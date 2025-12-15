@@ -245,7 +245,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                     if (imageFile.content && imageFile.content.startsWith('data:')) {
                         // Handle WebP images by converting them to PNG if needed
                         let imageUrl = imageFile.content;
-                        
+
                         // Check if this is a WebP image
                         if (imageFile.content.startsWith('data:image/webp')) {
                             try {
@@ -260,7 +260,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                 imageUrl = imageFile.content;
                             }
                         }
-                        
+
                         // Validate and clean the base64 data URL
                         try {
                             const { validateBase64DataURL } = await import('./file-upload.js');
@@ -268,13 +268,13 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                         } catch (validationError) {
                             console.warn(`Failed to validate base64 data URL for ${imageFile.name}:`, validationError);
                         }
-                        
+
                         // Final validation before adding to request
                         if (!imageUrl || !imageUrl.startsWith('data:')) {
                             console.error(`Invalid image URL for ${imageFile.name}:`, imageUrl?.substring(0, 100));
                             continue; // Skip this image
                         }
-                        
+
                         content.push({
                             type: "image_url",
                             image_url: {
@@ -290,7 +290,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                     try {
                         const { prepareFilesForLLM } = await import('./file-upload.js');
                         const formattedFileContent = await prepareFilesForLLM(nonImageFiles);
-                        
+
                         if (formattedFileContent.trim()) {
                             content[0].text += `\n\n${formattedFileContent}`;
                         }
@@ -301,40 +301,40 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
 
                 // Replace the content with the new format
                 messages[lastUserMessageIndex].content = content;
-                
+
                 console.log(`Vision model message prepared with ${imageFiles.length} image(s) and ${nonImageFiles.length} text file(s)`);
             } else {
                 // For non-vision models, embed all file contents as text
                 const lastUserMessageIndex = messages.length - 1;
-                
+
                 // Import the prepareFilesForLLM function to format files properly
                 try {
                     const { prepareFilesForLLM } = await import('./file-upload.js');
                     const formattedFileContent = await prepareFilesForLLM(fileContents);
-                    
+
                     // Log the formatted content length for debugging
                     console.log(`Formatted file content length: ${formattedFileContent.length} characters`);
-                    
+
                     // Append the properly formatted file contents to the user message
                     messages[lastUserMessageIndex].content += `\n\n${formattedFileContent}`;
                 } catch (importError) {
                     console.warn('Could not import prepareFilesForLLM, using fallback formatting:', importError);
-                    
+
                     // Fallback to simple formatting with length limits
                     let fileContent = '';
-                    
+
                     for (const file of fileContents) {
                         // Conservative length limit for safety
                         const maxLength = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf') ? 25000 : 40000;
-                        
+
                         let content = file.content;
                         if (content.length > maxLength) {
                             content = content.substring(0, maxLength) + `\n\n[Content truncated. Original length: ${file.content.length} characters]`;
                         }
-                        
+
                         fileContent += `\n\nFile: ${file.name}\n\`\`\`\n${content}\n\`\`\`\n`;
                     }
-                    
+
                     console.log(`Fallback formatted file content length: ${fileContent.length} characters`);
                     messages[lastUserMessageIndex].content += fileContent;
                 }
@@ -427,7 +427,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         let lastChunkTime = Date.now();
         let isInThinkingProcess = false;
         let thinkingStartTime = null;
-        
+
         // Streaming progress tracking for reasoning models
 
         // Create a new timeout for the streaming process (reset on each chunk)
@@ -454,7 +454,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                 if (chunkTimeoutId) {
                     clearTimeout(chunkTimeoutId);
                 }
-                
+
                 // Immediately terminate the connection when done is true
                 if (abortController) {
                     debugLog('Terminating connection as stream is complete');
@@ -462,10 +462,10 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                         // Store reference and clear global reference immediately
                         const controller = abortController;
                         abortController = null;
-                        
+
                         // Abort the controller to ensure connection is closed
                         controller.abort();
-                        
+
                         // Force UI state reset immediately
                         hideLoadingIndicator();
                         const stopButton = document.getElementById('stop-button');
@@ -476,7 +476,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                         debugLog('Error when closing connection:', abortError);
                     }
                 }
-                
+
                 break;
             }
 
@@ -535,9 +535,12 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                 if (delta.content) {
                                     // Create the AI message bubble on first content arrival
                                     if (!aiMessageElement) {
+                                        // Hide loading indicator before showing the message
+                                        hideLoadingIndicator();
+
                                         aiMessageElement = appendMessage('ai', '');
                                         contentContainer = aiMessageElement.querySelector('.message-content');
-                                        
+
                                         // If we couldn't find a container, log error and stop
                                         if (!contentContainer) {
                                             debugError('Could not find message content container for AI message');
@@ -545,7 +548,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                             return;
                                         }
                                     }
-                                    
+
                                     aiMessage += delta.content;
 
                                     // Track thinking process for progress indication
@@ -569,7 +572,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                     // Check if this is a code block outside of think tags
                                     if (!hasCodeBlock &&
                                         (delta.content.includes('```') ||
-                                         aiMessage.includes('```'))) {
+                                            aiMessage.includes('```'))) {
 
                                         // Only trigger reload for code blocks outside think tags
                                         if (containsCodeBlocksOutsideThinkTags(aiMessage)) {
@@ -686,7 +689,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                         // Monaco Editor removed - code initialization no longer needed
                                         hasInitializedCodeBlocks = true;
                                     }
-                                    
+
                                     // Scroll to bottom during streaming if auto-scroll is enabled
                                     if (getAutoScrollEnabled()) {
                                         scrollToBottom(messagesContainer, false);
@@ -772,8 +775,8 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         if (containsCodeBlocksOutsideThinkTags(aiMessage)) {
             // Check if Monaco is already having issues before deciding to reload
             const hasMonacoIssues = window.monacoHasErrors ||
-                                    (window.monacoLoaded === false &&
-                                    Date.now() - (window.monacoLoadStartTime || 0) > 5000);
+                (window.monacoLoaded === false &&
+                    Date.now() - (window.monacoLoadStartTime || 0) > 5000);
 
             if (hasMonacoIssues) {
                 // Don't reload if Monaco is having issues - just render with fallback
@@ -845,16 +848,16 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         // Ensure proper cleanup regardless of how we got here (success, error, or abort)
         // Save reference to controller before clearing it
         const controller = abortController;
-        
+
         // Immediately clear the global reference first to prevent race conditions
         abortController = null;
-        
+
         // Then try to abort the controller if it exists
         if (controller) {
             try {
                 debugLog('Final connection cleanup in finally block');
                 controller.abort();
-                
+
                 // Second abort attempt for additional safety
                 setTimeout(() => {
                     try {
@@ -956,12 +959,12 @@ export async function updateChatHistory(userMessage, aiMessage, fileContents = [
 
     // Verify the user message is already in the history
     const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
-    
+
     // If the last message is not the expected user message, add it
     // This handles cases where the user message wasn't added via addUserMessageToHistory
     if (!lastMessage || lastMessage.role !== 'user' || lastMessage.content !== userMessage) {
         debugLog('User message not found in history, adding it now');
-        
+
         // Create user message object
         const userMsg = { role: 'user', content: userMessage };
 
@@ -1722,49 +1725,49 @@ export function createNewChat() {
             module.setSystemPrompt(savedPrompt, false);
         });
 
-            // Update the UI to show the system prompt
-            const systemPromptInput = document.getElementById('system-prompt');
-            if (systemPromptInput) {
-                systemPromptInput.value = savedPrompt;
-            }
-
-            // Update the system prompt display
-            const systemPromptDisplay = document.getElementById('system-prompt-display');
-            if (systemPromptDisplay) {
-                systemPromptDisplay.textContent = savedPrompt;
-            }
-            // Update the system prompt preview
-            const systemPromptPreview = document.getElementById('system-prompt-preview');
-            if (systemPromptPreview) {
-                systemPromptPreview.textContent = savedPrompt;
-            }
-
-            // Force update any CodeMirror editor that might be showing the system prompt
-            if (window.systemPromptEditor && typeof window.systemPromptEditor.setValue === 'function') {
-                window.systemPromptEditor.setValue(savedPrompt);
-            }
+        // Update the UI to show the system prompt
+        const systemPromptInput = document.getElementById('system-prompt');
+        if (systemPromptInput) {
+            systemPromptInput.value = savedPrompt;
         }
 
-        // Save the empty chat to localStorage first to ensure it's saved
-        // even if there's an issue with subsequent operations
-        debugLog(`Saving new empty chat with ID ${newChatId} to localStorage`);
-        saveChatHistory();
-
-        // Hide the scroll-to-bottom button if it's visible
-        const scrollButton = document.getElementById('scroll-to-bottom');
-        if (scrollButton) {
-            scrollButton.classList.remove('visible');
-            scrollButton.classList.add('hidden');
+        // Update the system prompt display
+        const systemPromptDisplay = document.getElementById('system-prompt-display');
+        if (systemPromptDisplay) {
+            systemPromptDisplay.textContent = savedPrompt;
+        }
+        // Update the system prompt preview
+        const systemPromptPreview = document.getElementById('system-prompt-preview');
+        if (systemPromptPreview) {
+            systemPromptPreview.textContent = savedPrompt;
         }
 
-        // Close the sidebar if it's open (especially important on mobile)
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar && sidebar.classList.contains('active')) {
-            toggleSidebar();
+        // Force update any CodeMirror editor that might be showing the system prompt
+        if (window.systemPromptEditor && typeof window.systemPromptEditor.setValue === 'function') {
+            window.systemPromptEditor.setValue(savedPrompt);
         }
-
-        return newChatId;
     }
+
+    // Save the empty chat to localStorage first to ensure it's saved
+    // even if there's an issue with subsequent operations
+    debugLog(`Saving new empty chat with ID ${newChatId} to localStorage`);
+    saveChatHistory();
+
+    // Hide the scroll-to-bottom button if it's visible
+    const scrollButton = document.getElementById('scroll-to-bottom');
+    if (scrollButton) {
+        scrollButton.classList.remove('visible');
+        scrollButton.classList.add('hidden');
+    }
+
+    // Close the sidebar if it's open (especially important on mobile)
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && sidebar.classList.contains('active')) {
+        toggleSidebar();
+    }
+
+    return newChatId;
+}
 
 /**
  * Saves the chat history to localStorage
@@ -1794,7 +1797,7 @@ export function saveChatHistory() {
                 chatHistoryToSave[chatId] = {
                     messages: oldMessages,
                     title: oldTitle,
-                        };
+                };
             }
 
             // Ensure messages property exists and is an array
@@ -1952,7 +1955,7 @@ export function loadChatHistory() {
                     chatHistoryData[chatId] = {
                         messages: oldMessages,
                         title: oldTitle,
-                                };
+                    };
                     debugLog(`Converted chat ${chatId} to new format`);
                 } else {
                     // For already converted chats, ensure proper structure
@@ -1973,7 +1976,7 @@ export function loadChatHistory() {
                     chatHistoryData[chatId] = {
                         messages: Array.isArray(chatData.messages) ? [...chatData.messages] : [],
                         title: cleanTitle,
-                            };
+                    };
                 }
 
                 // Get the messages array (now guaranteed to be in the new format)
@@ -1993,17 +1996,17 @@ export function loadChatHistory() {
                     if (msg.content && typeof msg.content === 'string' && msg.content.includes('```')) {
                         // Clean up any visible HTML markers that may have been incorrectly added
                         // These markers should only be used internally during save/load, not displayed to users
-                        if (msg.content.includes('][HTML_CODE_BLOCK_START]') || 
+                        if (msg.content.includes('][HTML_CODE_BLOCK_START]') ||
                             msg.content.includes('[HTML_CODE_BLOCK_END]') ||
                             msg.content.includes('[HTML_CODE_BLOCK_START]')) {
-                            
+
                             // Clean up various forms of visible markers
                             msg.content = msg.content.replace(/\]\[HTML_CODE_BLOCK_START\]/g, '');
                             msg.content = msg.content.replace(/\[HTML_CODE_BLOCK_START\]/g, '');
                             msg.content = msg.content.replace(/\[HTML_CODE_BLOCK_END\]/g, '');
                             debugLog('Cleaned up visible HTML markers from message content');
                         }
-                        
+
                         // Only preserve the original content during load - don't add any markers
                         // HTML markers should only be added during save operations, not load operations
                         debugLog('Preserved original code block content on load');
@@ -2053,7 +2056,7 @@ function cleanupIncompleteAIResponse() {
     if (aiMessages.length > 0) {
         const lastAIMessage = aiMessages[aiMessages.length - 1];
         const contentContainer = lastAIMessage.querySelector('.message-content');
-        
+
         // If the AI message is empty or only contains whitespace, remove it
         if (contentContainer && (!contentContainer.textContent.trim() || contentContainer.textContent.trim() === '')) {
             debugLog('Removing empty AI message after cancellation');
@@ -2078,7 +2081,7 @@ export function abortGeneration() {
         // Now abort the controller
         try {
             controller.abort();
-            
+
             // Second abort attempt for additional safety
             setTimeout(() => {
                 try {
@@ -2098,7 +2101,7 @@ export function abortGeneration() {
         // Ensure UI immediately reflects that generation is stopped
         hideLoadingIndicator();
         debugLog('Toggling button back to send...');
-        
+
         // Only toggle if we're currently showing the stop button
         const stopButton = document.getElementById('stop-button');
         if (stopButton && !stopButton.classList.contains('hidden')) {
@@ -2118,7 +2121,7 @@ export function abortGeneration() {
         // Ensure the UI is reset even if no abort controller exists
         isGenerating = false;
         hideLoadingIndicator();
-        
+
         // Only toggle if we're currently showing the stop button
         const stopButton = document.getElementById('stop-button');
         if (stopButton && !stopButton.classList.contains('hidden')) {
@@ -2501,10 +2504,10 @@ export async function regenerateLastResponse(isRetry = false) {
             }
 
             // Create request body
-        const requestBody = {
+            const requestBody = {
                 model: getSelectedModel(),
                 messages: apiMessages,
-            temperature: getTemperature(),
+                temperature: getTemperature(),
                 stream: true,
             };
 
@@ -2647,7 +2650,7 @@ export async function regenerateLastResponse(isRetry = false) {
                                         if (!aiMessageElement) {
                                             aiMessageElement = appendMessage('ai', '');
                                             contentContainer = aiMessageElement.querySelector('.message-content');
-                                            
+
                                             // If we couldn't find a container, log error and stop
                                             if (!contentContainer) {
                                                 debugError('Could not find message content container for regenerated AI message');
@@ -2656,7 +2659,7 @@ export async function regenerateLastResponse(isRetry = false) {
                                                 return;
                                             }
                                         }
-                                        
+
                                         aiMessage += delta.content;
 
                                         // Track thinking process for progress indication (same as initial generation)
@@ -2683,7 +2686,7 @@ export async function regenerateLastResponse(isRetry = false) {
                                         // Check if this is a code block outside of think tags
                                         if (!hasCodeBlock &&
                                             (delta.content.includes('```') ||
-                                             aiMessage.includes('```'))) {
+                                                aiMessage.includes('```'))) {
 
                                             // Only trigger reload for code blocks outside think tags
                                             if (containsCodeBlocksOutsideThinkTags(aiMessage)) {
@@ -2869,125 +2872,125 @@ export async function regenerateLastResponse(isRetry = false) {
 
             scrollToBottom(messagesContainer, true);
 
-        // Update chat history: remove messages after the last user message and add new AI response
-        if (Array.isArray(chatHistoryData[currentChatId])) {
-            // Convert to new format if needed
-            chatHistoryData[currentChatId] = {
-                messages: chatHistoryData[currentChatId].slice(0, lastUserMessageIndex + 1),
-                title: chatHistoryData[currentChatId].title || null,
+            // Update chat history: remove messages after the last user message and add new AI response
+            if (Array.isArray(chatHistoryData[currentChatId])) {
+                // Convert to new format if needed
+                chatHistoryData[currentChatId] = {
+                    messages: chatHistoryData[currentChatId].slice(0, lastUserMessageIndex + 1),
+                    title: chatHistoryData[currentChatId].title || null,
                 };
-        } else {
-            chatHistoryData[currentChatId].messages = chatHistoryData[currentChatId].messages.slice(0, lastUserMessageIndex + 1);
-        }
-
-        // Add the new AI response
-        chatHistoryData[currentChatId].messages.push({ role: 'assistant', content: aiMessage });
-
-        // Make sure to save to localStorage before any other operations
-        // This ensures the chat is saved even if there's an issue with subsequent operations
-        saveChatHistory();
-
-        // Since this is a regeneration, ensure isFirstMessage is set to false
-        if (isFirstMessage) {
-            debugLog('Setting isFirstMessage to false during regeneration');
-            setIsFirstMessage(false);
-        }
-
-        // Update the UI to reflect the changes
-        updateChatHistoryUI();
-
-        // Final processing for thinking tags
-        if (getHideThinking()) {
-            // Remove any remaining thinking indicators
-            const thinkingIndicators = document.querySelectorAll('.thinking-indicator');
-            thinkingIndicators.forEach(indicator => {
-                indicator.remove();
-            });
-
-            // Import the removeVisibleThinkTags function to ensure thinking tags are hidden
-            import('./settings-manager.js').then(module => {
-                module.removeVisibleThinkTags();
-            });
-
-            // Apply the thinking visibility setting to all messages
-            import('./ui-manager.js').then(module => {
-                module.applyThinkingVisibility();
-            });
-        }
-
-        debugLog('Regeneration completed successfully');
-    } catch (error) {
-        // Clean up timeouts on error
-        if (streamingTimeoutId) {
-            clearTimeout(streamingTimeoutId);
-        }
-        if (chunkTimeoutId) {
-            clearTimeout(chunkTimeoutId);
-        }
-
-        if (error.name === 'AbortError') {
-            debugLog('Fetch aborted');
-        } else {
-            debugError('Error during regeneration:', error);
-            appendMessage('error', 'An error occurred while regenerating the response: ' + error.message);
-        }
-    } finally {
-        debugLog('Finalizing regeneration...');
-
-        // Clean up all timeouts
-        if (streamingTimeoutId) {
-            clearTimeout(streamingTimeoutId);
-        }
-        if (chunkTimeoutId) {
-            clearTimeout(chunkTimeoutId);
-        }
-
-        isGenerating = false;
-
-        // Make sure the connection is closed by explicitly aborting
-        if (abortController) {
-            try {
-                debugLog('Ensuring LLM connection is closed in finally block during regeneration');
-
-                // Save a reference to the controller before nullifying it
-                const controller = abortController;
-
-                // Immediately set to null to prevent any further operations on it
-                abortController = null;
-
-                // Now abort the controller
-                controller.abort();
-            } catch (finallyAbortError) {
-                debugLog('Error when ensuring connection closure during regeneration:', finallyAbortError);
+            } else {
+                chatHistoryData[currentChatId].messages = chatHistoryData[currentChatId].messages.slice(0, lastUserMessageIndex + 1);
             }
-        }
 
-        hideLoadingIndicator();
+            // Add the new AI response
+            chatHistoryData[currentChatId].messages.push({ role: 'assistant', content: aiMessage });
 
-        const stopButton = document.getElementById('stop-button');
-        if (stopButton && !stopButton.classList.contains('hidden')) {
-            toggleSendStopButton();
-        }
+            // Make sure to save to localStorage before any other operations
+            // This ensures the chat is saved even if there's an issue with subsequent operations
+            saveChatHistory();
 
-        abortController = null;
+            // Since this is a regeneration, ensure isFirstMessage is set to false
+            if (isFirstMessage) {
+                debugLog('Setting isFirstMessage to false during regeneration');
+                setIsFirstMessage(false);
+            }
 
-        // Final check to ensure hide thinking is applied correctly
-        if (getHideThinking()) {
-            // Remove any remaining thinking indicators
-            const thinkingIndicators = document.querySelectorAll('.thinking-indicator');
-            thinkingIndicators.forEach(indicator => {
-                indicator.remove();
-            });
+            // Update the UI to reflect the changes
+            updateChatHistoryUI();
 
-            // Apply the thinking visibility setting to all messages
-            import('./ui-manager.js').then(module => {
-                module.applyThinkingVisibility();
-            });
+            // Final processing for thinking tags
+            if (getHideThinking()) {
+                // Remove any remaining thinking indicators
+                const thinkingIndicators = document.querySelectorAll('.thinking-indicator');
+                thinkingIndicators.forEach(indicator => {
+                    indicator.remove();
+                });
 
-            // Also ensure any thinking indicators are properly handled
-            import('./settings-manager.js').then(module => {
-                module.removeVisibleThinkTags();
-            });
+                // Import the removeVisibleThinkTags function to ensure thinking tags are hidden
+                import('./settings-manager.js').then(module => {
+                    module.removeVisibleThinkTags();
+                });
+
+                // Apply the thinking visibility setting to all messages
+                import('./ui-manager.js').then(module => {
+                    module.applyThinkingVisibility();
+                });
+            }
+
+            debugLog('Regeneration completed successfully');
+        } catch (error) {
+            // Clean up timeouts on error
+            if (streamingTimeoutId) {
+                clearTimeout(streamingTimeoutId);
+            }
+            if (chunkTimeoutId) {
+                clearTimeout(chunkTimeoutId);
+            }
+
+            if (error.name === 'AbortError') {
+                debugLog('Fetch aborted');
+            } else {
+                debugError('Error during regeneration:', error);
+                appendMessage('error', 'An error occurred while regenerating the response: ' + error.message);
+            }
+        } finally {
+            debugLog('Finalizing regeneration...');
+
+            // Clean up all timeouts
+            if (streamingTimeoutId) {
+                clearTimeout(streamingTimeoutId);
+            }
+            if (chunkTimeoutId) {
+                clearTimeout(chunkTimeoutId);
+            }
+
+            isGenerating = false;
+
+            // Make sure the connection is closed by explicitly aborting
+            if (abortController) {
+                try {
+                    debugLog('Ensuring LLM connection is closed in finally block during regeneration');
+
+                    // Save a reference to the controller before nullifying it
+                    const controller = abortController;
+
+                    // Immediately set to null to prevent any further operations on it
+                    abortController = null;
+
+                    // Now abort the controller
+                    controller.abort();
+                } catch (finallyAbortError) {
+                    debugLog('Error when ensuring connection closure during regeneration:', finallyAbortError);
+                }
+            }
+
+            hideLoadingIndicator();
+
+            const stopButton = document.getElementById('stop-button');
+            if (stopButton && !stopButton.classList.contains('hidden')) {
+                toggleSendStopButton();
+            }
+
+            abortController = null;
+
+            // Final check to ensure hide thinking is applied correctly
+            if (getHideThinking()) {
+                // Remove any remaining thinking indicators
+                const thinkingIndicators = document.querySelectorAll('.thinking-indicator');
+                thinkingIndicators.forEach(indicator => {
+                    indicator.remove();
+                });
+
+                // Apply the thinking visibility setting to all messages
+                import('./ui-manager.js').then(module => {
+                    module.applyThinkingVisibility();
+                });
+
+                // Also ensure any thinking indicators are properly handled
+                import('./settings-manager.js').then(module => {
+                    module.removeVisibleThinkTags();
+                });
             }
         }
     } catch (error) {

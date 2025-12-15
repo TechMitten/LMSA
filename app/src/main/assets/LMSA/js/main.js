@@ -35,17 +35,14 @@ let androidKeyboardHeight = 0;
 
 // Import age verification and terms acceptance for checking
 import { hasAcceptedCurrentTerms } from './terms-acceptance.js';
-import { hasVerifiedAge } from './age-verification.js';
+
 
 /**
  * Initializes the application
  */
 export async function initializeApp() {
     // Wait for age verification and terms acceptance check before proceeding
-    if (!hasVerifiedAge()) {
-        console.log('Age not verified, skipping app initialization');
-        return;
-    }
+
 
     if (!hasAcceptedCurrentTerms()) {
         console.log('Terms not accepted, skipping app initialization');
@@ -131,7 +128,7 @@ export async function initializeApp() {
     // File preview touch handler removed
     // File upload already initialized above
     initializeModelManager();
-    
+
     // Update file upload capabilities after model manager is initialized
     try {
         const { updateFileUploadCapabilities } = await import('./file-upload.js');
@@ -139,11 +136,11 @@ export async function initializeApp() {
     } catch (error) {
         console.error('Error updating initial file upload capabilities:', error);
     }
-    
+
     initializeCollapsibleSections();
     initializeSettingsModal();
     initializeIpPortConfirmationModal();
-    
+
     // Pre-initialize TTS service to prevent double-tap issues
     try {
         if (window.TTSService && !window.TTSService.isInitialized()) {
@@ -153,9 +150,9 @@ export async function initializeApp() {
     } catch (error) {
         console.error('Error pre-initializing TTS service:', error);
     }
-    
 
-    
+
+
     // Initialize saved system prompts functionality
     try {
         const { initializeSavedSystemPrompts } = await import('./saved-system-prompts.js');
@@ -163,10 +160,10 @@ export async function initializeApp() {
     } catch (error) {
         console.error('Error initializing saved system prompts:', error);
     }
-    
+
     initializeExportImport();
     initializeWhatsNew();
-    
+
     updateConfirmationModalTheme();
     updateExportImportModalsTheme();
 
@@ -214,7 +211,7 @@ export async function initializeApp() {
             messageCache.performCleanup();
         }
     });
-    
+
     memoryManager.registerCleanupCallback(() => {
         // Clean up chat history optimizer
         const memoryStats = chatHistoryOptimizer.getMemoryStats();
@@ -225,15 +222,15 @@ export async function initializeApp() {
 
     // Initialize performance optimizations
     performanceMonitor.trackDOMUpdate();
-    
-    
+
+
 
     // Add performance monitoring to window for debugging
     if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
         window.performanceMonitor = performanceMonitor;
         window.memoryUtils = MemoryUtils;
         window.animationOptimizer = animationOptimizer;
-        
+
         // Log performance summary every 30 seconds in development
         const performanceInterval = setInterval(() => {
             console.log('Performance Summary:', performanceMonitor.getMetrics());
@@ -242,14 +239,14 @@ export async function initializeApp() {
                 console.warn('Memory leaks detected:', leaks);
             }
         }, 30000);
-        
+
         // Stop performance monitoring after 5 minutes to prevent long-term memory leaks
         setTimeout(() => {
             clearInterval(performanceInterval);
             console.log('Performance monitoring stopped');
-            
+
         }, 5 * 60 * 1000);
-        
+
     }
 }
 
@@ -291,24 +288,24 @@ function initializeAndroidKeyboardFix() {
     if (!isAndroidWebView()) {
         return;
     }
-    
+
     // Use VisualViewport API for better keyboard handling
     if (window.visualViewport) {
         const viewport = window.visualViewport;
-        
+
         // Handle viewport resize events
         const handleViewportChange = () => {
             // Calculate the keyboard height
             const currentViewportHeight = viewport.height * viewport.scale;
             const keyboardHeight = window.innerHeight - currentViewportHeight;
-            
+
             // Get the chat form element
             const chatForm = document.getElementById('chat-form');
-            
+
             if (keyboardHeight > 100) {
                 // Keyboard is visible - adjust layout
                 document.body.classList.add('keyboard-visible');
-                
+
                 // Scroll to input field
                 const userInput = document.getElementById('user-input');
                 if (userInput) {
@@ -324,10 +321,10 @@ function initializeAndroidKeyboardFix() {
                 document.body.classList.remove('keyboard-visible');
             }
         };
-        
+
         // Add event listener for viewport changes
         viewport.addEventListener('resize', handleViewportChange);
-        
+
         // Also handle window resize for additional safety
         window.addEventListener('resize', () => {
             // Update initial height when window resizes
@@ -335,23 +332,23 @@ function initializeAndroidKeyboardFix() {
     } else {
         // Fallback for older Android WebViews without VisualViewport API
         let initialHeight = window.innerHeight;
-        
-        window.addEventListener('resize', function() {
+
+        window.addEventListener('resize', function () {
             const currentHeight = window.innerHeight;
             const heightDifference = initialHeight - currentHeight;
-            
+
             // Keyboard is likely visible if height changed by more than 100px
             if (Math.abs(heightDifference) > 100) {
                 if (heightDifference > 0) {
                     // Keyboard likely visible
                     document.body.classList.add('keyboard-visible');
-                    
+
                     // Scroll to input if it exists
                     const userInput = document.getElementById('user-input');
                     if (userInput) {
                         setTimeout(() => {
-                            userInput.scrollIntoView({ 
-                                behavior: 'smooth', 
+                            userInput.scrollIntoView({
+                                behavior: 'smooth',
                                 block: 'center'
                             });
                         }, 100);
@@ -366,18 +363,14 @@ function initializeAndroidKeyboardFix() {
 }
 
 // Initialize the application when the DOM is loaded, age is verified, and terms are accepted
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Make initializeApp globally available
     window.initializeApp = initializeApp;
 
     // Check age verification and terms acceptance first, then initialize app if both pass
-    if (hasVerifiedAge() && hasAcceptedCurrentTerms()) {
+    if (hasAcceptedCurrentTerms()) {
         initializeApp();
     } else {
-        if (!hasVerifiedAge()) {
-            console.log('Age not verified - app initialization paused until age verification is complete');
-        } else {
-            console.log('Terms not accepted - app initialization paused until terms are accepted');
-        }
+        console.log('Terms not accepted - app initialization paused until terms are accepted');
     }
 });

@@ -1,6 +1,7 @@
 // API Service for handling server communication
 import { serverIpInput, serverPortInput, loadedModelDisplay } from './dom-elements.js';
 import { getLightThemeEnabled } from './settings-manager.js';
+import { showIpPortErrorModal, hideIpPortErrorModal } from './ui-manager.js';
 
 let API_URL = '';
 let availableModels = [];
@@ -24,7 +25,11 @@ let lastFetchPromise = null;
 /**
  * Updates the server URL based on IP and port inputs
  */
-export function updateServerUrl() {
+/**
+ * Validates the IP and Port fields
+ * @returns {boolean} - True if valid, false if invalid
+ */
+export function validateIpPort() {
     const ip = serverIpInput.value.trim();
     const port = serverPortInput.value.trim();
 
@@ -34,8 +39,17 @@ export function updateServerUrl() {
     // If either field has content, both must be filled
     if ((ip && !port) || (!ip && port)) {
         showValidationError();
-        return;
+        return false;
     }
+    return true;
+}
+
+/**
+ * Saves the server settings and fetches models
+ */
+export function saveServerSettings() {
+    const ip = serverIpInput.value.trim();
+    const port = serverPortInput.value.trim();
 
     if (ip && port) {
         API_URL = `http://${ip}:${port}/v1/chat/completions`;
@@ -46,34 +60,39 @@ export function updateServerUrl() {
 }
 
 /**
+ * Updates the server URL based on IP and port inputs
+ * Kept for backward compatibility if needed
+ */
+export function updateServerUrl() {
+    if (validateIpPort()) {
+        saveServerSettings();
+        return true;
+    }
+    return false;
+}
+
+/**
  * Shows validation error for IP/Port fields
  */
 function showValidationError() {
     const ip = serverIpInput.value.trim();
     const port = serverPortInput.value.trim();
-    
+
     // Add error styling to both fields
     serverIpInput.style.borderColor = '#ef4444';
     serverPortInput.style.borderColor = '#ef4444';
-    
-    // Show error message
-    let errorContainer = document.getElementById('ip-port-error');
-    if (!errorContainer) {
-        errorContainer = document.createElement('div');
-        errorContainer.id = 'ip-port-error';
-        errorContainer.className = 'text-red-400 text-xs mt-1';
-        
-        // Insert after the IP/Port container
-        const ipPortContainer = document.querySelector('.ip-port-container');
-        if (ipPortContainer && ipPortContainer.parentNode) {
-            ipPortContainer.parentNode.insertBefore(errorContainer, ipPortContainer.nextSibling);
-        }
-    }
-    
+
+    // Determine the error message
+    let message = '';
     if (ip && !port) {
-        errorContainer.textContent = 'Port is required when IP address is specified';
+        message = 'Port is required when IP address is specified';
     } else if (!ip && port) {
-        errorContainer.textContent = 'IP address is required when Port is specified';
+        message = 'IP address is required when Port is specified';
+    }
+
+    // Show the error modal if there is a message
+    if (message) {
+        showIpPortErrorModal(message);
     }
 }
 
@@ -84,8 +103,11 @@ function clearValidationErrors() {
     // Remove error styling
     serverIpInput.style.borderColor = '';
     serverPortInput.style.borderColor = '';
-    
-    // Remove error message
+
+    // Ensure the error modal is hidden
+    hideIpPortErrorModal();
+
+    // Remove legacy error message if it still exists
     const errorContainer = document.getElementById('ip-port-error');
     if (errorContainer) {
         errorContainer.remove();
@@ -137,251 +159,251 @@ export async function fetchAvailableModels() {
 
                 clearTimeout(timeoutId);
 
-            if (!modelsResponse.ok) {
-                console.error('Failed to fetch models, server returned:', modelsResponse.status, modelsResponse.statusText);
-                availableModels = []; // Ensure availableModels is empty
-                if (loadedModelDisplay) {
-                    loadedModelDisplay.classList.add('hidden');
-                }
-                return [];
-            }
-
-            const data = await modelsResponse.json();
-
-            if (!data || !data.data || !Array.isArray(data.data)) {
-                console.error('Invalid response format from server:', data);
-                availableModels = []; // Ensure availableModels is empty
-                if (loadedModelDisplay) {
-                    loadedModelDisplay.classList.add('hidden');
-                }
-                return [];
-            }
-
-            const modelsList = data.data;
-
-            // Try to determine which model is loaded through multiple methods
-
-            // Method 1: Look for status flags in the API response directly - add more possible attributes to check
-            let loadedModelInfo = modelsList.find(model =>
-                model.ready === true ||
-                model.loaded === true ||
-                model.active === true ||
-                model.current === true ||
-                model.status === 'loaded' ||
-                model.status === 'ready' ||
-                model.state === 'loaded' ||
-                model.state === 'ready' ||
-                model.status === 'active' ||
-                model.state === 'active'
-            );
-
-            // Method 2: If no model is marked as loaded, check if we can get info via a different endpoint
-            if (!loadedModelInfo) {
-                try {
-                    // Try different endpoints that LM Studio might use
-                    // Reduced from 4 to 2 endpoints to minimize log noise
-                    // Keep /v1/internal/model/info as it generates the intentional 400 error that prevents auto-loading
-                    const endpoints = [
-                        '/v1/internal/model/info',
-                        '/v1/model/info'
-                    ];
-
-                    for (const endpoint of endpoints) {
-                        try {
-                            const controller = new AbortController();
-                            const timeoutId = setTimeout(() => controller.abort(), 2000); // shorter timeout for info endpoints
-
-                            const modelInfoResponse = await fetch(`http://${ip}:${port}${endpoint}`, {
-                                method: 'GET',
-                                signal: controller.signal
-                            }).catch(() => {
-                                // Silently catch network errors
-                                return { ok: false };
-                            });
-
-                            clearTimeout(timeoutId);
-
-                            if (modelInfoResponse.ok) {
-                                const modelInfo = await modelInfoResponse.json();
-
-                                if (modelInfo && modelInfo.id) {
-                                    // Find the matching model in our list
-                                    loadedModelInfo = modelsList.find(model => model.id === modelInfo.id);
-                                    if (loadedModelInfo) {
-                                        console.log('Found loaded model through info endpoint:', loadedModelInfo.id);
-                                        break;
-                                    }
-                                }
-                            } else {
-                                // Don't log errors for expected 400 responses
-                            }
-                        } catch (endpointError) {
-                            // Silently continue - don't log to reduce console noise
-                        }
+                if (!modelsResponse.ok) {
+                    console.error('Failed to fetch models, server returned:', modelsResponse.status, modelsResponse.statusText);
+                    availableModels = []; // Ensure availableModels is empty
+                    if (loadedModelDisplay) {
+                        loadedModelDisplay.classList.add('hidden');
                     }
-                } catch (infoError) {
-                    // Silently continue - this is expected when endpoints don't exist
+                    return [];
                 }
-            }
 
-            // Method 3: If we still couldn't detect a loaded model through Methods 1 & 2,
-            // try making a simple completion request
-            // IMPORTANT: Skip this method if we already found a model to reduce API calls
-            // This will help detect if a model is actually loaded even if the API doesn't report it
-            if (!loadedModelInfo && modelsList.length > 0 && !window.currentLoadedModel) {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const data = await modelsResponse.json();
 
-                    const chatResponse = await fetch(`http://${ip}:${port}/v1/chat/completions`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            messages: [
-                                { role: 'system', content: 'You are a helpful assistant.' },
-                                { role: 'user', content: 'test' }
-                            ],
-                            max_tokens: 1,
-                            stream: false
-                        }),
-                        signal: controller.signal
-                    }).catch(() => {
-                        return { ok: false };
-                    });
+                if (!data || !data.data || !Array.isArray(data.data)) {
+                    console.error('Invalid response format from server:', data);
+                    availableModels = []; // Ensure availableModels is empty
+                    if (loadedModelDisplay) {
+                        loadedModelDisplay.classList.add('hidden');
+                    }
+                    return [];
+                }
 
-                    clearTimeout(timeoutId);
+                const modelsList = data.data;
 
-                    if (chatResponse.ok) {
-                        const result = await chatResponse.json();
+                // Try to determine which model is loaded through multiple methods
 
-                        if (result && result.model) {
-                            // Find this model in our list
-                            loadedModelInfo = modelsList.find(model => model.id === result.model);
-                            if (!loadedModelInfo && modelsList.length > 0) {
-                                // If we can't find the exact model but know one is loaded, use the first one
-                                console.log('Model from completion API not in list, assuming first model');
-                                loadedModelInfo = modelsList[0];
+                // Method 1: Look for status flags in the API response directly - add more possible attributes to check
+                let loadedModelInfo = modelsList.find(model =>
+                    model.ready === true ||
+                    model.loaded === true ||
+                    model.active === true ||
+                    model.current === true ||
+                    model.status === 'loaded' ||
+                    model.status === 'ready' ||
+                    model.state === 'loaded' ||
+                    model.state === 'ready' ||
+                    model.status === 'active' ||
+                    model.state === 'active'
+                );
+
+                // Method 2: If no model is marked as loaded, check if we can get info via a different endpoint
+                if (!loadedModelInfo) {
+                    try {
+                        // Try different endpoints that LM Studio might use
+                        // Reduced from 4 to 2 endpoints to minimize log noise
+                        // Keep /v1/internal/model/info as it generates the intentional 400 error that prevents auto-loading
+                        const endpoints = [
+                            '/v1/internal/model/info',
+                            '/v1/model/info'
+                        ];
+
+                        for (const endpoint of endpoints) {
+                            try {
+                                const controller = new AbortController();
+                                const timeoutId = setTimeout(() => controller.abort(), 2000); // shorter timeout for info endpoints
+
+                                const modelInfoResponse = await fetch(`http://${ip}:${port}${endpoint}`, {
+                                    method: 'GET',
+                                    signal: controller.signal
+                                }).catch(() => {
+                                    // Silently catch network errors
+                                    return { ok: false };
+                                });
+
+                                clearTimeout(timeoutId);
+
+                                if (modelInfoResponse.ok) {
+                                    const modelInfo = await modelInfoResponse.json();
+
+                                    if (modelInfo && modelInfo.id) {
+                                        // Find the matching model in our list
+                                        loadedModelInfo = modelsList.find(model => model.id === modelInfo.id);
+                                        if (loadedModelInfo) {
+                                            console.log('Found loaded model through info endpoint:', loadedModelInfo.id);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    // Don't log errors for expected 400 responses
+                                }
+                            } catch (endpointError) {
+                                // Silently continue - don't log to reduce console noise
                             }
+                        }
+                    } catch (infoError) {
+                        // Silently continue - this is expected when endpoints don't exist
+                    }
+                }
+
+                // Method 3: If we still couldn't detect a loaded model through Methods 1 & 2,
+                // try making a simple completion request
+                // IMPORTANT: Skip this method if we already found a model to reduce API calls
+                // This will help detect if a model is actually loaded even if the API doesn't report it
+                if (!loadedModelInfo && modelsList.length > 0 && !window.currentLoadedModel) {
+                    try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+                        const chatResponse = await fetch(`http://${ip}:${port}/v1/chat/completions`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                messages: [
+                                    { role: 'system', content: 'You are a helpful assistant.' },
+                                    { role: 'user', content: 'test' }
+                                ],
+                                max_tokens: 1,
+                                stream: false
+                            }),
+                            signal: controller.signal
+                        }).catch(() => {
+                            return { ok: false };
+                        });
+
+                        clearTimeout(timeoutId);
+
+                        if (chatResponse.ok) {
+                            const result = await chatResponse.json();
+
+                            if (result && result.model) {
+                                // Find this model in our list
+                                loadedModelInfo = modelsList.find(model => model.id === result.model);
+                                if (!loadedModelInfo && modelsList.length > 0) {
+                                    // If we can't find the exact model but know one is loaded, use the first one
+                                    console.log('Model from completion API not in list, assuming first model');
+                                    loadedModelInfo = modelsList[0];
+                                }
+                            }
+                        } else {
+                            console.log('Completion API not available or no model loaded');
+                        }
+                    } catch (completionError) {
+                        console.log('Error checking completion API:', completionError);
+                    }
+                }
+
+                // Method 4: Use the previously stored model if it's in the list
+                if (!loadedModelInfo && window.currentLoadedModel) {
+                    const matchingModel = modelsList.find(model => model.id === window.currentLoadedModel);
+                    if (matchingModel) {
+                        console.log('Using previously stored loaded model:', window.currentLoadedModel);
+                        loadedModelInfo = matchingModel;
+                    }
+                }
+
+                if (loadedModelInfo) {
+                    // We found a loaded model
+                    availableModels = [loadedModelInfo.id];
+
+                    // Store the loaded model name in a global variable for easy access
+                    window.currentLoadedModel = loadedModelInfo.id;
+
+                    // Update file upload capabilities now that we have a model
+                    try {
+                        const { updateFileUploadCapabilities } = await import('./file-upload.js');
+                        await updateFileUploadCapabilities();
+                    } catch (error) {
+                        console.error('Failed to update file upload capabilities after model detection:', error);
+                    }
+
+                    // Check saved banner visibility preference before showing
+                    const modelBannerVisible = localStorage.getItem('modelBannerVisible');
+
+                    if (modelBannerVisible !== 'false') {
+                        // Only show the banner if it wasn't explicitly hidden by the user
+                        updateLoadedModelDisplay(loadedModelInfo.id);
+
+                        // Ensure the model banner is visible
+                        if (loadedModelDisplay) {
+                            loadedModelDisplay.classList.remove('hidden');
                         }
                     } else {
-                        console.log('Completion API not available or no model loaded');
-                    }
-                } catch (completionError) {
-                    console.log('Error checking completion API:', completionError);
-                }
-            }
-
-            // Method 4: Use the previously stored model if it's in the list
-            if (!loadedModelInfo && window.currentLoadedModel) {
-                const matchingModel = modelsList.find(model => model.id === window.currentLoadedModel);
-                if (matchingModel) {
-                    console.log('Using previously stored loaded model:', window.currentLoadedModel);
-                    loadedModelInfo = matchingModel;
-                }
-            }
-
-            if (loadedModelInfo) {
-                // We found a loaded model
-                availableModels = [loadedModelInfo.id];
-
-                // Store the loaded model name in a global variable for easy access
-                window.currentLoadedModel = loadedModelInfo.id;
-                
-                // Update file upload capabilities now that we have a model
-                try {
-                    const { updateFileUploadCapabilities } = await import('./file-upload.js');
-                    await updateFileUploadCapabilities();
-                } catch (error) {
-                    console.error('Failed to update file upload capabilities after model detection:', error);
-                }
-
-                // Check saved banner visibility preference before showing
-                const modelBannerVisible = localStorage.getItem('modelBannerVisible');
-
-                if (modelBannerVisible !== 'false') {
-                    // Only show the banner if it wasn't explicitly hidden by the user
-                    updateLoadedModelDisplay(loadedModelInfo.id);
-
-                    // Ensure the model banner is visible
-                    if (loadedModelDisplay) {
-                        loadedModelDisplay.classList.remove('hidden');
+                        // Remove the banner completely from DOM
+                        const modelWrapper = document.getElementById('loaded-model-wrapper');
+                        if (modelWrapper) {
+                            modelWrapper.remove();
+                            // Reset the CSS variable to 0
+                            document.documentElement.style.setProperty('--loaded-model-height', '0px');
+                        }
                     }
                 } else {
-                    // Remove the banner completely from DOM
-                    const modelWrapper = document.getElementById('loaded-model-wrapper');
-                    if (modelWrapper) {
-                        modelWrapper.remove();
-                        // Reset the CSS variable to 0
-                        document.documentElement.style.setProperty('--loaded-model-height', '0px');
+                    // No loaded model found in the API response
+                    console.log('No loaded model found after all detection methods');
+                    availableModels = []; // No model is truly loaded
+                    window.currentLoadedModel = null; // Clear the global variable
+                    console.log('Cleared global currentLoadedModel');
+
+                    // Check if the banner was manually shown by the user
+                    const manuallyShown = loadedModelDisplay &&
+                        (loadedModelDisplay.dataset.manuallyShown === 'true');
+
+                    // Check if the banner was shown recently (within the last 10 seconds)
+                    const manuallyShownAt = localStorage.getItem('modelBannerManuallyShownAt');
+                    const recentlyShown = manuallyShownAt &&
+                        (Date.now() - parseInt(manuallyShownAt)) < 10000; // 10 seconds
+
+                    // Only hide the model banner if it wasn't manually shown by user
+                    if (!manuallyShown && !recentlyShown) {
+                        hideLoadedModelDisplay();
+                    } else {
+                        console.log('Banner was manually shown by user, keeping it visible even with no model loaded');
+                        // If the banner is already showing, make sure it still shows "No model loaded"
+                        if (loadedModelDisplay && !loadedModelDisplay.classList.contains('hidden')) {
+                            loadedModelDisplay.textContent = 'No model loaded';
+                            loadedModelDisplay.dataset.hasLoadedModel = 'false';
+                        }
                     }
                 }
-            } else {
-                // No loaded model found in the API response
-                console.log('No loaded model found after all detection methods');
-                availableModels = []; // No model is truly loaded
-                window.currentLoadedModel = null; // Clear the global variable
-                console.log('Cleared global currentLoadedModel');
 
-                // Check if the banner was manually shown by the user
-                const manuallyShown = loadedModelDisplay &&
-                                    (loadedModelDisplay.dataset.manuallyShown === 'true');
+                // Return the full model data for UI display
+                // Update cache before returning
+                modelInfoCache.data = modelsList;
+                modelInfoCache.timestamp = Date.now();
 
-                // Check if the banner was shown recently (within the last 10 seconds)
-                const manuallyShownAt = localStorage.getItem('modelBannerManuallyShownAt');
-                const recentlyShown = manuallyShownAt &&
-                                    (Date.now() - parseInt(manuallyShownAt)) < 10000; // 10 seconds
+                return modelsList;
+            } catch (fetchError) {
+                clearTimeout(timeoutId);
+                // Suppress console errors for unsafe ports and common fetch failures
+                const errorMessage = fetchError.message || fetchError.toString();
+                const isUnsafePortError = errorMessage.includes('ERR_UNSAFE_PORT') ||
+                    errorMessage.includes('Failed to fetch') ||
+                    errorMessage.includes('net::ERR_');
 
-                // Only hide the model banner if it wasn't manually shown by user
-                if (!manuallyShown && !recentlyShown) {
-                    hideLoadedModelDisplay();
-                } else {
-                    console.log('Banner was manually shown by user, keeping it visible even with no model loaded');
-                    // If the banner is already showing, make sure it still shows "No model loaded"
-                    if (loadedModelDisplay && !loadedModelDisplay.classList.contains('hidden')) {
-                        loadedModelDisplay.textContent = 'No model loaded';
-                        loadedModelDisplay.dataset.hasLoadedModel = 'false';
-                    }
+                if (!isUnsafePortError) {
+                    console.error('Error fetching models:', fetchError);
                 }
+                availableModels = []; // Ensure availableModels is empty
+                if (loadedModelDisplay) {
+                    loadedModelDisplay.classList.add('hidden');
+                }
+                return [];
+            } finally {
+                // Clear the promise reference when done
+                lastFetchPromise = null;
             }
-
-            // Return the full model data for UI display
-            // Update cache before returning
-            modelInfoCache.data = modelsList;
-            modelInfoCache.timestamp = Date.now();
-
-            return modelsList;
-        } catch (fetchError) {
-            clearTimeout(timeoutId);
-            // Suppress console errors for unsafe ports and common fetch failures
-            const errorMessage = fetchError.message || fetchError.toString();
-            const isUnsafePortError = errorMessage.includes('ERR_UNSAFE_PORT') || 
-                                    errorMessage.includes('Failed to fetch') ||
-                                    errorMessage.includes('net::ERR_');
-            
-            if (!isUnsafePortError) {
-                console.error('Error fetching models:', fetchError);
-            }
-            availableModels = []; // Ensure availableModels is empty
-            if (loadedModelDisplay) {
-                loadedModelDisplay.classList.add('hidden');
-            }
-            return [];
-        } finally {
-            // Clear the promise reference when done
-            lastFetchPromise = null;
-        }
         })();
 
         return lastFetchPromise;
     } catch (error) {
         // Suppress console errors for unsafe ports and common fetch failures
         const errorMessage = error.message || error.toString();
-        const isUnsafePortError = errorMessage.includes('ERR_UNSAFE_PORT') || 
-                                errorMessage.includes('Failed to fetch') ||
-                                errorMessage.includes('net::ERR_');
-        
+        const isUnsafePortError = errorMessage.includes('ERR_UNSAFE_PORT') ||
+            errorMessage.includes('Failed to fetch') ||
+            errorMessage.includes('net::ERR_');
+
         if (!isUnsafePortError) {
             console.error('Unexpected error in fetchAvailableModels:', error);
         }
@@ -583,14 +605,14 @@ async function waitForModelLoad(ip, port, modelId, maxAttempts = 10) {
             });
 
             if (testResponse.ok) {
-                            // Read the completed text - this confirms the model is actually loaded
-            const response = await testResponse.json();
-            console.log(`Model ${modelId} is now loaded and responding:`, response);
+                // Read the completed text - this confirms the model is actually loaded
+                const response = await testResponse.json();
+                console.log(`Model ${modelId} is now loaded and responding:`, response);
 
-            // Store the current loaded model in a global variable for easy access
-            window.currentLoadedModel = modelId;
+                // Store the current loaded model in a global variable for easy access
+                window.currentLoadedModel = modelId;
 
-            return true;
+                return true;
             }
         } catch (error) {
             console.log(`Model not loaded yet, waiting...`, error);
@@ -910,9 +932,11 @@ export function loadServerSettings() {
             }, 2000);
         }
 
-        // Add event listeners for IP and port inputs
-        serverIpInput.addEventListener('change', updateServerUrl);
-        serverPortInput.addEventListener('change', updateServerUrl);
+        // Event listeners for IP and port inputs removed to prevent validation on blur/change
+        // Validation now happens only when closing settings or accepting changes
+
+        // serverIpInput.addEventListener('change', updateServerUrl);
+        // serverPortInput.addEventListener('change', updateServerUrl);
 
         // Apply to both input fields
         [serverIpInput, serverPortInput].forEach(input => {

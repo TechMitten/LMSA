@@ -1,5 +1,5 @@
 // Only proceed if sidebar exists and is currently active/visible
-  // Event Handlers for the application
+// Event Handlers for the application
 import {
     chatForm, userInput, clearChatButton, newChatButton, settingsButton,
     closeSettingsButton, closeSettingsXButton, settingsModal, welcomeMessage, messagesContainer,
@@ -37,7 +37,7 @@ import {
     addUserMessageToHistory
 } from './chat-service.js';
 import { resetApp, initializeResetAppButton } from './reset-app.js';
-import { fetchAvailableModels, isServerRunning, getAvailableModels } from './api-service.js';
+import { fetchAvailableModels, isServerRunning, getAvailableModels, validateIpPort, saveServerSettings } from './api-service.js';
 import { resetUploadedFiles, getUploadedFiles, uploadFilesToLMStudio } from './file-upload.js';
 import { setActionToPerform, getActionToPerform } from './shared-state.js';
 import { closeSidebarExport } from './export-import.js';
@@ -256,7 +256,7 @@ export function initializeEventHandlers() {
         const maxHeight = 200;
 
         // Function to auto-resize the textarea based on content
-        const autoResizeTextarea = function(textarea) {
+        const autoResizeTextarea = function (textarea) {
             if (!textarea) return;
 
             // Save the current scroll position
@@ -326,7 +326,7 @@ export function initializeEventHandlers() {
         };
 
         // Simple direct method to ensure cursor is at the end when typing
-        const scrollInputToEnd = function(input) {
+        const scrollInputToEnd = function (input) {
             // Use setTimeout to ensure this runs after the browser has updated the input value
             setTimeout(() => {
                 // For textarea, scroll to bottom
@@ -335,7 +335,7 @@ export function initializeEventHandlers() {
         };
 
         // Handle input events to ensure cursor visibility during typing
-        userInput.addEventListener('input', function(e) {
+        userInput.addEventListener('input', function (e) {
             // Auto-resize the textarea
             autoResizeTextarea(e.target);
             // Use both methods for maximum compatibility
@@ -344,7 +344,7 @@ export function initializeEventHandlers() {
         });
 
         // Handle keydown events for cursor visibility and Enter key
-        userInput.addEventListener('keydown', function(e) {
+        userInput.addEventListener('keydown', function (e) {
             // Handle Enter key to submit form (unless Shift is held)
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault(); // Prevent new line
@@ -366,19 +366,19 @@ export function initializeEventHandlers() {
         });
 
         // Handle selection change events
-        userInput.addEventListener('select', function(e) {
+        userInput.addEventListener('select', function (e) {
             // Ensure cursor is visible when selection changes
             ensureCursorVisible(e.target);
         });
 
         // Handle click events to ensure cursor visibility when clicking within text
-        userInput.addEventListener('click', function(e) {
+        userInput.addEventListener('click', function (e) {
             // Ensure cursor is visible when clicking to position cursor
             ensureCursorVisible(e.target);
         });
 
         // Handle focus events to ensure cursor visibility when focusing the input field
-        userInput.addEventListener('focus', function(e) {
+        userInput.addEventListener('focus', function (e) {
             // Hide welcome screen when user focuses on input field
             import('./ui-manager.js').then(module => {
                 if (typeof module.hideWelcomeMessage === 'function' && welcomeMessage && welcomeMessage.style.display !== 'none') {
@@ -397,7 +397,7 @@ export function initializeEventHandlers() {
         });
 
         // Handle touchstart events for touch devices to hide welcome screen immediately
-        userInput.addEventListener('touchstart', function(e) {
+        userInput.addEventListener('touchstart', function (e) {
             // Hide welcome screen when user touches the input field
             import('./ui-manager.js').then(module => {
                 if (typeof module.hideWelcomeMessage === 'function' && welcomeMessage && welcomeMessage.style.display !== 'none') {
@@ -409,7 +409,7 @@ export function initializeEventHandlers() {
         }, { passive: true });
 
         // Handle touchend events for mobile devices
-        userInput.addEventListener('touchend', function(e) {
+        userInput.addEventListener('touchend', function (e) {
             // Ensure cursor is visible after touch interaction
             setTimeout(() => {
                 ensureCursorVisible(e.target);
@@ -435,7 +435,7 @@ export function initializeEventHandlers() {
         clearChatButton.addEventListener('click', () => {
             // Close settings modal first to avoid modal conflicts
             hideSettingsModal();
-            
+
             // Small delay to let settings modal close completely
             setTimeout(() => {
                 setActionToPerform('clearAllChats');
@@ -619,7 +619,7 @@ export function initializeEventHandlers() {
     }
 
     // Close sidebar when clicking outside on mobile or desktop
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         // Skip this event handler if the target is an input, textarea, or form control
         if (e.target.tagName === 'INPUT' ||
             e.target.tagName === 'TEXTAREA' ||
@@ -638,7 +638,7 @@ export function initializeEventHandlers() {
 
         // Don't handle sidebar clicks if any modal is visible
         const anyModalVisible = document.querySelector('.modal-container:not(.hidden)') ||
-                              (settingsModal && settingsModal.style.display === 'flex');
+            (settingsModal && settingsModal.style.display === 'flex');
         if (anyModalVisible) {
             return;
         }
@@ -648,16 +648,16 @@ export function initializeEventHandlers() {
 
     // Prevent multiple rapid touch events
     let lastTouchTime = 0;
-    
+
     // Also handle touch events for mobile and tablets
-    document.addEventListener('touchend', function(e) {
+    document.addEventListener('touchend', function (e) {
         // Prevent rapid-fire touch events
         const now = Date.now();
         if (now - lastTouchTime < 100) {
             return;
         }
         lastTouchTime = now;
-        
+
         // Debug logging removed
         // Only process if this is a simple tap (not scrolling or other complex gestures)
         if (e.changedTouches && e.changedTouches.length === 1) {
@@ -685,7 +685,7 @@ export function initializeEventHandlers() {
 
             // Don't handle sidebar clicks if any modal is visible
             const anyModalVisible = document.querySelector('.modal-container:not(.hidden)') ||
-                                  (settingsModal && settingsModal.style.display === 'flex');
+                (settingsModal && settingsModal.style.display === 'flex');
             if (anyModalVisible) {
                 return;
             }
@@ -741,7 +741,7 @@ export function initializeEventHandlers() {
         helpButton.addEventListener('click', () => {
             // Close the sidebar first
             closeSidebar();
-            
+
             // Also close the options container
             const optionsContainer = document.getElementById('options-container');
             if (optionsContainer) {
@@ -815,7 +815,7 @@ export function initializeEventHandlers() {
 
                 // Close the sidebar and show the What's New modal
                 closeSidebar();
-                
+
                 // Show the What's New modal after sidebar is closed
                 setTimeout(() => {
                     // Show the What's New modal, forcing it to show even if already seen
@@ -867,7 +867,7 @@ export function initializeEventHandlers() {
             debugLog('About button clicked');
             // Close the sidebar first
             closeSidebar();
-            
+
             // Also close the options container
             const optionsContainer = document.getElementById('options-container');
             if (optionsContainer) {
@@ -928,7 +928,7 @@ export function initializeEventHandlers() {
                         // Fallback if function not available
                         abortGeneration();
                     }
-                    
+
                     // Double-check UI state after a short delay to ensure it's reset
                     setTimeout(() => {
                         if (stopBtn && !stopBtn.classList.contains('hidden')) {
@@ -939,7 +939,7 @@ export function initializeEventHandlers() {
                             }
                             hideLoadingIndicator();
                         }
-                        
+
                         // Ensure abort controller is nullified
                         if (typeof module.setAbortController === 'function') {
                             module.setAbortController(null);
@@ -949,7 +949,7 @@ export function initializeEventHandlers() {
                     console.error('Error importing chat-service module:', error);
                     // Fallback to standard abort function
                     abortGeneration();
-                    
+
                     // Force UI reset
                     setTimeout(() => {
                         stopBtn.classList.add('hidden');
@@ -1054,7 +1054,7 @@ export function initializeEventHandlers() {
             debugLog('Model button clicked');
             // Close the sidebar first
             closeSidebar();
-            
+
             // Also close the options container
             const optionsContainer = document.getElementById('options-container');
             if (optionsContainer) {
@@ -1512,7 +1512,7 @@ export function initializeEventHandlers() {
 
     // Initialize reset app button
     initializeResetAppButton();
-    
+
     // Force re-initialization of reset app button after other components are loaded
     setTimeout(() => {
         initializeResetAppButton();
@@ -1636,11 +1636,11 @@ async function handleChatFormSubmit(e) {
                 // Create a new abort controller for this request
                 const controller = new AbortController();
                 module.setAbortController(controller);
-                
+
                 // Show loading indicator and toggle to stop button
                 showLoadingIndicator();
                 toggleSendStopButton();
-                
+
                 // Process files if any
                 processFilesAndGenerateResponse();
             }
@@ -1651,7 +1651,7 @@ async function handleChatFormSubmit(e) {
             toggleSendStopButton();
             processFilesAndGenerateResponse();
         });
-        
+
         // Define the function to process files and generate response
         async function processFilesAndGenerateResponse() {
             try {
@@ -1711,14 +1711,14 @@ function handleSettingsButtonClick() {
 
     // Close the sidebar regardless of screen size
     closeSidebar();
-    
+
     // Also close the options container
     const optionsContainer = document.getElementById('options-container');
     if (optionsContainer) {
         optionsContainer.classList.add('hidden');
         optionsContainer.classList.remove('animate-fade-in');
     }
-    
+
     // Collapse all sections when sidebar is closed
     const sectionHeaders = sidebar.querySelectorAll('.section-header');
     const chatHistorySection = sidebar.querySelector('.sidebar-section:last-child');
@@ -1740,7 +1740,7 @@ function handleSettingsButtonClick() {
         welcomeMessage.style.opacity = '0';
         welcomeMessage.style.visibility = 'hidden';
     }
-    
+
     // Use the centralized settings modal manager
     showSettingsModal();
 
@@ -1757,31 +1757,19 @@ function handleSettingsButtonClick() {
  * Handles close settings button click
  */
 function handleCloseSettingsButtonClick() {
-    // Check for IP/Port validation errors before closing
-    const serverIpInput = document.getElementById('server-ip');
-    const serverPortInput = document.getElementById('server-port');
-    
-    if (serverIpInput && serverPortInput) {
-        const ip = serverIpInput.value.trim();
-        const port = serverPortInput.value.trim();
-        
-        // If either field has content but not both, prevent closing
-        if ((ip && !port) || (!ip && port)) {
-            // Trigger validation to show error message
-            const changeEvent = new Event('change', { bubbles: true });
-            if (ip && !port) {
-                serverPortInput.dispatchEvent(changeEvent);
-            } else {
-                serverIpInput.dispatchEvent(changeEvent);
-            }
-            return; // Don't close the modal
-        }
+    // Validate IP/Port settings first
+    // This will show the error modal if validation fails
+    if (!validateIpPort()) {
+        return; // Don't close the settings modal if validation fails
     }
 
     // Use IP/Port confirmation modal to intercept changes
     interceptIpPortChanges(() => {
         // This callback will be executed after user confirms or if no changes detected
-        
+
+        // Save the settings now that they are confirmed/validated
+        saveServerSettings();
+
         // Immediately prevent any sidebar interactions
         document.body.removeEventListener('click', handleSidebarOutsideClick);
 
@@ -1808,8 +1796,8 @@ function handleSidebarOutsideClick(e) {
     // First check if any modal is currently visible - don't react if a modal is open
     const settingsModalVisible = settingsModal &&
         (!settingsModal.classList.contains('hidden') ||
-         settingsModal.style.display === 'flex' ||
-         settingsModal.style.visibility === 'visible');
+            settingsModal.style.display === 'flex' ||
+            settingsModal.style.visibility === 'visible');
 
     // Don't toggle sidebar if settings modal is visible
     if (settingsModalVisible) {
@@ -1954,7 +1942,7 @@ function handleOptionsButtonClick() {
                 newAboutButton.addEventListener('click', () => {
                     // Close the sidebar first
                     closeSidebar();
-                    
+
                     // Also close the options container
                     const optionsContainer = document.getElementById('options-container');
                     if (optionsContainer) {
@@ -1962,7 +1950,7 @@ function handleOptionsButtonClick() {
                         optionsContainer.classList.remove('animate-fade-in');
                         optionsButton.classList.remove('active');
                     }
-                    
+
                     // Collapse all sections when sidebar is closed
                     const sectionHeaders = sidebar.querySelectorAll('.section-header');
                     const chatHistorySection = sidebar.querySelector('.sidebar-section:last-child');

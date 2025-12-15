@@ -36,13 +36,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.android.billingclient.api.*
+
 import android.widget.Button
 import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.google.android.play.core.review.ReviewManagerFactory
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
+import com.android.billingclient.api.*
 
 class WebViewActivity : AppCompatActivity() {
 
@@ -55,8 +59,8 @@ class WebViewActivity : AppCompatActivity() {
     private var pendingFileName: String? = null
     private var isImageFile: Boolean = false
 
-    private lateinit var billingClient: BillingClient
-    private var isAdFree = false
+
+
     private var textToSpeech: TextToSpeech? = null
     private var isTTSInitialized = false
     private lateinit var audioManager: AudioManager
@@ -67,11 +71,26 @@ class WebViewActivity : AppCompatActivity() {
     private var isSpeakingChunks: Boolean = false
     private var ttsAudioSessionId: Int = AudioManager.AUDIO_SESSION_ID_GENERATE
 
+    // Billing Client
+    private lateinit var billingClient: BillingClient
+    private val PRODUCT_ID = "ad_removal"
+    private var isPremium = false
+
+    private val purchasesUpdatedListener = PurchasesUpdatedListener { billingResult, purchases ->
+        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
+            for (purchase in purchases) {
+                handlePurchase(purchase)
+            }
+        } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
+            Log.d(TAG, "User canceled purchase")
+        } else {
+            Log.e(TAG, "Purchase error: ${billingResult.responseCode}")
+        }
+    }
+
     companion object {
         private const val STORAGE_PERMISSION_CODE = 101
-        private const val AD_FREE_SKU = "ad_removal"
-        private const val PREFS_NAME = "LMSA_PREFS"
-        private const val IS_AD_FREE_KEY = "is_ad_free"
+
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -80,11 +99,44 @@ class WebViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_webview)
 
-        // Load premium status from SharedPreferences
-        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        isAdFree = prefs.getBoolean(IS_AD_FREE_KEY, false)
+        MobileAds.initialize(this) {}
+        val adView = findViewById<AdView>(R.id.adView)
 
-        setupBillingClient()
+        // Custom Splash Screen Logic
+        val splashImage = findViewById<android.widget.ImageView>(R.id.splashImageView)
+        // Keep splash screen visible for 3 seconds then fade out
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            splashImage.animate()
+                .alpha(0f)
+                .setDuration(500)
+                .withEndAction { 
+                    splashImage.visibility = View.GONE 
+                }
+                .start()
+        }, 3000)
+
+        // Initialize BillingClient
+        billingClient = BillingClient.newBuilder(this)
+            .setListener(purchasesUpdatedListener)
+            .enablePendingPurchases()
+            .build()
+        
+        startBillingConnection()
+        
+        // Check if premium before loading ads
+        val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
+        isPremium = prefs.getBoolean("is_premium", false)
+        
+        if (!isPremium) {
+            val adRequest = AdRequest.Builder().build()
+            adView.loadAd(adRequest)
+        } else {
+            adView.visibility = View.GONE
+        }
+
+
+
+
         
         // Initialize AudioManager for TTS audio focus management
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -264,10 +316,11 @@ class WebViewActivity : AppCompatActivity() {
 
         // Add JavaScript interface for file operations
         webView.addJavascriptInterface(FileOperationInterface(), "AndroidFileOps")
-        webView.addJavascriptInterface(BillingInterface(), "AndroidBilling")
+
         webView.addJavascriptInterface(ReviewInterface(), "AndroidReview")
         // Add JavaScript interface for TTS
         webView.addJavascriptInterface(TTSInterface(), "AndroidTTS")
+        webView.addJavascriptInterface(BillingInterface(), "AndroidBilling")
 
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
@@ -340,133 +393,11 @@ class WebViewActivity : AppCompatActivity() {
         webView.loadUrl("file:///android_asset/LMSA/index.html")
     }
 
-    private fun setupBillingClient() {
-        @Suppress("DEPRECATION")
-        billingClient = BillingClient.newBuilder(this)
-            .setListener(purchasesUpdatedListener)
-            .enablePendingPurchases()
-            .build()
 
-        billingClient.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(billingResult: BillingResult) {
-                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    Log.d(TAG, "Billing Client connected")
-                    queryPurchases()
-                } else {
-                    Log.e(TAG, "Billing Client connection failed")
-                }
-            }
-
-            override fun onBillingServiceDisconnected() {
-                Log.w(TAG, "Billing Client disconnected")
-                // Implement retry logic here if needed
-            }
-        })
-    }
-
-    private val purchasesUpdatedListener = PurchasesUpdatedListener { billingResult, purchases ->
-        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-            for (purchase in purchases) {
-                handlePurchase(purchase)
-            }
-        } else {
-            // Handle error
-            runOnUiThread {
-                Toast.makeText(this, "An error occurred during your purchase. Please try again later.", Toast.LENGTH_LONG).show()
-            }
-            Log.e(TAG, "Error updating purchases: ${billingResult.responseCode}")
-        }
-    }
-
-    private fun handlePurchase(purchase: Purchase) {
-        if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
-            if (!purchase.isAcknowledged) {
-                val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
-                    .setPurchaseToken(purchase.purchaseToken)
-                    .build()
-                billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
-                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                        setAdFreeStatus(true)
-                    }
-                }
-            } else {
-                setAdFreeStatus(true)
-            }
-        }
-    }
-
-    private fun queryPurchases() {
-        val params = QueryPurchasesParams.newBuilder()
-            .setProductType(BillingClient.ProductType.INAPP)
-
-        billingClient.queryPurchasesAsync(params.build()) { billingResult, purchases ->
-            var adFree = false
-            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                purchases.forEach { purchase ->
-                    if (purchase.products.contains(AD_FREE_SKU) && purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
-                        adFree = true
-                    }
-                }
-            }
-            setAdFreeStatus(adFree)
-        }
-    }
-
-    private fun launchPurchaseFlow() {
-        if (!isNetworkAvailable()) {
-            Toast.makeText(this, "Please check your internet connection and try again.", Toast.LENGTH_LONG).show()
-            return
-        }
-
-        val productList = listOf(
-            QueryProductDetailsParams.Product.newBuilder()
-                .setProductId(AD_FREE_SKU)
-                .setProductType(BillingClient.ProductType.INAPP)
-                .build()
-        )
-        val params = QueryProductDetailsParams.newBuilder().setProductList(productList)
-
-
-        billingClient.queryProductDetailsAsync(params.build()) { billingResult, productDetailsList ->
-            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && productDetailsList.isNotEmpty()) {
-                val productDetails = productDetailsList[0]
-                val productDetailsParamsList =
-                    listOf(
-                        BillingFlowParams.ProductDetailsParams.newBuilder()
-                            .setProductDetails(productDetails)
-                            .build()
-                    )
-                val billingFlowParams = BillingFlowParams.newBuilder()
-                    .setProductDetailsParamsList(productDetailsParamsList)
-                    .build()
-                billingClient.launchBillingFlow(this, billingFlowParams)
-            } else {
-                Log.e(TAG, "Could not query product details: ${billingResult.responseCode}")
-            }
-        }
-    }
-
-    private fun setAdFreeStatus(adFree: Boolean) {
-        if (isAdFree == adFree) return // No change needed
-
-        isAdFree = adFree
-
-        // Save the new status to SharedPreferences
-        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        with(prefs.edit()) {
-            putBoolean(IS_AD_FREE_KEY, isAdFree)
-            apply()
-        }
-
-        runOnUiThread {
-            // Update the WebView UI
-            updateWebViewPremiumUI()
-        }
-    }
 
     private fun updateWebViewPremiumUI() {
         val webView: WebView = findViewById(R.id.webView)
-        val jsCommand = "if(typeof updateUiForPremium === 'function') { updateUiForPremium($isAdFree); }"
+        val jsCommand = "if(typeof updateUiForPremium === 'function') { updateUiForPremium($isPremium); }"
         webView.evaluateJavascript(jsCommand, null)
     }
 
@@ -535,7 +466,7 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        billingClient.endConnection()
+
         textToSpeech?.shutdown()
         super.onDestroy()
     }
@@ -684,17 +615,7 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
-    inner class BillingInterface {
-        @JavascriptInterface
-        fun removeAds() {
-            launchPurchaseFlow()
-        }
-        
-        @JavascriptInterface
-        fun restorePurchases() {
-            queryPurchases()
-        }
-    }
+
 
     inner class ReviewInterface {
         @JavascriptInterface
@@ -703,6 +624,140 @@ class WebViewActivity : AppCompatActivity() {
             runOnUiThread {
                 launchInAppReview()
             }
+        }
+    }
+
+    private fun startBillingConnection() {
+        billingClient.startConnection(object : BillingClientStateListener {
+            override fun onBillingSetupFinished(billingResult: BillingResult) {
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    queryPurchases()
+                }
+            }
+            override fun onBillingServiceDisconnected() {
+                // Retry logic can be added here
+            }
+        })
+    }
+
+    private fun queryPurchases() {
+        if (!billingClient.isReady) return
+        
+        val params = QueryPurchasesParams.newBuilder()
+            .setProductType(BillingClient.ProductType.INAPP)
+            .build()
+            
+        billingClient.queryPurchasesAsync(params) { billingResult, purchasesList ->
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                var hasPremium = false
+                for (purchase in purchasesList) {
+                    if (purchase.products.contains(PRODUCT_ID) && purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+                        hasPremium = true
+                        if (!purchase.isAcknowledged) {
+                            handlePurchase(purchase)
+                        }
+                    }
+                }
+                
+                if (hasPremium != isPremium) {
+                    setPremiumStatus(hasPremium)
+                }
+            }
+        }
+    }
+
+    private fun handlePurchase(purchase: Purchase) {
+        if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+            if (!purchase.isAcknowledged) {
+                val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
+                    .setPurchaseToken(purchase.purchaseToken)
+                    .build()
+                billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
+                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                         setPremiumStatus(true)
+                    }
+                }
+            } else {
+                setPremiumStatus(true)
+            }
+        }
+    }
+
+    private fun setPremiumStatus(premium: Boolean) {
+        isPremium = premium
+        val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
+        prefs.edit().putBoolean("is_premium", isPremium).apply()
+        
+        runOnUiThread {
+            val adView = findViewById<AdView>(R.id.adView)
+            if (isPremium) {
+                adView.visibility = View.GONE
+            } else {
+                adView.visibility = View.VISIBLE
+                val adRequest = AdRequest.Builder().build()
+                adView.loadAd(adRequest)
+            }
+            updateWebViewPremiumUI()
+        }
+    }
+
+    inner class BillingInterface {
+        @JavascriptInterface
+        fun purchaseAdRemoval() {
+            if (isPremium) {
+                runOnUiThread {
+                    Toast.makeText(this@WebViewActivity, "You already have Premium!", Toast.LENGTH_SHORT).show()
+                }
+                return
+            }
+            
+            val productList = listOf(
+                QueryProductDetailsParams.Product.newBuilder()
+                    .setProductId(PRODUCT_ID)
+                    .setProductType(BillingClient.ProductType.INAPP)
+                    .build()
+            )
+            
+            val params = QueryProductDetailsParams.newBuilder()
+                .setProductList(productList)
+                .build()
+                
+            billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    if (productDetailsList.isNotEmpty()) {
+                        val productDetails = productDetailsList[0]
+                        val productDetailsParamsList = listOf(
+                            BillingFlowParams.ProductDetailsParams.newBuilder()
+                                .setProductDetails(productDetails)
+                                .build()
+                        )
+                        val billingFlowParams = BillingFlowParams.newBuilder()
+                            .setProductDetailsParamsList(productDetailsParamsList)
+                            .build()
+                        billingClient.launchBillingFlow(this@WebViewActivity, billingFlowParams)
+                    } else {
+                        Log.e(TAG, "Product not found: $PRODUCT_ID")
+                        runOnUiThread {
+                            Toast.makeText(this@WebViewActivity, "Product details not found", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    Log.e(TAG, "Failed to query product details: ${billingResult.debugMessage}")
+                }
+            }
+        }
+        
+        @JavascriptInterface
+        fun restorePurchases() {
+            runOnUiThread {
+                Toast.makeText(this@WebViewActivity, "Checking for purchases...", Toast.LENGTH_SHORT).show()
+            }
+            queryPurchases()
+        }
+        
+        @JavascriptInterface
+        fun checkPremiumStatus(): Boolean {
+            return isPremium
         }
     }
 

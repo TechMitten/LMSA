@@ -4,7 +4,7 @@
 
 
 // Import age verification system first (must be loaded before anything else)
-import './age-verification.js';
+
 
 // Import terms acceptance system (loads after age verification)
 import { initializeTermsAcceptance, hasAcceptedCurrentTerms } from './terms-acceptance.js';
@@ -13,11 +13,11 @@ import { initializeTermsAcceptance, hasAcceptedCurrentTerms } from './terms-acce
 import './main.js';
 
 // Add event listeners for the sidebar overlay
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const sidebarOverlay = document.getElementById('sidebar-overlay');
     if (sidebarOverlay) {
         // Click event for desktop
-        sidebarOverlay.addEventListener('click', function() {
+        sidebarOverlay.addEventListener('click', function () {
             // Import the toggleSidebar function dynamically
             import('./ui-manager.js').then(module => {
                 module.toggleSidebar();
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // Touch event for tablets and mobile
-        sidebarOverlay.addEventListener('touchend', function(e) {
+        sidebarOverlay.addEventListener('touchend', function (e) {
             e.preventDefault(); // Prevent any default behavior
             // Import the toggleSidebar function dynamically
             import('./ui-manager.js').then(module => {

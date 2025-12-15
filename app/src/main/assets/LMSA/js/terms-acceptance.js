@@ -64,6 +64,7 @@ function hasAcceptedCurrentTerms() {
  */
 function showTermsModal() {
     termsModal.classList.remove('hidden');
+    termsModal.classList.add('flex');
     document.body.classList.add('terms-modal-open');
     document.body.style.overflow = 'hidden';
     document.body.style.position = 'fixed';
@@ -72,7 +73,7 @@ function showTermsModal() {
 
     // Reset scroll state
     hasScrolledToBottom = false;
-    updateAcceptButton();
+
 
     // Scroll to top of terms
     termsContent.scrollTop = 0;
@@ -86,6 +87,7 @@ function showTermsModal() {
  */
 function hideTermsModal() {
     termsModal.classList.add('hidden');
+    termsModal.classList.remove('flex');
     document.body.classList.remove('terms-modal-open');
     document.body.style.overflow = '';
     document.body.style.position = '';
@@ -111,14 +113,6 @@ function hideMainApp() {
  * Setup all event listeners
  */
 function setupEventListeners() {
-    // Scroll event for terms content
-    termsContent.addEventListener('scroll', handleScroll);
-
-    // Touch events for terms content to ensure proper touch scrolling
-    termsContent.addEventListener('touchstart', handleTouchStart, { passive: true });
-    termsContent.addEventListener('touchmove', handleTouchMove, { passive: true });
-    termsContent.addEventListener('touchend', handleTouchEnd, { passive: true });
-
     // Accept button click
     acceptButton.addEventListener('click', handleAcceptTerms);
 
@@ -133,76 +127,9 @@ function setupEventListeners() {
 }
 
 /**
- * Handle touch start on terms content
- */
-function handleTouchStart(event) {
-    // Allow the touch to start normally - this enables touch scrolling
-    return true;
-}
-
-/**
- * Handle touch move on terms content
- */
-function handleTouchMove(event) {
-    // Allow touch move for scrolling within the terms content
-    // This ensures touch scrolling works properly
-    return true;
-}
-
-/**
- * Handle touch end on terms content
- */
-function handleTouchEnd(event) {
-    // After touch ends, check scroll position
-    // Use a small timeout to allow the scroll to settle
-    setTimeout(() => {
-        handleScroll();
-    }, 50);
-    return true;
-}
-
-/**
- * Handle scroll event in terms content
- */
-function handleScroll() {
-    const scrollElement = termsContent;
-    const scrollTop = scrollElement.scrollTop;
-    const scrollHeight = scrollElement.scrollHeight;
-    const clientHeight = scrollElement.clientHeight;
-
-    // Check if scrolled to bottom (with 10px tolerance)
-    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
-
-    if (isAtBottom && !hasScrolledToBottom) {
-        hasScrolledToBottom = true;
-        scrollIndicator.classList.add('hidden');
-        updateAcceptButton();
-    } else if (!isAtBottom && hasScrolledToBottom) {
-        hasScrolledToBottom = false;
-        scrollIndicator.classList.remove('hidden');
-        updateAcceptButton();
-    }
-}
-
-/**
- * Update accept button state based on scroll position
- */
-function updateAcceptButton() {
-    if (hasScrolledToBottom) {
-        acceptButton.disabled = false;
-        acceptButton.classList.remove('bg-gray-300', 'dark:bg-gray-600', 'text-gray-500', 'dark:text-gray-400');
-    } else {
-        acceptButton.disabled = true;
-        acceptButton.classList.add('bg-gray-300', 'dark:bg-gray-600', 'text-gray-500', 'dark:text-gray-400');
-    }
-}
-
-/**
  * Handle accept terms button click
  */
 async function handleAcceptTerms() {
-    if (!hasScrolledToBottom) return;
-
     // Show loading state
     acceptButton.classList.add('loading');
     acceptButton.disabled = true;
@@ -237,7 +164,6 @@ async function handleAcceptTerms() {
         // Reset button state on error
         acceptButton.classList.remove('loading');
         acceptButton.disabled = false;
-        updateAcceptButton();
     }
 }
 
@@ -298,13 +224,6 @@ function preventBodyScroll(event) {
  * Clean up event listeners
  */
 function cleanupEventListeners() {
-    if (termsContent) {
-        termsContent.removeEventListener('scroll', handleScroll);
-        termsContent.removeEventListener('touchstart', handleTouchStart);
-        termsContent.removeEventListener('touchmove', handleTouchMove);
-        termsContent.removeEventListener('touchend', handleTouchEnd);
-    }
-
     if (acceptButton) {
         acceptButton.removeEventListener('click', handleAcceptTerms);
     }
@@ -382,4 +301,10 @@ export {
     hasAcceptedCurrentTerms
 };
 
-// Don't auto-initialize - age verification will initialize this after successful verification
+// Auto-initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTermsAcceptance);
+} else {
+    // DOM is already loaded
+    initializeTermsAcceptance();
+}

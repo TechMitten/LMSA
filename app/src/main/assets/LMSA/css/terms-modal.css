@@ -23,6 +23,7 @@
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -33,6 +34,7 @@
         opacity: 0;
         transform: translateY(30px) scale(0.95);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -155,55 +157,34 @@ body.dark #terms-modal .bg-gray-900\/50 {
     background-color: rgba(17, 24, 39, 0.5) !important;
 }
 
-/* Accept button styles */
-#accept-terms-btn:disabled {
-    background: #d1d5db !important;
-    color: #9ca3af !important;
-    cursor: not-allowed !important;
+/* Accept button styles handled by Tailwind classes in index.html */
+#accept-terms-btn.loading {
+    position: relative;
+    color: transparent !important;
 }
 
-body.dark #accept-terms-btn:disabled {
-    background: #4b5563 !important;
-    color: #6b7280 !important;
+#accept-terms-btn.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1rem;
+    height: 1rem;
+    margin: -0.5rem 0 0 -0.5rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 
-#accept-terms-btn:not(:disabled) {
-    background: linear-gradient(135deg, #10b981, #059669) !important;
-    color: white !important;
-    cursor: pointer !important;
-    transform: translateY(0);
-    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
-    transition: all 0.2s ease;
-}
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
 
-#accept-terms-btn:not(:disabled):hover {
-    background: linear-gradient(135deg, #059669, #047857) !important;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
-}
-
-#accept-terms-btn:not(:disabled):active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
-}
-
-/* Scroll indicator styles */
-#scroll-indicator {
-    transition: all 0.3s ease;
-    border: 1px solid #fbbf24;
-    background: linear-gradient(135deg, #fef3c7, #fef9c3);
-}
-
-body.dark #scroll-indicator {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(254, 249, 195, 0.05));
-    border-color: #f59e0b;
-    color: #fbbf24;
-}
-
-#scroll-indicator.hidden {
-    opacity: 0;
-    transform: translateY(-10px);
-    pointer-events: none;
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Mobile optimizations */
@@ -260,38 +241,3 @@ body.dark #scroll-indicator {
 }
 
 /* Prevent body scroll when modal is open - handled by JavaScript inline styles */
-
-/* Focus management */
-#accept-terms-btn:focus {
-    outline: 2px solid #10b981;
-    outline-offset: 2px;
-}
-
-body.dark #accept-terms-btn:focus {
-    outline-color: #059669;
-}
-
-/* Loading state for button */
-#accept-terms-btn.loading {
-    position: relative;
-    color: transparent !important;
-}
-
-#accept-terms-btn.loading::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 1rem;
-    height: 1rem;
-    margin: -0.5rem 0 0 -0.5rem;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top: 2px solid white;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}

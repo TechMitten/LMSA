@@ -626,13 +626,11 @@ body.light-theme #chat-container {
 }
 
 #messages>div.user {
-  background: linear-gradient(145deg,
-    rgba(55, 65, 95, 0.8) 0%,
-    rgba(45, 55, 85, 0.85) 100%) !important;
+  background: var(--user-message-gradient) !important;
   backdrop-filter: blur(16px) saturate(150%);
   -webkit-backdrop-filter: blur(16px) saturate(150%);
   border-radius: 1.25rem 1.25rem 0.25rem 1.25rem;
-  border: 1.5px solid rgba(100, 150, 255, 0.4) !important;
+  border: 1.5px solid var(--user-message-border) !important;
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.4),
     0 4px 12px rgba(0, 0, 0, 0.3),
@@ -651,21 +649,19 @@ body.light-theme #chat-container {
   right: 0;
   height: 50%;
   background: linear-gradient(180deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0) 100%);
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0) 100%);
   border-radius: inherit;
   pointer-events: none;
   z-index: 1;
 }
 
 #messages>div.ai {
-  background: linear-gradient(145deg,
-    rgba(40, 50, 75, 0.8) 0%,
-    rgba(30, 40, 65, 0.85) 100%) !important;
+  background: var(--ai-message-gradient) !important;
   backdrop-filter: blur(16px) saturate(150%);
   -webkit-backdrop-filter: blur(16px) saturate(150%);
   border-radius: 1.25rem 1.25rem 1.25rem 0.25rem;
-  border: 1.5px solid rgba(80, 120, 200, 0.35) !important;
+  border: 1.5px solid var(--ai-message-border) !important;
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.4),
     0 4px 12px rgba(0, 0, 0, 0.3),
@@ -684,20 +680,18 @@ body.light-theme #chat-container {
   right: 0;
   height: 50%;
   background: linear-gradient(180deg,
-    rgba(255, 255, 255, 0.06) 0%,
-    rgba(255, 255, 255, 0) 100%);
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0) 100%);
   border-radius: inherit;
   pointer-events: none;
   z-index: 1;
 }
 
 body.light-theme #messages>div.ai {
-  background: linear-gradient(145deg,
-    rgba(226, 232, 240, 0.8) 0%,
-    rgba(203, 213, 225, 0.85) 100%) !important;
+  background: var(--ai-message-gradient) !important;
   backdrop-filter: blur(16px) saturate(150%);
   -webkit-backdrop-filter: blur(16px) saturate(150%);
-  border: 1.5px solid rgba(59, 130, 246, 0.3) !important;
+  border: 1.5px solid var(--ai-message-border) !important;
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.1),
     0 4px 12px rgba(0, 0, 0, 0.08),
@@ -706,8 +700,8 @@ body.light-theme #messages>div.ai {
 }
 
 /* Ensure message content appears above glass effect */
-#messages>div.user > *,
-#messages>div.ai > * {
+#messages>div.user>*,
+#messages>div.ai>* {
   position: relative;
   z-index: 2;
 }
@@ -1637,14 +1631,14 @@ body.light-theme #welcome-message {
     padding-bottom: 0.5rem !important;
     margin-bottom: 0.5rem !important;
   }
-  
+
   /* Fix chat title cutoff on tablet landscape by reducing trash icon size */
   #chat-history .chat-item .trash-icon-container {
     min-width: 32px !important;
     min-height: 32px !important;
     padding: 6px !important;
   }
-  
+
   #chat-history .chat-item .action-wrapper {
     margin-left: 0.375rem;
   }
@@ -1657,11 +1651,11 @@ body.light-theme #welcome-message {
     min-height: 28px !important;
     padding: 4px !important;
   }
-  
+
   #chat-history .chat-item .action-wrapper {
     margin-left: 0.25rem;
   }
-  
+
   #chat-history .chat-item {
     padding-right: 0.125rem !important;
   }
@@ -3856,21 +3850,24 @@ body.light-theme #clear-chat.professional-button:hover {
 }
 
 /* Responsive spacing for Edit and +Add buttons container */
-#edit-system-prompt-btn + #save-system-prompt-btn {
-  margin-left: 0.5rem; /* Default gap-2 equivalent */
+#edit-system-prompt-btn+#save-system-prompt-btn {
+  margin-left: 0.5rem;
+  /* Default gap-2 equivalent */
 }
 
 /* Increase spacing for tablet screens (768px and up) */
 @media (min-width: 768px) {
-  #edit-system-prompt-btn + #save-system-prompt-btn {
-    margin-left: 1rem; /* gap-4 equivalent */
+  #edit-system-prompt-btn+#save-system-prompt-btn {
+    margin-left: 1rem;
+    /* gap-4 equivalent */
   }
 }
 
 /* Increase spacing for desktop screens (1024px and up) */
 @media (min-width: 1024px) {
-  #edit-system-prompt-btn + #save-system-prompt-btn {
-    margin-left: 1.5rem; /* gap-6 equivalent */
+  #edit-system-prompt-btn+#save-system-prompt-btn {
+    margin-left: 1.5rem;
+    /* gap-6 equivalent */
   }
 }
 
@@ -4015,7 +4012,8 @@ body.light-theme #settings-help-btn.professional-button:hover {
 /* Blue accent colors for icons and text */
 body.light-theme .text-blue-400,
 body.light-theme i.text-blue-400 {
-  color: #2563eb !important; /* Darker blue for better visibility */
+  color: #2563eb !important;
+  /* Darker blue for better visibility */
 }
 
 body.light-theme .text-blue-500 {
@@ -4029,7 +4027,8 @@ body.light-theme .text-blue-600 {
 /* Red accent colors (trash icons, danger elements) */
 body.light-theme .text-red-400,
 body.light-theme i.text-red-400 {
-  color: #dc2626 !important; /* Red-600 for better contrast */
+  color: #dc2626 !important;
+  /* Red-600 for better contrast */
 }
 
 body.light-theme .text-red-500 {
@@ -4043,7 +4042,8 @@ body.light-theme .text-red-600 {
 /* Yellow accent colors (sun icon, warnings) */
 body.light-theme .text-yellow-400,
 body.light-theme i.text-yellow-400 {
-  color: #ca8a04 !important; /* Yellow-600 for better contrast */
+  color: #ca8a04 !important;
+  /* Yellow-600 for better contrast */
 }
 
 body.light-theme .text-yellow-500 {
@@ -4052,7 +4052,8 @@ body.light-theme .text-yellow-500 {
 
 /* Green accent colors */
 body.light-theme .text-green-400 {
-  color: #16a34a !important; /* Green-600 */
+  color: #16a34a !important;
+  /* Green-600 */
 }
 
 body.light-theme .text-green-500 {
@@ -4061,15 +4062,18 @@ body.light-theme .text-green-500 {
 
 /* Gray text colors */
 body.light-theme .text-gray-200 {
-  color: #1e293b !important; /* Dark slate for primary text */
+  color: #1e293b !important;
+  /* Dark slate for primary text */
 }
 
 body.light-theme .text-gray-300 {
-  color: #334155 !important; /* Slate-700 for secondary text */
+  color: #334155 !important;
+  /* Slate-700 for secondary text */
 }
 
 body.light-theme .text-gray-400 {
-  color: #64748b !important; /* Slate-500 for muted text */
+  color: #64748b !important;
+  /* Slate-500 for muted text */
 }
 
 body.light-theme .text-gray-500 {
@@ -4077,15 +4081,18 @@ body.light-theme .text-gray-500 {
 }
 
 body.light-theme .text-gray-600 {
-  color: #475569 !important; /* Slate-600 */
+  color: #475569 !important;
+  /* Slate-600 */
 }
 
 body.light-theme .text-gray-700 {
-  color: #334155 !important; /* Slate-700 */
+  color: #334155 !important;
+  /* Slate-700 */
 }
 
 body.light-theme .text-gray-800 {
-  color: #1e293b !important; /* Slate-800 */
+  color: #1e293b !important;
+  /* Slate-800 */
 }
 
 /* Hover states for gray text */
@@ -4107,11 +4114,13 @@ body.light-theme .hover\:text-white:hover {
 
 /* Background colors */
 body.light-theme .bg-gray-600 {
-  background-color: #cbd5e1 !important; /* Light slate-300 */
+  background-color: #cbd5e1 !important;
+  /* Light slate-300 */
 }
 
 body.light-theme .bg-gray-700 {
-  background-color: #94a3b8 !important; /* Slate-400 */
+  background-color: #94a3b8 !important;
+  /* Slate-400 */
 }
 
 /* Border colors */
@@ -4187,7 +4196,8 @@ body.light-theme .dark-icon {
 }
 
 body.light-theme .light-icon {
-  color: #f59e0b !important; /* Keep sun icon yellow */
+  color: #f59e0b !important;
+  /* Keep sun icon yellow */
 }
 
 body.light-theme .dark-footer-text {
@@ -4260,117 +4270,144 @@ body.light-theme .fa-paperclip {
 
 /* Light theme sidebar icon colors - distinct colors for each icon */
 body.light-theme #sidebar .fa-plus-circle {
-  color: #059669 !important; /* Green for new chat */
+  color: #059669 !important;
+  /* Green for new chat */
 }
 
 body.light-theme #sidebar .fa-cog {
-  color: #2563eb !important; /* Blue for settings */
+  color: #2563eb !important;
+  /* Blue for settings */
 }
 
 body.light-theme #sidebar .fa-chevron-down,
 body.light-theme #sidebar .fa-caret-down,
 body.light-theme #sidebar .fa-caret-up {
-  color: #475569 !important; /* Gray for arrows */
+  color: #475569 !important;
+  /* Gray for arrows */
 }
 
 body.light-theme #sidebar .fa-exchange-alt {
-  color: #7c3aed !important; /* Purple for switch model */
+  color: #7c3aed !important;
+  /* Purple for switch model */
 }
 
 body.light-theme #sidebar .fa-file-import {
-  color: #0891b2 !important; /* Cyan for import */
+  color: #0891b2 !important;
+  /* Cyan for import */
 }
 
 body.light-theme #sidebar .fa-file-export {
-  color: #d97706 !important; /* Amber for export */
+  color: #d97706 !important;
+  /* Amber for export */
 }
 
 body.light-theme #sidebar .fa-robot {
-  color: #2563eb !important; /* Blue for models */
+  color: #2563eb !important;
+  /* Blue for models */
 }
 
 body.light-theme #sidebar .fa-save {
-  color: #059669 !important; /* Green for save */
+  color: #059669 !important;
+  /* Green for save */
 }
 
 body.light-theme #sidebar .fa-question-circle {
-  color: #0891b2 !important; /* Cyan for help */
+  color: #0891b2 !important;
+  /* Cyan for help */
 }
 
 body.light-theme #sidebar .fa-wand-magic-sparkles {
-  color: #be185d !important; /* Pink for magic/prompts */
+  color: #be185d !important;
+  /* Pink for magic/prompts */
 }
 
 body.light-theme #sidebar .fa-info-circle {
-  color: #2563eb !important; /* Blue for info */
+  color: #2563eb !important;
+  /* Blue for info */
 }
 
 body.light-theme #sidebar .fa-undo {
-  color: #d97706 !important; /* Amber for reset */
+  color: #d97706 !important;
+  /* Amber for reset */
 }
 
 body.light-theme #sidebar .fa-comments {
-  color: #2563eb !important; /* Blue for chat history */
+  color: #2563eb !important;
+  /* Blue for chat history */
 }
 
 /* Dark theme sidebar icon colors - preserve individual colors */
 body:not(.light-theme) #sidebar .fa-plus-circle {
-  color: #10b981 !important; /* Green for new chat */
+  color: #10b981 !important;
+  /* Green for new chat */
 }
 
 body:not(.light-theme) #sidebar .fa-cog {
-  color: #3b82f6 !important; /* Blue for settings */
+  color: #3b82f6 !important;
+  /* Blue for settings */
 }
 
 body:not(.light-theme) #sidebar .fa-chevron-down,
 body:not(.light-theme) #sidebar .fa-caret-down,
 body:not(.light-theme) #sidebar .fa-caret-up {
-  color: #64748b !important; /* Gray for arrows */
+  color: #64748b !important;
+  /* Gray for arrows */
 }
 
 body:not(.light-theme) #sidebar .fa-exchange-alt {
-  color: #a855f7 !important; /* Purple for switch model */
+  color: #a855f7 !important;
+  /* Purple for switch model */
 }
 
 body:not(.light-theme) #sidebar .fa-file-import {
-  color: #06b6d4 !important; /* Cyan for import */
+  color: #06b6d4 !important;
+  /* Cyan for import */
 }
 
 body:not(.light-theme) #sidebar .fa-file-export {
-  color: #f59e0b !important; /* Amber for export */
+  color: #f59e0b !important;
+  /* Amber for export */
 }
 
 body:not(.light-theme) #sidebar .fa-robot {
-  color: #3b82f6 !important; /* Blue for models */
+  color: #3b82f6 !important;
+  /* Blue for models */
 }
 
 body:not(.light-theme) #sidebar .fa-save {
-  color: #10b981 !important; /* Green for save */
+  color: #10b981 !important;
+  /* Green for save */
 }
 
 body:not(.light-theme) #sidebar .fa-question-circle {
-  color: #06b6d4 !important; /* Cyan for help */
+  color: #06b6d4 !important;
+  /* Cyan for help */
 }
 
 body:not(.light-theme) #sidebar .fa-wand-magic-sparkles {
-  color: #ec4899 !important; /* Pink for magic/prompts */
+  color: #ec4899 !important;
+  /* Pink for magic/prompts */
 }
 
 body:not(.light-theme) #sidebar .fa-info-circle {
-  color: #3b82f6 !important; /* Blue for info */
+  color: #3b82f6 !important;
+  /* Blue for info */
 }
 
 body:not(.light-theme) #sidebar .fa-undo {
-  color: #f59e0b !important; /* Amber for reset */
+  color: #f59e0b !important;
+  /* Amber for reset */
 }
 
 body:not(.light-theme) #sidebar .fa-comments {
-  color: #3b82f6 !important; /* Blue for chat history */
+  color: #3b82f6 !important;
+  /* Blue for chat history */
 }
 
 /* Button icons inside professional buttons */
 body.light-theme .professional-button i {
-  color: inherit !important; /* Inherit from button's color scheme */
+  color: inherit !important;
+  /* Inherit from button's color scheme */
 }
 
 /* Ensure proper contrast for text in inputs and textareas */

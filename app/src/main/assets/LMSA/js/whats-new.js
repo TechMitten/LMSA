@@ -9,7 +9,7 @@ const gotItButton = document.getElementById('got-it-whats-new');
 const versionElement = document.getElementById('whats-new-version');
 
 // Local storage keys
-const WHATS_NEW_VERSION = '8.9'; // Updated for new features: Age gate and terms acceptance for safety, Default model selection
+const WHATS_NEW_VERSION = '9.0'; // Updated for new features: TTS Audio, Default model selection
 
 // Flag to track if the modal has been shown in the current session
 let modalShownInCurrentSession = false;
@@ -33,7 +33,7 @@ export function showWhatsNewModal(forceShow = false) {
         // Add modal-open class to html and body to help with touch handling and prevent background interaction
         document.documentElement.classList.add('modal-open');
         document.body.classList.add('modal-open');
-        
+
         // Prevent scrolling of the body
         document.body.style.overflow = 'hidden';
 
@@ -42,7 +42,7 @@ export function showWhatsNewModal(forceShow = false) {
 
         // Adjust modal height immediately to prevent dragging during animation
         adjustModalHeight();
-        
+
         // For forced shows (like from side menu), ensure it runs again after DOM is fully ready
         if (forceShow) {
             setTimeout(() => {
@@ -143,7 +143,7 @@ function hideWhatsNewModal() {
                     // Remove modal-open class from html and body
                     document.documentElement.classList.remove('modal-open');
                     document.body.classList.remove('modal-open');
-                    
+
                     // Restore body scrolling
                     document.body.style.overflow = '';
 
@@ -158,14 +158,14 @@ function hideWhatsNewModal() {
                 whatsNewModal.classList.remove('fade-out');
                 whatsNewModal.classList.add('hidden');
                 window.removeEventListener('resize', adjustModalHeight);
-                
+
                 // Remove modal-open class from html and body
                 document.documentElement.classList.remove('modal-open');
                 document.body.classList.remove('modal-open');
-                
+
                 // Restore body scrolling
                 document.body.style.overflow = '';
-                
+
                 checkAndShowWelcomeMessage();
             }, 300);
         }
@@ -306,7 +306,7 @@ export function initializeWhatsNew() {
 
     // Check if user has dismissed this specific version
     const dismissedVersion = localStorage.getItem('whatsNewDismissedVersion');
-    
+
     // For version 8.8, always show the modal unless user has specifically dismissed it
     if (WHATS_NEW_VERSION === '8.8' && dismissedVersion !== WHATS_NEW_VERSION) {
         // Show the modal after a brief delay for version 8.8

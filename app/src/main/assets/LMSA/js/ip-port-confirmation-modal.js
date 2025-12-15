@@ -15,6 +15,7 @@ let wifiCheck = null;
 let confirmBtn = null;
 let cancelBtn = null;
 let progressCount = null;
+let neverShowAgainCheck = null;
 
 /**
  * Initialize the IP/Port confirmation modal
@@ -27,7 +28,9 @@ export function initializeIpPortConfirmationModal() {
     wifiCheck = document.getElementById('wifi-check');
     confirmBtn = document.getElementById('ip-port-confirm-btn');
     cancelBtn = document.getElementById('ip-port-cancel-btn');
+
     progressCount = document.getElementById('progress-count');
+    neverShowAgainCheck = document.getElementById('ip-port-never-show-again');
 
     if (!modal || !corsCheck || !localNetworkCheck || !wifiCheck || !confirmBtn || !cancelBtn || !progressCount) {
         debugError('IP/Port confirmation modal elements not found');
@@ -49,7 +52,7 @@ export function initializeIpPortConfirmationModal() {
 function storeOriginalValues() {
     const serverIpInput = document.getElementById('server-ip');
     const serverPortInput = document.getElementById('server-port');
-    
+
     if (serverIpInput && serverPortInput) {
         originalIp = serverIpInput.value.trim();
         originalPort = serverPortInput.value.trim();
@@ -63,21 +66,21 @@ function storeOriginalValues() {
 function hasIpPortChanged() {
     const serverIpInput = document.getElementById('server-ip');
     const serverPortInput = document.getElementById('server-port');
-    
+
     if (!serverIpInput || !serverPortInput) {
         return false;
     }
 
     const currentIp = serverIpInput.value.trim();
     const currentPort = serverPortInput.value.trim();
-    
+
     const changed = (currentIp !== originalIp) || (currentPort !== originalPort);
-    debugLog('IP/Port change check:', { 
+    debugLog('IP/Port change check:', {
         original: { ip: originalIp, port: originalPort },
         current: { ip: currentIp, port: currentPort },
         changed: changed
     });
-    
+
     return changed;
 }
 
@@ -92,21 +95,23 @@ function showModal() {
     // Reset checkboxes
     corsCheck.checked = false;
     localNetworkCheck.checked = false;
+
     wifiCheck.checked = false;
-    
+    if (neverShowAgainCheck) neverShowAgainCheck.checked = false;
+
     // Reset progress tracker
     updateProgressTracker();
-    
+
     // Disable confirm button initially
     confirmBtn.disabled = true;
-    
+
     // Show modal with animation
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-    
+
     // Add backdrop blur effect
     document.body.style.overflow = 'hidden';
-    
+
     debugLog('IP/Port confirmation modal shown');
 }
 
@@ -118,14 +123,14 @@ function hideModal() {
 
     modal.classList.add('hidden');
     modal.classList.remove('flex');
-    
+
     // Remove backdrop blur effect
     document.body.style.overflow = '';
-    
+
     // Clear pending changes
     pendingChanges = null;
     pendingCallback = null;
-    
+
     debugLog('IP/Port confirmation modal hidden');
 }
 
@@ -134,10 +139,10 @@ function hideModal() {
  */
 function updateProgressTracker() {
     if (!progressCount || !corsCheck || !localNetworkCheck || !wifiCheck) return;
-    
+
     const checkedCount = [corsCheck, localNetworkCheck, wifiCheck].filter(checkbox => checkbox.checked).length;
     progressCount.textContent = `${checkedCount}/3`;
-    
+
     debugLog('Progress tracker updated:', { checkedCount });
 }
 
@@ -146,10 +151,10 @@ function updateProgressTracker() {
  */
 function updateConfirmButtonState() {
     if (!confirmBtn || !corsCheck || !localNetworkCheck || !wifiCheck) return;
-    
+
     const allChecked = corsCheck.checked && localNetworkCheck.checked && wifiCheck.checked;
     confirmBtn.disabled = !allChecked;
-    
+
     // Also update progress tracker
     updateProgressTracker();
 }
@@ -191,6 +196,12 @@ function handleConfirm() {
     // Update original values to current values
     storeOriginalValues();
 
+    // Save "Never show again" preference if checked
+    if (neverShowAgainCheck && neverShowAgainCheck.checked) {
+        localStorage.setItem('ipPortChecklistNeverShow', 'true');
+        debugLog('IP/Port checklist "Never show again" preference saved');
+    }
+
     // Execute pending callback if exists
     if (pendingCallback) {
         pendingCallback();
@@ -206,7 +217,7 @@ function handleCancel() {
     // Revert IP/Port values to original
     const serverIpInput = document.getElementById('server-ip');
     const serverPortInput = document.getElementById('server-port');
-    
+
     if (serverIpInput && serverPortInput) {
         serverIpInput.value = originalIp;
         serverPortInput.value = originalPort;
@@ -224,6 +235,16 @@ export function interceptIpPortChanges(callback) {
     // Check if values have changed
     if (!hasIpPortChanged()) {
         // No changes, execute callback immediately
+        if (callback) callback();
+
+        return;
+    }
+
+    // Check if user has opted to never show the checklist again
+    if (localStorage.getItem('ipPortChecklistNeverShow') === 'true') {
+        debugLog('Skipping IP/Port checklist (user preference)');
+        // Update stored values since we are accepting the change implicitly
+        storeOriginalValues();
         if (callback) callback();
         return;
     }

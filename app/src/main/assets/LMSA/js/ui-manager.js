@@ -17,7 +17,7 @@ let longPressTimer;
  */
 export function showWelcomeMessage() {
     performanceMonitor.trackDOMUpdate();
-    
+
     // Batch DOM operations to prevent layout thrashing
     domBatcher.write(() => {
         if (welcomeMessage) {
@@ -44,7 +44,7 @@ export function showWelcomeMessage() {
  */
 export function hideWelcomeMessage() {
     performanceMonitor.trackDOMUpdate();
-    
+
     // Batch DOM operations to prevent layout thrashing
     domBatcher.write(() => {
         if (welcomeMessage) {
@@ -52,7 +52,7 @@ export function hideWelcomeMessage() {
             welcomeMessage.style.visibility = 'hidden';
             welcomeMessage.style.display = 'none';
         }
-        
+
         if (messagesContainer) {
             messagesContainer.style.display = 'flex';
             messagesContainer.style.height = '100%';
@@ -78,7 +78,7 @@ export function updateChatHistoryScroll() {
         chatHistory.setAttribute('data-touch-handlers-added', 'true');
 
         // Add touch event handlers for better scrolling
-        chatHistory.addEventListener('touchmove', function(e) {
+        chatHistory.addEventListener('touchmove', function (e) {
             e.stopPropagation();
         }, { passive: true });
     }
@@ -116,7 +116,7 @@ export function toggleSidebar() {
 
     const sidebarOverlay = document.getElementById('sidebar-overlay');
     const isOpen = sidebar.classList.contains('active');
-    
+
     // Update hamburger icon based on sidebar state
     updateHamburgerIcon(!isOpen);
 
@@ -142,7 +142,7 @@ export function toggleSidebar() {
             sidebar.setAttribute('data-touch-handlers-added', 'true');
 
             // Prevent default on touchmove to avoid body scrolling while touching the sidebar
-            sidebar.addEventListener('touchmove', function(e) {
+            sidebar.addEventListener('touchmove', function (e) {
                 e.stopPropagation();
             }, { passive: true });
         }
@@ -177,7 +177,7 @@ export function toggleSidebar() {
         sidebar.classList.add('animate-slide-out');
         sidebar.classList.remove('animate-slide-in');
         document.body.classList.remove('sidebar-open');
-        
+
         // Only hide settings modal if it exists and is actually visible
         if (settingsModal && !settingsModal.classList.contains('hidden')) {
             settingsModal.classList.add('hidden');
@@ -225,13 +225,13 @@ export function toggleSidebar() {
 export function updateHamburgerIcon(isOpen) {
     const sidebarToggleBtn = document.getElementById('sidebar-toggle');
     if (!sidebarToggleBtn) return;
-    
+
     const svg = sidebarToggleBtn.querySelector('svg');
     if (!svg) return;
-    
+
     const path = svg.querySelector('path');
     if (!path) return;
-    
+
     if (isOpen) {
         // Change to X icon
         path.setAttribute('d', 'M6 18L18 6M6 6l12 12');
@@ -248,28 +248,28 @@ export function updateHamburgerIcon(isOpen) {
  */
 export function closeSidebar() {
     if (!sidebar) return;
-    
+
     // Only proceed if sidebar is currently open
     if (sidebar.classList.contains('hidden') || !sidebar.classList.contains('active')) {
         return;
     }
-    
+
     const sidebarOverlay = document.getElementById('sidebar-overlay');
-    
+
     // Update hamburger icon to show hamburger
     updateHamburgerIcon(false);
-    
+
     // Handle overlay in mobile and tablet view first
     if (window.innerWidth <= 1024 && sidebarOverlay) {
         sidebarOverlay.classList.remove('active');
         sidebarOverlay.classList.add('hidden');
     }
-    
+
     // Add closing animation
     sidebar.classList.add('animate-slide-out');
     sidebar.classList.remove('animate-slide-in');
     document.body.classList.remove('sidebar-open');
-    
+
     // Only hide settings modal if it exists and is actually visible
     if (settingsModal && !settingsModal.classList.contains('hidden')) {
         settingsModal.classList.add('hidden');
@@ -365,6 +365,81 @@ export function hideConfirmationModal() {
     }
 }
 
+
+let ipPortErrorModalTimeout = null;
+
+/**
+ * Shows the IP/Port validation error modal
+ * @param {string} message - The error message to display
+ */
+export function showIpPortErrorModal(message) {
+    // Clear any pending hide timeout to prevent race conditions
+    if (ipPortErrorModalTimeout) {
+        clearTimeout(ipPortErrorModalTimeout);
+        ipPortErrorModalTimeout = null;
+    }
+
+    const errorModal = document.getElementById('ip-port-error-modal');
+    const errorMessage = document.getElementById('ip-port-error-message');
+    const okButton = document.getElementById('ip-port-error-ok-btn');
+
+    if (errorModal && errorMessage) {
+        // Set the message
+        errorMessage.textContent = message;
+
+        // Ensure the modal is properly displayed
+        errorModal.classList.remove('hidden');
+        errorModal.style.display = 'flex';
+
+        // Add animation
+        const modalContent = errorModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.classList.remove('animate-modal-out');
+            modalContent.classList.add('animate-modal-in');
+        }
+
+        // Add event listener for the OK button
+        if (okButton) {
+            // Remove any existing event listeners to prevent duplicates
+            // We use the clone node trick to wipe all event listeners
+            const newOkButton = okButton.cloneNode(true);
+            okButton.parentNode.replaceChild(newOkButton, okButton);
+
+            newOkButton.addEventListener('click', hideIpPortErrorModal);
+
+            // Focus the button for accessibility
+            setTimeout(() => newOkButton.focus(), 100);
+        }
+    }
+}
+
+/**
+ * Hides the IP/Port validation error modal
+ */
+export function hideIpPortErrorModal() {
+    const errorModal = document.getElementById('ip-port-error-modal');
+
+    if (errorModal) {
+        const modalContent = errorModal.querySelector('.modal-content');
+
+        if (modalContent) {
+            modalContent.classList.remove('animate-modal-in');
+            modalContent.classList.add('animate-modal-out');
+
+            // Wait for animation to finish
+            ipPortErrorModalTimeout = setTimeout(() => {
+                errorModal.classList.add('hidden');
+                errorModal.style.display = 'none';
+                modalContent.classList.remove('animate-modal-out');
+                ipPortErrorModalTimeout = null;
+            }, 300);
+        } else {
+            errorModal.classList.add('hidden');
+            errorModal.style.display = 'none';
+        }
+    }
+}
+
 /**
  * Shows the export confirmation modal
  */
@@ -420,16 +495,27 @@ export function hideExportConfirmationModal() {
  */
 export function showLoadingIndicator() {
     if (!loadingIndicator) {
-        loadingIndicator = document.createElement('div');
-        loadingIndicator.id = 'loading-indicator';
-        loadingIndicator.innerHTML = '<span class="loading-ellipsis">...</span>';
-        // Apply additional inline styles to ensure horizontal display
+        debugError('Loading indicator element not found');
+        return;
+    }
+
+    // Ensure the content includes the thinking text
+    if (!loadingIndicator.querySelector('.thinking-text')) {
+        loadingIndicator.innerHTML = '<span class="thinking-text">Thinking</span><span class="loading-ellipsis">...</span>';
+
+        // Apply styling to new elements
         const ellipsis = loadingIndicator.querySelector('.loading-ellipsis');
+        const thinkingText = loadingIndicator.querySelector('.thinking-text');
+
         if (ellipsis) {
             ellipsis.style.display = 'inline-block';
             ellipsis.style.whiteSpace = 'nowrap';
             ellipsis.style.textAlign = 'left';
             ellipsis.style.direction = 'ltr';
+        }
+
+        if (thinkingText) {
+            thinkingText.style.marginRight = '2px';
         }
     }
     loadingIndicator.classList.remove('hidden');
@@ -483,7 +569,7 @@ export function toggleSendStopButton() {
             sendButton.classList.remove('hidden');
             // Reset any inline styles
             stopButton.style.display = '';
-            
+
             // Import chat service module to ensure abort controller is properly nullified
             // This helps prevent lingering connections when switching back to send button
             import('./chat-service.js').then(module => {
@@ -528,9 +614,9 @@ export function appendMessage(sender, message, files = null, isStreaming = false
             if (contentContainer) {
                 // Check for thinking tags in various formats
                 const hasThinkTags = message.includes('<think>') ||
-                                   message.includes('</think>') ||
-                                   message.includes('&lt;think&gt;') ||
-                                   message.includes('&lt;/think&gt;');
+                    message.includes('</think>') ||
+                    message.includes('&lt;think&gt;') ||
+                    message.includes('&lt;/think&gt;');
 
                 // Store the original message content for reprocessing if needed
                 lastMessage.originalContent = message;
@@ -615,9 +701,9 @@ export function appendMessage(sender, message, files = null, isStreaming = false
 
         // Check for thinking tags in various formats
         const hasThinkTags = message.includes('<think>') ||
-                           message.includes('</think>') ||
-                           message.includes('&lt;think&gt;') ||
-                           message.includes('&lt;/think&gt;');
+            message.includes('</think>') ||
+            message.includes('&lt;think&gt;') ||
+            message.includes('&lt;/think&gt;');
 
         // Apply the appropriate sanitization based on message type
         if (hasThinkTags) {
@@ -650,10 +736,10 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                 let iconClass = 'fa-file';
                 if (file.type.includes('image')) iconClass = 'fa-file-image';
                 else if (file.type.includes('text') ||
-                         file.name.endsWith('.json') ||
-                         file.name.endsWith('.md') ||
-                         file.name.endsWith('.py') ||
-                         file.name.endsWith('.js')) iconClass = 'fa-file-alt';
+                    file.name.endsWith('.json') ||
+                    file.name.endsWith('.md') ||
+                    file.name.endsWith('.py') ||
+                    file.name.endsWith('.js')) iconClass = 'fa-file-alt';
                 else if (file.name.endsWith('.pdf')) iconClass = 'fa-file-pdf';
                 else if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) iconClass = 'fa-file-word';
 
@@ -703,17 +789,17 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                 copyButton.title = 'Copy this message';
                 copyButton.addEventListener('click', () => {
                     let contentWithoutThinking = '';
-                    
+
                     // APPROACH 1: Try to find the visible-after-think div, which is specifically created
                     // to contain only content after the last think tag
                     const messageContentElement = messageElement.querySelector('.message-content');
                     const visibleAfterThinkElement = messageContentElement?.querySelector('.visible-after-think');
-                    
+
                     if (visibleAfterThinkElement && visibleAfterThinkElement.textContent.trim()) {
                         // Use the new htmlToFormattedText function to preserve formatting
                         contentWithoutThinking = htmlToFormattedText(visibleAfterThinkElement);
                         debugLog('Using visible-after-think element for copy content with formatting');
-                    } 
+                    }
                     // APPROACH 2: If no visible-after-think element found, use the message content element
                     // while excluding all thinking-related elements
                     else if (messageContentElement) {
@@ -735,11 +821,11 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                                 contentToCopy = messageElement.innerHTML || '';
                             }
                         }
-                        
+
                         // Try to find content after the last </think> tag in the raw content
                         const lastThinkTagIndex = contentToCopy.lastIndexOf('</think>');
                         const lastEncodedThinkTagIndex = contentToCopy.lastIndexOf('&lt;/think&gt;');
-                        
+
                         if (lastThinkTagIndex !== -1 || lastEncodedThinkTagIndex !== -1) {
                             // Get text after the last think tag
                             let afterThinkContent;
@@ -760,7 +846,7 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                             contentWithoutThinking = htmlToFormattedText(cleanedContent);
                         }
                     }
-                    
+
                     // Make sure we have content to copy
                     if (!contentWithoutThinking) {
                         // Last resort: just get the visible text directly from the message content
@@ -819,11 +905,11 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                 speakerButton.addEventListener('click', async () => {
                     // Get the message content for TTS
                     let textToSpeak = '';
-                    
+
                     // Try to get content without thinking tags (same logic as copy button)
                     const messageContentElement = messageElement.querySelector('.message-content');
                     const visibleAfterThinkElement = messageContentElement?.querySelector('.visible-after-think');
-                    
+
                     if (visibleAfterThinkElement && visibleAfterThinkElement.textContent.trim()) {
                         textToSpeak = visibleAfterThinkElement.textContent.trim();
                     } else if (messageContentElement) {
@@ -840,7 +926,7 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                         let contentToCopy = messageElement.originalContent || '';
                         const lastThinkTagIndex = contentToCopy.lastIndexOf('</think>');
                         const lastEncodedThinkTagIndex = contentToCopy.lastIndexOf('&lt;/think&gt;');
-                        
+
                         if (lastThinkTagIndex !== -1 || lastEncodedThinkTagIndex !== -1) {
                             if (lastThinkTagIndex > lastEncodedThinkTagIndex) {
                                 textToSpeak = contentToCopy.substring(lastThinkTagIndex + 8).trim();
@@ -853,7 +939,7 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                                 .replace(/&lt;think&gt;[\s\S]*?&lt;\/think&gt;/g, '')
                                 .trim();
                         }
-                        
+
                         // Convert HTML to plain text
                         const tempDiv = document.createElement('div');
                         tempDiv.innerHTML = textToSpeak;
@@ -862,7 +948,7 @@ export function appendMessage(sender, message, files = null, isStreaming = false
 
                     // Store original button state
                     const originalHTML = speakerButton.innerHTML;
-                    
+
                     if (!textToSpeak) {
                         speakerButton.innerHTML = '<i class="fas fa-times"></i>';
                         setTimeout(() => {
@@ -878,7 +964,7 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                             if (!window.TTSService.isInitialized()) {
                                 await window.TTSService.initialize();
                             }
-                            
+
                             // Check if currently speaking and stop if needed
                             if (window.TTSService.isSpeaking()) {
                                 window.TTSService.stop();
@@ -886,11 +972,11 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                                 speakerButton.title = 'Read this message aloud';
                                 return;
                             }
-                            
+
                             // Start speaking - show square stop icon
                             speakerButton.innerHTML = '<i class="fas fa-square"></i>';
                             speakerButton.title = 'Stop reading';
-                            
+
                             // Start TTS and set up completion handler
                             window.TTSService.speak(textToSpeak).then(() => {
                                 // Reset button when TTS actually finishes
@@ -1152,7 +1238,7 @@ export function refreshAllMessages() {
             if (contentContainer) {
                 // Check if the message content is already handled by the new HTML detection system
                 const hasHtmlCodeContainer = contentContainer.querySelector('.html-code-container');
-                
+
                 if (!hasHtmlCodeContainer) {
                     const codeBlocks = contentContainer.querySelectorAll('pre code');
                     codeBlocks.forEach(block => {
@@ -1166,7 +1252,7 @@ export function refreshAllMessages() {
                                 codeContent = codeContent.replace(/\[HTML_CODE_BLOCK_END\]/g, '');
                                 block.innerHTML = codeContent;
                             }
-                            
+
                             // Monaco Editor will handle HTML code blocks properly without visible markers
                             // The markers should only be used internally, never displayed to users
                         }
@@ -1195,17 +1281,17 @@ export function refreshAllMessages() {
                     copyButton.title = 'Copy this message';
                     copyButton.addEventListener('click', () => {
                         let contentWithoutThinking = '';
-                        
+
                         // APPROACH 1: Try to find the visible-after-think div, which is specifically created
                         // to contain only content after the last think tag
                         const messageContentElement = messageEl.querySelector('.message-content');
                         const visibleAfterThinkElement = messageContentElement?.querySelector('.visible-after-think');
-                        
+
                         if (visibleAfterThinkElement && visibleAfterThinkElement.textContent.trim()) {
                             // Use the new htmlToFormattedText function to preserve formatting
                             contentWithoutThinking = htmlToFormattedText(visibleAfterThinkElement);
                             debugLog('Using visible-after-think element for copy content with formatting');
-                        } 
+                        }
                         // APPROACH 2: If no visible-after-think element found, use the message content element
                         // while excluding all thinking-related elements
                         else if (messageContentElement) {
@@ -1227,11 +1313,11 @@ export function refreshAllMessages() {
                                     contentToCopy = messageEl.innerHTML || '';
                                 }
                             }
-                            
+
                             // Try to find content after the last </think> tag in the raw content
                             const lastThinkTagIndex = contentToCopy.lastIndexOf('</think>');
                             const lastEncodedThinkTagIndex = contentToCopy.lastIndexOf('&lt;/think&gt;');
-                            
+
                             if (lastThinkTagIndex !== -1 || lastEncodedThinkTagIndex !== -1) {
                                 // Get text after the last think tag
                                 let afterThinkContent;
@@ -1252,7 +1338,7 @@ export function refreshAllMessages() {
                                 contentWithoutThinking = htmlToFormattedText(cleanedContent);
                             }
                         }
-                        
+
                         // Make sure we have content to copy
                         if (!contentWithoutThinking) {
                             // Last resort: just get the visible text directly from the message content
@@ -1311,11 +1397,11 @@ export function refreshAllMessages() {
                     speakerButton.addEventListener('click', async () => {
                         // Get the message content for TTS
                         let textToSpeak = '';
-                        
+
                         // Try to get content without thinking tags (same logic as copy button)
                         const messageContentElement = messageEl.querySelector('.message-content');
                         const visibleAfterThinkElement = messageContentElement?.querySelector('.visible-after-think');
-                        
+
                         if (visibleAfterThinkElement && visibleAfterThinkElement.textContent.trim()) {
                             textToSpeak = visibleAfterThinkElement.textContent.trim();
                         } else if (messageContentElement) {
@@ -1332,7 +1418,7 @@ export function refreshAllMessages() {
                             let contentToCopy = messageEl.originalContent || '';
                             const lastThinkTagIndex = contentToCopy.lastIndexOf('</think>');
                             const lastEncodedThinkTagIndex = contentToCopy.lastIndexOf('&lt;/think&gt;');
-                            
+
                             if (lastThinkTagIndex !== -1 || lastEncodedThinkTagIndex !== -1) {
                                 if (lastThinkTagIndex > lastEncodedThinkTagIndex) {
                                     textToSpeak = contentToCopy.substring(lastThinkTagIndex + 8).trim();
@@ -1345,7 +1431,7 @@ export function refreshAllMessages() {
                                     .replace(/&lt;think&gt;[\s\S]*?&lt;\/think&gt;/g, '')
                                     .trim();
                             }
-                            
+
                             // Convert HTML to plain text
                             const tempDiv = document.createElement('div');
                             tempDiv.innerHTML = textToSpeak;
@@ -1354,7 +1440,7 @@ export function refreshAllMessages() {
 
                         // Store original button state
                         const originalHTML = speakerButton.innerHTML;
-                        
+
                         if (!textToSpeak) {
                             speakerButton.innerHTML = '<i class="fas fa-times"></i>';
                             setTimeout(() => {
@@ -1370,7 +1456,7 @@ export function refreshAllMessages() {
                                 if (!window.TTSService.isInitialized()) {
                                     await window.TTSService.initialize();
                                 }
-                                
+
                                 // Check if currently speaking and stop if needed
                                 if (window.TTSService.isSpeaking()) {
                                     window.TTSService.stop();
@@ -1378,11 +1464,11 @@ export function refreshAllMessages() {
                                     speakerButton.title = 'Read this message aloud';
                                     return;
                                 }
-                                
+
                                 // Start speaking - show square stop icon
                                 speakerButton.innerHTML = '<i class="fas fa-square"></i>';
                                 speakerButton.title = 'Stop reading';
-                                
+
                                 // Start TTS and set up completion handler
                                 window.TTSService.speak(textToSpeak).then(() => {
                                     // Reset button when TTS actually finishes
@@ -1696,12 +1782,12 @@ export function ensureWelcomeMessagePosition() {
     if (welcomeMessage) {
         // Only show welcome message if there are no chat messages
         const shouldShowWelcome = !messagesContainer || messagesContainer.children.length === 0;
-        
+
         if (!shouldShowWelcome) {
             // Don't make welcome message visible if there are chat messages
             return;
         }
-        
+
         // Force a reflow to ensure proper positioning
         void welcomeMessage.offsetWidth;
 
@@ -1742,8 +1828,8 @@ export function ensureWelcomeMessagePosition() {
                 // Check if character icon is enabled
                 const activeCharacterDisplay = document.getElementById('active-character-display');
                 const isCharacterActive = activeCharacterDisplay &&
-                                         !activeCharacterDisplay.classList.contains('hidden') &&
-                                         activeCharacterDisplay.style.display !== 'none';
+                    !activeCharacterDisplay.classList.contains('hidden') &&
+                    activeCharacterDisplay.style.display !== 'none';
 
                 // Center the welcome content vertically within the available space
                 welcomeMessage.style.alignItems = 'center';
@@ -1762,11 +1848,11 @@ export function ensureWelcomeMessagePosition() {
                         // For all other 320px width screens
                         iconContainer.style.marginTop = '2rem';
                     } else if ((window.innerWidth >= 343 && window.innerWidth <= 345) &&
-                               (window.innerHeight >= 880 && window.innerHeight <= 884)) {
+                        (window.innerHeight >= 880 && window.innerHeight <= 884)) {
                         // Special handling for 344x882 screens
                         iconContainer.style.marginTop = '2rem';
                     } else if ((window.innerWidth >= 359 && window.innerWidth <= 361) &&
-                               (window.innerHeight >= 639 && window.innerHeight <= 641)) {
+                        (window.innerHeight >= 639 && window.innerHeight <= 641)) {
                         // Special handling for 360x640 screens
                         iconContainer.style.marginTop = '1.75rem';
                     } else if (window.innerWidth <= 375) {
@@ -1799,8 +1885,8 @@ export function ensureWelcomeMessagePosition() {
                 // Check if character icon is enabled
                 const activeCharacterDisplay = document.getElementById('active-character-display');
                 const isCharacterActive = activeCharacterDisplay &&
-                                         !activeCharacterDisplay.classList.contains('hidden') &&
-                                         activeCharacterDisplay.style.display !== 'none';
+                    !activeCharacterDisplay.classList.contains('hidden') &&
+                    activeCharacterDisplay.style.display !== 'none';
 
                 // Add top margin to icon container inside welcome content to prevent touching top edge
                 const iconContainer = welcomeContent.querySelector('.icon-container');
@@ -1816,11 +1902,11 @@ export function ensureWelcomeMessagePosition() {
                         // For all other 320px width screens
                         iconContainer.style.marginTop = '2rem';
                     } else if ((window.innerWidth >= 343 && window.innerWidth <= 345) &&
-                               (window.innerHeight >= 880 && window.innerHeight <= 884)) {
+                        (window.innerHeight >= 880 && window.innerHeight <= 884)) {
                         // Special handling for 344x882 screens
                         iconContainer.style.marginTop = '2rem';
                     } else if ((window.innerWidth >= 359 && window.innerWidth <= 361) &&
-                               (window.innerHeight >= 639 && window.innerHeight <= 641)) {
+                        (window.innerHeight >= 639 && window.innerHeight <= 641)) {
                         // Special handling for 360x640 screens
                         iconContainer.style.marginTop = '1.75rem';
                     } else if (window.innerWidth <= 375) {
@@ -1982,7 +2068,7 @@ export function initializeCollapsibleSections() {
                 if (otherHeader !== header) {
                     const otherIsOptionsSection = otherHeader.closest('.sidebar-section.collapsible');
                     const otherIsCharactersSection = otherHeader.closest('.sidebar-section.characters-section');
-                    
+
                     // Only close if it's not a coexisting section
                     if (!((isOptionsSection && otherIsCharactersSection) || (isCharactersSection && otherIsOptionsSection))) {
                         otherHeader.classList.remove('active');
@@ -1998,7 +2084,7 @@ export function initializeCollapsibleSections() {
             if (chatHistorySection) {
                 const optionsHeader = document.querySelector('.sidebar-section.collapsible .section-header');
                 const optionsIsActive = optionsHeader && optionsHeader.classList.contains('active');
-                
+
                 if (optionsIsActive) {
                     chatHistorySection.classList.add('chat-history-hidden');
                 } else {
@@ -2109,7 +2195,7 @@ class HeaderManager {
             const isTabletOrLarger = window.innerWidth >= 768;
             const shouldKeepVisible = isEssential || (isPreviewToggle && isTabletOrLarger);
             const spaceWithGap = currentWidth + data.width + (currentWidth > 0 ? gap : 0);
-            
+
             if (spaceWithGap <= availableSpace || shouldKeepVisible) {
                 // Check if CSS media query is hiding this button
                 const computedStyle = window.getComputedStyle(data.element);
@@ -2187,11 +2273,11 @@ export function addSpeakerButtonsToExistingMessages() {
             speakerButton.addEventListener('click', async () => {
                 // Get the message content for TTS
                 let textToSpeak = '';
-                
+
                 // Try to get content without thinking tags (same logic as copy button)
                 const messageContentElement = messageEl.querySelector('.message-content');
                 const visibleAfterThinkElement = messageContentElement?.querySelector('.visible-after-think');
-                
+
                 if (visibleAfterThinkElement && visibleAfterThinkElement.textContent.trim()) {
                     textToSpeak = visibleAfterThinkElement.textContent.trim();
                 } else if (messageContentElement) {
@@ -2208,7 +2294,7 @@ export function addSpeakerButtonsToExistingMessages() {
                     let contentToCopy = messageEl.originalContent || '';
                     const lastThinkTagIndex = contentToCopy.lastIndexOf('</think>');
                     const lastEncodedThinkTagIndex = contentToCopy.lastIndexOf('&lt;/think&gt;');
-                    
+
                     if (lastThinkTagIndex !== -1 || lastEncodedThinkTagIndex !== -1) {
                         if (lastThinkTagIndex > lastEncodedThinkTagIndex) {
                             textToSpeak = contentToCopy.substring(lastThinkTagIndex + 8).trim();
@@ -2221,7 +2307,7 @@ export function addSpeakerButtonsToExistingMessages() {
                             .replace(/&lt;think&gt;[\s\S]*?&lt;\/think&gt;/g, '')
                             .trim();
                     }
-                    
+
                     // Convert HTML to plain text
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = textToSpeak;
@@ -2230,7 +2316,7 @@ export function addSpeakerButtonsToExistingMessages() {
 
                 // Store original button state
                 const originalHTML = speakerButton.innerHTML;
-                
+
                 if (!textToSpeak) {
                     speakerButton.innerHTML = '<i class="fas fa-times"></i>';
                     setTimeout(() => {
@@ -2246,7 +2332,7 @@ export function addSpeakerButtonsToExistingMessages() {
                         if (!window.TTSService.isInitialized()) {
                             await window.TTSService.initialize();
                         }
-                        
+
                         // Check if currently speaking and stop if needed
                         if (window.TTSService.isSpeaking()) {
                             window.TTSService.stop();
@@ -2254,11 +2340,11 @@ export function addSpeakerButtonsToExistingMessages() {
                             speakerButton.title = 'Read this message aloud';
                             return;
                         }
-                        
+
                         // Start speaking - show square stop icon
                         speakerButton.innerHTML = '<i class="fas fa-square"></i>';
                         speakerButton.title = 'Stop reading';
-                        
+
                         // Start TTS and set up completion handler
                         window.TTSService.speak(textToSpeak).then(() => {
                             // Reset button when TTS actually finishes
@@ -2284,7 +2370,7 @@ export function addSpeakerButtonsToExistingMessages() {
                     }, 2000);
                 }
             });
-            
+
             // Insert speaker button before regenerate button if it exists
             const regenerateButton = controlsContainer.querySelector('.regenerate-btn');
             if (regenerateButton) {
