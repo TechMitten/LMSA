@@ -20,3 +20,6 @@ app/build/
 
 # VS Code
 .vscode/
+
+# JDK setup directory (large binary files)
+jdk_setup/
