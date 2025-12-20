@@ -11,8 +11,9 @@ class TTSService {
         this.currentUtterance = null;
         this.speechSynthesis = window.speechSynthesis;
         this.voices = [];
-        
+
         // Don't auto-initialize, let it be called explicitly
+        this.shouldStop = false;
         console.log('TTSService created, Android available:', this.isAndroid);
     }
 
@@ -21,15 +22,15 @@ class TTSService {
      */
     async initialize() {
         if (this.isInitializing || this.initialized) return;
-        
+
         this.isInitializing = true;
-        
+
         if (this.isAndroid) {
             await this.initializeAndroidTTS();
         } else {
             await this.initializeWebTTS();
         }
-        
+
         this.isInitializing = false;
     }
 
@@ -57,12 +58,12 @@ class TTSService {
                 }
                 resolve(success);
             };
-            
+
             // Initialize Android TTS
             try {
                 console.log('Calling AndroidTTS.initializeTTS()');
                 AndroidTTS.initializeTTS();
-                
+
                 // Set a timeout in case the callback never comes
                 setTimeout(() => {
                     if (!this.initialized) {
@@ -119,23 +120,132 @@ class TTSService {
         }
 
         // Ensure TTS is initialized
-        if (!this.isInitialized) {
+        if (!this.initialized) {
             await this.initialize();
         }
 
-        if (!this.isInitialized) {
+        if (!this.initialized) {
             console.error('TTS not available');
             return Promise.resolve(false);
         }
 
         // Stop any current speech
         this.stop();
+        this.shouldStop = false;
 
-        if (this.isAndroid) {
-            return this.speakAndroid(text, options);
-        } else {
-            return this.speakWeb(text, options);
+        // Trigger start callback
+        if (options.onStart) options.onStart();
+
+        const limit = 3800; // Safe limit for Android TTS
+        const chunks = this.chunkText(text, limit);
+
+        if (chunks.length > 1) {
+            console.log(`Text length ${text.length} exceeds limit ${limit}, split into ${chunks.length} chunks`);
         }
+
+        try {
+            for (let i = 0; i < chunks.length; i++) {
+                if (this.shouldStop) {
+                    console.log('TTS stopped explicitly');
+                    break;
+                }
+
+                // Prepare options for this chunk - remove callbacks to prevent multiple triggers
+                const chunkOptions = { ...options };
+                delete chunkOptions.onStart;
+                delete chunkOptions.onEnd;
+
+                if (this.isAndroid) {
+                    await this.speakAndroid(chunks[i], chunkOptions);
+                } else {
+                    await this.speakWeb(chunks[i], chunkOptions);
+                }
+            }
+
+            if (!this.shouldStop && options.onEnd) {
+                options.onEnd();
+            }
+            return true;
+        } catch (error) {
+            console.error('TTS playback error:', error);
+            if (options.onError) options.onError(error);
+            return false;
+        }
+    }
+
+    /**
+     * Split text into chunks that fit within the character limit
+     * @param {string} text - Text to split
+     * @param {number} limit - Character limit per chunk
+     * @returns {string[]} Array of text chunks
+     */
+    chunkText(text, limit = 3900) {
+        if (text.length <= limit) return [text];
+
+        const chunks = [];
+        let remainingText = text;
+
+        while (remainingText.length > 0) {
+            if (remainingText.length <= limit) {
+                chunks.push(remainingText);
+                break;
+            }
+
+            // Find a good split point
+            let splitIndex = -1;
+
+            // Try to split at sentence ending
+            // We look for punctuation followed by space or newline
+            const sentenceEndStr = ['. ', '? ', '! ', '.\n', '?\n', '!\n'];
+
+            let bestSentenceEnd = -1;
+            for (const endMarker of sentenceEndStr) {
+                const index = remainingText.lastIndexOf(endMarker, limit);
+                if (index > bestSentenceEnd) {
+                    bestSentenceEnd = index;
+                }
+            }
+
+            if (bestSentenceEnd > limit * 0.5) {
+                // Include the punctuation in the chunk
+                // The marker is like ". ", so we want to include the "." (index) plus 1.
+                // Actually if it sends ". ", we probably want to split after the space? 
+                // "Hello. World" -> "Hello. " and "World".
+                splitIndex = bestSentenceEnd + 2; // Include punctuation and space
+            }
+
+            // If no good sentence split, try clauses
+            if (splitIndex === -1) {
+                const clauseEndStr = [', ', '; ', ': ', '\n'];
+                let bestClauseEnd = -1;
+                for (const endMarker of clauseEndStr) {
+                    const index = remainingText.lastIndexOf(endMarker, limit);
+                    if (index > bestClauseEnd) {
+                        bestClauseEnd = index;
+                    }
+                }
+
+                if (bestClauseEnd > limit * 0.5) {
+                    splitIndex = bestClauseEnd + 2;
+                }
+            }
+
+            // If still no good split, split at last space
+            if (splitIndex === -1) {
+                splitIndex = remainingText.lastIndexOf(' ', limit);
+                if (splitIndex !== -1) splitIndex += 1; // Include space
+            }
+
+            // If absolutely no space (very long word), force split
+            if (splitIndex === -1 || splitIndex === 0) {
+                splitIndex = limit;
+            }
+
+            chunks.push(remainingText.substring(0, splitIndex));
+            remainingText = remainingText.substring(splitIndex);
+        }
+
+        return chunks;
     }
 
     /**
@@ -163,7 +273,7 @@ class TTSService {
 
                 // Speak the text
                 AndroidTTS.speak(text);
-                
+
                 // Poll for completion since Android TTS doesn't provide completion callbacks
                 const checkCompletion = () => {
                     try {
@@ -176,10 +286,10 @@ class TTSService {
                         reject(error);
                     }
                 };
-                
+
                 // Start polling after a short delay to ensure TTS has started
                 setTimeout(checkCompletion, 200);
-                
+
             } catch (error) {
                 console.error('Error speaking with Android TTS:', error);
                 reject(error);
@@ -196,7 +306,7 @@ class TTSService {
         return new Promise((resolve, reject) => {
             try {
                 this.currentUtterance = new SpeechSynthesisUtterance(text);
-                
+
                 // Set voice options
                 this.currentUtterance.lang = options.language || 'en-US';
                 this.currentUtterance.rate = options.rate || 1.0;
@@ -206,7 +316,7 @@ class TTSService {
                 // Use selected voice or find appropriate voice
                 let voice = this.selectedVoice;
                 if (!voice) {
-                    voice = this.voices.find(v => 
+                    voice = this.voices.find(v =>
                         v.lang.startsWith(this.currentUtterance.lang.split('-')[0])
                     );
                 }
@@ -247,6 +357,7 @@ class TTSService {
      * Stop current speech
      */
     stop() {
+        this.shouldStop = true;
         if (this.isAndroid) {
             try {
                 AndroidTTS.stop();
@@ -361,10 +472,10 @@ class TTSService {
         return new Promise((resolve, reject) => {
             let attempts = 0;
             const maxAttempts = 50; // 5 seconds max wait time
-            
+
             const checkReady = () => {
                 attempts++;
-                
+
                 try {
                     if (typeof AndroidTTS !== 'undefined' && AndroidTTS.isReady && AndroidTTS.isReady()) {
                         console.log('Android TTS is ready after', attempts * 100, 'ms');
@@ -374,17 +485,17 @@ class TTSService {
                 } catch (error) {
                     console.error('Error checking TTS readiness:', error);
                 }
-                
+
                 if (attempts >= maxAttempts) {
                     console.warn('Timeout waiting for Android TTS to be ready');
                     reject(new Error('TTS initialization timeout'));
                     return;
                 }
-                
+
                 // Check again after 100ms
                 setTimeout(checkReady, 100);
             };
-            
+
             checkReady();
         });
     }
@@ -400,7 +511,7 @@ class TTSService {
                 if (!this.isInitialized) {
                     await this.initialize();
                 }
-                
+
                 if (typeof AndroidTTS !== 'undefined' && AndroidTTS.setVoice) {
                     return AndroidTTS.setVoice(voiceName);
                 }
@@ -414,7 +525,7 @@ class TTSService {
             if (!this.isInitialized) {
                 await this.initialize();
             }
-            
+
             const voice = this.voices.find(v => v.name === voiceName);
             if (voice) {
                 this.selectedVoice = voice;

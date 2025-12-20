@@ -1370,39 +1370,7 @@ body.light-theme #loaded-model {
     transform: none !important;
 }
 
-/* Hide tablet view toggle button on small screens (phones only) */
-@media (max-width: 600px) {
-    #preview-toggle {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-        position: absolute !important;
-        width: 0 !important;
-        height: 0 !important;
-        overflow: hidden !important;
-        clip: rect(0, 0, 0, 0) !important;
-        white-space: nowrap !important;
-        border: 0 !important;
-    }
-}
 
-/* Ensure tablet view toggle button is visible on tablets and larger screens */
-@media (min-width: 601px) {
-    #preview-toggle {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-        position: relative !important;
-        width: auto !important;
-        height: auto !important;
-        overflow: visible !important;
-        clip: auto !important;
-        white-space: normal !important;
-        border: initial !important;
-    }
-}
 
 /* Mobile-specific adjustments */
 @media (max-width: 768px) {
@@ -2116,13 +2084,6 @@ header {
     }
 }
 
-/* Fix for the preview toggle button alignment */
-#preview-toggle .flex.items-center {
-    display: flex;
-    align-items: center;
-    height: 100%;
-}
-
 /* Ensure consistent sizing for all icons */
 header i,
 header svg {
@@ -2134,14 +2095,6 @@ header svg {
 header button.header-btn {
     box-sizing: border-box;
     flex-shrink: 0;
-}
-
-/* Fix for the preview toggle button on medium screens */
-@media (min-width: 768px) {
-    #preview-toggle {
-        width: auto !important;
-        padding-right: 0.75rem !important;
-    }
 }
 
 
@@ -6668,6 +6621,11 @@ body.light-theme #whats-new-modal .features-container::-webkit-scrollbar-thumb:h
     box-shadow: 0 4px 8px rgba(0, 184, 148, 0.3);
 }
 
+/* Remove Ads button icon styling */
+#remove-ads-button i {
+    color: #d4af37 !important;
+}
+
 /* Import/Export container styles */
 #import-export-container {
     max-height: 0;
@@ -6970,15 +6928,23 @@ body.light-theme .gradient-text {
     border: none;
     color: #ff6b6b;
     cursor: pointer;
-    padding: 2px;
-    border-radius: 3px;
-    font-size: 10px;
-    opacity: 0.7;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 20px;
+    opacity: 0.8;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
 }
 
 .file-preview .remove-file:hover {
     opacity: 1;
-    background: rgba(255, 107, 107, 0.1);
+    background: rgba(255, 107, 107, 0.15);
+    transform: scale(1.1);
 }
 
 .file-preview img {
@@ -8750,4 +8716,85 @@ body.modal-open {
 #privacy-policy-btn:hover {
     opacity: 1 !important;
     background: var(--sidebar-item-hover);
+}
+
+/* Template Indicator Banner Styles */
+#template-indicator {
+    position: sticky;
+    top: 0;
+    z-index: 15;
+    transition: all 0.3s ease;
+}
+
+#template-indicator.hidden {
+    display: none !important;
+}
+
+#template-indicator button {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#template-indicator button:active {
+    transform: scale(0.95);
+}
+
+/* Responsive adjustments for template indicator */
+@media (max-width: 480px) {
+    #template-indicator {
+        padding: 0.625rem 0.875rem !important;
+        font-size: 0.875rem;
+    }
+
+    #template-indicator .text-xs {
+        font-size: 0.65rem !important;
+    }
+
+    #template-indicator #template-name {
+        font-size: 0.875rem !important;
+    }
+
+    #template-indicator #disable-template-btn {
+        padding: 0.375rem 0.625rem !important;
+        font-size: 0.8rem !important;
+    }
+
+    #template-indicator #disable-template-btn span {
+        display: none;
+    }
+
+    #template-indicator #disable-template-btn i {
+        margin-right: 0 !important;
+    }
+}
+
+/* Light theme support for template indicator */
+body.light-theme #template-indicator {
+    background: rgba(241, 245, 249, 0.8) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme #template-indicator .text-xs {
+    color: #64748b !important;
+}
+
+body.light-theme #template-indicator #template-name {
+    color: #1e293b !important;
+}
+
+body.light-theme #template-indicator i.fa-th-large {
+    color: #3b82f6 !important;
+}
+
+body.light-theme #template-indicator #disable-template-btn {
+    background: rgba(59, 130, 246, 0.15) !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    color: #3b82f6 !important;
+}
+
+body.light-theme #template-indicator #disable-template-btn:hover {
+    background: rgba(59, 130, 246, 0.25) !important;
 }

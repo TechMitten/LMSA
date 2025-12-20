@@ -3483,28 +3483,9 @@ body.light-theme #dev-website-link.professional-button:hover {
 }
 
 /* Help modal button color accents */
-#tutorial-video-btn.professional-button {
-  border-color: rgba(220, 38, 38, 0.6);
-  border-width: 2px;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(220, 38, 38, 0.3);
-}
 
-#tutorial-video-btn.professional-button:hover {
-  border-color: rgba(220, 38, 38, 0.8);
-  box-shadow:
-    0 12px 40px rgba(220, 38, 38, 0.25),
-    0 6px 20px rgba(185, 28, 28, 0.15),
-    0 3px 10px rgba(153, 27, 27, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
-    0 0 0 2px rgba(220, 38, 38, 0.4);
-}
+
+
 
 #support-articles-btn.professional-button {
   border-color: rgba(16, 185, 129, 0.6);
@@ -3530,27 +3511,9 @@ body.light-theme #dev-website-link.professional-button:hover {
 }
 
 /* Light theme variants for help modal buttons */
-body.light-theme #tutorial-video-btn.professional-button {
-  border-color: rgba(220, 38, 38, 0.7);
-  box-shadow:
-    0 8px 32px rgba(15, 23, 42, 0.15),
-    0 4px 16px rgba(30, 41, 59, 0.1),
-    0 2px 8px rgba(51, 65, 85, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(220, 38, 38, 0.4);
-}
 
-body.light-theme #tutorial-video-btn.professional-button:hover {
-  border-color: rgba(220, 38, 38, 0.9);
-  box-shadow:
-    0 12px 40px rgba(220, 38, 38, 0.3),
-    0 6px 20px rgba(185, 28, 28, 0.2),
-    0 3px 10px rgba(153, 27, 27, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
-    0 0 0 2px rgba(220, 38, 38, 0.5);
-}
+
+
 
 body.light-theme #support-articles-btn.professional-button {
   border-color: rgba(16, 185, 129, 0.7);

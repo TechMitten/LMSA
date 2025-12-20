@@ -63,7 +63,7 @@ export function initializeTemperature() {
 
         // Track lock state explicitly to avoid browser confusion
         let isLocked = true; // Start locked
-        
+
         // Event prevention for when locked
         const preventSliderInteraction = (e) => {
             if (isLocked) {
@@ -73,12 +73,12 @@ export function initializeTemperature() {
                 return false;
             }
         };
-        
+
         // Add comprehensive event blocking
         ['mousedown', 'mouseup', 'mousemove', 'click', 'touchstart', 'touchend', 'touchmove', 'input', 'change'].forEach(eventType => {
             temperatureInput.addEventListener(eventType, preventSliderInteraction, { capture: true, passive: false });
         });
-        
+
         // Helper function to apply locked state
         const applyLockedState = () => {
             temperatureInput.disabled = true;
@@ -90,7 +90,7 @@ export function initializeTemperature() {
             temperatureLock.innerHTML = '<i class="fas fa-lock text-red-400"></i>';
             temperatureLock.title = 'Temperature is locked (click to unlock)';
         };
-        
+
         // Helper function to apply unlocked state
         const applyUnlockedState = () => {
             temperatureInput.disabled = false;
@@ -114,7 +114,7 @@ export function initializeTemperature() {
                 isLocked = true;
                 applyLockedState();
             }
-            
+
             // Force a repaint
             temperatureInput.offsetHeight;
         });
@@ -166,11 +166,24 @@ export function initializeSystemPrompt() {
             // Save both the prompt and the flag
             localStorage.setItem('systemPrompt', systemPrompt);
             localStorage.setItem('isUserCreatedSystemPrompt', 'true');
+
+            // Clear the active template since the user is manually editing
+            localStorage.removeItem('activeTemplateName');
+
             debugLog('Saved user-created system prompt:', systemPrompt);
 
             // Sync the display element if it exists
             if (systemPromptDisplay) {
                 systemPromptDisplay.textContent = systemPrompt;
+            }
+
+            // Update the template indicator
+            try {
+                import('./template-indicator.js').then(module => {
+                    module.hideTemplateIndicator();
+                });
+            } catch (error) {
+                debugLog('Error hiding template indicator:', error);
             }
         });
 
@@ -862,12 +875,60 @@ export function setSystemPrompt(prompt) {
 }
 
 /**
+ * Resets the system prompt to default (empty)
+ * Used when disabling templates or clearing the prompt
+ */
+export function resetSystemPrompt() {
+    debugLog('Resetting system prompt to default');
+
+    const DEFAULT_SYSTEM_PROMPT = '';
+
+    // Reset variables
+    systemPrompt = DEFAULT_SYSTEM_PROMPT;
+    isUserCreatedSystemPrompt = false;
+
+    // Update localStorage
+    localStorage.setItem('systemPrompt', DEFAULT_SYSTEM_PROMPT);
+    localStorage.removeItem('isUserCreatedSystemPrompt');
+    // Also clear active template name if it exists
+    localStorage.removeItem('activeTemplateName');
+
+    // Update UI elements
+    if (systemPromptInput) {
+        systemPromptInput.value = DEFAULT_SYSTEM_PROMPT;
+    }
+
+    const systemPromptDisplay = document.getElementById('system-prompt-display');
+    if (systemPromptDisplay) {
+        systemPromptDisplay.textContent = DEFAULT_SYSTEM_PROMPT;
+    }
+
+    const systemPromptPreview = document.getElementById('system-prompt-preview');
+    if (systemPromptPreview) {
+        systemPromptPreview.innerHTML = '';
+        const placeholderSpan = document.createElement('span');
+        placeholderSpan.id = 'prompt-placeholder';
+        placeholderSpan.className = 'text-gray-400 dark:text-gray-500 italic';
+        placeholderSpan.textContent = 'No system prompt set';
+        placeholderSpan.style.display = '';
+        systemPromptPreview.appendChild(placeholderSpan);
+    }
+
+    // Force update any CodeMirror editor
+    if (window.systemPromptEditor && typeof window.systemPromptEditor.setValue === 'function') {
+        window.systemPromptEditor.setValue(DEFAULT_SYSTEM_PROMPT);
+    }
+
+    debugLog('System prompt reset complete');
+}
+
+/**
  * Checks if a system prompt is explicitly set by the user or if a character is active
  * @returns {boolean} - True if a system prompt is set or a character is active, false otherwise
  */
 export function isSystemPromptSet() {
     // Character functionality has been removed - only check if system prompt exists
-    
+
     // Log the current state for debugging
     debugLog('isSystemPromptSet check - systemPrompt:', systemPrompt);
 

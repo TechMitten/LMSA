@@ -1,7 +1,7 @@
 // Touch event handlers for mobile devices
 import { messagesContainer, userInput } from './dom-elements.js';
 import { ensureCursorVisible, debugLog } from './utils.js';
-import { touchOptimizer, performanceMonitor } from './performance-optimizer.js';
+import { touchOptimizer } from './optimized-utils.js';
 
 /**
  * Initializes touch event handlers
@@ -14,7 +14,7 @@ export async function initializeTouchHandlers() {
     // - overflow-y: auto
     // - -webkit-overflow-scrolling: touch
     // - transform: translateZ(0) for hardware acceleration
-    
+
     // No custom touch handling needed for messages container
     debugLog('Touch handlers simplified - relying on native browser scrolling');
 
@@ -27,7 +27,7 @@ export async function initializeTouchHandlers() {
     // Allow scrolling within the settings modal scrollable areas
     const settingsContentWrapper = document.getElementById('settings-content-wrapper');
     if (settingsContentWrapper) {
-        settingsContentWrapper.addEventListener('touchmove', function(e) {
+        settingsContentWrapper.addEventListener('touchmove', function (e) {
             e.stopPropagation();
         }, { passive: true });
     }
@@ -35,7 +35,7 @@ export async function initializeTouchHandlers() {
     // Allow scrolling within the What's New modal
     const whatsNewModal = document.getElementById('whats-new-modal');
     if (whatsNewModal) {
-        whatsNewModal.addEventListener('touchmove', function(e) {
+        whatsNewModal.addEventListener('touchmove', function (e) {
             // Check if the touch is within the features container (scrollable area)
             if (e.target.closest('.features-container')) {
                 e.stopPropagation();

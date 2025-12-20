@@ -5,7 +5,7 @@ import {
 } from './dom-elements.js';
 import { basicSanitizeInput, sanitizeInput, initializeCodeMirror, scrollToBottom, copyToClipboard, debugLog, debugError, processCodeBlocks, decodeHtmlEntities, htmlToFormattedText } from './utils.js';
 import { getHideThinking } from './settings-manager.js';
-import { domBatcher, performanceMonitor, rafThrottle } from './performance-optimizer.js';
+import { domBatcher, rafThrottle } from './optimized-utils.js';
 
 
 let selectedText = '';
@@ -16,7 +16,7 @@ let longPressTimer;
  * Shows the welcome message and hides the messages container
  */
 export function showWelcomeMessage() {
-    performanceMonitor.trackDOMUpdate();
+    // Performance monitoring removed
 
     // Batch DOM operations to prevent layout thrashing
     domBatcher.write(() => {
@@ -43,7 +43,7 @@ export function showWelcomeMessage() {
  * Hides the welcome message and shows the messages container
  */
 export function hideWelcomeMessage() {
-    performanceMonitor.trackDOMUpdate();
+    // Performance monitoring removed
 
     // Batch DOM operations to prevent layout thrashing
     domBatcher.write(() => {

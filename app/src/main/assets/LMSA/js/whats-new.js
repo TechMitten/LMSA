@@ -3,13 +3,13 @@ import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { showExternalSiteModal } from './external-site-confirmation-modal.js';
 
 // DOM Elements
-const whatsNewModal = document.getElementById('whats-new-modal');
-const closeWhatsNewButton = document.getElementById('close-whats-new');
-const gotItButton = document.getElementById('got-it-whats-new');
-const versionElement = document.getElementById('whats-new-version');
+let whatsNewModal;
+let closeWhatsNewButton;
+let gotItButton;
+let versionElement;
 
 // Local storage keys
-const WHATS_NEW_VERSION = '9.0'; // Updated for new features: TTS Audio, Default model selection
+const WHATS_NEW_VERSION = '9.1'; // Updated for new features: TTS Audio, Default model selection
 
 // Flag to track if the modal has been shown in the current session
 let modalShownInCurrentSession = false;
@@ -23,6 +23,9 @@ export function showWhatsNewModal(forceShow = false) {
     if (modalShownInCurrentSession && !forceShow) {
         return;
     }
+
+    // Ensure elements are initialized
+    if (!whatsNewModal) initializeElements();
 
     if (whatsNewModal) {
         // Set the version number in the UI
@@ -192,9 +195,9 @@ function adjustModalHeight() {
         // Get the available viewport height
         const viewportHeight = window.innerHeight;
 
-        // Get the header and footer heights
-        const header = modalContent.querySelector('.flex.justify-between.items-center.mb-2');
-        const footer = modalContent.querySelector('.flex.justify-between.items-center.pt-2');
+        // Get the header and footer heights - use more robust selectors
+        const header = modalContent.querySelector('#whats-new-title')?.closest('.flex.justify-between');
+        const footer = modalContent.querySelector('#got-it-whats-new')?.closest('.flex.justify-end');
 
         const headerHeight = header ? header.offsetHeight : 0;
         const footerHeight = footer ? footer.offsetHeight : 0;
@@ -267,13 +270,39 @@ function setupTouchScrolling() {
 
         // Re-attach event handlers after cloning
         attachLocateOrderNumberHandler();
+
+        // Also re-attach close button listener just in case cloning affected the parent
+        // (though close button is outside features-container, it's good practice)
+        if (closeWhatsNewButton) {
+            // Remove old listener first to be safe (though cloning shouldn't affect it)
+            const newCloseBtn = closeWhatsNewButton.cloneNode(true);
+            closeWhatsNewButton.parentNode.replaceChild(newCloseBtn, closeWhatsNewButton);
+            closeWhatsNewButton = newCloseBtn;
+
+            closeWhatsNewButton.addEventListener('click', () => {
+                hideWhatsNewModal();
+            });
+        }
     }
+}
+
+/**
+ * Initialize DOM elements
+ */
+function initializeElements() {
+    whatsNewModal = document.getElementById('whats-new-modal');
+    closeWhatsNewButton = document.getElementById('close-whats-new');
+    gotItButton = document.getElementById('got-it-whats-new');
+    versionElement = document.getElementById('whats-new-version');
 }
 
 /**
  * Initializes the What's New modal functionality
  */
 export function initializeWhatsNew() {
+    // Initialize DOM elements
+    initializeElements();
+
     // Event listeners
     if (closeWhatsNewButton) {
         closeWhatsNewButton.addEventListener('click', () => {

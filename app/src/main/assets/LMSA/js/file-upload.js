@@ -1,7 +1,7 @@
 // File Upload functionality
 import { fileUploadInput as importedFileUploadInput } from './dom-elements.js';
 import { appendMessage } from './ui-manager.js';
-import { memoryManager } from './memory-manager.js';
+// Optimization modules removed
 
 let uploadedFiles = [];
 let uploadedFileIds = []; // Track uploaded file IDs for API requests
@@ -49,7 +49,7 @@ export async function isVisionModel() {
             updateVisionCache(modelId, result);
             return result;
         }
-        
+
         // Method 1: Check model details from /v1/models endpoint
         try {
             const modelsResponse = await fetch(`http://${serverIp}:${serverPort}/v1/models`, {
@@ -59,11 +59,11 @@ export async function isVisionModel() {
 
             if (modelsResponse.ok) {
                 const modelsData = await modelsResponse.json();
-                
+
                 if (modelsData.data && Array.isArray(modelsData.data)) {
                     const currentModel = modelsData.data.find(model => model.id === modelId);
                     if (currentModel) {
-                        
+
                         // Check for vision capabilities in model metadata
                         if (hasVisionCapabilities(currentModel)) {
                             updateVisionCache(modelId, true);
@@ -152,23 +152,23 @@ function fallbackNameBasedDetection() {
     }
 
     const modelName = window.currentLoadedModel.toLowerCase();
-    
+
     // Check if the model name contains vision indicators
     const visionIndicators = [
         'vision', 'visual', 'multimodal', 'mm', 'vlm',
         'qwen2-vl', 'qwen2.5-vl', 'llava', 'pixtral',
-        'gemma-3-4b', 'gemma-3-12b', 'gemma-3-27b', 'gemma-3', 'gemma3', 
+        'gemma-3-4b', 'gemma-3-12b', 'gemma-3-27b', 'gemma-3', 'gemma3',
         'phi-3.5-vision', 'minicpm-v',
         'internvl', 'cogvlm', 'blip', 'flamingo'
     ];
-    
-    
+
+
     // Check each indicator individually for debugging
     const matches = visionIndicators.filter(indicator => {
         const matches = modelName.includes(indicator);
         return matches;
     });
-    
+
     const hasVisionKeyword = matches.length > 0;
     return hasVisionKeyword;
 }
@@ -185,7 +185,7 @@ function hasVisionCapabilities(modelData) {
 
     // Check various possible capability indicators in model metadata
     const capabilityFields = [
-        'capabilities', 'modalities', 'supported_modalities', 
+        'capabilities', 'modalities', 'supported_modalities',
         'input_modalities', 'features', 'model_capabilities'
     ];
 
@@ -194,7 +194,7 @@ function hasVisionCapabilities(modelData) {
         if (capabilities) {
             // Check if capabilities is an array
             if (Array.isArray(capabilities)) {
-                const hasVision = capabilities.some(cap => 
+                const hasVision = capabilities.some(cap =>
                     typeof cap === 'string' && (
                         cap.toLowerCase().includes('vision') ||
                         cap.toLowerCase().includes('image') ||
@@ -206,11 +206,11 @@ function hasVisionCapabilities(modelData) {
             }
             // Check if capabilities is an object
             else if (typeof capabilities === 'object') {
-                const hasVision = Object.keys(capabilities).some(key => 
-                    key.toLowerCase().includes('vision') || 
+                const hasVision = Object.keys(capabilities).some(key =>
+                    key.toLowerCase().includes('vision') ||
                     key.toLowerCase().includes('image') ||
                     key.toLowerCase().includes('visual')
-                ) || Object.values(capabilities).some(value => 
+                ) || Object.values(capabilities).some(value =>
                     typeof value === 'string' && (
                         value.toLowerCase().includes('vision') ||
                         value.toLowerCase().includes('image') ||
@@ -222,9 +222,9 @@ function hasVisionCapabilities(modelData) {
             // Check if capabilities is a string
             else if (typeof capabilities === 'string') {
                 const hasVision = capabilities.toLowerCase().includes('vision') ||
-                               capabilities.toLowerCase().includes('image') ||
-                               capabilities.toLowerCase().includes('visual') ||
-                               capabilities.toLowerCase().includes('multimodal');
+                    capabilities.toLowerCase().includes('image') ||
+                    capabilities.toLowerCase().includes('visual') ||
+                    capabilities.toLowerCase().includes('multimodal');
                 if (hasVision) return true;
             }
         }
@@ -232,10 +232,10 @@ function hasVisionCapabilities(modelData) {
 
     // Check for vision-specific model properties
     const visionProperties = [
-        'vision_model', 'image_processor', 'vision_config', 
+        'vision_model', 'image_processor', 'vision_config',
         'vision_tower', 'mm_projector', 'image_encoder'
     ];
-    
+
     for (const prop of visionProperties) {
         if (modelData[prop]) {
             return true;
@@ -265,7 +265,7 @@ async function testVisionCapability(serverIp, serverPort, modelId) {
     try {
         // Create a minimal test image (1x1 PNG in base64)
         const testImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-        
+
         const testRequest = {
             model: modelId,
             messages: [
@@ -289,7 +289,7 @@ async function testVisionCapability(serverIp, serverPort, modelId) {
             stream: false
         };
 
-        
+
         const response = await fetch(`http://${serverIp}:${serverPort}/v1/chat/completions`, {
             method: 'POST',
             headers: {
@@ -303,14 +303,14 @@ async function testVisionCapability(serverIp, serverPort, modelId) {
             return true;
         } else {
             const errorText = await response.text().catch(() => '');
-            
+
             // If the error suggests the model doesn't support images, it's not a vision model
-            if (errorText.toLowerCase().includes('image') || 
+            if (errorText.toLowerCase().includes('image') ||
                 errorText.toLowerCase().includes('vision') ||
                 errorText.toLowerCase().includes('multimodal')) {
                 return false;
             }
-            
+
             // For other errors, we can't determine capability
             return null;
         }
@@ -368,7 +368,7 @@ async function getAllowedMimeTypes() {
     if (await isVisionModel()) {
         const imageMimeTypes = [
             'image/jpeg',
-            'image/jpg', 
+            'image/jpg',
             'image/png',
             'image/webp'
         ];
@@ -386,10 +386,10 @@ async function updateFileInputAccept() {
     if (!localFileInput) {
         return;
     }
-    
+
     // Always allow all file types - no restrictions
     localFileInput.removeAttribute('accept');
-    
+
     // Verify the accept attribute was removed
     setTimeout(() => {
         const actualAccept = document.getElementById('file-upload-input')?.accept;
@@ -402,15 +402,15 @@ async function updateFileInputAccept() {
  */
 export function initializeFileUpload() {
     // console.log('Initializing file upload functionality');
-    
+
     // Get file upload input element - use imported reference or find it directly
     localFileInput = importedFileUploadInput || document.getElementById('file-upload-input');
-    
+
     if (!localFileInput) {
         console.error('File upload input element not found');
         return;
     }
-    
+
     // console.log('Found file upload input element:', localFileInput.id);
 
     // Remove any existing event listeners to prevent duplicates
@@ -424,12 +424,12 @@ export function initializeFileUpload() {
         // console.log('File input has no parent node, removing event listeners directly');
         localFileInput.removeEventListener('change', handleFileSelection);
     }
-    
+
     // Add event listener for file selection
     localFileInput.addEventListener('change', async (event) => {
         // console.log('File upload input change event triggered');
         await handleFileSelection(event);
-        
+
         // Always clear the file input after processing to ensure change event fires next time
         // This is especially important for the case where user selects same file multiple times
         setTimeout(() => {
@@ -438,13 +438,13 @@ export function initializeFileUpload() {
             }
         }, 100);
     });
-    
+
     // Reset the uploaded files state - commented out to preserve file previews
     // resetUploadedFiles();
-    
+
     // Update file input accept attribute based on current model
     updateFileInputAccept();
-    
+
     // Add event listener to the paperclip button
     const paperclipButton = document.getElementById('paperclip-button');
     if (paperclipButton) {
@@ -474,7 +474,7 @@ export function initializeFileUpload() {
             });
         }
     }
-    
+
     // console.log('File upload initialization complete');
 }
 
@@ -484,13 +484,13 @@ export function initializeFileUpload() {
  */
 export async function updateFileUploadCapabilities() {
     // console.log('Updating file upload capabilities for model:', window.currentLoadedModel);
-    
+
     const visionCapable = await isVisionModel();
     // console.log('Vision model detected:', visionCapable);
-    
+
     // Update the file input accept attribute
     await updateFileInputAccept();
-    
+
     // Update UI to show/hide image upload capability
     const paperclipButton = document.getElementById('paperclip-button');
     if (paperclipButton) {
@@ -498,7 +498,7 @@ export async function updateFileUploadCapabilities() {
         if (visionCapable) {
             paperclipButton.setAttribute('title', 'Upload files or images (Vision model detected)');
             paperclipButton.classList.add('vision-enabled');
-            
+
             // Camera icon indicator disabled to maintain consistent appearance
             // Remove any existing camera icon indicator
             const existingCameraIcon = paperclipButton.querySelector('.vision-indicator');
@@ -508,7 +508,7 @@ export async function updateFileUploadCapabilities() {
         } else {
             paperclipButton.setAttribute('title', 'Upload files');
             paperclipButton.classList.remove('vision-enabled');
-            
+
             // Remove camera icon indicator
             const existingCameraIcon = paperclipButton.querySelector('.vision-indicator');
             if (existingCameraIcon) {
@@ -529,14 +529,14 @@ async function extractDocxText(input) {
         if (input && typeof input === 'object' && input.content && typeof input.content === 'string') {
             return input.content;
         }
-        
+
         // Initialize JSZip to extract the XML content from the DOCX (which is a ZIP file)
         const JSZip = window.JSZip;
         if (!JSZip) {
             console.error('JSZip library not available. Loading it dynamically.');
             await loadJSZip();
         }
-        
+
         // Convert File to ArrayBuffer if needed
         let arrayBuffer;
         if (input instanceof File) {
@@ -545,22 +545,22 @@ async function extractDocxText(input) {
             // Assume it's already an ArrayBuffer
             arrayBuffer = input;
         }
-        
+
         // Parse the DOCX file (ZIP archive)
         const zip = await JSZip.loadAsync(arrayBuffer);
-        
+
         // The main document content is in word/document.xml
         const documentFile = zip.file('word/document.xml');
         if (!documentFile) {
             console.error('Invalid DOCX file: Could not find word/document.xml');
             return 'Invalid DOCX file: Missing document content.';
         }
-        
+
         const contentXml = await documentFile.async('text');
-        
+
         // Extract text from XML
         let textContent = '';
-        
+
         // Simple XML parsing using regex to extract text between <w:t> tags
         // This is a simplified approach, proper XML parsing would be more robust
         const textMatches = contentXml.match(/<w:t[^>]*>([^<]*)<\/w:t>/g);
@@ -573,7 +573,7 @@ async function extractDocxText(input) {
                 })
                 .join(' ');
         }
-        
+
         return textContent || 'No text content could be extracted from DOCX file.';
     } catch (error) {
         console.error('Error extracting DOCX content:', error);
@@ -589,12 +589,12 @@ async function loadJSZip() {
         if (window.JSZip) {
             return window.JSZip;
         }
-        
+
         // Use the lazy loader from index.html
         if (typeof window.loadJSZipLibrary === 'function') {
             return await window.loadJSZipLibrary();
         }
-        
+
         throw new Error('JSZip lazy loader not available');
     } catch (error) {
         console.error('Error loading JSZip:', error);
@@ -607,27 +607,27 @@ async function loadJSZip() {
  */
 async function loadPDFJS() {
     return new Promise((resolve, reject) => {
-        
+
         // Check if PDF.js is already loaded
         if (window.pdfjsLib) {
             resolve(window.pdfjsLib);
             return;
         }
-        
+
         // Check alternative global variable names
         if (window.PDFJS) {
             window.pdfjsLib = window.PDFJS;
             resolve(window.PDFJS);
             return;
         }
-        
+
         // Check if we're already in the process of loading PDF.js
         if (window._loadingPDFJS) {
             window._loadingPDFJS.then(resolve).catch(reject);
             return;
         }
-        
-        
+
+
         // Create a promise to track the loading process
         window._loadingPDFJS = new Promise((loadResolve, loadReject) => {
             // Use the HTML lazy loader
@@ -635,15 +635,15 @@ async function loadPDFJS() {
                 window.loadPDFLibrary()
                     .then(() => {
                         console.log('HTML loadPDFLibrary resolved, checking for PDF.js...');
-                        
+
                         // Wait a bit and check multiple times
                         let checkAttempts = 0;
                         const maxChecks = 20;
-                        
+
                         const checkForPDFJS = () => {
                             checkAttempts++;
                             console.log(`Checking for PDF.js, attempt ${checkAttempts}/${maxChecks}`);
-                            
+
                             if (window.pdfjsLib) {
                                 console.log('PDF.js found as pdfjsLib after HTML loader');
                                 loadResolve(window.pdfjsLib);
@@ -659,7 +659,7 @@ async function loadPDFJS() {
                                 loadReject(new Error('PDF.js not available after loading'));
                             }
                         };
-                        
+
                         // Start checking immediately
                         checkForPDFJS();
                     })
@@ -672,7 +672,7 @@ async function loadPDFJS() {
                 loadReject(new Error('PDF.js loader not available'));
             }
         });
-        
+
         // Return the loading promise
         window._loadingPDFJS
             .then(lib => {
@@ -695,38 +695,38 @@ function preprocessImageForOCR(originalCanvas) {
     // Create a new canvas for preprocessing
     const preprocessedCanvas = document.createElement('canvas');
     const ctx = preprocessedCanvas.getContext('2d');
-    
+
     // Set canvas size to match original
     preprocessedCanvas.width = originalCanvas.width;
     preprocessedCanvas.height = originalCanvas.height;
-    
+
     // Draw original image to new canvas
     ctx.drawImage(originalCanvas, 0, 0);
-    
+
     // Get image data for processing
     const imageData = ctx.getImageData(0, 0, preprocessedCanvas.width, preprocessedCanvas.height);
     const data = imageData.data;
-    
+
     // Apply image preprocessing techniques
     for (let i = 0; i < data.length; i += 4) {
         // Convert to grayscale using luminance formula
         const gray = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
-        
+
         // Apply contrast enhancement and binarization
         // Threshold for black/white conversion (adjust as needed)
         const threshold = 128;
         const binaryValue = gray > threshold ? 255 : 0;
-        
+
         // Set RGB values to binary result
         data[i] = binaryValue;     // Red
         data[i + 1] = binaryValue; // Green
         data[i + 2] = binaryValue; // Blue
         // Alpha channel (data[i + 3]) remains unchanged
     }
-    
+
     // Put processed image data back to canvas
     ctx.putImageData(imageData, 0, 0);
-    
+
     return preprocessedCanvas;
 }
 
@@ -741,33 +741,33 @@ async function loadTesseract() {
             console.log('Tesseract.js already available and ready');
             return window.Tesseract;
         }
-        
+
         // Use the lazy loader from index.html
         if (typeof window.loadTesseractLibrary === 'function') {
             console.log('Loading Tesseract library...');
             const tesseract = await window.loadTesseractLibrary();
-            
+
             // Wait for Tesseract to be fully ready
             let attempts = 0;
             const maxAttempts = 100; // 10 seconds max wait
-            
+
             while (attempts < maxAttempts) {
                 if (window.Tesseract && typeof window.Tesseract.recognize === 'function') {
                     console.log('Tesseract.js fully initialized and ready');
                     return window.Tesseract;
                 }
-                
+
                 if (attempts % 10 === 0) { // Log every second
                     console.log(`Waiting for Tesseract.js initialization... attempt ${attempts}/${maxAttempts}`);
                 }
-                
+
                 await new Promise(resolve => setTimeout(resolve, 100));
                 attempts++;
             }
-            
+
             throw new Error('Tesseract.js failed to initialize after waiting 10 seconds');
         }
-        
+
         throw new Error('Tesseract lazy loader not available');
     } catch (error) {
         console.error('Error loading Tesseract:', error);
@@ -786,7 +786,7 @@ async function extractPdfText(input) {
         if (input && typeof input === 'object' && input.content && typeof input.content === 'string') {
             return input.content;
         }
-        
+
         // Load PDF.js library if not already available
         let pdfjsLib = window.pdfjsLib || window.PDFJS;
         if (!pdfjsLib) {
@@ -804,7 +804,7 @@ async function extractPdfText(input) {
                 }
             }
         }
-        
+
         // Convert File to ArrayBuffer if needed
         let arrayBuffer;
         if (input instanceof File) {
@@ -814,72 +814,72 @@ async function extractPdfText(input) {
             // Assume it's already an ArrayBuffer
             arrayBuffer = input;
         }
-        
+
         // Load the PDF document
         const typedArray = new Uint8Array(arrayBuffer);
         const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
-        
+
         console.log(`PDF loaded successfully. Number of pages: ${pdf.numPages}`);
-        
+
         let extractedText = '';
         let hasTextContent = false;
         let ocrNeeded = false;
-        
+
         // First pass: Extract text from each page using PDF.js
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
             try {
                 const page = await pdf.getPage(pageNum);
                 const textContent = await page.getTextContent();
-                
+
                 console.log(`Page ${pageNum}: Found ${textContent.items.length} text items`);
-                
+
                 // Debug: Log first few text items to see what we're getting
                 if (textContent.items.length > 0 && pageNum === 1) {
                     console.log(`First 5 text items on page 1:`, textContent.items.slice(0, 5).map(item => ({ str: item.str, transform: item.transform })));
                 }
-                
+
                 // Process text items with better spacing and formatting
                 let pageText = '';
                 let lastY = null;
-                
+
                 textContent.items.forEach((item, index) => {
                     // item.transform[5] contains the Y coordinate
                     const currentY = item.transform ? item.transform[5] : 0;
-                    
+
                     // If this is a new line (different Y coordinate), add line break
                     if (lastY !== null && Math.abs(currentY - lastY) > 5) {
                         pageText += '\n';
                     }
-                    
+
                     // Add the text content
                     pageText += item.str;
-                    
+
                     // Add space if needed (check if next item needs a space)
                     if (index < textContent.items.length - 1) {
                         const nextItem = textContent.items[index + 1];
                         const nextY = nextItem.transform ? nextItem.transform[5] : 0;
-                        
+
                         // If on the same line and there's a gap, add space
                         if (Math.abs(currentY - nextY) <= 5 && !item.str.endsWith(' ') && !nextItem.str.startsWith(' ')) {
                             pageText += ' ';
                         }
                     }
-                    
+
                     lastY = currentY;
                 });
-                
+
                 // Clean up excessive whitespace
                 pageText = pageText
                     .replace(/\n\s*\n\s*\n/g, '\n\n') // Replace multiple line breaks with double line break
                     .replace(/[ \t]+/g, ' ') // Replace multiple spaces/tabs with single space
                     .trim();
-                
+
                 if (pageText.length > 10) {
                     hasTextContent = true;
                 }
-                
+
                 extractedText += `--- Page ${pageNum} ---\n${pageText}\n\n`;
-                
+
                 console.log(`Successfully extracted text from page ${pageNum}, length: ${pageText.length} characters`);
                 console.log(`Page ${pageNum} raw text preview:`, pageText.substring(0, 200) + (pageText.length > 200 ? '...' : ''));
             } catch (pageError) {
@@ -887,56 +887,56 @@ async function extractPdfText(input) {
                 extractedText += `--- Page ${pageNum} ---\n[Error extracting text from this page: ${pageError.message}]\n\n`;
             }
         }
-        
+
         console.log(`Successfully extracted PDF content from ${input.name || 'PDF'}, total length: ${extractedText.length} characters`);
-        
+
         // Check if we got very little or no text content - if so, try OCR
         const cleanedText = extractedText.replace(/--- Page \d+ ---\n/g, '').trim();
         if (cleanedText.length < 50) {
             console.warn(`PDF appears to be image-based or has very little text content. Extracted length: ${cleanedText.length}. Attempting OCR...`);
             ocrNeeded = true;
-            
+
             try {
                 // Notify user that OCR is starting
                 const fileName = input.name || 'PDF';
                 appendMessage('system', `📄 Processing image-based PDF "${fileName}" with OCR (Optical Character Recognition). This may take a few moments...`);
-                
+
                 // Load Tesseract.js for OCR
                 const Tesseract = await loadTesseract();
                 console.log('Tesseract.js loaded successfully, starting OCR process...');
-                
+
                 let ocrText = '';
-                
+
                 // Second pass: Render pages as images and perform OCR
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                     try {
                         console.log(`Starting OCR for page ${pageNum}...`);
-                        
+
                         const page = await pdf.getPage(pageNum);
                         const viewport = page.getViewport({ scale: 2.0 }); // Higher scale for better OCR accuracy
-                        
+
                         // Create canvas to render PDF page
                         const canvas = document.createElement('canvas');
                         const context = canvas.getContext('2d');
                         canvas.height = viewport.height;
                         canvas.width = viewport.width;
-                        
+
                         // Render PDF page to canvas
                         const renderContext = {
                             canvasContext: context,
                             viewport: viewport
                         };
-                        
+
                         await page.render(renderContext).promise;
-                        
+
                         // Preprocess the image for better OCR accuracy
                         const preprocessedCanvas = preprocessImageForOCR(canvas);
-                        
+
                         // Convert canvas to image data for OCR
                         const imageData = preprocessedCanvas.toDataURL('image/png');
-                        
+
                         console.log(`Performing OCR on page ${pageNum}...`);
-                        
+
                         // Perform OCR on the rendered page with optimized settings
                         const { data: { text } } = await Tesseract.recognize(imageData, 'eng', {
                             logger: m => {
@@ -948,7 +948,7 @@ async function extractPdfText(input) {
                             preserve_interword_spaces: '1',
                             tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,!?:;()-[]{}"\'/\\@#$%^&*+=<>|~`'
                         });
-                        
+
                         const cleanedOcrText = text.trim();
                         if (cleanedOcrText.length > 0) {
                             ocrText += `--- Page ${pageNum} (OCR) ---\n${cleanedOcrText}\n\n`;
@@ -957,17 +957,17 @@ async function extractPdfText(input) {
                             ocrText += `--- Page ${pageNum} (OCR) ---\n[No text detected via OCR]\n\n`;
                             console.log(`OCR completed for page ${pageNum}, but no text was detected`);
                         }
-                        
+
                     } catch (ocrError) {
                         console.error(`OCR error for page ${pageNum}:`, ocrError);
                         ocrText += `--- Page ${pageNum} (OCR) ---\n[OCR failed: ${ocrError.message}]\n\n`;
                     }
                 }
-                
+
                 if (ocrText.trim().length > 0) {
                     const fileName = input.name || 'PDF';
                     const ocrExtractedText = ocrText.replace(/--- Page \d+ \(OCR\) ---\n/g, '').trim();
-                    
+
                     if (ocrExtractedText.length > 50) {
                         console.log(`OCR successful! Extracted ${ocrExtractedText.length} characters from image-based PDF`);
                         appendMessage('system', `✅ OCR processing completed for "${fileName}". Successfully extracted ${ocrExtractedText.length} characters of text.`);
@@ -979,14 +979,14 @@ async function extractPdfText(input) {
                 } else {
                     appendMessage('system', `❌ OCR processing completed for "${fileName}", but no text was detected in the images.`);
                 }
-                
+
             } catch (ocrError) {
                 console.error('OCR processing failed:', ocrError);
                 const fileName = input.name || 'PDF';
                 appendMessage('system', `❌ OCR processing failed for "${fileName}": ${ocrError.message}. The PDF will be processed without OCR.`);
                 // Fall through to original error message
             }
-            
+
             // If OCR failed or didn't find much text, return the original message
             const fileName = input.name || 'PDF';
             return `[This PDF (${fileName}) appears to be an image-based/scanned document with ${pdf.numPages} pages. ${ocrNeeded ? 'OCR was attempted but' : ''} No extractable text was found. This could be because:
@@ -1000,9 +1000,9 @@ ${ocrNeeded ? 'OCR (Optical Character Recognition) was attempted but did not yie
 
 The PDF was successfully loaded and has ${pdf.numPages} pages, but contains no extractable text content.]`;
         }
-        
+
         return extractedText;
-        
+
     } catch (error) {
         console.error('Error extracting PDF content:', error);
         console.error('PDF extraction error details:', {
@@ -1023,13 +1023,13 @@ The PDF was successfully loaded and has ${pdf.numPages} pages, but contains no e
  */
 export async function handleFileSelection(event) {
     console.log('handleFileSelection called with event:', event);
-    
+
     // Defensive programming: ensure event and event.target exist
     if (!event || !event.target) {
         console.error('Invalid event or event.target in handleFileSelection');
         return;
     }
-    
+
     const files = event.target.files;
     if (!files || files.length === 0) {
         console.log('No files selected');
@@ -1125,7 +1125,7 @@ function createFilePreviewsContainer(files) {
         console.log('Inserting file preview container before chat form');
         chatForm.parentNode.insertBefore(container, chatForm);
         console.log('File preview container inserted successfully');
-        
+
         // Debug: Check if container still exists after a delay
         setTimeout(() => {
             const existingContainer = document.querySelector('.file-previews');
@@ -1134,7 +1134,7 @@ function createFilePreviewsContainer(files) {
                 console.log('Container visibility:', window.getComputedStyle(existingContainer).visibility);
                 console.log('Container display:', window.getComputedStyle(existingContainer).display);
                 console.log('Container opacity:', window.getComputedStyle(existingContainer).opacity);
-                
+
                 // Check image elements inside the container
                 const images = existingContainer.querySelectorAll('img');
                 console.log(`Found ${images.length} image(s) in container`);
@@ -1144,7 +1144,7 @@ function createFilePreviewsContainer(files) {
                     console.log(`Image ${index} display:`, window.getComputedStyle(img).display);
                     console.log(`Image ${index} opacity:`, window.getComputedStyle(img).opacity);
                     console.log(`Image ${index} naturalWidth:`, img.naturalWidth, 'naturalHeight:', img.naturalHeight);
-                    
+
                     // Check if blob URL is still valid
                     if (img.src.startsWith('blob:')) {
                         const testImg = new Image();
@@ -1157,7 +1157,7 @@ function createFilePreviewsContainer(files) {
                 console.error('File preview container disappeared after 1 second!');
             }
         }, 1000);
-        
+
         // Debug: Add MutationObserver to track container removal
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
@@ -1170,7 +1170,7 @@ function createFilePreviewsContainer(files) {
                             console.trace('Container removal stack trace');
                         }
                     });
-                    
+
                     // Also check for any changes to the container's parent
                     mutation.addedNodes.forEach((node) => {
                         if (node.nodeType === Node.ELEMENT_NODE) {
@@ -1181,7 +1181,7 @@ function createFilePreviewsContainer(files) {
                         }
                     });
                 }
-                
+
                 // Track attribute changes that might affect visibility
                 if (mutation.type === 'attributes' && mutation.target.classList && mutation.target.classList.contains('file-previews')) {
                     console.log('File preview container attribute changed:', mutation.attributeName, 'new value:', mutation.target.getAttribute(mutation.attributeName));
@@ -1189,7 +1189,7 @@ function createFilePreviewsContainer(files) {
             });
         });
         observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
-        
+
     } else {
         console.error('Could not find chat form or its parent for file preview insertion');
     }
@@ -1202,17 +1202,17 @@ function createFilePreviewsContainer(files) {
  */
 function removeFilePreview(fileIndex, fileName) {
     console.log(`removeFilePreview called for file: ${fileName}, index: ${fileIndex}`);
-    
+
     // Clean up blob URL for the file being removed
     if (uploadedFiles[fileIndex] && uploadedFiles[fileIndex].blobUrl) {
         URL.revokeObjectURL(uploadedFiles[fileIndex].blobUrl);
         console.log(`Revoked blob URL for removed file: ${fileName}`);
     }
-    
+
     // Remove from uploadedFiles array
     uploadedFiles = uploadedFiles.filter((file, index) => index !== fileIndex);
     console.log(`uploadedFiles length after removal: ${uploadedFiles.length}`);
-    
+
     // Remove the file preview container if no files left
     if (uploadedFiles.length === 0) {
         console.log('No files left, removing file preview container');
@@ -1225,7 +1225,7 @@ function removeFilePreview(fileIndex, fileName) {
         // Recreate the previews with updated indices
         createFilePreviewsContainer(uploadedFiles);
     }
-    
+
     console.log(`Removed file: ${fileName}`);
 }
 
@@ -1242,10 +1242,10 @@ function readFileAsArrayBuffer(file) {
             reject(new Error('Input is not a Blob. Cannot use FileReader for ArrayBuffer.'));
             return;
         }
-        
+
         const reader = new FileReader();
-        
-        reader.onload = function(e) {
+
+        reader.onload = function (e) {
             try {
                 const arrayBuffer = e.target.result;
                 console.log(`Successfully read ${file.name} as ArrayBuffer, size: ${arrayBuffer.byteLength} bytes`);
@@ -1255,12 +1255,12 @@ function readFileAsArrayBuffer(file) {
                 reject(error);
             }
         };
-        
-        reader.onerror = function(e) {
+
+        reader.onerror = function (e) {
             console.error(`FileReader error for ArrayBuffer ${file.name}:`, e);
             reject(new Error(`FileReader error: ${e.target.error}`));
         };
-        
+
         try {
             reader.readAsArrayBuffer(file);
         } catch (error) {
@@ -1278,7 +1278,7 @@ function readFileAsArrayBuffer(file) {
 async function readFileContent(file) {
     return new Promise((resolve, reject) => {
         console.log(`Reading file content for: ${file.name}, type: ${file.type}`);
-        
+
         try {
             // If file is an object with content already
             if (file && typeof file === 'object' && file.content && typeof file.content === 'string') {
@@ -1290,45 +1290,45 @@ async function readFileContent(file) {
                 });
                 return;
             }
-            
+
             // Check file types by extension and MIME type
             const fileNameLower = file.name.toLowerCase();
             const isPdfFile = fileNameLower.endsWith('.pdf') || (file.type && file.type === 'application/pdf');
             const isDocxFile = fileNameLower.endsWith('.docx') || fileNameLower.endsWith('.doc');
-            const isImageFile = (file.type && file.type.startsWith('image/')) || 
-                               ['.jpg', '.jpeg', '.png', '.webp'].some(ext => fileNameLower.endsWith(ext));
-            
+            const isImageFile = (file.type && file.type.startsWith('image/')) ||
+                ['.jpg', '.jpeg', '.png', '.webp'].some(ext => fileNameLower.endsWith(ext));
+
             // Define text file types
             const textFileTypes = [
-                'text/', 
-                'application/json', 
-                'application/javascript', 
+                'text/',
+                'application/json',
+                'application/javascript',
                 'application/typescript',
-                'application/xml', 
-                'application/x-sh', 
+                'application/xml',
+                'application/x-sh',
                 'application/xhtml+xml'
             ];
-            
+
             // Define text file extensions
             const textFileExtensions = [
-                '.txt', '.json', '.md', '.py', '.js', '.ts', '.jsx', '.tsx', 
-                '.sh', '.c', '.cpp', '.h', '.hpp', '.yaml', '.yml', '.html', 
-                '.css', '.svg', '.csv', '.log', '.java', '.php', '.rb', '.go', 
+                '.txt', '.json', '.md', '.py', '.js', '.ts', '.jsx', '.tsx',
+                '.sh', '.c', '.cpp', '.h', '.hpp', '.yaml', '.yml', '.html',
+                '.css', '.svg', '.csv', '.log', '.java', '.php', '.rb', '.go',
                 '.rs', '.toml', '.ini', '.config', '.sql'
             ];
-            
+
             // Check if it's a text file based on type or extension
             const isTextTypeByMimeType = textFileTypes.some(type => file.type && file.type.startsWith(type));
             const isTextTypeByExtension = textFileExtensions.some(ext => fileNameLower.endsWith(ext));
             const isTextFile = isTextTypeByMimeType || isTextTypeByExtension;
-            
+
             console.log(`File ${file.name} classification: isPdf=${isPdfFile}, isDocx=${isDocxFile}, isImage=${isImageFile}, isTextByMime=${isTextTypeByMimeType}, isTextByExt=${isTextTypeByExtension}`);
-            
+
             if (isImageFile) {
                 // Process image files as base64
                 readAsDataURL(file).then(async (base64Content) => {
                     console.log(`Successfully read image content from ${file.name}, base64 length: ${base64Content.length}`);
-                    
+
                     // Check if this is a WebP image and convert it to PNG for better compatibility
                     let finalContent = base64Content;
                     if (base64Content.startsWith('data:image/webp')) {
@@ -1347,7 +1347,7 @@ async function readFileContent(file) {
                             finalContent = base64Content;
                         }
                     }
-                    
+
                     // Validate and clean the base64 data URL for all images
                     try {
                         finalContent = validateBase64DataURL(finalContent);
@@ -1355,7 +1355,7 @@ async function readFileContent(file) {
                     } catch (validationError) {
                         console.warn(`Failed to validate base64 data URL for ${file.name}:`, validationError);
                     }
-                    
+
                     resolve({
                         name: file.name,
                         type: file.type || inferFileType(file.name),
@@ -1375,13 +1375,13 @@ async function readFileContent(file) {
                 // Process PDF files using PDF.js
                 extractPdfText(file).then(content => {
                     console.log(`Successfully extracted PDF content from ${file.name}, length: ${content.length}`);
-                    
+
                     // Check if the content looks like an error message
                     if (content.includes('[Failed to extract PDF content:') || content.length < 50) {
                         console.warn(`PDF extraction may have failed for ${file.name}, content length: ${content.length}`);
                         console.warn(`Content preview: ${content.substring(0, 100)}`);
                     }
-                    
+
                     resolve({
                         name: file.name,
                         type: file.type || 'application/pdf',
@@ -1389,21 +1389,21 @@ async function readFileContent(file) {
                     });
                 }).catch(error => {
                     console.error(`Error extracting PDF content from ${file.name}:`, error);
-                    
+
                     // Try a simple text extraction as fallback
                     console.log(`Attempting text fallback for PDF ${file.name}...`);
                     readAsText(file).then(textContent => {
                         console.log(`Text fallback for PDF ${file.name} returned ${textContent.length} characters`);
-                        
+
                         // Check if the text content contains any readable text
-                        const hasReadableText = textContent.length > 100 && 
-                                              /[a-zA-Z]{3,}/.test(textContent) && 
-                                              !textContent.includes('PDF') || textContent.includes('%PDF');
-                        
+                        const hasReadableText = textContent.length > 100 &&
+                            /[a-zA-Z]{3,}/.test(textContent) &&
+                            !textContent.includes('PDF') || textContent.includes('%PDF');
+
                         resolve({
                             name: file.name,
                             type: file.type || 'application/pdf',
-                            content: hasReadableText ? 
+                            content: hasReadableText ?
                                 `[PDF processed as raw text - may contain formatting artifacts and binary data]\n\n${textContent.substring(0, 5000)}${textContent.length > 5000 ? '\n\n[Content truncated due to length...]' : ''}` :
                                 `[Failed to extract PDF content: ${error.message}. This appears to be an image-based PDF. OCR (Optical Character Recognition) processing will be attempted automatically for image-based PDFs.]`
                         });
@@ -1496,10 +1496,10 @@ function readAsDataURL(file) {
             reject(new Error('Input is not a Blob. Cannot use FileReader for data URL.'));
             return;
         }
-        
+
         const reader = new FileReader();
-        
-        reader.onload = function(e) {
+
+        reader.onload = function (e) {
             try {
                 const dataUrl = e.target.result;
                 console.log(`Successfully read ${file.name} as data URL, length: ${dataUrl.length}`);
@@ -1509,12 +1509,12 @@ function readAsDataURL(file) {
                 reject(error);
             }
         };
-        
-        reader.onerror = function(e) {
+
+        reader.onerror = function (e) {
             console.error(`FileReader error for data URL ${file.name}:`, e);
             reject(new Error(`FileReader error: ${e.target.error}`));
         };
-        
+
         try {
             reader.readAsDataURL(file);
         } catch (error) {
@@ -1531,7 +1531,7 @@ function readAsDataURL(file) {
  */
 function readAsText(file) {
     console.log('readAsText called for file:', file?.name);
-    
+
     return new Promise((resolve, reject) => {
         // If the file is actually an object with content property already (from chat history)
         if (file && typeof file === 'object' && file.content && typeof file.content === 'string') {
@@ -1539,7 +1539,7 @@ function readAsText(file) {
             resolve(file.content);
             return;
         }
-        
+
         // If file is not a Blob (e.g., not a real File object), we can't use FileReader
         if (!(file instanceof Blob)) {
             console.error(`File ${file.name} is not a Blob, cannot use FileReader`);
@@ -1553,10 +1553,10 @@ function readAsText(file) {
             reject(new Error('Input is not a Blob. Cannot use FileReader.'));
             return;
         }
-        
+
         const reader = new FileReader();
-        
-        reader.onload = function(e) {
+
+        reader.onload = function (e) {
             try {
                 const content = e.target.result;
                 console.log(`Successfully read ${file.name} as text, content length: ${content.length}`);
@@ -1566,17 +1566,17 @@ function readAsText(file) {
                 reject(error);
             }
         };
-        
-        reader.onerror = function(e) {
+
+        reader.onerror = function (e) {
             console.error(`FileReader error for ${file.name}:`, e);
             reject(new Error(`FileReader error: ${e.target.error}`));
         };
-        
-        reader.onabort = function(e) {
+
+        reader.onabort = function (e) {
             console.error(`FileReader aborted for ${file.name}:`, e);
             reject(new Error('File reading was aborted'));
         };
-        
+
         try {
             console.log(`Starting readAsText for ${file.name}, file type:`, file.type);
             // Set a timeout to prevent potential hangs
@@ -1588,11 +1588,11 @@ function readAsText(file) {
                     console.error('Error aborting file read:', error);
                 }
             }, 30000); // 30 seconds timeout
-            
-            reader.onloadend = function() {
+
+            reader.onloadend = function () {
                 clearTimeout(timeoutId);
             };
-            
+
             reader.readAsText(file);
         } catch (error) {
             console.error(`Error initiating readAsText for ${file.name}:`, error);
@@ -1612,7 +1612,7 @@ export async function uploadFilesToLMStudio(files) {
             console.log('No files to process');
             return [];
         }
-        
+
         console.log(`Processing ${files.length} files for LM Studio:`, files.map(f => f.name).join(', '));
         console.log('Files details:', files.map(f => ({
             name: f.name,
@@ -1622,14 +1622,14 @@ export async function uploadFilesToLMStudio(files) {
             isBlob: f instanceof Blob,
             isFile: f instanceof File
         })));
-        
+
         // Process each file using the unified reader function
         const fileContentsPromises = files.map(file => readFileContent(file));
-        
+
         const fileContents = await Promise.all(fileContentsPromises);
         console.log('Files processed successfully:', fileContents.map(f => f.name).join(', '));
         console.log('File content summary:', fileContents.map(f => `${f.name}: ${f.content ? f.content.length : 0} chars`).join(', '));
-        
+
         return fileContents;
     } catch (error) {
         console.error('Error processing files:', error);
@@ -1673,24 +1673,24 @@ export function resetUploadedFiles() {
             blob: file.blob
         });
     });
-    
+
     uploadedFiles = [];
     console.log('uploadedFiles array cleared in resetUploadedFiles');
     uploadedFileIds = [];
-    
+
     // Clear processing files
     processingFiles.clear();
-    
+
     if (localFileInput) {
         localFileInput.value = '';
     }
-    
+
     // Remove file preview container
     const filePreviewsContainer = document.querySelector('.file-previews');
     if (filePreviewsContainer) {
         filePreviewsContainer.remove();
     }
-    
+
     // console.log('Uploaded files reset and memory cleaned up');
 }
 
@@ -1718,28 +1718,28 @@ export function getUploadedFileIds() {
 async function extractFileContent(file) {
     try {
         console.log(`Extracting content from file: ${file.name}, type: ${file.type}`);
-        
+
         // If the file already has content property (from chat history), use it directly
         if (file && typeof file === 'object' && file.content && typeof file.content === 'string') {
             console.log(`File ${file.name} already has content as string, using directly`);
             return file.content;
         }
-        
+
         // Check file type by extension
         const fileName = file.name.toLowerCase();
-        
+
         // PDF files
         if (fileName.endsWith('.pdf')) {
             console.log(`Processing ${file.name} as PDF document`);
             return await extractPdfText(file);
         }
-        
+
         // DOCX files
         if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
             console.log(`Processing ${file.name} as DOCX document`);
             return await extractDocxText(file);
         }
-        
+
         // For all other file types, try to read as text
         console.log(`Processing ${file.name} as text file`);
         try {
@@ -1748,7 +1748,7 @@ async function extractFileContent(file) {
             console.error(`Error reading ${file.name} as text:`, error);
             return `[Error reading file: ${error.message}]`;
         }
-        
+
     } catch (error) {
         console.error(`Error extracting content from ${file.name}:`, error);
         return `[Error extracting content from ${file.name}: ${error.message}]`;
@@ -1765,9 +1765,9 @@ export async function prepareFilesForLLM(files) {
         console.log('No files to prepare for LLM');
         return "";
     }
-    
+
     console.log(`Preparing ${files.length} files for LLM input`);
-    
+
     try {
         // Process each file to extract content
         const extractionResults = await Promise.all(
@@ -1782,7 +1782,7 @@ export async function prepareFilesForLLM(files) {
                         success: false
                     };
                 }
-                
+
                 try {
                     const content = await extractFileContent(file);
                     return {
@@ -1802,16 +1802,16 @@ export async function prepareFilesForLLM(files) {
                 }
             })
         );
-        
+
         // Build the formatted context for the LLM with very clear attachment markers
         const totalFiles = extractionResults.length;
-        const fileTypes = extractionResults.map(r => r.type.includes('pdf') ? 'PDF' : 
-                                                    r.type.includes('word') || r.name.toLowerCase().includes('doc') ? 'Word Document' :
-                                                    r.type.includes('text') ? 'Text File' : 'Document').join(', ');
-        
+        const fileTypes = extractionResults.map(r => r.type.includes('pdf') ? 'PDF' :
+            r.type.includes('word') || r.name.toLowerCase().includes('doc') ? 'Word Document' :
+                r.type.includes('text') ? 'Text File' : 'Document').join(', ');
+
         let formattedContext = `📎 ATTACHMENTS: ${totalFiles} file(s) attached (${fileTypes})\n`;
         formattedContext += "=".repeat(60) + "\n\n";
-        
+
         extractionResults.forEach((result, index) => {
             // Determine file type for display
             let fileTypeDisplay = 'Document';
@@ -1824,11 +1824,11 @@ export async function prepareFilesForLLM(files) {
             } else if (result.type.includes('text')) {
                 fileTypeDisplay = 'Text File';
             }
-            
+
             formattedContext += `📄 ATTACHMENT ${index + 1}: ${fileTypeDisplay}\n`;
             formattedContext += `📝 Filename: ${result.name}\n`;
             formattedContext += `📋 Content Type: ${result.type}\n`;
-            
+
             // Handle image files differently
             if (result.isImage) {
                 formattedContext += `🖼️ Image Content: Base64 encoded image data (${result.content.length} characters)\n`;
@@ -1837,44 +1837,44 @@ export async function prepareFilesForLLM(files) {
                 formattedContext += "=".repeat(60) + "\n\n";
                 return; // Skip the normal content processing for images
             }
-            
+
             // More conservative content length limits for better API compatibility
             let maxContentLength = 50000; // Reduced from 100000 to be more conservative
-            
+
             // For PDFs, be even more conservative as they tend to have dense content
             if (result.type === 'application/pdf' || result.name.toLowerCase().endsWith('.pdf')) {
                 maxContentLength = 30000; // Further reduced for PDFs
             }
-            
+
             const wasContentTruncated = result.content.length > maxContentLength;
             const displayContent = wasContentTruncated ? result.content.substring(0, maxContentLength) : result.content;
-            
+
             formattedContext += `📊 Content Length: ${wasContentTruncated ? `${maxContentLength} chars (truncated from ${result.content.length})` : `${result.content.length} chars (complete)`}\n`;
             formattedContext += "─".repeat(50) + "\n";
             formattedContext += "CONTENT:\n";
             formattedContext += "```\n";
             formattedContext += displayContent;
-            
+
             if (wasContentTruncated) {
                 formattedContext += `\n\n⚠️ [CONTENT TRUNCATED: Original document had ${result.content.length} characters. Showing first ${maxContentLength} characters for analysis.]`;
-                
+
                 // Add a brief summary of what was truncated
                 const remainingLength = result.content.length - maxContentLength;
                 if (remainingLength > 1000) {
                     formattedContext += `\n💡 [NOTE: ${remainingLength} additional characters contain more content from this document.]`;
                 }
             }
-            
+
             formattedContext += "\n```\n";
             formattedContext += "=".repeat(60) + "\n\n";
         });
-        
+
         formattedContext += `✅ Total ${totalFiles} attachment(s) processed and ready for analysis.\n`;
         formattedContext += `💬 Please analyze the attached ${fileTypes.toLowerCase()} and respond to the user's question.\n\n`;
-        
+
         console.log(`Successfully prepared ${extractionResults.length} attachments for LLM input`);
         console.log(`Total attachment content size: ${formattedContext.length} characters`);
-        
+
         return formattedContext;
     } catch (error) {
         console.error('Error preparing files for LLM:', error);
@@ -1889,7 +1889,7 @@ export async function prepareFilesForLLM(files) {
  */
 function inferFileType(fileName) {
     const extension = fileName.split('.').pop().toLowerCase();
-    
+
     const mimeTypes = {
         'txt': 'text/plain',
         'html': 'text/html',
@@ -1922,7 +1922,7 @@ function inferFileType(fileName) {
         'png': 'image/png',
         'webp': 'image/webp'
     };
-    
+
     return mimeTypes[extension] || 'application/octet-stream';
 }
 
@@ -1945,23 +1945,23 @@ export async function convertWebPToPNG(webpDataUrl) {
         try {
             // Create an image element to load the WebP
             const img = new Image();
-            
-            img.onload = function() {
+
+            img.onload = function () {
                 try {
                     // Create a canvas to convert the image
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    
+
                     // Set canvas dimensions to match the image
                     canvas.width = img.width;
                     canvas.height = img.height;
-                    
+
                     // Draw the image onto the canvas
                     ctx.drawImage(img, 0, 0);
-                    
+
                     // Convert canvas to PNG data URL
                     const pngDataUrl = canvas.toDataURL('image/png');
-                    
+
                     console.log(`Successfully converted WebP to PNG, original: ${webpDataUrl.length} chars, converted: ${pngDataUrl.length} chars`);
                     resolve(pngDataUrl);
                 } catch (error) {
@@ -1969,12 +1969,12 @@ export async function convertWebPToPNG(webpDataUrl) {
                     reject(error);
                 }
             };
-            
-            img.onerror = function(error) {
+
+            img.onerror = function (error) {
                 console.error('Error loading WebP image for conversion:', error);
                 reject(new Error('Failed to load WebP image for conversion'));
             };
-            
+
             // Load the WebP image
             img.src = webpDataUrl;
         } catch (error) {
@@ -1995,24 +1995,24 @@ export function validateBase64DataURL(dataUrl) {
         if (!dataUrl.startsWith('data:')) {
             throw new Error('Invalid data URL format - missing data: prefix');
         }
-        
+
         // Split the data URL into parts
         const parts = dataUrl.split(',');
         if (parts.length !== 2) {
             throw new Error('Invalid data URL format - missing comma separator');
         }
-        
+
         const [header, base64Data] = parts;
-        
+
         // Validate the header format
         if (!header.includes('base64')) {
             throw new Error('Invalid data URL format - missing base64 declaration');
         }
-        
+
         // Validate that the base64 data is properly formatted
         // Remove any whitespace or newlines that might have been added
         const cleanBase64 = base64Data.replace(/\s/g, '');
-        
+
         // Check if the base64 string is valid
         try {
             // Try to decode the base64 to validate it
@@ -2020,10 +2020,10 @@ export function validateBase64DataURL(dataUrl) {
         } catch (base64Error) {
             throw new Error(`Invalid base64 data: ${base64Error.message}`);
         }
-        
+
         // Return the cleaned data URL
         return `${header},${cleanBase64}`;
-        
+
     } catch (error) {
         console.error('Base64 data URL validation failed:', error);
         // Return the original if validation fails

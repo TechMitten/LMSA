@@ -8,6 +8,7 @@ import {
     regenerateTextButton, exitButton, refreshButton, modelToggleButton, loadedModelDisplay,
     settingsIconButton, newTopicButton, sendButton, sendContextMenu, newTopicMenuButton, scrollToBottomMenuButton,
     modelButton, importExportGroupButton, importExportContainer,
+    exportChatsButton, importChatsButton, importChatsInput,
     welcomeModelsBtn, welcomeNewChatBtn, welcomeHelpBtn
 } from './dom-elements.js';
 import { showSettingsModal, hideSettingsModal } from './settings-modal-manager.js';
@@ -501,32 +502,75 @@ export function initializeEventHandlers() {
         });
     }
 
-    // Privacy Policy button
+    // Privacy Policy Logic
     const privacyPolicyBtn = document.getElementById('privacy-policy-btn');
+    const privacyPolicyCloseBtn = document.getElementById('privacy-policy-close-btn');
+    const privacyPolicyModal = document.getElementById('privacy-policy-modal');
+
+    // Function to close privacy policy modal
+    const closePrivacyPolicyModal = () => {
+        if (privacyPolicyModal) {
+            privacyPolicyModal.classList.add('hidden');
+            privacyPolicyModal.style.display = 'none';
+
+            // Restore body scroll
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.height = '';
+
+            // Remove temporary event listeners
+            document.removeEventListener('keydown', handlePrivacyPolicyEscape);
+            privacyPolicyModal.removeEventListener('click', handlePrivacyPolicyOutsideClick);
+        }
+    };
+
+    // Handle Escape key
+    const handlePrivacyPolicyEscape = (e) => {
+        if (e.key === 'Escape') {
+            closePrivacyPolicyModal();
+        }
+    };
+
+    // Handle outside click
+    const handlePrivacyPolicyOutsideClick = (e) => {
+        if (e.target === privacyPolicyModal) {
+            closePrivacyPolicyModal();
+        }
+    };
+
     if (privacyPolicyBtn) {
         privacyPolicyBtn.addEventListener('click', () => {
             // Close the sidebar first
             closeSidebar();
 
             // Then open the Privacy Policy modal
-            const privacyPolicyModal = document.getElementById('privacy-policy-modal');
+            const privacyPolicyContent = document.getElementById('privacy-policy-content');
             if (privacyPolicyModal) {
                 privacyPolicyModal.classList.remove('hidden');
                 privacyPolicyModal.style.display = 'flex';
+
+                // Prevent body scroll (match terms modal behavior)
+                document.body.style.overflow = 'hidden';
+                document.body.style.position = 'fixed';
+                document.body.style.width = '100%';
+                document.body.style.height = '100%';
+
+                // Reset scroll position
+                if (privacyPolicyContent) {
+                    privacyPolicyContent.scrollTop = 0;
+                }
+
+                // Add temporary event listeners
+                document.addEventListener('keydown', handlePrivacyPolicyEscape);
+                privacyPolicyModal.addEventListener('click', handlePrivacyPolicyOutsideClick);
             }
         });
     }
 
     // Privacy Policy modal close button
-    const privacyPolicyCloseBtn = document.getElementById('privacy-policy-close-btn');
     if (privacyPolicyCloseBtn) {
-        privacyPolicyCloseBtn.addEventListener('click', () => {
-            const privacyPolicyModal = document.getElementById('privacy-policy-modal');
-            if (privacyPolicyModal) {
-                privacyPolicyModal.classList.add('hidden');
-                privacyPolicyModal.style.display = 'none';
-            }
-        });
+        privacyPolicyCloseBtn.addEventListener('click', closePrivacyPolicyModal);
     }
 
     // Locate order number link (in Legacy Access modal) - opens external site modal
@@ -1560,6 +1604,71 @@ export function initializeEventHandlers() {
 
         // Add click event listener to the new button
         document.getElementById('import-export-group-btn').addEventListener('click', toggleImportExportContainer);
+    }
+
+    // Export Chats button
+    if (exportChatsButton) {
+        // Remove any existing event listeners to prevent duplicates
+        const newExportChatsButton = exportChatsButton.cloneNode(true);
+        exportChatsButton.parentNode.replaceChild(newExportChatsButton, exportChatsButton);
+
+        // Add the event listener to the new button
+        newExportChatsButton.addEventListener('click', () => {
+            // Close the sidebar first
+            closeSidebarExport();
+
+            // Show the export confirmation modal
+            import('./ui-manager.js').then(module => {
+                module.showExportConfirmationModal();
+
+                // Re-attach event listeners to the export confirmation buttons
+                const confirmExportBtn = document.getElementById('confirm-export');
+                const cancelExportBtn = document.getElementById('cancel-export');
+
+                if (confirmExportBtn) {
+                    // Remove any existing event listeners to prevent duplicates
+                    const newConfirmExportBtn = confirmExportBtn.cloneNode(true);
+                    confirmExportBtn.parentNode.replaceChild(newConfirmExportBtn, confirmExportBtn);
+
+                    // Add the event listener to the new button
+                    newConfirmExportBtn.addEventListener('click', () => {
+                        // Hide the confirmation modal
+                        module.hideExportConfirmationModal();
+                        // Perform the export
+                        import('./export-import.js').then(exportModule => {
+                            exportModule.exportChats();
+                        });
+                    });
+                }
+
+                if (cancelExportBtn) {
+                    // Remove any existing event listeners to prevent duplicates
+                    const newCancelExportBtn = cancelExportBtn.cloneNode(true);
+                    cancelExportBtn.parentNode.replaceChild(newCancelExportBtn, cancelExportBtn);
+
+                    // Add the event listener to the new button
+                    newCancelExportBtn.addEventListener('click', () => {
+                        module.hideExportConfirmationModal();
+                    });
+                }
+            });
+        });
+    }
+
+    // Import Chats button
+    if (importChatsButton && importChatsInput) {
+        // Remove any existing event listeners to prevent duplicates
+        const newImportChatsButton = importChatsButton.cloneNode(true);
+        importChatsButton.parentNode.replaceChild(newImportChatsButton, importChatsButton);
+
+        // Add the event listener to the new button
+        newImportChatsButton.addEventListener('click', () => {
+            // Close the sidebar first
+            closeSidebarExport();
+
+            // Trigger the file input
+            importChatsInput.click();
+        });
     }
 }
 

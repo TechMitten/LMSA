@@ -16,14 +16,14 @@ import { initializeModelManager } from './model-manager.js';
 import { initializeWhatsNew } from './whats-new.js';
 import { initializeSettingsModal } from './settings-modal-manager.js';
 import { initializeIpPortConfirmationModal } from './ip-port-confirmation-modal.js';
+import { initializeTemplateIndicator } from './template-indicator.js';
 
-import { memoryManager } from './memory-manager.js';
-import { messageCache } from './message-cache.js';
-import { chatHistoryOptimizer } from './chat-history-optimizer.js';
+// Optimization modules removed
+
 
 import { updateConfirmationModalTheme, updateExportImportModalsTheme } from './confirmation-modal-fix.js';
-import { memoryLeakDetector, MemoryUtils } from './memory-leak-detector.js';
-import { performanceMonitor, animationOptimizer } from './performance-optimizer.js';
+// Memory leak detector removed
+import { animationOptimizer } from './optimized-utils.js';
 // Import help.js to ensure help modal buttons work immediately
 import './help.js';
 // Import about.js to ensure about modal buttons work immediately
@@ -33,7 +33,7 @@ import './about.js';
 let initialViewportHeight = window.innerHeight;
 let androidKeyboardHeight = 0;
 
-// Import age verification and terms acceptance for checking
+// Import terms acceptance for checking
 import { hasAcceptedCurrentTerms } from './terms-acceptance.js';
 
 
@@ -41,7 +41,7 @@ import { hasAcceptedCurrentTerms } from './terms-acceptance.js';
  * Initializes the application
  */
 export async function initializeApp() {
-    // Wait for age verification and terms acceptance check before proceeding
+    // Wait for terms acceptance check before proceeding
 
 
     if (!hasAcceptedCurrentTerms()) {
@@ -140,6 +140,7 @@ export async function initializeApp() {
     initializeCollapsibleSections();
     initializeSettingsModal();
     initializeIpPortConfirmationModal();
+    initializeTemplateIndicator();
 
     // Pre-initialize TTS service to prevent double-tap issues
     try {
@@ -203,51 +204,15 @@ export async function initializeApp() {
     });
 
     // Initialize memory optimizations
-    // Register cleanup callbacks for memory management
-    memoryManager.registerCleanupCallback(() => {
-        // Clean up message cache
-        const cacheStats = messageCache.getStats();
-        if (cacheStats.memoryUtilization > 80) {
-            messageCache.performCleanup();
-        }
-    });
+    // Memory optimizations removed
 
-    memoryManager.registerCleanupCallback(() => {
-        // Clean up chat history optimizer
-        const memoryStats = chatHistoryOptimizer.getMemoryStats();
-        if (memoryStats.compressedDataSize > 10 * 1024 * 1024) { // 10MB
-            chatHistoryOptimizer.cleanupOldCompressedData([]);
-        }
-    });
 
     // Initialize performance optimizations
-    performanceMonitor.trackDOMUpdate();
+    // Performance monitoring removed
 
 
 
-    // Add performance monitoring to window for debugging
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-        window.performanceMonitor = performanceMonitor;
-        window.memoryUtils = MemoryUtils;
-        window.animationOptimizer = animationOptimizer;
-
-        // Log performance summary every 30 seconds in development
-        const performanceInterval = setInterval(() => {
-            console.log('Performance Summary:', performanceMonitor.getMetrics());
-            const leaks = MemoryUtils.checkForLeaks();
-            if (leaks) {
-                console.warn('Memory leaks detected:', leaks);
-            }
-        }, 30000);
-
-        // Stop performance monitoring after 5 minutes to prevent long-term memory leaks
-        setTimeout(() => {
-            clearInterval(performanceInterval);
-            console.log('Performance monitoring stopped');
-
-        }, 5 * 60 * 1000);
-
-    }
+    // Performance monitoring removed for production/staging
 }
 
 /**
@@ -362,12 +327,12 @@ function initializeAndroidKeyboardFix() {
     }
 }
 
-// Initialize the application when the DOM is loaded, age is verified, and terms are accepted
+// Initialize the application when the DOM is loaded and terms are accepted
 document.addEventListener('DOMContentLoaded', function () {
     // Make initializeApp globally available
     window.initializeApp = initializeApp;
 
-    // Check age verification and terms acceptance first, then initialize app if both pass
+    // Check terms acceptance first, then initialize app if passed
     if (hasAcceptedCurrentTerms()) {
         initializeApp();
     } else {

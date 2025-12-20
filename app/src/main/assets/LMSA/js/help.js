@@ -8,8 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const newChatHeaderBtn = document.getElementById('new-chat-header-button');
     const helpModal = document.getElementById('help-modal');
     const closeHelpBtn = document.getElementById('close-help');
-    const tutorialVideoBtn = document.getElementById('tutorial-video-btn');
-      const settingsHelpBtn = document.getElementById('settings-help-btn');
+
+    const settingsHelpBtn = document.getElementById('settings-help-btn');
     const sidebarElement = document.getElementById('sidebar');
     const modalContent = helpModal ? helpModal.querySelector('.modal-content') : null;
     const openSettingsLink = document.getElementById('open-settings-link');
@@ -130,18 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
             closeHelpBtn.addEventListener('click', closeHelpModal);
         }
 
-        // Tutorial video button event listener
-        /*
-        if (tutorialVideoBtn) {
-            tutorialVideoBtn.addEventListener('click', () => {
-                // Show confirmation modal before opening YouTube video
-                const youtubeUrl = 'https://www.youtube.com/watch?v=qoXfa6In5BM&pp=ygUMbG1zYSBhbmRyb2lk';
-                showExternalSiteModal(youtubeUrl);
-            });
-        }
-        */
 
-  
+
+
         // Settings link event listener
         if (openSettingsLink && settingsModal) {
             openSettingsLink.addEventListener('click', (e) => {

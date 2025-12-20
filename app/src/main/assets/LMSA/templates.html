@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>LM Studio Assistant - Template Selection</title>
+    <link rel="stylesheet" href="css/tailwind-local.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block"
+        rel="stylesheet" />
+
+    <style>
+        /* CSS Variables from theme-variables.css would be ideal, but we map manually for now to ensure offline functionality without full build */
+        :root {
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-700: #334155;
+            --slate-500: #64748b;
+            --slate-400: #94a3b8;
+            --slate-300: #cbd5e1;
+            --slate-200: #e2e8f0;
+            --slate-100: #f1f5f9;
+
+            --blue-500: #3b82f6;
+            --blue-400: #60a5fa;
+
+            --primary: #60A5FA;
+        }
+
+        /* Material Symbols Outlined Base Style */
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Essential Color Utilities */
+        .bg-slate-900 {
+            background-color: var(--slate-900);
+        }
+
+        .bg-slate-800 {
+            background-color: var(--slate-800);
+        }
+
+        .bg-slate-700 {
+            background-color: var(--slate-700);
+        }
+
+        .text-slate-100 {
+            color: var(--slate-100);
+        }
+
+        .text-slate-200 {
+            color: var(--slate-200);
+        }
+
+        .text-slate-300 {
+            color: var(--slate-300);
+        }
+
+        .text-slate-400 {
+            color: var(--slate-400);
+        }
+
+        .text-slate-500 {
+            color: var(--slate-500);
+        }
+
+        .bg-primary {
+            background-color: var(--blue-500);
+        }
+
+        /* Mapping to standard blue */
+        .text-white {
+            color: #ffffff;
+        }
+
+        /* Specific Opacity & Border Utilities */
+        .bg-white\/10 {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .bg-white\/5 {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .bg-slate-900\/50 {
+            background-color: rgba(15, 23, 42, 0.5);
+        }
+
+        .bg-slate-900\/95 {
+            background-color: rgba(15, 23, 42, 0.95);
+        }
+
+        .bg-slate-800\/50 {
+            background-color: rgba(30, 41, 59, 0.5);
+        }
+
+        .bg-slate-800\/80 {
+            background-color: rgba(30, 41, 59, 0.8);
+        }
+
+        .border-white\/10 {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .border-blue-500\/20 {
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .bg-blue-500\/20 {
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .border-dashed {
+            border-style: dashed;
+        }
+
+        .border-slate-600\/60 {
+            border-color: rgba(71, 85, 105, 0.6);
+        }
+
+        /* Icon Colors - Manual Polyfills */
+        .bg-orange-500\/10 {
+            background-color: rgba(249, 115, 22, 0.1);
+        }
+
+        .text-orange-400 {
+            color: #fb923c;
+        }
+
+        .group:hover .group-hover\:bg-orange-500\/20 {
+            background-color: rgba(249, 115, 22, 0.2);
+        }
+
+        .border-orange-500\/10 {
+            border-color: rgba(249, 115, 22, 0.1);
+        }
+
+        .bg-purple-500\/10 {
+            background-color: rgba(168, 85, 247, 0.1);
+        }
+
+        .text-purple-400 {
+            color: #c084fc;
+        }
+
+        .group:hover .group-hover\:bg-purple-500\/20 {
+            background-color: rgba(168, 85, 247, 0.2);
+        }
+
+        .border-purple-500\/10 {
+            border-color: rgba(168, 85, 247, 0.1);
+        }
+
+        .bg-red-500\/10 {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        .text-red-400 {
+            color: #f87171;
+        }
+
+        .group:hover .group-hover\:bg-red-500\/20 {
+            background-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .border-red-500\/10 {
+            border-color: rgba(239, 68, 68, 0.1);
+        }
+
+        .bg-emerald-500\/10 {
+            background-color: rgba(16, 185, 129, 0.1);
+        }
+
+        .text-emerald-400 {
+            color: #34d399;
+        }
+
+        .group:hover .group-hover\:bg-emerald-500\/20 {
+            background-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .border-emerald-500\/10 {
+            border-color: rgba(16, 185, 129, 0.1);
+        }
+
+        .bg-blue-500\/10 {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+
+        .text-blue-400 {
+            color: #60a5fa;
+        }
+
+        .group:hover .group-hover\:bg-blue-500\/20 {
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .border-blue-500\/10 {
+            border-color: rgba(59, 130, 246, 0.1);
+        }
+
+        .bg-pink-500\/10 {
+            background-color: rgba(236, 72, 153, 0.1);
+        }
+
+        .text-pink-400 {
+            color: #f472b6;
+        }
+
+        .group:hover .group-hover\:bg-pink-500\/20 {
+            background-color: rgba(236, 72, 153, 0.2);
+        }
+
+        .border-pink-500\/10 {
+            border-color: rgba(236, 72, 153, 0.1);
+        }
+
+        .bg-cyan-500\/10 {
+            background-color: rgba(6, 182, 212, 0.1);
+        }
+
+        .text-cyan-400 {
+            color: #22d3ee;
+        }
+
+        .group:hover .group-hover\:bg-cyan-500\/20 {
+            background-color: rgba(6, 182, 212, 0.2);
+        }
+
+        .border-cyan-500\/10 {
+            border-color: rgba(6, 182, 212, 0.1);
+        }
+
+        .bg-sky-500\/10 {
+            background-color: rgba(14, 165, 233, 0.1);
+        }
+
+        .text-sky-400 {
+            color: #38bdf8;
+        }
+
+        .group:hover .group-hover\:bg-sky-500\/20 {
+            background-color: rgba(14, 165, 233, 0.2);
+        }
+
+        .border-sky-500\/10 {
+            border-color: rgba(14, 165, 233, 0.1);
+        }
+
+        .bg-indigo-500\/10 {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+
+        .text-indigo-400 {
+            color: #818cf8;
+        }
+
+        .group:hover .group-hover\:bg-indigo-500\/20 {
+            background-color: rgba(99, 102, 241, 0.2);
+        }
+
+        .border-indigo-500\/10 {
+            border-color: rgba(99, 102, 241, 0.1);
+        }
+
+        .bg-teal-500\/10 {
+            background-color: rgba(20, 184, 166, 0.1);
+        }
+
+        .text-teal-400 {
+            color: #2dd4bf;
+        }
+
+        .group:hover .group-hover\:bg-teal-500\/20 {
+            background-color: rgba(20, 184, 166, 0.2);
+        }
+
+        .border-teal-500\/10 {
+            border-color: rgba(20, 184, 166, 0.1);
+        }
+
+        .bg-rose-500\/10 {
+            background-color: rgba(244, 63, 94, 0.1);
+        }
+
+        .text-rose-400 {
+            color: #fb7185;
+        }
+
+        .group:hover .group-hover\:bg-rose-500\/20 {
+            background-color: rgba(244, 63, 94, 0.2);
+        }
+
+        .border-rose-500\/10 {
+            border-color: rgba(244, 63, 94, 0.1);
+        }
+
+        .bg-lime-500\/10 {
+            background-color: rgba(132, 204, 22, 0.1);
+        }
+
+        .text-lime-400 {
+            color: #a3e635;
+        }
+
+        .group:hover .group-hover\:bg-lime-500\/20 {
+            background-color: rgba(132, 204, 22, 0.2);
+        }
+
+        .border-lime-500\/10 {
+            border-color: rgba(132, 204, 22, 0.1);
+        }
+
+        .bg-yellow-500\/10 {
+            background-color: rgba(234, 179, 8, 0.1);
+        }
+
+        .text-yellow-400 {
+            color: #facc15;
+        }
+
+        .group:hover .group-hover\:bg-yellow-500\/20 {
+            background-color: rgba(234, 179, 8, 0.2);
+        }
+
+        .border-yellow-500\/10 {
+            border-color: rgba(234, 179, 8, 0.1);
+        }
+
+        .bg-fuchsia-500\/10 {
+            background-color: rgba(217, 70, 239, 0.1);
+        }
+
+        .text-fuchsia-400 {
+            color: #e879f9;
+        }
+
+        .group:hover .group-hover\:bg-fuchsia-500\/20 {
+            background-color: rgba(217, 70, 239, 0.2);
+        }
+
+        .border-fuchsia-500\/10 {
+            border-color: rgba(217, 70, 239, 0.1);
+        }
+
+        /* Gradients */
+        .bg-gradient-to-t {
+            background-image: linear-gradient(to top, var(--tw-gradient-stops));
+        }
+
+        .bg-gradient-to-b {
+            background-image: linear-gradient(to bottom, var(--tw-gradient-stops));
+        }
+
+        .from-slate-900 {
+            --tw-gradient-from: #0f172a;
+            --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(15, 23, 42, 0));
+        }
+
+        .via-slate-900\/95 {
+            --tw-gradient-via: rgba(15, 23, 42, 0.95);
+            --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to, rgba(15, 23, 42, 0));
+        }
+
+        .via-\[\#1e293b\] {
+            --tw-gradient-via: #1e293b;
+            --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to, rgba(30, 41, 59, 0));
+        }
+
+        .to-slate-900 {
+            --tw-gradient-to: #0f172a;
+        }
+
+        .to-transparent {
+            --tw-gradient-to: transparent;
+        }
+
+        /* Ring utilities */
+        .ring-2 {
+            box-shadow: 0 0 0 2px var(--tw-ring-color, #3b82f6);
+        }
+
+        .ring-blue-500 {
+            --tw-ring-color: #3b82f6;
+        }
+
+        /* Other utilities */
+        .cursor-not-allowed {
+            cursor: not-allowed;
+        }
+
+        .opacity-50 {
+            opacity: 0.5;
+        }
+
+        .active\:scale-\[0\.98\]:active {
+            transform: scale(0.98);
+        }
+
+        .hover\:bg-white\/10:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .hover\:bg-white\/5:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .hover\:bg-slate-800\/50:hover {
+            background-color: rgba(30, 41, 59, 0.5);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .glass-card:active {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(0.98);
+        }
+
+        .glass-header {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            min-height: max(884px, 100dvh);
+        }
+
+        /* JIT Polyfills - Layout & Sizing */
+        .h-\[850px\] {
+            height: 850px;
+        }
+
+        .max-h-\[100dvh\] {
+            max-height: 100dvh;
+        }
+
+        .min-h-screen {
+            min-height: 100vh;
+        }
+
+        /* Sizing Polyfills */
+        .w-full {
+            width: 100%;
+        }
+
+        .h-full {
+            height: 100%;
+        }
+
+        .max-w-md {
+            max-width: 28rem;
+        }
+
+        /* Padding & Margin spacing */
+        .p-4 {
+            padding: 1rem;
+        }
+
+        .p-5 {
+            padding: 1.25rem;
+        }
+
+        .p-6 {
+            padding: 1.5rem;
+        }
+
+        .px-4 {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .py-4 {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        .pt-12 {
+            padding-top: 3rem;
+        }
+
+        .pb-28 {
+            padding-bottom: 7rem;
+        }
+
+        .mb-6 {
+            margin-bottom: 1.5rem;
+        }
+
+        .gap-4 {
+            gap: 1rem;
+        }
+
+        .space-x-2> :not([hidden])~ :not([hidden]) {
+            margin-left: 0.5rem;
+        }
+
+        .space-x-3> :not([hidden])~ :not([hidden]) {
+            margin-left: 0.75rem;
+        }
+
+        /* Rounded Utilities */
+        .rounded-2xl {
+            border-radius: 1rem;
+        }
+
+        .rounded-lg {
+            border-radius: 0.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .sm\:rounded-\[30px\] {
+                border-radius: 30px;
+            }
+
+            .sm\:border {
+                border-width: 1px;
+            }
+
+            .sm\:shadow-2xl {
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            }
+        }
+
+        /* Border & Rings */
+        .ring-1 {
+            box-shadow: 0 0 0 1px var(--tw-ring-color, rgba(255, 255, 255, 0.05));
+        }
+
+        .ring-white\/5 {
+            --tw-ring-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Backdrop Filters */
+        .backdrop-blur-sm {
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .backdrop-blur-md {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Flex & Grid alignment (helpers) */
+        .flex-col {
+            flex-direction: column;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-center {
+            justify-content: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        /* Ensuring sticky header works */
+        .sticky {
+            position: sticky;
+        }
+
+        .top-0 {
+            top: 0;
+        }
+
+        .bottom-0 {
+            bottom: 0;
+        }
+
+        .left-0 {
+            left: 0;
+        }
+
+        .right-0 {
+            right: 0;
+        }
+
+        .inset-0 {
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+
+        .absolute {
+            position: absolute;
+        }
+
+        .relative {
+            position: relative;
+        }
+
+        .z-10 {
+            z-index: 10;
+        }
+
+        .z-20 {
+            z-index: 20;
+        }
+
+        .z-30 {
+            z-index: 30;
+        }
+
+        .z-50 {
+            z-index: 50;
+        }
+
+        .-z-50 {
+            z-index: -50;
+        }
+
+        .overflow-hidden {
+            overflow: hidden;
+        }
+
+        .pointer-events-none {
+            pointer-events: none;
+        }
+
+        /* Animation */
+        .transition-colors {
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+        }
+
+        .transition-all {
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+        }
+
+        /* Aspect Ratio */
+        .aspect-square {
+            aspect-ratio: 1 / 1;
+        }
+
+        @keyframes blob {
+            0% {
+                transform: translate(0px, 0px) scale(1);
+            }
+
+            33% {
+                transform: translate(30px, -50px) scale(1.1);
+            }
+
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+
+            100% {
+                transform: translate(0px, 0px) scale(1);
+            }
+        }
+
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+
+        .template-title {
+            text-transform: none;
+            background: none;
+            -webkit-text-fill-color: initial;
+            text-shadow: none;
+            letter-spacing: -0.025em;
+            color: #ffffff;
+        }
+
+        /* Fix for selected state ring visibility */
+        .glass-card.ring-2 {
+            box-shadow: 0 0 0 2px var(--tw-ring-color, #3b82f6), 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+    <style>
+        html,
+        body {
+            overflow-x: hidden;
+            width: 100%;
+            overscroll-behavior-y: none;
+            /* Prevents bounce effect on Mac/iOS */
+        }
+
+        body {
+            min-height: 100vh;
+            /* Remove fixed pixel min-height that forces scroll on smaller screens unless intended */
+            /* min-height: max(884px, 100dvh); <- this was likely causing scrollbar issues if viewport < 884px */
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-900 font-display text-white min-h-screen flex flex-col items-center justify-center relative overflow-x-hidden selection:bg-blue-500/30">
+
+    <!-- Fixed Background Container to prevent layout shifts/scrollbars -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none -z-50">
+        <div class="absolute top-0 left-0 w-full h-full bg-slate-900"></div>
+        <div
+            class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-slate-800 via-[#1e293b] to-slate-900 opacity-80">
+        </div>
+        <!-- Blobs inside fixed container -->
+        <div
+            class="absolute top-[-10%] right-[-10%] w-96 h-96 bg-blue-600 rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-blob">
+        </div>
+        <div
+            class="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-indigo-600 rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-blob animation-delay-2000">
+        </div>
+    </div>
+
+    <div
+        class="w-full max-w-md h-[850px] max-h-[100dvh] relative flex flex-col bg-slate-900/50 overflow-hidden sm:rounded-[30px] sm:border sm:border-white/10 sm:shadow-2xl ring-1 ring-white/5 backdrop-blur-sm">
+        <header class="flex items-center justify-between px-4 py-4 glass-header sticky top-0 z-30">
+            <div class="flex items-center space-x-3">
+                <button class="p-2 -ml-2 rounded-full hover:bg-white/10 transition text-slate-200"
+                    onclick="window.location.href='index.html'">
+                    <span class="material-symbols-outlined text-2xl">arrow_back</span>
+                </button>
+                <div class="flex items-center gap-2.5">
+                    <div
+                        class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center border border-blue-500/20">
+                        <span class="material-symbols-outlined text-lg text-blue-400">dashboard</span>
+                    </div>
+                    <h1 class="text-lg font-bold tracking-tight text-white template-title">Select a Template</h1>
+                </div>
+            </div>
+
+        </header>
+        <main class="flex-1 overflow-y-auto p-5 pb-28 scroll-smooth">
+            <div class="mb-6">
+                <p class="text-sm text-slate-400 leading-relaxed">
+                    Choose a persona to start your conversation with a specialized context.
+                </p>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <button
+                    class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50">
+                    <div
+                        class="w-12 h-12 mb-3 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors border border-orange-500/10">
+                        <span class="material-symbols-outlined text-3xl text-orange-400">calculate</span>
+                    </div>
+                    <span class="font-semibold text-sm text-slate-100">Math Tutor</span>
+                    <span class="text-xs text-slate-400 mt-1">Solves problems</span>
+                </button>
+                <button
+                    class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50">
+                    <div
+                        class="w-12 h-12 mb-3 rounded-full bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors border border-purple-500/10">
+                        <span class="material-symbols-outlined text-3xl text-purple-400">auto_fix_high</span>
+                    </div>
+                    <span class="font-semibold text-sm text-slate-100">Fortune Teller</span>
+                    <span class="text-xs text-slate-400 mt-1">Predicts future</span>
+                </button>
+                <button
+                    class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50">
+                    <div
+                        class="w-12 h-12 mb-3 rounded-full bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors border border-red-500/10">
+                        <span class="material-symbols-outlined text-3xl text-red-400">sentiment_very_satisfied</span>
+                    </div>
+                    <span class="font-semibold text-sm text-slate-100">The Joker</span>
+                    <span class="text-xs text-slate-400 mt-1">Tells jokes</span>
+                </button>
+                <button
+                    class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50">
+                    <div
+                        class="w-12 h-12 mb-3 rounded-full bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors border border-emerald-500/10">
+                        <span class="material-symbols-outlined text-3xl text-emerald-400">history_edu</span>
+                    </div>
+                    <span class="font-semibold text-sm text-slate-100">Story Writer</span>
+                    <span class="text-xs text-slate-400 mt-1">Creative prose</span>
+                </button>
+                <button
+                    class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50">
+                    <div
+                        class="w-12 h-12 mb-3 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors border border-blue-500/10">
+                        <span class="material-symbols-outlined text-3xl text-blue-400">school</span>
+                    </div>
+                    <span class="font-semibold text-sm text-slate-100">General Tutor</span>
+                    <span class="text-xs text-slate-400 mt-1">Learn anything</span>
+                </button>
+                <button
+                    class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50">
+                    <div
+                        class="w-12 h-12 mb-3 rounded-full bg-pink-500/10 flex items-center justify-center group-hover:bg-pink-500/20 transition-colors border border-pink-500/10">
+                        <span class="material-symbols-outlined text-3xl text-pink-400">thumb_up</span>
+                    </div>
+                    <span class="font-semibold text-sm text-slate-100 text-center">Social Media Writer</span>
+                    <span class="text-xs text-slate-400 mt-1">Viral captions</span>
+                </button>
+                <button
+                    class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50">
+                    <div
+                        class="w-12 h-12 mb-3 rounded-full bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors border border-cyan-500/10">
+                        <span class="material-symbols-outlined text-3xl text-cyan-400">terminal</span>
+                    </div>
+                    <span class="font-semibold text-sm text-slate-100 text-center">Code Assistant</span>
+                    <span class="text-xs text-slate-400 mt-1">Writes &amp; debugs</span>
+                </button>
+                <button
+                    class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50">
+                    <div
+                        class="w-12 h-12 mb-3 rounded-full bg-sky-500/10 flex items-center justify-center group-hover:bg-sky-500/20 transition-colors border border-sky-500/10">
+                        <span class="material-symbols-outlined text-3xl text-sky-400">flight</span>
+                    </div>
+                    <span class="font-semibold text-sm text-slate-100 text-center">Travel Planner</span>
+                    <span class="text-xs text-slate-400 mt-1">Trip itineraries</span>
+                </button>
+                <button
+                    class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50">
+                    <div
+                        class="w-12 h-12 mb-3 rounded-full bg-indigo-500/10 flex items-center justify-center group-hover:bg-indigo-500/20 transition-colors border border-indigo-500/10">
+                        <span class="material-symbols-outlined text-3xl text-indigo-400">work</span>
+                    </div>
+                    <span class="font-semibold text-sm text-slate-100 text-center">Career Coach</span>
+                    <span class="text-xs text-slate-400 mt-1">Resumes &amp; jobs</span>
+                </button>
+                <button
+                    class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50">
+                    <div
+                        class="w-12 h-12 mb-3 rounded-full bg-teal-500/10 flex items-center justify-center group-hover:bg-teal-500/20 transition-colors border border-teal-500/10">
+                        <span class="material-symbols-outlined text-3xl text-teal-400">mark_email_read</span>
+                    </div>
+                    <span class="font-semibold text-sm text-slate-100 text-center">Email Polisher</span>
+                    <span class="text-xs text-slate-400 mt-1">Pro communication</span>
+                </button>
+                <button
+                    class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50">
+                    <div
+                        class="w-12 h-12 mb-3 rounded-full bg-rose-500/10 flex items-center justify-center group-hover:bg-rose-500/20 transition-colors border border-rose-500/10">
+                        <span class="material-symbols-outlined text-3xl text-rose-400">restaurant</span>
+                    </div>
+                    <span class="font-semibold text-sm text-slate-100 text-center">Sous Chef</span>
+                    <span class="text-xs text-slate-400 mt-1">Recipes &amp; meals</span>
+                </button>
+                <button
+                    class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50">
+                    <div
+                        class="w-12 h-12 mb-3 rounded-full bg-lime-500/10 flex items-center justify-center group-hover:bg-lime-500/20 transition-colors border border-lime-500/10">
+                        <span class="material-symbols-outlined text-3xl text-lime-400">gavel</span>
+                    </div>
+                    <span class="font-semibold text-sm text-slate-100 text-center">Debate Partner</span>
+                    <span class="text-xs text-slate-400 mt-1">Challenges views</span>
+                </button>
+                <button
+                    class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50">
+                    <div
+                        class="w-12 h-12 mb-3 rounded-full bg-yellow-500/10 flex items-center justify-center group-hover:bg-yellow-500/20 transition-colors border border-yellow-500/10">
+                        <span class="material-symbols-outlined text-3xl text-yellow-400">article</span>
+                    </div>
+                    <span class="font-semibold text-sm text-slate-100 text-center">Blog Post Writer</span>
+                    <span class="text-xs text-slate-400 mt-1 text-center">Long-form SEO content</span>
+                </button>
+
+
+                <button
+                    class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50">
+                    <div
+                        class="w-12 h-12 mb-3 rounded-full bg-fuchsia-500/10 flex items-center justify-center group-hover:bg-fuchsia-500/20 transition-colors border border-fuchsia-500/10">
+                        <span class="material-symbols-outlined text-3xl text-fuchsia-400">support_agent</span>
+                    </div>
+                    <span class="font-semibold text-sm text-slate-100 text-center">Tech Support</span>
+                    <span class="text-xs text-slate-400 mt-1 text-center">Help &amp; Repair</span>
+                </button>
+            </div>
+
+        </main>
+        <div
+            class="absolute bottom-0 left-0 w-full p-6 pt-12 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent z-20">
+            <button id="start-chatting-btn"
+                class="w-full bg-primary hover:bg-blue-400 text-white font-semibold py-4 rounded-2xl shadow-lg shadow-blue-500/20 transition-all transform active:scale-[0.98] flex items-center justify-center space-x-2 opacity-50 cursor-not-allowed">
+                <span>Start Chatting</span>
+                <span class="material-symbols-outlined text-lg">arrow_forward</span>
+            </button>
+        </div>
+    </div>
+    <div class="absolute top-4 right-4 z-50 hidden">
+        <button class="bg-white/10 backdrop-blur-md p-2 rounded-full border border-white/10 text-white"
+            onclick="document.documentElement.classList.toggle('dark')">
+            <span class="material-symbols-outlined">light_mode</span>
+        </button>
+    </div>
+
+    <script>
+        const templates = {
+            "Math Tutor": "You are an encouraging Math Tutor. Your goal is to help the user learn, not just give answers. Solve problems step-by-step, explaining the formulas and logic used at each stage. If the user makes a mistake, gently correct them.",
+            "Fortune Teller": "You are a mystical Fortune Teller. Speak in an ethereal, enigmatic tone using metaphors and celestial imagery. Provide readings on the future, love, and luck. Keep predictions vague but generally optimistic/entertaining.",
+            "The Joker": "You are The Joker. Your sole purpose is to entertain with humor. Deliver punchlines, dad jokes, and witty banter. Keep the tone lighthearted, silly, and playful. Avoid being mean-spirited.",
+            "Story Writer": "You are a creative Story Writer. Craft immersive narratives with vivid imagery, strong character development, and compelling plots. Focus on 'showing, not telling.' Adapt your writing style to the genre requested by the user.",
+            "General Tutor": "You are a patient General Tutor. Explain complex concepts in simple, easy-to-understand language (ELI5). Be ready to answer questions on history, science, and general knowledge. Use analogies to clarify difficult topics.",
+            "Social Media Writer": "You are a viral Social Media Writer. Create catchy, engaging captions designed to stop the scroll. Use strong hooks, relevant emojis, and trending hashtags. Adapt the tone for specific platforms (e.g., professional for LinkedIn, casual for Instagram).",
+            "Code Assistant": "You are an expert Code Assistant. Write clean, efficient, and bug-free code. Always include comments to explain your logic. If the user provides broken code, debug it and explain exactly what went wrong and how you fixed it.",
+            "Travel Planner": "You are a logistical Travel Planner. Build detailed day-by-day itineraries based on the user's destination, budget, and interests. Include practical recommendations for transport, accommodation, and dining. Organize the output clearly.",
+            "Career Coach": "You are a professional Career Coach. Help users land their dream jobs. Review resumes for impact, draft persuasive cover letters, and conduct mock interviews. Focus on the STAR method and highlighting the user's measurable achievements.",
+            "Email Polisher": "You are an Email Polisher. Your goal is professional communication. Rewrite user drafts to be clear, concise, and grammatically perfect. Adjust the tone to be polite, assertive, or formal as requested.",
+            "Sous Chef": "You are a helpful Sous Chef. Suggest delicious recipes based on the ingredients the user has on hand. Provide clear, step-by-step cooking instructions, cooking times, and offer safe substitutions for missing ingredients.",
+            "Debate Partner": "You are a logical Debate Partner. Your role is to play 'Devil's Advocate.' Constructively challenge the user's arguments to help them find holes in their logic. Point out fallacies and offer counter-points, but remain civil and intellectual.",
+            "Blog Post Writer": "You are a skilled Blog Post Writer. Create high-quality, SEO-optimized long-form content. Use engaging headlines, subheadings, and a clear structure. Focus on providing value, using relevant keywords naturally, and maintaining a consistent tone suitable for the target audience.",
+            "Tech Support": "You are an expert Technical Support Specialist. Your goal is to help the user solve technical problems and answer tech-related questions. Be patient, clear, and methodical. Ask diagnostic questions if there isn't enough information. Provide step-by-step troubleshooting guides."
+        };
+
+        let selectedPrompt = null;
+        let selectedTemplateName = null;
+        const startBtn = document.getElementById('start-chatting-btn');
+        const buttons = document.querySelectorAll('.glass-card'); // Select all template buttons
+
+        buttons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                // Remove active state from all
+                buttons.forEach(b => {
+                    b.classList.remove('ring-2', 'ring-blue-500', 'bg-slate-800/80');
+                    // Revert to original hover effect class if needed, but the base classes handle that.
+                    // We just need to remove our "active" classes.
+                });
+
+                // Add active state to clicked
+                this.classList.add('ring-2', 'ring-blue-500', 'bg-slate-800/80');
+
+                // Find the title text to lookup the prompt
+                const titleSpan = this.querySelector('span.font-semibold');
+                if (titleSpan) {
+                    const title = titleSpan.textContent.trim();
+                    if (templates[title]) {
+                        selectedPrompt = templates[title];
+                        selectedTemplateName = title;
+
+                        // Enable start button
+                        startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        startBtn.disabled = false;
+                    }
+                }
+            });
+        });
+
+        startBtn.addEventListener('click', function () {
+            if (selectedPrompt) {
+                // Save to localStorage
+                localStorage.setItem('systemPrompt', selectedPrompt);
+                localStorage.setItem('isUserCreatedSystemPrompt', 'true');
+                localStorage.setItem('activeTemplateName', selectedTemplateName);
+
+                // Navigate to main app
+                window.location.href = 'index.html';
+            }
+        });
+
+        // Prevent start button from working initially
+        startBtn.disabled = true;
+
+
+
+    </script>
+
+</body>
+
+</html>

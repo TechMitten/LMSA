@@ -130,7 +130,7 @@ export function initializeExportImport() {
         // Read the file
         const reader = new FileReader();
 
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             try {
                 // Log file content for debugging (first 500 chars)
                 const fileContent = e.target.result;
@@ -317,7 +317,7 @@ export function initializeExportImport() {
             }
         };
 
-        reader.onerror = function() {
+        reader.onerror = function () {
             showImportStatus('Error reading file. Please try again.', 'error');
         };
 
@@ -354,32 +354,32 @@ export function initializeExportImport() {
         const hasChats = data.hasOwnProperty('chats');
         const hasSavedSystemPrompts = data.hasOwnProperty('savedSystemPrompts');
         const hasExportVersion = data.hasOwnProperty('exportVersion');
-        
+
         if (hasChats || hasSavedSystemPrompts || hasExportVersion) {
             console.log('Detected new export format');
-            
+
             // Validate chats if present
             if (hasChats) {
                 if (!validateChatData(data.chats)) {
                     return false;
                 }
             }
-            
+
             // Validate saved system prompts if present
             if (hasSavedSystemPrompts) {
                 if (!validateSavedSystemPrompts(data.savedSystemPrompts)) {
                     return false;
                 }
             }
-            
+
             return true;
         }
-        
+
         // Old format: validate as chat data directly
         console.log('Detected old export format (chat data only)');
         return validateChatData(data);
     }
-    
+
     /**
      * Validates saved system prompts data
      * @param {Array} prompts - The saved system prompts array
@@ -390,28 +390,28 @@ export function initializeExportImport() {
             console.error('Import validation failed: savedSystemPrompts is not an array');
             return false;
         }
-        
+
         for (let i = 0; i < prompts.length; i++) {
             const prompt = prompts[i];
             if (!prompt || typeof prompt !== 'object') {
                 console.error(`Import validation failed: savedSystemPrompts[${i}] is not an object`);
                 return false;
             }
-            
+
             if (!prompt.id || !prompt.name || !prompt.content) {
                 console.error(`Import validation failed: savedSystemPrompts[${i}] missing required fields (id, name, content)`);
                 return false;
             }
-            
+
             if (typeof prompt.id !== 'string' || typeof prompt.name !== 'string' || typeof prompt.content !== 'string') {
                 console.error(`Import validation failed: savedSystemPrompts[${i}] has invalid field types`);
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * Validates chat data
      * @param {Object} chatData - The chat data object
@@ -565,303 +565,290 @@ export function initializeExportImport() {
     return true;
 }
 
-    /**
-     * Shows the import modal
-     */
-    function showImportModal() {
-        if (importModal) {
-            importModal.classList.remove('hidden');
-            const modalContent = importModal.querySelector('.modal-content');
-            if (modalContent) {
-                modalContent.classList.add('animate-modal-in');
-                setTimeout(() => {
-                    modalContent.classList.remove('animate-modal-in');
-                }, 300);
-            }
-
-            // Hide the status message
-            hideImportStatus();
+/**
+ * Shows the import modal
+ */
+function showImportModal() {
+    if (importModal) {
+        importModal.classList.remove('hidden');
+        const modalContent = importModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.classList.add('animate-modal-in');
+            setTimeout(() => {
+                modalContent.classList.remove('animate-modal-in');
+            }, 300);
         }
+
+        // Hide the status message
+        hideImportStatus();
     }
+}
 
-    /**
-     * Hides the import modal
-     */
-    function hideImportModal() {
-        if (importModal) {
-            const modalContent = importModal.querySelector('.modal-content');
-            if (modalContent) {
-                modalContent.classList.add('animate-modal-out');
-                setTimeout(() => {
-                    importModal.classList.add('hidden');
-                    modalContent.classList.remove('animate-modal-out');
-
-                    // Hide the status message
-                    hideImportStatus();
-                    // Clear the selected file
-                    selectedImportFile = null;
-                }, 300);
-            } else {
+/**
+ * Hides the import modal
+ */
+function hideImportModal() {
+    if (importModal) {
+        const modalContent = importModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.classList.add('animate-modal-out');
+            setTimeout(() => {
                 importModal.classList.add('hidden');
+                modalContent.classList.remove('animate-modal-out');
+
+                // Hide the status message
+                hideImportStatus();
                 // Clear the selected file
                 selectedImportFile = null;
-            }
+            }, 300);
+        } else {
+            importModal.classList.add('hidden');
+            // Clear the selected file
+            selectedImportFile = null;
         }
     }
+}
 
-    /**
-     * Shows the import status message
-     * @param {string} message - The message to show
-     * @param {string} type - The type of message ('success' or 'error')
-     */
-    function showImportStatus(message, type) {
-        if (importStatusContainer && importStatusMessage) {
-            importStatusMessage.textContent = message;
+/**
+ * Shows the import status message
+ * @param {string} message - The message to show
+ * @param {string} type - The type of message ('success' or 'error')
+ */
+function showImportStatus(message, type) {
+    if (importStatusContainer && importStatusMessage) {
+        importStatusMessage.textContent = message;
 
-            // Set the appropriate styling based on the message type
-            if (type === 'error') {
-                importStatusContainer.querySelector('div').classList.remove('bg-blue-900', 'border-blue-700');
-                importStatusContainer.querySelector('div').classList.add('bg-red-900', 'border-red-700');
-                importStatusMessage.classList.remove('text-blue-300');
-                importStatusMessage.classList.add('text-red-300');
-            } else {
-                importStatusContainer.querySelector('div').classList.remove('bg-red-900', 'border-red-700');
-                importStatusContainer.querySelector('div').classList.add('bg-blue-900', 'border-blue-700');
-                importStatusMessage.classList.remove('text-red-300');
-                importStatusMessage.classList.add('text-blue-300');
-            }
+        // Set the appropriate styling based on the message type
+        if (type === 'error') {
+            importStatusContainer.querySelector('div').classList.remove('bg-blue-900', 'border-blue-700');
+            importStatusContainer.querySelector('div').classList.add('bg-red-900', 'border-red-700');
+            importStatusMessage.classList.remove('text-blue-300');
+            importStatusMessage.classList.add('text-red-300');
+        } else {
+            importStatusContainer.querySelector('div').classList.remove('bg-red-900', 'border-red-700');
+            importStatusContainer.querySelector('div').classList.add('bg-blue-900', 'border-blue-700');
+            importStatusMessage.classList.remove('text-red-300');
+            importStatusMessage.classList.add('text-blue-300');
+        }
 
-            importStatusContainer.classList.remove('hidden');
+        importStatusContainer.classList.remove('hidden');
+    }
+}
+
+/**
+ * Hides the import status message
+ */
+function hideImportStatus() {
+    if (importStatusContainer) {
+        importStatusContainer.classList.add('hidden');
+    }
+}
+
+/**
+ * Shows the import success modal with a message
+ * @param {number} chatCount - The number of chats imported
+ * @param {number} promptCount - The number of saved system prompts imported
+ */
+function showImportSuccessModal(chatCount, promptCount = 0) {
+    if (importSuccessModal && importSuccessMessage) {
+        // Create the success message
+        let message = `Successfully imported ${chatCount} chat${chatCount !== 1 ? 's' : ''}`;
+        if (promptCount > 0) {
+            message += ` and ${promptCount} saved system prompt${promptCount !== 1 ? 's' : ''}`;
+        }
+        message += '.';
+
+        importSuccessMessage.textContent = message;
+
+        // Show the modal
+        importSuccessModal.classList.remove('hidden');
+        const modalContent = importSuccessModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.classList.add('animate-modal-in');
+            setTimeout(() => {
+                modalContent.classList.remove('animate-modal-in');
+            }, 300);
         }
     }
+}
 
-    /**
-     * Hides the import status message
-     */
-    function hideImportStatus() {
-        if (importStatusContainer) {
-            importStatusContainer.classList.add('hidden');
-        }
-    }
-
-    /**
-     * Shows the import success modal with a message
-     * @param {number} chatCount - The number of chats imported
-     * @param {number} promptCount - The number of saved system prompts imported
-     */
-    function showImportSuccessModal(chatCount, promptCount = 0) {
-        if (importSuccessModal && importSuccessMessage) {
-            // Create the success message
-            let message = `Successfully imported ${chatCount} chat${chatCount !== 1 ? 's' : ''}`;
-            if (promptCount > 0) {
-                message += ` and ${promptCount} saved system prompt${promptCount !== 1 ? 's' : ''}`;
-            }
-            message += '.';
-            
-            importSuccessMessage.textContent = message;
-
-            // Show the modal
-            importSuccessModal.classList.remove('hidden');
-            const modalContent = importSuccessModal.querySelector('.modal-content');
-            if (modalContent) {
-                modalContent.classList.add('animate-modal-in');
-                setTimeout(() => {
-                    modalContent.classList.remove('animate-modal-in');
-                }, 300);
-            }
-        }
-    }
-
-    /**
-     * Hides the import success modal
-     */
-    function hideImportSuccessModal() {
-        if (importSuccessModal) {
-            const modalContent = importSuccessModal.querySelector('.modal-content');
-            if (modalContent) {
-                modalContent.classList.add('animate-modal-out');
-                setTimeout(() => {
-                    importSuccessModal.classList.add('hidden');
-                    modalContent.classList.remove('animate-modal-out');
-
-                    // Show the sidebar so the user can see the imported chats
-                    showSidebar();
-
-                    // Check if welcome message should be shown
-                    checkAndShowWelcomeMessage();
-                }, 300);
-            } else {
+/**
+ * Hides the import success modal
+ */
+function hideImportSuccessModal() {
+    if (importSuccessModal) {
+        const modalContent = importSuccessModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.classList.add('animate-modal-out');
+            setTimeout(() => {
                 importSuccessModal.classList.add('hidden');
+                modalContent.classList.remove('animate-modal-out');
 
                 // Show the sidebar so the user can see the imported chats
                 showSidebar();
 
                 // Check if welcome message should be shown
                 checkAndShowWelcomeMessage();
-            }
+            }, 300);
+        } else {
+            importSuccessModal.classList.add('hidden');
+
+            // Show the sidebar so the user can see the imported chats
+            showSidebar();
+
+            // Check if welcome message should be shown
+            checkAndShowWelcomeMessage();
         }
     }
+}
 
-    /**
-     * Closes the sidebar
-     */
-    function closeSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-            sidebar.classList.add('hidden');
-            sidebar.classList.remove('active');
-            document.body.classList.remove('sidebar-open');
+/**
+ * Closes the sidebar
+ */
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+        sidebar.classList.add('hidden');
+        sidebar.classList.remove('active');
+        document.body.classList.remove('sidebar-open');
 
-            // Also close the options container
-            const optionsContainer = document.getElementById('options-container');
-            if (optionsContainer) {
-                optionsContainer.classList.add('hidden');
-                optionsContainer.classList.remove('animate-fade-in');
+        // Also close the options container
+        const optionsContainer = document.getElementById('options-container');
+        if (optionsContainer) {
+            optionsContainer.classList.add('hidden');
+            optionsContainer.classList.remove('animate-fade-in');
+        }
+
+        // Remove the sidebar overlay
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.remove('active');
+            sidebarOverlay.classList.add('hidden');
+        }
+
+        // Collapse all sections when sidebar is closed
+        const sectionHeaders = sidebar.querySelectorAll('.section-header');
+        const chatHistorySection = sidebar.querySelector('.sidebar-section:last-child');
+        sectionHeaders.forEach(header => {
+            header.classList.remove('active');
+            const content = header.nextElementSibling;
+            if (content && content.classList.contains('collapsible-content')) {
+                content.classList.remove('show');
             }
+        });
 
-            // Remove the sidebar overlay
+        // Ensure chat history is visible when sidebar is closed
+        if (chatHistorySection) {
+            chatHistorySection.classList.remove('chat-history-hidden');
+        }
+    }
+}
+
+/**
+ * Shows the sidebar
+ */
+function showSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+        sidebar.classList.remove('hidden');
+        sidebar.classList.add('active');
+        sidebar.classList.add('animate-slide-in');
+        document.body.classList.add('sidebar-open');
+
+        // Show the sidebar overlay on mobile
+        if (window.innerWidth <= 768) {
             const sidebarOverlay = document.getElementById('sidebar-overlay');
             if (sidebarOverlay) {
-                sidebarOverlay.classList.remove('active');
-                sidebarOverlay.classList.add('hidden');
-            }
-
-            // Collapse all sections when sidebar is closed
-            const sectionHeaders = sidebar.querySelectorAll('.section-header');
-            const chatHistorySection = sidebar.querySelector('.sidebar-section:last-child');
-            sectionHeaders.forEach(header => {
-                header.classList.remove('active');
-                const content = header.nextElementSibling;
-                if (content && content.classList.contains('collapsible-content')) {
-                    content.classList.remove('show');
-                }
-            });
-
-            // Ensure chat history is visible when sidebar is closed
-            if (chatHistorySection) {
-                chatHistorySection.classList.remove('chat-history-hidden');
+                sidebarOverlay.classList.remove('hidden');
+                sidebarOverlay.classList.add('active');
             }
         }
+
+        // Reset the options button state
+        const optionsBtn = document.getElementById('options-btn');
+        if (optionsBtn) {
+            optionsBtn.classList.remove('active');
+        }
+
+        // Make sure options container is hidden
+        const optionsContainer = document.getElementById('options-container');
+        if (optionsContainer) {
+            optionsContainer.classList.add('hidden');
+            optionsContainer.classList.remove('animate-fade-in');
+        }
+
+        // Get chat history section
+        const chatHistorySection = sidebar.querySelector('.sidebar-section:last-child');
+
+        // Ensure chat history is visible when sidebar is shown
+        if (chatHistorySection) {
+            chatHistorySection.classList.remove('chat-history-hidden');
+        }
+
+        // Always make sure the import/export container is hidden
+        const importExportContainer = document.getElementById('import-export-container');
+        if (importExportContainer) {
+            importExportContainer.classList.add('hidden');
+            importExportContainer.classList.remove('animate-fade-in');
+
+            // Reset any caret icons
+            const importExportGroupButton = document.getElementById('import-export-group-btn');
+            if (importExportGroupButton) {
+                // First check for up caret
+                const caretUp = importExportGroupButton.querySelector('.fa-caret-up');
+                if (caretUp) {
+                    caretUp.classList.remove('fa-caret-up');
+                    caretUp.classList.add('fa-caret-down');
+                }
+                // Ensure down caret is properly applied
+                const caretDown = importExportGroupButton.querySelector('.fa-caret-down');
+                if (!caretDown) {
+                    // If no caret icon exists, add one
+                    const caret = document.createElement('i');
+                    caret.className = 'fas fa-caret-down transition-transform duration-200';
+                    importExportGroupButton.appendChild(caret);
+                }
+            }
+        }
+
+        setTimeout(() => {
+            sidebar.classList.remove('animate-slide-in');
+        }, 300);
     }
+}
 
-    /**
-     * Shows the sidebar
-     */
-    function showSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-            sidebar.classList.remove('hidden');
-            sidebar.classList.add('active');
-            sidebar.classList.add('animate-slide-in');
-            document.body.classList.add('sidebar-open');
+/**
+ * Shows the export success modal with a message
+ * @param {number} chatCount - The number of chats exported
+ */
+function showExportSuccessModal(chatCount) {
+    if (exportSuccessModal && exportSuccessMessage) {
+        // Set the success message with the chat count
+        exportSuccessMessage.textContent = `Successfully exported ${chatCount} chat${chatCount !== 1 ? 's' : ''}.`;
 
-            // Show the sidebar overlay on mobile
-            if (window.innerWidth <= 768) {
-                const sidebarOverlay = document.getElementById('sidebar-overlay');
-                if (sidebarOverlay) {
-                    sidebarOverlay.classList.remove('hidden');
-                    sidebarOverlay.classList.add('active');
-                }
-            }
-
-            // Reset the options button state
-            const optionsBtn = document.getElementById('options-btn');
-            if (optionsBtn) {
-                optionsBtn.classList.remove('active');
-            }
-
-            // Make sure options container is hidden
-            const optionsContainer = document.getElementById('options-container');
-            if (optionsContainer) {
-                optionsContainer.classList.add('hidden');
-                optionsContainer.classList.remove('animate-fade-in');
-            }
-
-            // Get chat history section
-            const chatHistorySection = sidebar.querySelector('.sidebar-section:last-child');
-
-            // Ensure chat history is visible when sidebar is shown
-            if (chatHistorySection) {
-                chatHistorySection.classList.remove('chat-history-hidden');
-            }
-
-            // Always make sure the import/export container is hidden
-            const importExportContainer = document.getElementById('import-export-container');
-            if (importExportContainer) {
-                importExportContainer.classList.add('hidden');
-                importExportContainer.classList.remove('animate-fade-in');
-
-                // Reset any caret icons
-                const importExportGroupButton = document.getElementById('import-export-group-btn');
-                if (importExportGroupButton) {
-                    // First check for up caret
-                    const caretUp = importExportGroupButton.querySelector('.fa-caret-up');
-                    if (caretUp) {
-                        caretUp.classList.remove('fa-caret-up');
-                        caretUp.classList.add('fa-caret-down');
-                    }
-                    // Ensure down caret is properly applied
-                    const caretDown = importExportGroupButton.querySelector('.fa-caret-down');
-                    if (!caretDown) {
-                        // If no caret icon exists, add one
-                        const caret = document.createElement('i');
-                        caret.className = 'fas fa-caret-down transition-transform duration-200';
-                        importExportGroupButton.appendChild(caret);
-                    }
-                }
-            }
-
+        // Show the modal
+        exportSuccessModal.classList.remove('hidden');
+        const modalContent = exportSuccessModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.classList.add('animate-modal-in');
             setTimeout(() => {
-                sidebar.classList.remove('animate-slide-in');
+                modalContent.classList.remove('animate-modal-in');
             }, 300);
         }
     }
+}
 
-    /**
-     * Shows the export success modal with a message
-     * @param {number} chatCount - The number of chats exported
-     */
-    function showExportSuccessModal(chatCount) {
-        if (exportSuccessModal && exportSuccessMessage) {
-            // Set the success message with the chat count
-            exportSuccessMessage.textContent = `Successfully exported ${chatCount} chat${chatCount !== 1 ? 's' : ''}.`;
-
-            // Show the modal
-            exportSuccessModal.classList.remove('hidden');
-            const modalContent = exportSuccessModal.querySelector('.modal-content');
-            if (modalContent) {
-                modalContent.classList.add('animate-modal-in');
-                setTimeout(() => {
-                    modalContent.classList.remove('animate-modal-in');
-                }, 300);
-            }
-        }
-    }
-
-    /**
-     * Hides the export success modal
-     */
-    function hideExportSuccessModal() {
-        if (exportSuccessModal) {
-            const modalContent = exportSuccessModal.querySelector('.modal-content');
-            if (modalContent) {
-                modalContent.classList.add('animate-modal-out');
-                setTimeout(() => {
-                    exportSuccessModal.classList.add('hidden');
-                    modalContent.classList.remove('animate-modal-out');
-
-                    // Update hamburger icon to show hamburger (in case sidebar was closed)
-                    import('./ui-manager.js').then(module => {
-                        module.updateHamburgerIcon(false);
-                    }).catch(error => {
-                        console.error('Error updating hamburger icon:', error);
-                    });
-
-                    // Check if welcome message should be shown
-                    checkAndShowWelcomeMessage();
-                }, 300);
-            } else {
+/**
+ * Hides the export success modal
+ */
+function hideExportSuccessModal() {
+    if (exportSuccessModal) {
+        const modalContent = exportSuccessModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.classList.add('animate-modal-out');
+            setTimeout(() => {
                 exportSuccessModal.classList.add('hidden');
+                modalContent.classList.remove('animate-modal-out');
 
                 // Update hamburger icon to show hamburger (in case sidebar was closed)
                 import('./ui-manager.js').then(module => {
@@ -872,9 +859,22 @@ export function initializeExportImport() {
 
                 // Check if welcome message should be shown
                 checkAndShowWelcomeMessage();
-            }
+            }, 300);
+        } else {
+            exportSuccessModal.classList.add('hidden');
+
+            // Update hamburger icon to show hamburger (in case sidebar was closed)
+            import('./ui-manager.js').then(module => {
+                module.updateHamburgerIcon(false);
+            }).catch(error => {
+                console.error('Error updating hamburger icon:', error);
+            });
+
+            // Check if welcome message should be shown
+            checkAndShowWelcomeMessage();
         }
     }
+}
 
 /**
  * Exports the chat history to a file
@@ -882,10 +882,10 @@ export function initializeExportImport() {
 export function exportChats() {
     // Get the chat history data
     const chatHistoryData = getChatHistoryData();
-    
+
     // Get saved system prompts
     const savedSystemPrompts = getSavedSystemPrompts();
-    
+
     // Create export data structure that includes both chats and saved system prompts
     const exportData = {
         chats: chatHistoryData,
@@ -910,9 +910,9 @@ export function exportChats() {
     // Check if we're in an Android app with native file operations
     if (window.AndroidFileOps && typeof window.AndroidFileOps.saveFile === 'function') {
         console.log('Using Android native file saving');
-        
+
         // Set up callback for when file is saved
-        window.onFileSaved = function(success) {
+        window.onFileSaved = function (success) {
             if (success) {
                 console.log('File saved successfully via Android native interface');
                 // Show the export success modal
@@ -938,7 +938,7 @@ export function exportChats() {
             // Clean up the callback
             delete window.onFileSaved;
         };
-        
+
         // Call the Android native file saving method
         window.AndroidFileOps.saveFile(jsonString, filename);
         return;
@@ -946,7 +946,7 @@ export function exportChats() {
 
     // Fallback for non-Android environments or older Android versions
     console.log('Using fallback file saving method');
-    
+
     // Check if we're in an Android WebView
     if (isAndroidWebView() || isMobileDevice()) {
         // For Android WebView without native file ops, use the standard approach
