@@ -204,4 +204,9 @@ export const savedPromptsButton = document.getElementById('saved-prompts-btn');
 export const saveSystemPromptButton = document.getElementById('save-system-prompt-btn');
 export const savedPromptsModal = document.getElementById('saved-prompts-modal');
 export const closeSavedPromptsModal = document.getElementById('close-saved-prompts-modal');
-export const savedPromptsList = document.getElementById('saved-prompts-list');
+// Confirm Default Model Modal Elements
+export const confirmDefaultModelModal = document.getElementById('confirm-default-model-modal');
+export const confirmDefaultModelTitle = document.getElementById('confirm-default-model-title');
+export const confirmDefaultModelName = document.getElementById('confirm-default-model-name');
+export const confirmDefaultModelBtn = document.getElementById('confirm-default-model-btn');
+export const cancelDefaultModelBtn = document.getElementById('cancel-default-model-btn');

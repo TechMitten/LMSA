@@ -939,17 +939,7 @@ export function loadServerSettings() {
             window.isInitialStartup = true;
             setTimeout(() => fetchAvailableModels(), 500);
 
-            // Check if there's a default model set - if yes, auto-open models modal
-            const defaultModelId = localStorage.getItem('defaultModelId');
-            if (defaultModelId) {
-                // Auto-open models modal after a delay to allow models to be fetched
-                setTimeout(() => {
-                    // Import and show the model modal
-                    import('./model-manager.js').then(module => {
-                        module.showModelModal();
-                    });
-                }, 1000); // 1 second delay to ensure models are fetched
-            }
+
 
             // Reset the flag after a delay to allow for normal operation later
             setTimeout(() => {

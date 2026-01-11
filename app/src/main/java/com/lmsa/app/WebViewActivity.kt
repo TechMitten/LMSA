@@ -800,19 +800,7 @@ class WebViewActivity : AppCompatActivity() {
                                 Log.w(TAG, "Could not generate audio session ID: ${e.message}")
                             }
 
-                            // Boost system volume for TTS to ensure audibility (do this once at init)
-                            try {
-                                val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-                                val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-                                val targetVolume = (maxVolume * 0.70).toInt() // Set to 70% of max volume
 
-                                if (currentVolume < targetVolume) {
-                                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVolume, 0)
-                                    Log.d(TAG, "TTS volume boosted from $currentVolume to $targetVolume (max: $maxVolume)")
-                                }
-                            } catch (e: Exception) {
-                                Log.w(TAG, "Could not adjust system volume for TTS: ${e.message}")
-                            }
                             
                             // Set utterance progress listener for audio focus management
                             textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {

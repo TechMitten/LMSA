@@ -12,7 +12,11 @@ import {
     modelLoadingModal,
     modelLoadingTitle,
     modelLoadingMessage,
-    modelLoadingName
+    modelLoadingName,
+    confirmDefaultModelModal,
+    confirmDefaultModelName,
+    confirmDefaultModelBtn,
+    cancelDefaultModelBtn
 } from './dom-elements.js';
 import { fetchAvailableModels, getAvailableModels, isServerRunning, loadModel as apiLoadModel } from './api-service.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
@@ -33,6 +37,8 @@ let currentModelFullName = '';
 let loadingModalStartTime = null;
 // Flag to track if we're auto-loading default model on startup
 let isAutoLoadingDefaultModel = false;
+// Store the model ID pending confirmation for default
+let pendingDefaultModelId = null;
 
 /**
  * Initializes the model manager
@@ -47,8 +53,32 @@ export function initializeModelManager() {
         refreshModelsButton.addEventListener('click', refreshModels);
     }
 
+    // Confirmation modal listeners
+    if (confirmDefaultModelBtn) {
+        confirmDefaultModelBtn.addEventListener('click', handleConfirmDefaultModel);
+    }
+
+    // Perform an initial silent check for models (and auto-load default if set)
+    // This runs in the background without opening the modal
+    checkModelsSilent();
+
+    if (cancelDefaultModelBtn) {
+        cancelDefaultModelBtn.addEventListener('click', hideDefaultModelConfirmationModal);
+    }
+
     // The model header icon doesn't exist when this function runs
     // We'll add the event listener dynamically when the modal is shown
+}
+
+/**
+ * silently checks for models and loads default if needed
+ * Does NOT open the model modal
+ */
+function checkModelsSilent() {
+    console.log('Performing silent model check...');
+    // We reuse loadModelInformation with the silent flag
+    // We DON'T call showModelModal(), so the modal UI won't appear
+    loadModelInformation(true);
 }
 
 /**
@@ -69,7 +99,7 @@ export function showModelModal() {
             }, 300);
         }
 
-        // Show loading state first
+        // Show loading state first, but only if not silent (though showModelModal is usually explicit)
         if (currentModelDisplay) {
             currentModelDisplay.textContent = 'Loading...';
         }
@@ -97,6 +127,9 @@ export function showModelModal() {
         showMobileInstructionsIfNeeded();
 
         // Load model information
+        // If it's initial startup (which we can infer if the modal is being opened automatically by something else,
+        // but typically showModelModal is user-initiated.
+        // However, if we want to ensure we don't show loading state during auto-checks:
         loadModelInformation();
     } else {
         console.error('Model modal element not found');
@@ -127,10 +160,12 @@ export function closeModelModal() {
     }
 }
 
+
 /**
  * Loads model information
+ * @param {boolean} silent - Whether to suppress loading UI indicators
  */
-async function loadModelInformation() {
+async function loadModelInformation(silent = false) {
     try {
         // When opening the model modal, temporarily set isInitialStartup to true
         // This prevents auto-loading of models when checking availability
@@ -241,15 +276,8 @@ async function loadModelInformation() {
                             console.log('Default model not found in available models:', defaultModelId);
                         }
                     } else {
-                        // Default model is already loaded - just show success modal and close models modal
+                        // Default model is already loaded - no need to show success modal on startup
                         console.log('Default model is already loaded:', currentlyLoadedModelId);
-                        console.log('Auto-closing models modal and showing success notification');
-                        setTimeout(() => {
-                            closeModelModal();
-                            setTimeout(() => {
-                                showDefaultModelLoadedModal(currentlyLoadedModelId);
-                            }, 300);
-                        }, 500);
                     }
                 }
 
@@ -471,7 +499,11 @@ function showModelLoadingModal(modelId) {
 /**
  * Hides the model loading modal
  */
-function hideModelLoadingModal() {
+/**
+ * Hides the model loading modal
+ * @param {Function} [onBeforeHide] - Optional callback to run before the hide animation starts
+ */
+function hideModelLoadingModal(onBeforeHide) {
     if (modelLoadingModal) {
         const currentTime = Date.now();
         const elapsedTime = loadingModalStartTime ? currentTime - loadingModalStartTime : 0;
@@ -483,6 +515,11 @@ function hideModelLoadingModal() {
         const delayTime = Math.max(0, minDisplayTime - elapsedTime);
         
         setTimeout(() => {
+            // Run the callback if provided (e.g. to close underlying modals)
+            if (onBeforeHide && typeof onBeforeHide === 'function') {
+                onBeforeHide();
+            }
+
             const modalContent = modelLoadingModal.querySelector('.modal-content');
             if (modalContent) {
                 modalContent.classList.add('animate-modal-out');
@@ -519,8 +556,12 @@ async function loadModel(modelId) {
         // Set loading flag to true
         isModelLoading = true;
 
-        // Show the loading modal immediately
-        showModelLoadingModal(modelId);
+        // Show the loading modal immediately ONLY if not auto-loading
+        if (!isAutoLoadingDefaultModel) {
+            showModelLoadingModal(modelId);
+        } else {
+            console.log('Auto-loading default model, skipping loading modal');
+        }
 
         // Disable all load buttons in the modal
         disableLoadButtons();
@@ -553,8 +594,10 @@ async function loadModel(modelId) {
             console.log(`Failed to load model: ${modelId}`);
             showActionError(modelId, 'Failed to load');
 
-            // Hide the loading modal
-            hideModelLoadingModal();
+            // Hide the loading modal if it was shown
+            if (!isAutoLoadingDefaultModel) {
+                hideModelLoadingModal();
+            }
 
             // Restore the current model display to previous state
             await updateModelDisplay(null);
@@ -575,8 +618,39 @@ async function loadModel(modelId) {
 
         console.log(`Successfully loaded model: ${modelId}`);
 
-        // Hide the loading modal
-        hideModelLoadingModal();
+        // Hide the loading modal if it was shown
+        if (!isAutoLoadingDefaultModel) {
+            // We pass a callback to close the underlying model modal at the same time the loading modal starts to fade out
+            // This prevents the user from seeing the model modal "flash" or reappear briefly
+            hideModelLoadingModal(() => {
+                console.log('Model loaded successfully, synchronizing modal transitions');
+                
+                // Close the models modal immediately when loading modal starts fading out
+                // Since they both take 300ms to fade out, they will disappear together
+                closeModelModal();
+
+                // Check if this was an auto-load
+                const wasAutoLoading = isAutoLoadingDefaultModel;
+
+                // Reset the flag if it was set
+                if (isAutoLoadingDefaultModel) {
+                    isAutoLoadingDefaultModel = false;
+                }
+
+                // Only show the success modal if it wasn't an auto-load
+                if (!wasAutoLoading) {
+                    console.log('Showing success modal for:', modelId);
+                    // Show the success modal immediately to avoid flashing the background
+                    showDefaultModelLoadedModal(modelId); 
+                } else {
+                    console.log('Skipping success modal for auto-loaded default model');
+                }
+            });
+        } else {
+            // If we didn't show the loading modal (auto-load), we just reset the flag
+            console.log('Auto-load complete without UI interruption');
+            isAutoLoadingDefaultModel = false;
+        }
 
         // Update global variable immediately to ensure consistency
         window.currentLoadedModel = modelId;
@@ -594,34 +668,15 @@ async function loadModel(modelId) {
         // Re-enable all load buttons
         enableLoadButtons();
 
-        // If this was an auto-load on startup, close models modal and show success modal
-        console.log('Checking isAutoLoadingDefaultModel flag:', isAutoLoadingDefaultModel);
-        if (isAutoLoadingDefaultModel) {
-            console.log('Auto-load complete, closing models modal and showing success modal');
-            console.log('Model loaded:', modelId);
-            // Reset the flag
-            isAutoLoadingDefaultModel = false;
-            // Close the models modal
-            setTimeout(() => {
-                console.log('Closing models modal...');
-                closeModelModal();
-                // Show the success modal
-                setTimeout(() => {
-                    console.log('Showing success modal for:', modelId);
-                    showDefaultModelLoadedModal(modelId);
-                }, 300); // Small delay after closing models modal
-            }, 500); // Small delay to ensure loading modal is hidden
-        } else {
-            console.log('Not auto-loading, skipping auto-close');
-        }
-
         return true;
     } catch (error) {
         console.error('Error loading model:', error);
         showActionError(modelId, 'Failed to load');
 
-        // Hide the loading modal
-        hideModelLoadingModal();
+        // Hide the loading modal if it was shown
+        if (!isAutoLoadingDefaultModel) {
+            hideModelLoadingModal();
+        }
 
         // Restore the current model display
         await updateModelDisplay(null);
@@ -879,15 +934,14 @@ function displayAvailableModels(models, loadedModelId) {
                     const currentDefault = getDefaultModelId();
 
                     if (currentDefault === modelId) {
-                        // Remove as default
+                        // Remove as default - No info modal needed
                         setDefaultModelId(null);
+                        // Refresh the display to update the UI
+                        displayAvailableModels(allAvailableModels, currentLoadedModelId);
                     } else {
-                        // Set as default
-                        setDefaultModelId(modelId);
+                        // Set as default - Show confirmation
+                        showDefaultModelConfirmationModal(modelId);
                     }
-
-                    // Refresh the display to update the UI
-                    displayAvailableModels(allAvailableModels, currentLoadedModelId);
                 });
             }
 
@@ -1014,15 +1068,14 @@ function displayPotentialModels(models) {
                     const currentDefault = getDefaultModelId();
 
                     if (currentDefault === modelId) {
-                        // Remove as default
+                        // Remove as default - No info modal needed
                         setDefaultModelId(null);
+                        // Refresh the display to update the UI
+                        displayPotentialModels(allAvailableModels);
                     } else {
-                        // Set as default
-                        setDefaultModelId(modelId);
+                        // Set as default - Show confirmation
+                        showDefaultModelConfirmationModal(modelId);
                     }
-
-                    // Refresh the display to update the UI
-                    displayPotentialModels(allAvailableModels);
                 });
             }
 
@@ -1203,6 +1256,16 @@ function showDefaultModelLoadedModal(modelName) {
 
     if (modal && modelNameDisplay) {
         console.log('Elements found, setting model name and showing modal');
+        
+        // Update title to be generic
+        const modalTitle = document.getElementById('default-model-loaded-title');
+        if (modalTitle) {
+            const titleSpan = modalTitle.querySelector('span');
+            if (titleSpan) {
+                titleSpan.textContent = 'Model Successfully Loaded';
+            }
+        }
+
         // Set the model name
         modelNameDisplay.textContent = modelName;
 
@@ -1244,5 +1307,74 @@ function closeDefaultModelLoadedModal() {
         } else {
             modal.classList.add('hidden');
         }
+    }
+}
+
+/**
+ * Shows the confirmation modal for setting a default model
+ * @param {string} modelId - The ID of the model to set as default
+ */
+function showDefaultModelConfirmationModal(modelId) {
+    if (confirmDefaultModelModal && confirmDefaultModelName) {
+        pendingDefaultModelId = modelId;
+        confirmDefaultModelName.textContent = modelId;
+        
+        confirmDefaultModelModal.classList.remove('hidden');
+        confirmDefaultModelModal.style.display = 'flex';
+        
+        const modalContent = confirmDefaultModelModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.classList.add('animate-modal-in');
+            setTimeout(() => {
+                modalContent.classList.remove('animate-modal-in');
+            }, 300);
+        }
+    } else {
+        console.error('Confirmation modal elements not found');
+    }
+}
+
+/**
+ * Hides the default model confirmation modal
+ */
+function hideDefaultModelConfirmationModal() {
+    if (confirmDefaultModelModal) {
+        const modalContent = confirmDefaultModelModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.classList.add('animate-modal-out');
+            setTimeout(() => {
+                modalContent.classList.remove('animate-modal-out');
+                confirmDefaultModelModal.classList.add('hidden');
+                confirmDefaultModelModal.style.display = 'none';
+                pendingDefaultModelId = null;
+            }, 300);
+        } else {
+            confirmDefaultModelModal.classList.add('hidden');
+            confirmDefaultModelModal.style.display = 'none';
+            pendingDefaultModelId = null;
+        }
+    }
+}
+
+/**
+ * Handles the confirmation of setting the default model
+ */
+function handleConfirmDefaultModel() {
+    if (pendingDefaultModelId) {
+        console.log('Confirmed setting default model:', pendingDefaultModelId);
+        setDefaultModelId(pendingDefaultModelId);
+        
+        // Refresh the UI
+        // We need to check if we are in available models list or potential models list
+        // Since we don't have that context here easily, we can try to guess or just refresh current view
+        // Ideally we should have a way to know which list is active or just refresh both implicitly
+        
+        if (isModelLoaded) {
+            displayAvailableModels(allAvailableModels, window.currentLoadedModel);
+        } else {
+            displayPotentialModels(allAvailableModels);
+        }
+        
+        hideDefaultModelConfirmationModal();
     }
 }

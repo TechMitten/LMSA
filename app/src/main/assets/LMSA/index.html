@@ -1854,15 +1854,7 @@
                             To connect LMSA to Ollama on your local network, you need to configure Ollama to listen on all network interfaces. Follow the instructions below for your operating system.
                         </p>
 
-                        <div class="mt-2 mb-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                            <p class="font-medium flex items-center" style="color: #f59e0b;"><i class="fas fa-exclamation-triangle mr-2"></i>Important Difference:</p>
-                            <p style="color: var(--text-primary); margin-top: 0.5rem;">
-                                Unlike LM Studio where you only need to load the model on the mobile device, <strong>Ollama requires you to manually load the model on BOTH your computer and the mobile device.</strong>
-                            </p>
-                            <p style="color: var(--text-primary); margin-top: 0.5rem;">
-                                Ensure the model is running in your terminal/command prompt <code>ollama run modelname</code> before attempting to connect from the app.
-                            </p>
-                        </div>
+
 
 
                         <div class="space-y-4">
@@ -1870,6 +1862,16 @@
                             <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #3b82f6;"><i class="fab fa-windows mr-2"></i>Windows Instructions</p>
                                 
+
+                                <div class="mt-3 p-3 rounded bg-blue-500/10 border border-blue-500/20 mb-4">
+                                    <p class="text-sm font-semibold text-blue-400 mb-2"><i class="fas fa-magic mr-2"></i>Quick Method (Recommended)</p>
+                                    <p style="color: var(--text-primary); font-size: 0.9em;">
+                                        Start the server by opening the <strong>Ollama user interface</strong>, clicking <strong>Settings</strong>, and then enabling the option <strong>Expose Ollama to the network</strong>.
+                                    </p>
+                                </div>
+
+                                <p class="text-xs italic font-medium text-gray-300 mb-3 ml-1">Or Manual Configuration:</p>
+
                                 <div class="mt-3">
                                     <p class="text-sm font-semibold text-blue-400 mb-1">Step 1: Close Ollama</p>
                                     <p style="color: var(--text-primary); font-size: 0.9em; margin-bottom: 0.5rem;">
@@ -2720,6 +2722,39 @@
                 <div id="default-model-loaded-name"
                     class="text-lg font-medium text-white dark:text-white light:text-gray-800 p-4 bg-darkBg-70 dark:bg-darkBg-70 light:bg-white rounded-lg shadow-inner break-all">
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Default Model Modal -->
+    <div id="confirm-default-model-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm items-center justify-center hidden modal-container"
+        aria-labelledby="confirm-default-model-title" role="dialog" aria-modal="true" style="z-index: 2100;">
+        <div
+            class="dark:bg-gradient-to-b dark:from-[#0a192f]/95 dark:via-[#0c1e36]/95 dark:to-[#0a192f]/95 light:bg-gradient-to-b light:from-[#f8fafc] light:via-[#f1f5f9] light:to-[#f8fafc] p-6 rounded-xl w-[500px] max-w-[90%] shadow-2xl modal-content border border-white/10 dark:border-white/10 light:border-gray-200">
+            <div class="mb-5">
+                <h2 id="confirm-default-model-title" class="text-xl font-bold modal-title flex items-center">
+                    <i class="fas fa-question-circle text-blue-400 mr-3"></i>
+                    <span class="text-blue-400 dark:text-blue-400 light:text-blue-600 font-extrabold">Confirm Default
+                        Model</span>
+                </h2>
+            </div>
+            <div class="p-5 bg-darkTertiary-30 dark:bg-darkTertiary-30 light:bg-white rounded-xl shadow-md mb-6">
+                <p class="text-gray-300 dark:text-gray-300 light:text-gray-700 text-lg leading-relaxed">
+                    Would you like to set <span id="confirm-default-model-name"
+                        class="font-bold text-white dark:text-white light:text-black"></span> to load as default every time
+                    the app loads?
+                </p>
+            </div>
+            <div class="flex space-x-4">
+                <button id="cancel-default-model-btn"
+                    class="flex-1 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-bold transition-all duration-200 transform hover:scale-[1.02] shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                    Cancel
+                </button>
+                <button id="confirm-default-model-btn"
+                    class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all duration-200 transform hover:scale-[1.02] shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                    YES
+                </button>
             </div>
         </div>
     </div>
