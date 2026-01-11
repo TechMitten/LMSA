@@ -694,7 +694,7 @@ function initializeManualInputFocus() {
 
                             // Don't show containers - they'll be shown when the modal is reopened
                         }
-                    });
+                    }, { passive: true });
 
                     // Add click event handler to ensure the button's click event is processed
                     closeSettingsButton.addEventListener('click', function(e) {

@@ -999,7 +999,7 @@
                             </div>
 
                             <div id="welcome-footer" class="mt-8 pt-5 pb-3 border-t border-white/10 text-xs">
-                                Version 9.1
+                                Version 9.2
                             </div>
                         </div>
                     </div>
@@ -1316,7 +1316,8 @@
                 <div id="settings-step-connection" class="settings-step active" data-step-name="Connection">
                     <div class="mb-4">
                         <label class="block text-sm font-medium mb-1 text-gray-200">
-                            <i class="fas fa-server mr-2 text-blue-400"></i>LM Studio Server Connection:</label>
+                            <i class="fas fa-server mr-2 text-blue-400"></i>LM Studio Server Connection:
+                        </label>
                         <div class="flex space-x-2 ip-port-container">
                             <div class="flex-grow">
                                 <label for="server-ip" class="block text-xs text-gray-300 mb-1">IP Address</label>
@@ -1390,6 +1391,18 @@
                     </div>
                     <div class="mb-5">
                         <div class="flex justify-between items-center mb-2">
+                            <label for="ollama-toggle" class="text-sm font-medium">
+                                <i class="fas fa-network-wired mr-2 text-blue-400"></i>Use Ollama Connection</label>
+                            <div class="toggle-container">
+                                <input type="checkbox" id="ollama-toggle">
+                                <div class="toggle-switch"></div>
+                                <div class="toggle-dot"></div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Enable to communicate with a local Ollama server (default port 11434). Disables manual model loading.</p>
+                    </div>
+                    <div class="mb-5">
+                        <div class="flex justify-between items-center mb-2">
                             <label for="hide-thinking" class="text-sm font-medium">
                                 <i class="fas fa-eye-slash mr-2 text-blue-400"></i>Hide Thinking Text</label>
                             <div class="toggle-container">
@@ -1427,6 +1440,19 @@
                         </div>
                         <p class="text-xs text-gray-400 mt-1">When enabled, automatically scrolls to the bottom of the
                             chat while the LLM is streaming its response.</p>
+                    </div>
+                    
+                    <div class="mb-5">
+                        <div class="flex justify-between items-center mb-2">
+                            <label for="enter-newline-toggle" class="text-sm font-medium">
+                                <i class="fas fa-keyboard mr-2 text-blue-400"></i>Enter for New Line</label>
+                            <div class="toggle-container">
+                                <input type="checkbox" id="enter-newline-toggle">
+                                <div class="toggle-switch"></div>
+                                <div class="toggle-dot"></div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">When enabled, Enter creates a new line. Use Shift+Enter or the send button to send message.</p>
                     </div>
 
                     <div class="mb-5 hidden">
@@ -1517,16 +1543,11 @@
                 </div>
 
                 <!-- Actions step buttons -->
-                <div class="justify-between navigation-buttons hidden" id="actions-step-buttons">
+                <div class="navigation-buttons hidden" id="actions-step-buttons">
                     <button id="back-to-options-btn"
-                        class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                        class="professional-button flex items-center justify-center gap-3 w-full h-[48px]">
                         <i class="fas fa-arrow-left text-sm"></i>
                         <span class="button-text">Back</span>
-                    </button>
-                    <button id="settings-help-btn"
-                        class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
-                        <i class="fas fa-question-circle text-sm"></i>
-                        <span class="button-text">Help</span>
                     </button>
                 </div>
             </div>
@@ -1725,6 +1746,12 @@
                                 <i class="fas fa-rocket mr-2 text-sm"></i>
                                 <span>Quick Start</span>
                             </a>
+                            <a href="#section-ollama-setup"
+                                class="toc-link flex items-center p-2 rounded transition-colors"
+                                style="color: #ec4899;">
+                                <i class="fas fa-terminal mr-2 text-sm"></i>
+                                <span>Ollama Setup</span>
+                            </a>
                             <a href="#section-templates"
                                 class="toc-link flex items-center p-2 rounded transition-colors"
                                 style="color: #a78bfa;">
@@ -1818,6 +1845,103 @@
                                 </ul>
                             </div>
                         </section>
+
+                    <section id="section-ollama-setup">
+                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #ec4899;">
+                            <i class="fas fa-terminal mr-2"></i>Ollama Setup
+                        </h3>
+                        <p style="color: var(--text-primary); margin-bottom: 1rem;">
+                            To connect LMSA to Ollama on your local network, you need to configure Ollama to listen on all network interfaces. Follow the instructions below for your operating system.
+                        </p>
+
+                        <div class="mt-2 mb-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                            <p class="font-medium flex items-center" style="color: #f59e0b;"><i class="fas fa-exclamation-triangle mr-2"></i>Important Difference:</p>
+                            <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                Unlike LM Studio where you only need to load the model on the mobile device, <strong>Ollama requires you to manually load the model on BOTH your computer and the mobile device.</strong>
+                            </p>
+                            <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                Ensure the model is running in your terminal/command prompt <code>ollama run modelname</code> before attempting to connect from the app.
+                            </p>
+                        </div>
+
+
+                        <div class="space-y-4">
+                            <!-- Windows Instructions -->
+                            <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i class="fab fa-windows mr-2"></i>Windows Instructions</p>
+                                
+                                <div class="mt-3">
+                                    <p class="text-sm font-semibold text-blue-400 mb-1">Step 1: Close Ollama</p>
+                                    <p style="color: var(--text-primary); font-size: 0.9em; margin-bottom: 0.5rem;">
+                                        If Ollama is currently running, find the little llama icon in your taskbar (near the clock), click it, and select <strong>Quit</strong> to close the application completely.
+                                    </p>
+                                </div>
+
+                                <div class="mt-3">
+                                    <p class="text-sm font-semibold text-blue-400 mb-1">Step 2: Open Environment Variables</p>
+                                    <p style="color: var(--text-primary); font-size: 0.9em; margin-bottom: 0.5rem;">
+                                        Follow these steps to access the environment variables:
+                                    </p>
+                                    <ul class="list-disc pl-5 space-y-1" style="color: var(--text-primary); font-size: 0.9em;">
+                                        <li>Click the <strong>Start</strong> button and type: <code>env</code></li>
+                                        <li>Click on the result that says <strong>"Edit the system environment variables"</strong>.</li>
+                                        <li>In the small window that pops up, click the button near the bottom labeled <strong>Environment Variables</strong>.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="mt-3">
+                                    <p class="text-sm font-semibold text-blue-400 mb-1">Step 3: Add the new setting</p>
+                                    <ul class="list-disc pl-5 space-y-1" style="color: var(--text-primary); font-size: 0.9em;">
+                                        <li>Look at the top section labeled <strong>"User variables for [YourName]"</strong>.</li>
+                                        <li>Click the <strong>New...</strong> button under that list.</li>
+                                        <li>In the "Variable name" box, type: <code>OLLAMA_HOST</code></li>
+                                        <li>In the "Variable value" box, type: <code>0.0.0.0</code></li>
+                                        <li>Click <strong>OK</strong> on all the open windows to save your changes.</li>
+                                    </ul>
+                                </div>
+
+                                 <div class="mt-3">
+                                    <p class="text-sm font-semibold text-blue-400 mb-1">Step 4: Restart</p>
+                                    <p style="color: var(--text-primary); font-size: 0.9em;">
+                                        <strong>Restart your computer</strong> for these changes to take effect.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Linux Instructions -->
+                            <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i class="fab fa-linux mr-2"></i>Linux Instructions</p>
+                                
+                                <div class="mt-3">
+                                    <p class="text-sm font-semibold text-blue-400 mb-1">Step 1: Open the settings file</p>
+                                    <p style="color: var(--text-primary); font-size: 0.9em; margin-bottom: 0.5rem;">Open your terminal and paste in the following command to edit the Ollama configuration file:</p>
+                                    <div class="p-2 rounded bg-gray-900 text-gray-300 font-mono text-xs overflow-x-auto border border-gray-700 mb-3">
+                                        sudo nano /etc/systemd/system/ollama.service
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <p class="text-sm font-semibold text-blue-400 mb-1">Step 2: Add the network setting</p>
+                                    <p style="color: var(--text-primary); font-size: 0.9em; margin-bottom: 0.5rem;">
+                                        Once the file opens, use your arrow keys to scroll down until you see the section labeled <code>[Service]</code>. Inside that section, add a new line and paste this text:
+                                    </p>
+                                    <div class="p-2 rounded bg-gray-900 text-gray-300 font-mono text-xs overflow-x-auto border border-gray-700 mb-3">
+                                        Environment="OLLAMA_HOST=0.0.0.0"
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <p class="text-sm font-semibold text-blue-400 mb-1">Step 3: Save your changes</p>
+                                    <p style="color: var(--text-primary); font-size: 0.9em; margin-bottom: 0.5rem;">To save the file and exit the editor:</p>
+                                    <ul class="list-disc pl-5 space-y-1" style="color: var(--text-primary); font-size: 0.9em;">
+                                        <li>Press <strong>Ctrl + O</strong> on your keyboard, then hit <strong>Enter</strong> to save.</li>
+                                        <li>Press <strong>Ctrl + X</strong> to close the file.</li>
+                                        <li><strong>Restart your computer</strong> for these changes to take effect.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                         <section id="section-templates">
                             <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #a78bfa;"><i
                                     class="fas fa-th-large mr-2"></i>Using Templates</h3>
@@ -1874,7 +1998,7 @@
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #f59e0b;"><i
-                                        class="fas fa-info-circle mr-2"></i>Important Note - Model Quality:</p>
+                                        class="fas fa-info-circle mr-2"></i>Model Quality:</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">The effectiveness of
                                     templates varies depending on which AI model you're using in LM Studio. Larger, more
                                     capable models (like 13B+ parameter models) will follow template instructions more
@@ -1906,7 +2030,7 @@
                                 <div class="mt-3 rounded border"
                                     style="background: var(--settings-label-bg); border-color: var(--border-color); padding: 0.75rem;">
                                     <p class="font-medium flex items-center" style="color: #ef4444;"><i
-                                            class="fas fa-shield-alt mr-2"></i>Network Security Warning:</p>
+                                            class="fas fa-shield-alt mr-2"></i>Network Security:</p>
                                     <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.5rem;">
                                         <strong>The connection between your device and the LM Studio server is NOT
                                             encrypted.</strong>
@@ -1936,7 +2060,7 @@
 
                                 <div class="mt-3 p-2 rounded" style="background: var(--settings-label-bg);">
                                     <p class="font-medium flex items-center" style="color: #06b6d4;"><i
-                                            class="fas fa-file-export mr-2"></i>Chat Export/Import Feature:</p>
+                                            class="fas fa-file-export mr-2"></i>Chat Export/Import:</p>
                                     <p style="color: var(--text-primary); margin-bottom: 0.5rem;">You can now backup and
                                         restore your conversations using the Export and Import features in the sidebar
                                         menu.</p>
@@ -1959,17 +2083,6 @@
                                 </div>
                             </div>
 
-                            <div class="mt-3 p-2 rounded" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #60a5fa;"><i
-                                        class="fas fa-search mr-2"></i>Where is the option to web search?</p>
-                                <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.5rem;">
-                                    This feature is intentionally omitted to uphold our strict privacy policy. We
-                                    promise that your chats never leave your local device and are never sent to external
-                                    servers. Implementing web search capabilities would require transmitting your
-                                    queries to third-party services, which conflicts with our commitment to keeping your
-                                    data completely local and private.
-                                </p>
-                            </div>
                     </div>
                     </section>
                     <section id="section-ads-privacy">
@@ -1977,7 +2090,7 @@
                                 class="fas fa-ad mr-2"></i>Ads & Privacy</h3>
                         <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
                             <p class="font-medium flex items-center" style="color: var(--success-color);"><i
-                                    class="fas fa-shield-alt mr-2"></i>Your Conversations Are Private</p>
+                                    class="fas fa-shield-alt mr-2"></i></p>
                             <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
                                 While LMSA displays ads to support development, your chat messages remain completely
                                 private:</p>
@@ -1998,7 +2111,7 @@
 
                             <div class="mt-4 p-2 rounded" style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #a78bfa;"><i
-                                        class="fas fa-crown mr-2"></i>LMSA Premium - Remove Ads</p>
+                                        class="fas fa-crown mr-2"></i>LMSA Premium</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">Prefer an ad-free
                                     experience? Tap the <strong>Remove Ads</strong> button on the main page to
                                     upgrade to LMSA Premium with a one-time lifetime purchase that removes all ads
@@ -2165,6 +2278,8 @@
                                 </ul>
                             </div>
                         </div>
+                    </section>
+
                     </section>
                 </div>
             </div>
@@ -2349,7 +2464,7 @@
                     <i class="fas fa-times"></i>
                 </button>
                 <div class="version-badge px-4 py-1.5 rounded-full mx-auto w-fit mt-2">
-                    <p class="text-sm font-medium text-blue-300 text-center">Version 9.1</p>
+                    <p class="text-sm font-medium text-blue-300 text-center">Version 9.2</p>
                 </div>
             </div>
 
@@ -2361,7 +2476,7 @@
                 <div class="flex flex-col items-center justify-center">
                     <p class="text-center text-gray-300 flex items-center mb-3">
                         <i class="fas fa-copyright text-blue-400 mr-2 opacity-75"></i>
-                        <span>2025 TechRay Apps LLC</span>
+                        <span>2026 TechRay Apps LLC</span>
                     </p>
 
                     <!-- Help link with improved styling -->

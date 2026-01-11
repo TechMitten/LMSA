@@ -59,7 +59,7 @@ export async function initializeTouchHandlers() {
         // Add event listeners for all interaction types
         userInput.addEventListener('focus', handleInputInteraction);
         userInput.addEventListener('click', handleInputInteraction);
-        userInput.addEventListener('touchstart', handleInputInteraction);
+        userInput.addEventListener('touchstart', handleInputInteraction, { passive: true });
         userInput.addEventListener('touchend', handleInputInteraction);
 
         // Add input event listener to ensure cursor is visible when typing

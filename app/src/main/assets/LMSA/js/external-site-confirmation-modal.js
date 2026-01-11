@@ -72,7 +72,7 @@ function createExternalSiteModal() {
     
     // Create the modal element
     const modalHTML = `
-    <div id="external-site-modal" class="fixed inset-0 ${isLightTheme ? 'bg-slate-500 bg-opacity-50' : 'bg-black bg-opacity-70'} flex items-center justify-center hidden animate-fade-in z-[1060]" aria-labelledby="external-site-title" role="dialog" aria-modal="true">
+    <div id="external-site-modal" class="fixed inset-0 ${isLightTheme ? 'bg-slate-500 bg-opacity-50' : 'bg-black bg-opacity-70'} items-center justify-center hidden animate-fade-in z-[1060]" aria-labelledby="external-site-title" role="dialog" aria-modal="true">
         <div class="relative p-6 rounded-lg w-96 max-w-[90%] shadow-xl mx-auto my-auto border ${isLightTheme ? 'border-blue-500/40' : 'border-blue-500/30'}" 
             style="background: ${isLightTheme ? 'linear-gradient(to bottom, #f8fafc, #f1f5f9)' : 'linear-gradient(to bottom, #0f172a, #0c1836)'}; 
                   color: ${isLightTheme ? '#1e293b' : 'var(--text-primary)'}; 
@@ -118,7 +118,7 @@ function createExternalSiteModal() {
     // Add ripple effect to buttons
     const buttons = externalSiteModal.querySelectorAll('.external-site-btn');
     buttons.forEach(button => {
-        button.addEventListener('touchstart', createRippleEffect);
+        button.addEventListener('touchstart', createRippleEffect, { passive: true });
         button.addEventListener('mousedown', createRippleEffect);
         button.hasRippleEffect = true;
     });
@@ -349,7 +349,7 @@ export function updateExternalSiteModalTheme() {
             
             // Make sure ripple event listeners are attached
             if (!cancelButton.hasRippleEffect) {
-                cancelButton.addEventListener('touchstart', createRippleEffect);
+                cancelButton.addEventListener('touchstart', createRippleEffect, { passive: true });
                 cancelButton.addEventListener('mousedown', createRippleEffect);
                 cancelButton.hasRippleEffect = true;
             }
@@ -383,7 +383,7 @@ export function updateExternalSiteModalTheme() {
             
             // Make sure ripple event listeners are attached
             if (!confirmButton.hasRippleEffect) {
-                confirmButton.addEventListener('touchstart', createRippleEffect);
+                confirmButton.addEventListener('touchstart', createRippleEffect, { passive: true });
                 confirmButton.addEventListener('mousedown', createRippleEffect);
                 confirmButton.hasRippleEffect = true;
             }

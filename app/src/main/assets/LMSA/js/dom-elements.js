@@ -106,6 +106,7 @@ export const loadedModelDisplay = domCache.get('loaded-model');
 export const hideThinkingCheckbox = domCache.get('hide-thinking');
 export const autoGenerateTitlesCheckbox = domCache.get('auto-generate-titles');
 export const themeToggleCheckbox = domCache.get('theme-toggle');
+export const ollamaToggleCheckbox = domCache.get('ollama-toggle');
 
 export const refreshButton = document.getElementById('refresh-button');
 export const modelToggleButton = document.getElementById('model-toggle-button');

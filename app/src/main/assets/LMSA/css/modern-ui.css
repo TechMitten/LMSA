@@ -3742,29 +3742,6 @@ body.light-theme #github-btn.professional-button:hover {
     0 0 0 2px rgba(107, 114, 128, 0.4);
 }
 
-#settings-help-btn.professional-button {
-  border-color: rgba(245, 158, 11, 0.6);
-  border-width: 2px;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(245, 158, 11, 0.3);
-}
-
-#settings-help-btn.professional-button:hover {
-  border-color: rgba(245, 158, 11, 0.8);
-  box-shadow:
-    0 12px 40px rgba(245, 158, 11, 0.25),
-    0 6px 20px rgba(217, 119, 6, 0.15),
-    0 3px 10px rgba(180, 83, 9, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
-    0 0 0 2px rgba(245, 158, 11, 0.4);
-}
-
 /* Light theme variants for settings modal buttons */
 body.light-theme #edit-system-prompt-btn.professional-button {
   border-color: rgba(59, 130, 246, 0.7);
@@ -3943,28 +3920,6 @@ body.light-theme #back-to-options-btn.professional-button:hover {
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
     inset 0 -1px 0 rgba(0, 0, 0, 0.15),
     0 0 0 2px rgba(107, 114, 128, 0.5);
-}
-
-body.light-theme #settings-help-btn.professional-button {
-  border-color: rgba(245, 158, 11, 0.7);
-  box-shadow:
-    0 8px 32px rgba(15, 23, 42, 0.15),
-    0 4px 16px rgba(30, 41, 59, 0.1),
-    0 2px 8px rgba(51, 65, 85, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(245, 158, 11, 0.4);
-}
-
-body.light-theme #settings-help-btn.professional-button:hover {
-  border-color: rgba(245, 158, 11, 0.9);
-  box-shadow:
-    0 12px 40px rgba(245, 158, 11, 0.3),
-    0 6px 20px rgba(217, 119, 6, 0.2),
-    0 3px 10px rgba(180, 83, 9, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
-    0 0 0 2px rgba(245, 158, 11, 0.5);
 }
 
 /* ============================================

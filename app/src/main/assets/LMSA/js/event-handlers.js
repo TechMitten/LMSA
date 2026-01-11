@@ -12,6 +12,7 @@ import {
     welcomeModelsBtn, welcomeNewChatBtn, welcomeHelpBtn
 } from './dom-elements.js';
 import { showSettingsModal, hideSettingsModal } from './settings-modal-manager.js';
+import { getEnterSendsNewline } from './settings-manager.js';
 import {
     showWelcomeMessage, hideWelcomeMessage, toggleSidebar, closeSidebar, showLoadingIndicator,
     hideLoadingIndicator, toggleSendStopButton, hideConfirmationModal, showConfirmationModal,
@@ -102,7 +103,7 @@ export function initializeEventHandlers() {
         // Add visual feedback for touch devices
         updatedGetStartedBtn.addEventListener('touchstart', () => {
             updatedGetStartedBtn.classList.add('active');
-        });
+        }, { passive: true });
 
         // Add touchcancel handler
         updatedGetStartedBtn.addEventListener('touchcancel', () => {
@@ -150,7 +151,7 @@ export function initializeEventHandlers() {
         // Add visual feedback for touch devices
         updatedWelcomeModelsBtn.addEventListener('touchstart', () => {
             updatedWelcomeModelsBtn.classList.add('active');
-        });
+        }, { passive: true });
 
         // Add touchcancel handler
         updatedWelcomeModelsBtn.addEventListener('touchcancel', () => {
@@ -190,7 +191,7 @@ export function initializeEventHandlers() {
         // Add visual feedback for touch devices
         updatedWelcomeNewChatBtn.addEventListener('touchstart', () => {
             updatedWelcomeNewChatBtn.classList.add('active');
-        });
+        }, { passive: true });
 
         // Add touchcancel handler
         updatedWelcomeNewChatBtn.addEventListener('touchcancel', () => {
@@ -237,7 +238,7 @@ export function initializeEventHandlers() {
         // Add visual feedback for touch devices
         updatedWelcomeHelpBtn.addEventListener('touchstart', () => {
             updatedWelcomeHelpBtn.classList.add('active');
-        });
+        }, { passive: true });
 
         // Add touchcancel handler
         updatedWelcomeHelpBtn.addEventListener('touchcancel', () => {
@@ -346,11 +347,19 @@ export function initializeEventHandlers() {
 
         // Handle keydown events for cursor visibility and Enter key
         userInput.addEventListener('keydown', function (e) {
-            // Handle Enter key to submit form (unless Shift is held)
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault(); // Prevent new line
-                chatForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                return;
+            // Handle Enter key based on settings
+            if (e.key === 'Enter') {
+                const enterForNewline = getEnterSendsNewline();
+                
+                // If enterForNewline is true: Shift+Enter sends, Enter adds newline
+                // If enterForNewline is false: Enter sends, Shift+Enter adds newline
+                const shouldSend = enterForNewline ? e.shiftKey : !e.shiftKey;
+
+                if (shouldSend) {
+                    e.preventDefault(); // Prevent new line
+                    chatForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                    return;
+                }
             }
 
             // For arrow keys, we need special handling

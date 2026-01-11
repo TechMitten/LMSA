@@ -1,6 +1,5 @@
 // Import required functions
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
-import { hideSettingsModal } from './settings-modal-manager.js';
 import { showExternalSiteModal } from './external-site-confirmation-modal.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -9,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const helpModal = document.getElementById('help-modal');
     const closeHelpBtn = document.getElementById('close-help');
 
-    const settingsHelpBtn = document.getElementById('settings-help-btn');
     const sidebarElement = document.getElementById('sidebar');
     const modalContent = helpModal ? helpModal.querySelector('.modal-content') : null;
     const openSettingsLink = document.getElementById('open-settings-link');
@@ -101,26 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
             import('./chat-service.js').then(module => {
                 module.createNewChat();
             });
-        });
-    }
-
-    // Settings help button - closes Settings modal and opens Help modal
-    if (settingsHelpBtn) {
-        settingsHelpBtn.addEventListener('click', () => {
-            // First close the settings modal
-            const settingsModal = document.getElementById('settings-modal');
-            if (settingsModal) {
-                // Close the settings modal using the imported function
-                hideSettingsModal();
-
-                // Wait a short time for the settings modal to close before opening help
-                setTimeout(() => {
-                    openHelpModal();
-                }, 100);
-            } else {
-                // If settings modal isn't found, just open help modal
-                openHelpModal();
-            }
         });
     }
 

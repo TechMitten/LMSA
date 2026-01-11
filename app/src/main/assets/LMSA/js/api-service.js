@@ -1,6 +1,6 @@
 // API Service for handling server communication
 import { serverIpInput, serverPortInput, loadedModelDisplay } from './dom-elements.js';
-import { getLightThemeEnabled } from './settings-manager.js';
+import { getLightThemeEnabled, getUseOllama } from './settings-manager.js';
 import { showIpPortErrorModal, hideIpPortErrorModal } from './ui-manager.js';
 
 let API_URL = '';
@@ -698,6 +698,25 @@ export async function loadModel(modelId) {
             return false;
         }
 
+        // If using Ollama, we don't need to explicitly load models
+        // Ollama loads them on demand
+        if (getUseOllama()) {
+            console.log(`Ollama mode enabled: Skipping explicit load for ${modelId}`);
+            // Update the UI to show this model as loaded
+            window.currentLoadedModel = modelId;
+            updateLoadedModelDisplay(modelId);
+            
+            // Allow file uploads if model is selected
+            try {
+                const { updateFileUploadCapabilities } = await import('./file-upload.js');
+                await updateFileUploadCapabilities();
+            } catch (error) {
+                console.error('Failed to update file upload capabilities:', error);
+            }
+            
+            return true;
+        }
+
         console.log(`Attempting to load model: ${modelId}`);
 
         // Try the direct model loading approach first
@@ -761,6 +780,12 @@ export async function ejectModel() {
         if (!ip || !port) {
             console.error('Server IP or port is empty');
             return false;
+        }
+
+        // If using Ollama, we don't need to explicitly eject models
+        if (getUseOllama()) {
+            console.log('Ollama mode enabled: Skipping explicit eject');
+            return true;
         }
 
         console.log('Attempting to eject model');

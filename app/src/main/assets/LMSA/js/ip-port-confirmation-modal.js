@@ -1,5 +1,6 @@
 // IP/Port Confirmation Modal Manager
 import { debugLog, debugError } from './utils.js';
+import { ollamaToggleCheckbox } from './dom-elements.js';
 
 // Store original IP/Port values to detect changes
 let originalIp = '';
@@ -237,6 +238,15 @@ export function interceptIpPortChanges(callback) {
         // No changes, execute callback immediately
         if (callback) callback();
 
+        return;
+    }
+
+    // Check if Ollama is enabled - skip checklist if so
+    if (ollamaToggleCheckbox && ollamaToggleCheckbox.checked) {
+        debugLog('Skipping IP/Port checklist (Ollama enabled)');
+        // Update stored values since we are accepting the change implicitly
+        storeOriginalValues();
+        if (callback) callback();
         return;
     }
 
