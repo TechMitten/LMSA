@@ -605,6 +605,37 @@
         body.dark #privacy-policy-modal .border-gray-200 {
             border-color: #374151 !important;
         }
+
+        /* Model Loading Spinner */
+        @keyframes spin-loader {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-spinner-wrapper {
+            position: relative;
+            width: 3rem;
+            height: 3rem;
+        }
+        
+        .loading-spinner-track {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .loading-spinner-active {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: #3b82f6;
+            animation: spin-loader 1s linear infinite;
+            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+        }
     </style>
 </head>
 
@@ -709,8 +740,8 @@
         </div>
     </div>
 
-    <!-- Main App Container (initially hidden until terms accepted) -->
-    <div id="main-app-container" class="hidden"
+    <!-- Main App Container -->
+    <div id="main-app-container" class=""
         style="min-height: 100vh; min-height: -webkit-fill-available; display: flex; flex-direction: column;">
         <!-- Header - Enhanced with modern styling and effects -->
         <header class="p-4 flex justify-between items-center">
@@ -999,7 +1030,7 @@
                             </div>
 
                             <div id="welcome-footer" class="mt-8 pt-5 pb-3 border-t border-white/10 text-xs">
-                                Version 9.2
+                                Version 9.4
                             </div>
                         </div>
                     </div>
@@ -2466,7 +2497,7 @@
                     <i class="fas fa-times"></i>
                 </button>
                 <div class="version-badge px-4 py-1.5 rounded-full mx-auto w-fit mt-2">
-                    <p class="text-sm font-medium text-blue-300 text-center">Version 9.2</p>
+                    <p class="text-sm font-medium text-blue-300 text-center">Version 9.4</p>
                 </div>
             </div>
 
@@ -2773,7 +2804,7 @@
                     <div class="flex flex-col">
                         <span class="text-blue-400 font-extrabold">What's New</span>
                         <span class="text-xs text-blue-300/80 font-medium">v<span
-                                id="whats-new-version">9.1</span></span>
+                                id="whats-new-version">9.4</span></span>
                     </div>
                 </h2>
                 <button id="close-whats-new"
@@ -2784,6 +2815,31 @@
 
             <div class="features-container overflow-y-auto flex-grow px-1 py-2">
                 <div class="space-y-3">
+                    <div class="feature-item">
+                        <div class="relative overflow-hidden">
+                            <div
+                                class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-yellow-500/10 to-orange-700/5 rounded-full blur-xl">
+                            </div>
+                            <div class="flex items-start relative z-10">
+                                <div
+                                    class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-yellow-500/20 w-10 h-10 shadow-sm">
+                                    <i class="fas fa-star text-yellow-400"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <h3 class="feature-title">Ollama Support & Updates</h3>
+                                        <span
+                                            class="ml-2 px-1.5 py-0.5 bg-yellow-500/20 text-yellow-300 text-xs rounded-full font-medium">NEW</span>
+                                    </div>
+                                    <div class="feature-description">
+                                        <p class="mb-3">Fixed a bug that was causing the volume to increase every time the app was launched.</p>
+                                        <p class="mb-3">Made improvements to the menu system flow for a smoother experience when switching models or setting a default model.</p>
+                                        <p>Added support for Ollama - users can now connect LMSA to Ollama server running on their PC. Check the Help menu for more information on how to get started.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="feature-item">
                         <div class="relative overflow-hidden">
                             <div
@@ -2946,86 +3002,13 @@
                         </div>
                     </div>
 
-                    <div class="feature-item">
-                        <div class="relative overflow-hidden">
-                            <div
-                                class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-purple-500/10 to-violet-700/5 rounded-full blur-xl">
-                            </div>
-                            <div class="flex items-start relative z-10">
-                                <div
-                                    class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-purple-500/20 w-10 h-10 shadow-sm">
-                                    <i class="fas fa-exchange-alt text-purple-400"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center">
-                                        <h3 class="feature-title">Import/Export Bug Fix</h3>
-                                    </div>
-                                    <div class="feature-description">
-                                        <p class="mb-3">Fixed a critical issue with the import/export feature that was
-                                            causing problems for some users. Chat history can now be reliably backed up
-                                            and restored without data loss.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
 
 
-                    <div class="feature-item">
-                        <div class="relative overflow-hidden">
-                            <div
-                                class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-cyan-500/10 to-teal-700/5 rounded-full blur-xl">
-                            </div>
-                            <div class="flex items-start relative z-10">
-                                <div
-                                    class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-cyan-500/20 w-10 h-10 shadow-sm">
-                                    <i class="fas fa-arrow-down text-cyan-400"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center">
-                                        <h3 class="feature-title">Auto-Scroll to Latest Messages</h3>
-                                    </div>
-                                    <div class="feature-description">
-                                        <p class="mb-3">Added a new setting in the options menu that automatically
-                                            scrolls to the bottom (latest/newest part) of the chat history window when
-                                            the LLM is streaming text. This keeps you focused on the most recent
-                                            responses without manual scrolling.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="feature-item">
-                        <div class="relative overflow-hidden">
-                            <div
-                                class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-yellow-500/10 to-amber-700/5 rounded-full blur-xl">
-                            </div>
-                            <div class="flex items-start relative z-10">
-                                <div
-                                    class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-yellow-500/20 w-10 h-10 shadow-sm">
-                                    <i class="fas fa-star text-yellow-400"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center">
-                                        <h3 class="feature-title">Default Model Selection</h3>
-                                    </div>
-                                    <div class="feature-description">
-                                        <p class="mb-3">You can now set a default model that will automatically load
-                                            whenever LMSA connects to LM Studio! Simply open the models modal and tap
-                                            the star icon next to any model to set it as your default.</p>
-                                        <p class="mb-3">Your default model will be saved and automatically selected
-                                            every time you launch the app, eliminating the need to manually switch
-                                            models. If a different model is already loaded when you start LMSA, it will
-                                            automatically switch to your preferred default model.</p>
-                                        <p>This feature provides a more automated experience - just launch the app and
-                                            your favorite model is ready to go!</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
+
+
 
                 </div>
             </div>
@@ -3059,38 +3042,7 @@
 
 
 
-    <!-- Native Ad Integration for Android -->
-    <script>
-        // Function to insert native ads into the chat
-        window.insertNativeAd = function (adHtml) {
-            try {
-                const chatOutput = document.getElementById('chat-output');
-                if (!chatOutput) return;
 
-                // Create a container for the native ad
-                const adContainer = document.createElement('div');
-                adContainer.className = 'native-ad-message-container';
-                adContainer.innerHTML = adHtml;
-
-                // Find the last message and insert the ad after it
-                const messages = chatOutput.querySelectorAll('.message-container');
-                if (messages.length > 0) {
-                    const lastMessage = messages[messages.length - 1];
-                    lastMessage.parentNode.insertBefore(adContainer, lastMessage.nextSibling);
-                } else {
-                    chatOutput.appendChild(adContainer);
-                }
-
-                // Scroll to show the new ad (smoothly)
-                setTimeout(() => {
-                    adContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }, 100);
-
-            } catch (error) {
-                console.log('Error inserting native ad:', error);
-            }
-        };
-    </script>
 
     <!-- TTS Service -->
     <script src="js/tts-service.js"></script>
@@ -3396,11 +3348,19 @@
                     </p>
                 </div>
 
+                <!-- Animated Loading Spinner -->
+                <div class="flex justify-center items-center mb-6">
+                    <div class="loading-spinner-wrapper">
+                        <div class="loading-spinner-track"></div>
+                        <div class="loading-spinner-active"></div>
+                    </div>
+                </div>
+
                 <!-- Enhanced info section with better styling -->
                 <div
                     class="mt-6 flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-xl border border-blue-500/10 dark:border-blue-500/10 light:border-blue-400/20">
                     <div class="flex items-center text-sm text-gray-400 dark:text-gray-400 light:text-gray-500">
-                        <span>This may take a few moments depending on model size</span>
+                        <span>This may take a few moments, depending on the model size</span>
                     </div>
                 </div>
             </div>

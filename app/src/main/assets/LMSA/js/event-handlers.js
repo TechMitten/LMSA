@@ -457,16 +457,7 @@ export function initializeEventHandlers() {
     // New chat button
     if (newChatButton) {
         newChatButton.addEventListener('click', () => {
-            // Show interstitial ad every other time (if on Android)
-            if (typeof AndroidAds !== 'undefined' && AndroidAds.shouldShowNewChatAd && AndroidAds.showInterstitial) {
-                try {
-                    if (AndroidAds.shouldShowNewChatAd()) {
-                        AndroidAds.showInterstitial();
-                    }
-                } catch (error) {
-                    console.log('Interstitial ad trigger failed:', error);
-                }
-            }
+// Interstitial ad trigger removed
             createNewChat();
         });
     }
@@ -1723,14 +1714,7 @@ async function handleChatFormSubmit(e) {
         // Always add the user message to the UI first
         appendMessage('user', message, hasUploadedFiles ? uploadedFiles : null);
 
-        // Trigger native ad check (if on Android)
-        if (typeof AndroidAds !== 'undefined' && AndroidAds.onMessageSent) {
-            try {
-                AndroidAds.onMessageSent();
-            } catch (error) {
-                console.log('Ad trigger failed:', error);
-            }
-        }
+        // Legacy ad trigger removed
 
         // Add the user message to chat history immediately
         // This ensures the message exists in history even if generation is cancelled
@@ -3027,16 +3011,7 @@ function toggleImportExportContainer() {
 function handleNewChatButtonClick() {
     debugLog('New chat button clicked');
 
-    // Show interstitial ad every other time (if on Android)
-    if (typeof AndroidAds !== 'undefined' && AndroidAds.shouldShowNewChatAd && AndroidAds.showInterstitial) {
-        try {
-            if (AndroidAds.shouldShowNewChatAd()) {
-                AndroidAds.showInterstitial();
-            }
-        } catch (error) {
-            console.log('Interstitial ad trigger failed:', error);
-        }
-    }
+    // Interstitial ad trigger removed
 
     // Close the sidebar first
     closeSidebar();

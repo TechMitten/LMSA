@@ -501,7 +501,7 @@ export function showLoadingIndicator() {
 
     // Ensure the content includes the thinking text
     if (!loadingIndicator.querySelector('.thinking-text')) {
-        loadingIndicator.innerHTML = '<span class="thinking-text">Thinking</span><span class="loading-ellipsis">...</span>';
+        loadingIndicator.innerHTML = '<span class="thinking-text">Generating...</span><span class="loading-ellipsis">...</span>';
 
         // Apply styling to new elements
         const ellipsis = loadingIndicator.querySelector('.loading-ellipsis');

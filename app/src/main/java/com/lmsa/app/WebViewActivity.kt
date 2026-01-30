@@ -75,6 +75,7 @@ class WebViewActivity : AppCompatActivity() {
     private lateinit var billingClient: BillingClient
     private val PRODUCT_ID = "ad_removal"
     private var isPremium = false
+    private var isDebugMode = false
 
     private val purchasesUpdatedListener = PurchasesUpdatedListener { billingResult, purchases ->
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
@@ -118,7 +119,7 @@ class WebViewActivity : AppCompatActivity() {
         // Initialize BillingClient
         billingClient = BillingClient.newBuilder(this)
             .setListener(purchasesUpdatedListener)
-            .enablePendingPurchases()
+            .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
             .build()
         
         startBillingConnection()
@@ -127,12 +128,7 @@ class WebViewActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
         isPremium = prefs.getBoolean("is_premium", false)
         
-        if (!isPremium) {
-            val adRequest = AdRequest.Builder().build()
-            adView.loadAd(adRequest)
-        } else {
-            adView.visibility = View.GONE
-        }
+        updatePremiumUiState()
 
 
 
@@ -326,7 +322,7 @@ class WebViewActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 // Now that the page is loaded, update the UI with the persisted premium status
-                updateWebViewPremiumUI()
+                updatePremiumUiState()
             }
         }
 
@@ -395,10 +391,25 @@ class WebViewActivity : AppCompatActivity() {
 
 
 
-    private fun updateWebViewPremiumUI() {
-        val webView: WebView = findViewById(R.id.webView)
-        val jsCommand = "if(typeof updateUiForPremium === 'function') { updateUiForPremium($isPremium); }"
-        webView.evaluateJavascript(jsCommand, null)
+    private fun updatePremiumUiState() {
+        runOnUiThread {
+            val effectivePremium = isPremium && !isDebugMode
+            val adView = findViewById<AdView>(R.id.adView)
+            val webView: WebView = findViewById(R.id.webView)
+
+            if (effectivePremium) {
+                adView.visibility = View.GONE
+            } else {
+                if (adView.visibility != View.VISIBLE) {
+                     adView.visibility = View.VISIBLE
+                     val adRequest = AdRequest.Builder().build()
+                     adView.loadAd(adRequest)
+                }
+            }
+            
+            val jsCommand = "if(typeof updateUiForPremium === 'function') { updateUiForPremium($effectivePremium); }"
+            webView.evaluateJavascript(jsCommand, null)
+        }
     }
 
     private fun checkAndRequestStoragePermissions() {
@@ -688,17 +699,7 @@ class WebViewActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
         prefs.edit().putBoolean("is_premium", isPremium).apply()
         
-        runOnUiThread {
-            val adView = findViewById<AdView>(R.id.adView)
-            if (isPremium) {
-                adView.visibility = View.GONE
-            } else {
-                adView.visibility = View.VISIBLE
-                val adRequest = AdRequest.Builder().build()
-                adView.loadAd(adRequest)
-            }
-            updateWebViewPremiumUI()
-        }
+        updatePremiumUiState()
     }
 
     inner class BillingInterface {
@@ -757,7 +758,16 @@ class WebViewActivity : AppCompatActivity() {
         
         @JavascriptInterface
         fun checkPremiumStatus(): Boolean {
-            return isPremium
+            return isPremium && !isDebugMode
+        }
+
+        @JavascriptInterface
+        fun toggleDebugMode(enable: Boolean) {
+            isDebugMode = enable
+            runOnUiThread {
+                Toast.makeText(this@WebViewActivity, "Debug Mode: ${if(enable) "Enabled" else "Disabled"}", Toast.LENGTH_SHORT).show()
+            }
+            updatePremiumUiState()
         }
     }
 
@@ -811,17 +821,15 @@ class WebViewActivity : AppCompatActivity() {
                                 override fun onDone(utteranceId: String?) {
                                     Log.d(TAG, "TTS finished speaking: $utteranceId")
                                     // Release audio focus when done
-                                    audioFocusChangeListener?.let { listener ->
-                                        audioManager.abandonAudioFocus(listener)
-                                    }
+                                    // Release audio focus when done
+                                    abandonAudioFocus()
                                 }
                                 
                                 override fun onError(utteranceId: String?) {
                                     Log.e(TAG, "TTS error for utterance: $utteranceId")
                                     // Release audio focus on error
-                                    audioFocusChangeListener?.let { listener ->
-                                        audioManager.abandonAudioFocus(listener)
-                                    }
+                                    // Release audio focus on error
+                                    abandonAudioFocus()
                                 }
                             })
                             

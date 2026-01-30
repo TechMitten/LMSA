@@ -118,3 +118,50 @@ if (openHelpLink && helpModal) {
     });
 }
 
+// Debug Mode Trigger logic
+const versionBadge = document.querySelector('.version-badge');
+let debugClickCount = 0;
+let debugClickTimer = null;
+// Initialize global debug state if not exists
+if (typeof window.isDebugMode === 'undefined') {
+    window.isDebugMode = false;
+}
+
+if (versionBadge) {
+    // Add distinct cursor to hint interactivity for those who know
+    // versionBadge.style.cursor = 'pointer'; // Maybe keep it hidden/normal cursor to be truly hidden
+
+    versionBadge.addEventListener('click', (e) => {
+        // Prevent default double-tap zoom etc
+        e.preventDefault();
+        
+        debugClickCount++;
+        
+        if (debugClickTimer) clearTimeout(debugClickTimer);
+        
+        // Reset counter if too much time passes between clicks
+        debugClickTimer = setTimeout(() => {
+            debugClickCount = 0;
+        }, 500); // 500ms timeout for rapid clicking
+        
+        if (debugClickCount >= 7) {
+            debugClickCount = 0;
+            // Toggle logic
+            if (window.AndroidBilling && typeof window.AndroidBilling.toggleDebugMode === 'function') {
+                window.isDebugMode = !window.isDebugMode;
+                window.AndroidBilling.toggleDebugMode(window.isDebugMode);
+                console.log(`Debug Mode toggled: ${window.isDebugMode}`);
+            } else {
+                console.warn('AndroidBilling interface not found or toggleDebugMode not supported');
+                // Fallback for browser testing
+                console.log('Debug mode trigger activated (mock)');
+                if (typeof window.updateUiForPremium === 'function') {
+                    window.isDebugMode = !window.isDebugMode;
+                    // Mock the effect
+                    window.updateUiForPremium(!window.isDebugMode); // Assuming premium is true, so !debug is false (free)
+                    alert(`Debug Mode: ${window.isDebugMode ? 'Enabled' : 'Disabled'}`);
+                }
+            }
+        }
+    });
+}

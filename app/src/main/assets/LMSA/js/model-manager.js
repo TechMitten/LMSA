@@ -748,14 +748,7 @@ function showActionError(modelId, errorMsg) {
                     if (loadButton) {
                         loadButton.addEventListener('click', async (e) => {
                             e.preventDefault();
-                            // Show interstitial ad (if on Android)
-                            if (typeof AndroidAds !== 'undefined' && AndroidAds.showInterstitial) {
-                                try {
-                                    AndroidAds.showInterstitial();
-                                } catch (error) {
-                                    console.log('Interstitial ad trigger failed:', error);
-                                }
-                            }
+                            // Legacy ad trigger removed
                             await loadModel(modelId);
                         });
                     }
@@ -890,16 +883,7 @@ function displayAvailableModels(models, loadedModelId) {
                 if (loadButton) {
                     loadButton.addEventListener('click', async (e) => {
                         e.preventDefault();
-                        // Show interstitial ad every other time (if on Android)
-                        if (typeof AndroidAds !== 'undefined' && AndroidAds.shouldShowModelSwitchAd && AndroidAds.showInterstitial) {
-                            try {
-                                if (AndroidAds.shouldShowModelSwitchAd()) {
-                                    AndroidAds.showInterstitial();
-                                }
-                            } catch (error) {
-                                console.log('Interstitial ad trigger failed:', error);
-                            }
-                        }
+                        // Legacy ad trigger removed
                         await loadModel(model.id);
                     });
 
@@ -1025,16 +1009,7 @@ function displayPotentialModels(models) {
             if (loadButton) {
                 loadButton.addEventListener('click', async (e) => {
                     e.preventDefault();
-                    // Show interstitial ad every other time (if on Android)
-                    if (typeof AndroidAds !== 'undefined' && AndroidAds.shouldShowModelSwitchAd && AndroidAds.showInterstitial) {
-                        try {
-                            if (AndroidAds.shouldShowModelSwitchAd()) {
-                                AndroidAds.showInterstitial();
-                            }
-                        } catch (error) {
-                            console.log('Interstitial ad trigger failed:', error);
-                        }
-                    }
+                    // Legacy ad trigger removed
                     await loadModel(model.id);
                 });
 

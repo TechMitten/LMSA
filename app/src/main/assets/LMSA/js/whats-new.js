@@ -9,7 +9,7 @@ let gotItButton;
 let versionElement;
 
 // Local storage keys
-const WHATS_NEW_VERSION = '9.1'; // Updated for new features: TTS Audio, Default model selection
+const WHATS_NEW_VERSION = '9.3'; // Updated for new features: TTS Audio, Ollama Support
 
 // Flag to track if the modal has been shown in the current session
 let modalShownInCurrentSession = false;
@@ -280,6 +280,17 @@ function setupTouchScrolling() {
             closeWhatsNewButton = newCloseBtn;
 
             closeWhatsNewButton.addEventListener('click', () => {
+                hideWhatsNewModal();
+            });
+        }
+
+        // Re-attach Got It button listener as well for consistency and robustness
+        if (gotItButton) {
+            const newGotItBtn = gotItButton.cloneNode(true);
+            gotItButton.parentNode.replaceChild(newGotItBtn, gotItButton);
+            gotItButton = newGotItBtn;
+
+            gotItButton.addEventListener('click', () => {
                 hideWhatsNewModal();
             });
         }

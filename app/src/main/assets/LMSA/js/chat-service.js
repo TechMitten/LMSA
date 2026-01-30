@@ -5,7 +5,7 @@ import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } 
 import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled } from './settings-manager.js';
 import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
-import { reviewManager } from './review-manager.js';
+
 
 let currentChatId = Date.now();
 let chatHistoryData = {};
@@ -766,8 +766,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             await updateChatHistory(userMessage, aiMessage, fileContents);
         }
 
-        // Track successful interaction for In-App Review
-        reviewManager.trackInteraction();
+        // Review trigger removed
 
         // Set isFirstMessage to false after first successful message
         if (isFirstMessage) {
@@ -2652,6 +2651,9 @@ export async function regenerateLastResponse(isRetry = false) {
                                     if (delta.content) {
                                         // Create the AI message bubble on first content arrival
                                         if (!aiMessageElement) {
+                                            // Hide loading indicator before showing the message
+                                            hideLoadingIndicator();
+
                                             aiMessageElement = appendMessage('ai', '');
                                             contentContainer = aiMessageElement.querySelector('.message-content');
 
@@ -2659,7 +2661,6 @@ export async function regenerateLastResponse(isRetry = false) {
                                             if (!contentContainer) {
                                                 debugError('Could not find message content container for regenerated AI message');
                                                 isGenerating = false;
-                                                hideLoadingIndicator();
                                                 return;
                                             }
                                         }
