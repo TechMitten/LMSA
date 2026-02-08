@@ -46,6 +46,8 @@ import com.google.android.play.core.review.ReviewManagerFactory
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.AdSize
+import android.widget.FrameLayout
 import com.android.billingclient.api.*
 
 class WebViewActivity : AppCompatActivity() {
@@ -58,6 +60,8 @@ class WebViewActivity : AppCompatActivity() {
     private var pendingFileContent: String? = null
     private var pendingFileName: String? = null
     private var isImageFile: Boolean = false
+    private lateinit var adContainerView: FrameLayout
+    private var adView: AdView? = null
 
 
 
@@ -101,7 +105,11 @@ class WebViewActivity : AppCompatActivity() {
         setContentView(R.layout.activity_webview)
 
         MobileAds.initialize(this) {}
-        val adView = findViewById<AdView>(R.id.adView)
+        adContainerView = findViewById(R.id.adViewContainer)
+        adContainerView.post {
+             // Initial load will happen in updatePremiumUiState if appropriate, 
+             // once the layout is ready or at least we can get width.
+        }
 
         // Custom Splash Screen Logic
         val splashImage = findViewById<android.widget.ImageView>(R.id.splashImageView)
@@ -394,22 +402,55 @@ class WebViewActivity : AppCompatActivity() {
     private fun updatePremiumUiState() {
         runOnUiThread {
             val effectivePremium = isPremium && !isDebugMode
-            val adView = findViewById<AdView>(R.id.adView)
             val webView: WebView = findViewById(R.id.webView)
 
             if (effectivePremium) {
-                adView.visibility = View.GONE
+                adContainerView.visibility = View.GONE
+                adView?.let { 
+                    adContainerView.removeView(it)
+                    it.destroy() 
+                }
+                adView = null
             } else {
-                if (adView.visibility != View.VISIBLE) {
-                     adView.visibility = View.VISIBLE
-                     val adRequest = AdRequest.Builder().build()
-                     adView.loadAd(adRequest)
+                if (adContainerView.visibility != View.VISIBLE || adView == null) {
+                     loadBanner()
                 }
             }
             
             val jsCommand = "if(typeof updateUiForPremium === 'function') { updateUiForPremium($effectivePremium); }"
             webView.evaluateJavascript(jsCommand, null)
         }
+    }
+
+    private fun loadBanner() {
+        // Create an ad request.
+        adView = AdView(this)
+        adView!!.adUnitId = "ca-app-pub-1388425042154340/3920449156"
+        adContainerView.removeAllViews()
+        adContainerView.addView(adView)
+
+        val adSize = getAdSize()
+        adView!!.setAdSize(adSize)
+
+        val adRequest = AdRequest.Builder().build()
+        adView!!.loadAd(adRequest)
+        adContainerView.visibility = View.VISIBLE
+    }
+
+    private fun getAdSize(): AdSize {
+        val display = windowManager.defaultDisplay
+        val outMetrics = android.util.DisplayMetrics()
+        display.getMetrics(outMetrics)
+
+        val density = outMetrics.density
+
+        var adWidthPixels = adContainerView.width.toFloat()
+        if (adWidthPixels == 0f) {
+            adWidthPixels = outMetrics.widthPixels.toFloat()
+        }
+
+        val adWidth = (adWidthPixels / density).toInt()
+        return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth)
     }
 
     private fun checkAndRequestStoragePermissions() {
@@ -477,6 +518,7 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        adView?.destroy()
 
         textToSpeech?.shutdown()
         super.onDestroy()

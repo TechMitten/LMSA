@@ -3090,11 +3090,9 @@ body.light-theme #send-context-menu .menu-header {
     opacity: 1;
     transform: translateX(0);
     height: auto;
-    flex: 1;
-    overflow-y: auto;
-    /* Allow scrolling within the step if needed */
-    -webkit-overflow-scrolling: touch;
-    /* Smooth scrolling on iOS */
+    /* Don't set overflow or max-height here - the parent #settings-content-wrapper handles scrolling */
+    /* Setting overflow-y: visible allows content to flow into the parent's scroll container */
+    overflow: visible;
     touch-action: pan-y;
     /* Allow vertical touch scrolling */
     overscroll-behavior: contain;
@@ -3103,8 +3101,6 @@ body.light-theme #send-context-menu .menu-header {
     /* Add padding at the bottom */
     margin-bottom: 1rem;
     /* Space before buttons */
-    max-height: 45vh;
-    /* Reduced height to ensure buttons are visible */
 }
 
 /* Navigation buttons styling */
@@ -3408,9 +3404,11 @@ body.light-theme #send-context-menu .menu-header {
     #settings-modal .modal-content {
         padding: 1rem;
         box-sizing: border-box;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: hidden;
         width: 100%;
         max-width: 100%;
+        touch-action: auto;
     }
 
     /* Fix for textarea container on smartphones */
@@ -3418,7 +3416,7 @@ body.light-theme #send-context-menu .menu-header {
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
-        overflow: hidden;
+        overflow-x: hidden;
     }
 
     /* Ensure buttons don't get transformed on mobile */
@@ -3550,8 +3548,10 @@ body.light-theme #send-context-menu .menu-header {
 
     /* Ensure modal content properly contains the save button */
     #settings-modal .modal-content {
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: hidden;
         box-sizing: border-box;
+        touch-action: auto;
     }
 
     /* Fix for navigation buttons in tablet view */
@@ -8352,6 +8352,21 @@ body.modal-open {
     overflow-y: auto !important;
 }
 
+/* For settings modal, the inner wrapper handles scrolling, not modal-content */
+.modal-open #settings-modal .modal-content {
+    overflow-y: hidden !important;
+    touch-action: auto !important;
+}
+
+/* Settings content wrapper needs specific touch scrolling properties */
+.modal-open #settings-content-wrapper {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    touch-action: pan-y !important;
+    overscroll-behavior: contain !important;
+    pointer-events: auto !important;
+}
+
 /* Prevent touch events on background elements when modal is open */
 .modal-open * {
     pointer-events: none;
@@ -8361,7 +8376,9 @@ body.modal-open {
 .modal-open .modal-container,
 .modal-open .modal-container *,
 .modal-open #whats-new-modal,
-.modal-open #whats-new-modal * {
+.modal-open #whats-new-modal *,
+.modal-open #settings-modal,
+.modal-open #settings-modal * {
     pointer-events: auto;
 }
 

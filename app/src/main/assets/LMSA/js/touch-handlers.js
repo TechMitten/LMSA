@@ -24,13 +24,9 @@ export async function initializeTouchHandlers() {
         // The browser handles scrolling naturally when no preventDefault is called
     }
 
-    // Allow scrolling within the settings modal scrollable areas
-    const settingsContentWrapper = document.getElementById('settings-content-wrapper');
-    if (settingsContentWrapper) {
-        settingsContentWrapper.addEventListener('touchmove', function (e) {
-            e.stopPropagation();
-        }, { passive: true });
-    }
+    // Settings modal touch scrolling is now handled by CSS (touch-action: pan-y)
+    // and programmatic styles in settings-modal-touch-handler.js
+    // No JavaScript touch handlers needed for scrolling
 
     // Allow scrolling within the What's New modal
     const whatsNewModal = document.getElementById('whats-new-modal');

@@ -25,6 +25,8 @@
   padding: 8px;
   box-sizing: border-box !important;
   /* will-change removed - only apply during transitions */
+  /* Allow touch events to propagate to scrollable children */
+  touch-action: auto;
 }
 
 /* Rich immersive background pattern with dynamic effects */
@@ -107,7 +109,8 @@
   right: auto !important;
   bottom: auto !important;
   transform: none !important;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden; /* Parent doesn't scroll - settings-content-wrapper handles it */
   z-index: 1052;
   /* Responsive sizing that works across all devices */
   width: min(750px, calc(100vw - 32px));
@@ -120,6 +123,8 @@
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   /* will-change removed - only apply during transitions */
+  /* Allow touch events to propagate to scrollable children */
+  touch-action: auto;
 }
 
 /* Premium edge highlight with animated gradient border */
@@ -1017,17 +1022,22 @@
 
 /* Settings content wrapper */
 #settings-content-wrapper {
-  overflow-y: auto;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
   max-height: calc(85vh - 160px);
-  /* Adjust based on header and footer height */
   padding-right: 12px;
-  /* Add padding for scrollbar */
   margin-right: -12px;
-  /* Offset padding to maintain alignment */
   scrollbar-width: thin;
   scrollbar-color: rgba(59, 130, 246, 0.5) rgba(30, 41, 59, 0.2);
   scroll-behavior: smooth;
   overscroll-behavior: contain;
+  /* Enable touch scrolling on mobile devices */
+  touch-action: pan-y !important;
+  /* Ensure pointer events are enabled for touch */
+  pointer-events: auto !important;
+  /* Flex properties to ensure scrolling works in flex container */
+  flex: 1 1 auto;
+  min-height: 0; /* Critical: allows the element to shrink and scroll */
 }
 
 /* Webkit scrollbar styles */
@@ -1152,8 +1162,8 @@
   visibility: visible !important;
   opacity: 1 !important;
   pointer-events: auto !important;
-  -webkit-overflow-scrolling: touch;
-  /* Enable smooth scrolling on iOS */
+  /* Don't set overflow-y: auto here - parent #settings-content-wrapper handles scrolling */
+  overflow: visible;
   touch-action: pan-y;
   /* Allow vertical touch scrolling */
   overscroll-behavior: contain;

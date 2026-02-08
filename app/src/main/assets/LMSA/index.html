@@ -1342,7 +1342,7 @@
             </div>
 
             <!-- Settings Content - Multi-step on mobile -->
-            <div id="settings-content-wrapper" class="relative px-1">
+            <div id="settings-content-wrapper" class="relative px-1" style="overflow-y: auto; overflow-x: hidden; touch-action: pan-y; overscroll-behavior: contain;">
                 <!-- Step 1: Connection Settings (always visible first) -->
                 <div id="settings-step-connection" class="settings-step active" data-step-name="Connection">
                     <div class="mb-4">
@@ -3052,6 +3052,34 @@
     <!-- All other modules are loaded by the main initialization system -->
     <!-- Removed custom marked.js loader as we're loading it earlier -->
 
+    <!-- Settings Modal Touch Scrolling Fix -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait a bit for all other scripts to initialize
+            setTimeout(function() {
+                const wrapper = document.getElementById('settings-content-wrapper');
+                if (wrapper) {
+                    // Force all necessary scroll properties
+                    wrapper.style.overflowY = 'auto';
+                    wrapper.style.overflowX = 'hidden';
+                    wrapper.style.touchAction = 'pan-y';
+                    wrapper.style.overscrollBehavior = 'contain';
+                    wrapper.style.pointerEvents = 'auto';
+                    
+                    // Also ensure parent modal-content doesn't block
+                    const modalContent = wrapper.closest('.modal-content');
+                    if (modalContent) {
+                        modalContent.style.overflowY = 'hidden';
+                        modalContent.style.touchAction = 'auto';
+                    }
+                    
+                    console.log('[Settings Scroll Fix] Applied touch scrolling styles to settings-content-wrapper');
+                }
+            }, 500);
+        });
+    </script>
+
+
     <script>
         // Add preview mode toggle functionality
 
@@ -3277,6 +3305,27 @@
                     modal.addEventListener('touchend', passiveHandler, { passive: true });
                 }
             });
+
+            // CRITICAL: Specifically configure the settings-content-wrapper for touch scrolling
+            const settingsContentWrapper = document.getElementById('settings-content-wrapper');
+            if (settingsContentWrapper) {
+                // Force native touch scrolling on the settings content wrapper
+                settingsContentWrapper.style.overflowY = 'auto';
+                settingsContentWrapper.style.webkitOverflowScrolling = 'touch';
+                settingsContentWrapper.style.touchAction = 'pan-y';
+                settingsContentWrapper.style.overscrollBehavior = 'contain';
+                // Flex properties for proper sizing in flex container
+                settingsContentWrapper.style.flex = '1 1 auto';
+                settingsContentWrapper.style.minHeight = '0'; // Critical for flexbox scrolling
+                
+                // Ensure the parent modal-content doesn't compete for scrolling
+                const modalContent = settingsContentWrapper.closest('.modal-content');
+                if (modalContent) {
+                    // The modal-content should NOT be scrollable - let settings-content-wrapper handle it
+                    modalContent.style.overflowY = 'clip'; // 'clip' prevents visual overflow but allows touch
+                    modalContent.style.touchAction = 'auto';
+                }
+            }
         });
     </script>
 
