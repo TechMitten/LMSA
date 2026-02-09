@@ -20,9 +20,8 @@
     <title>LMSA • AI Assistant</title>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="stylesheet" href="css/tailwind-local.css">
-    <!-- Google Fonts with optimized loading and memory management -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Local Fonts -->
+    <link rel="stylesheet" href="css/local-fonts.css">
     <!-- CSS Files -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/theme-variables.css">
@@ -34,12 +33,8 @@
     <link rel="stylesheet" href="css/terms-modal.css">
 
 
-    <!-- Font Awesome with optimized loading -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        media="print" onload="this.media='all'">
-    <noscript>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    </noscript>
+    <!-- Font Awesome - Local version for offline support -->
+    <link rel="stylesheet" href="css/fontawesome-all.min.css">
     <!-- Marked.js is now lazy-loaded when needed to reduce initial memory footprint -->
     <!-- JSZip Library for DOCX file processing - now lazy-loaded -->
     <script>
@@ -58,9 +53,7 @@
 
                 window._jsZipLoading = new Promise((loadResolve, loadReject) => {
                     const script = document.createElement('script');
-                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-                    script.integrity = 'sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==';
-                    script.crossOrigin = 'anonymous';
+                    script.src = 'js/libs/jszip.min.js';
                     script.onload = () => {
                         console.log('JSZip loaded successfully');
                         loadResolve(window.JSZip);
@@ -94,8 +87,7 @@
 
                 window._tesseractLoading = new Promise((loadResolve, loadReject) => {
                     const script = document.createElement('script');
-                    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.4/dist/tesseract.min.js';
-                    script.crossOrigin = 'anonymous';
+                    script.src = 'js/libs/tesseract.min.js';
                     script.onload = () => {
                         console.log('Tesseract loaded successfully');
                         loadResolve(window.Tesseract);
@@ -138,7 +130,7 @@
                     // Create a unique script element to avoid conflicts
                     const script = document.createElement('script');
                     script.id = 'pdfjs-loader-' + Date.now();
-                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+                    script.src = 'js/libs/pdf.min.js';
 
                     script.onload = function () {
                         console.log('PDF.js script loaded, checking availability...');
@@ -151,12 +143,12 @@
                             attempts++;
 
                             if (window.pdfjsLib) {
-                                window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                                window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/libs/pdf.worker.min.js';
                                 console.log('PDF.js found as pdfjsLib and configured successfully');
                                 loadResolve();
                             } else if (window.PDFJS) {
                                 window.pdfjsLib = window.PDFJS;
-                                window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                                window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/libs/pdf.worker.min.js';
                                 console.log('PDF.js found as PDFJS and configured successfully');
                                 loadResolve();
                             } else if (attempts < maxAttempts) {
@@ -273,9 +265,7 @@
 
                 window._jsZipLoading = new Promise((loadResolve, loadReject) => {
                     const script = document.createElement('script');
-                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-                    script.integrity = 'sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==';
-                    script.crossOrigin = 'anonymous';
+                    script.src = 'js/libs/jszip.min.js';
                     script.onload = () => {
                         console.log('JSZip loaded successfully');
                         loadResolve(window.JSZip);
@@ -309,8 +299,7 @@
 
                 window._tesseractLoading = new Promise((loadResolve, loadReject) => {
                     const script = document.createElement('script');
-                    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.4/dist/tesseract.min.js';
-                    script.crossOrigin = 'anonymous';
+                    script.src = 'js/libs/tesseract.min.js';
                     script.onload = () => {
                         console.log('Tesseract loaded successfully');
                         loadResolve(window.Tesseract);
@@ -353,7 +342,7 @@
                     // Create a unique script element to avoid conflicts
                     const script = document.createElement('script');
                     script.id = 'pdfjs-loader-' + Date.now();
-                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+                    script.src = 'js/libs/pdf.min.js';
 
                     script.onload = function () {
                         console.log('PDF.js script loaded, checking availability...');
@@ -366,12 +355,12 @@
                             attempts++;
 
                             if (window.pdfjsLib) {
-                                window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                                window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/libs/pdf.worker.min.js';
                                 console.log('PDF.js found as pdfjsLib and configured successfully');
                                 loadResolve();
                             } else if (window.PDFJS) {
                                 window.pdfjsLib = window.PDFJS;
-                                window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                                window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/libs/pdf.worker.min.js';
                                 console.log('PDF.js found as PDFJS and configured successfully');
                                 loadResolve();
                             } else if (attempts < maxAttempts) {
