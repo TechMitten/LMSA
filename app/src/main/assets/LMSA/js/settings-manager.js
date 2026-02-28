@@ -1184,7 +1184,7 @@ export function setDefaultModelId(modelId) {
  */
 export function loadDefaultModelSetting() {
   const savedDefaultModel = localStorage.getItem("defaultModelId");
-  if (savedDefaultModel) {
+  if (savedDefaultModel && savedDefaultModel !== "null") {
     defaultModelId = savedDefaultModel;
     debugLog("Loaded default model:", defaultModelId);
   } else {

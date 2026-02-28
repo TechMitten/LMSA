@@ -4,7 +4,7 @@
  */
 (function() {
     // Use fetch to get the raw source
-    fetch('js/libs/marked.min.js')
+    fetch('https://cdn.jsdelivr.net/npm/marked@4.0.2/marked.min.js')
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');

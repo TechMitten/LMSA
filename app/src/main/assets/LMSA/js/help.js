@@ -56,6 +56,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeHelpModal() {
         if (helpModal && modalContent) {
             modalContent.classList.add('animate-modal-out');
+            
+            // Remove modal-open class from html and body
+            document.documentElement.classList.remove('modal-open');
+            document.body.classList.remove('modal-open');
+
+            // Re-enable scrolling
+            document.body.style.overflow = 'auto';
+
             setTimeout(() => {
                 helpModal.classList.add('hidden');
                 modalContent.classList.remove('animate-modal-out');

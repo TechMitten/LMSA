@@ -76,14 +76,16 @@ export async function isVisionModel() {
         }
 
         // Method 2: Test vision capability with a small image request
-        try {
-            const visionTestResult = await testVisionCapability(serverIp, serverPort, modelId);
-            if (visionTestResult !== null) {
-                updateVisionCache(modelId, visionTestResult);
-                return visionTestResult;
-            }
-        } catch (error) {
-        }
+        // DISABLED: This method causes 400 Bad Request errors in the console
+        // The other methods (1, 3, and 4) are sufficient for vision detection
+        // try {
+        //     const visionTestResult = await testVisionCapability(serverIp, serverPort, modelId);
+        //     if (visionTestResult !== null) {
+        //         updateVisionCache(modelId, visionTestResult);
+        //         return visionTestResult;
+        //     }
+        // } catch (error) {
+        // }
 
         // Method 3: Check model info through additional endpoints
         // REDUCED from 3 to 2 endpoints to minimize log noise

@@ -4,6 +4,7 @@
 import { settingsModal } from './dom-elements.js';
 import { debugLog } from './utils.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
+import { getApiUrl, getAvailableModels, isServerRunning } from './api-service.js';
 
 
 
@@ -787,6 +788,7 @@ function initializeSystemPromptOverlay() {
     const hiddenTextarea = document.getElementById('system-prompt');
     const previewDiv = document.getElementById('system-prompt-preview');
     const placeholderSpan = document.getElementById('prompt-placeholder');
+    const improveButton = document.getElementById('improve-system-prompt-btn');
 
 
     if (!overlay || !editButton || !cancelButton || !saveButton || !editor || !hiddenTextarea || !previewDiv) {
@@ -1019,6 +1021,126 @@ function initializeSystemPromptOverlay() {
         e.preventDefault();
         showOverlay();
     });
+
+    if (improveButton) {
+        improveButton.addEventListener('click', async function(e) {
+            e.preventDefault();
+
+            const currentPrompt = editor.value.trim();
+            if (!currentPrompt) {
+                // Shake the editor to indicate input is needed
+                editor.classList.add('shake-animation');
+                setTimeout(() => editor.classList.remove('shake-animation'), 500);
+                return;
+            }
+
+            // Check if server is running
+            if (!(await isServerRunning())) {
+                const originalText = improveButton.innerHTML;
+                improveButton.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Server Offline';
+                setTimeout(() => {
+                    improveButton.innerHTML = originalText;
+                }, 2000);
+                return;
+            }
+
+            // Show loading state
+            const originalText = improveButton.innerHTML;
+            improveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Improving...</span>';
+            improveButton.disabled = true;
+            editor.disabled = true;
+            
+            // Add skeleton loading effect to editor
+            editor.classList.add('animate-pulse');
+
+            try {
+                // Get available models to ensure we have one
+                const models = getAvailableModels();
+                let modelToUse = models.length > 0 ? models[0] : null;
+                
+                // If we have a currently loaded model global, use that
+                if (window.currentLoadedModel) {
+                    modelToUse = window.currentLoadedModel;
+                }
+
+                const apiUrl = getApiUrl();
+                
+                // Use a generic model ID if none found, let the server handle fallback
+                if (!modelToUse) modelToUse = 'local-model';
+
+                debugLog('Improving system prompt with model:', modelToUse);
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: modelToUse,
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'You are an expert prompt engineer. Your goal is to optimize the user\'s system prompt to be more detailed, robust, and effective. You should expand on the original intent to provide clearer instructions and better persona definition. Return ONLY the improved prompt text. Do not include any explanations, markdown formatting (like ```), or conversational text.'
+                            },
+                            {
+                                role: 'user',
+                                content: `Experimental System Prompt to improve:\n\n${currentPrompt}`
+                            }
+                        ],
+                        temperature: 0.7,
+                        stream: false
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+                        let improvedPrompt = data.choices[0].message.content.trim();
+                        
+                        // Clean up any potential markdown code blocks if the model ignored instructions
+                        improvedPrompt = improvedPrompt.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/^```[a-z]*\n/i, '').replace(/\n```$/i, '').trim();
+                        
+                        editor.value = improvedPrompt;
+                        // Trigger resize
+                        adjustTextareaHeight();
+                        
+                        // Flash success
+                         improveButton.innerHTML = '<i class="fas fa-check"></i> <span>Done!</span>';
+                         setTimeout(() => {
+                             improveButton.innerHTML = originalText;
+                             improveButton.disabled = false;
+                         }, 1500);
+                    } else {
+                         throw new Error('Invalid response format');
+                    }
+                } else {
+                    console.error('Failed to improve prompt:', response.status);
+                    improveButton.innerHTML = '<i class="fas fa-times"></i> <span>Error</span>';
+                    setTimeout(() => {
+                        improveButton.innerHTML = originalText;
+                        improveButton.disabled = false;
+                    }, 2000);
+                }
+
+            } catch (error) {
+                console.error('Error improving prompt:', error);
+                improveButton.innerHTML = '<i class="fas fa-times"></i> <span>Error</span>';
+                 setTimeout(() => {
+                     improveButton.innerHTML = originalText;
+                     improveButton.disabled = false;
+                 }, 2000);
+            } finally {
+                // Restore state if not handling success/error timeout
+                if (!improveButton.innerHTML.includes('Done') && !improveButton.innerHTML.includes('Error')) {
+                    improveButton.innerHTML = originalText;
+                    improveButton.disabled = false;
+                }
+                editor.disabled = false;
+                editor.classList.remove('animate-pulse');
+                editor.focus();
+            }
+        });
+    }
 
     cancelButton.addEventListener('click', function(e) {
         e.preventDefault();
@@ -1274,4 +1396,54 @@ export function initializeSettingsModal() {
 
     // Initialize the clear system prompt modal
     initializeClearSystemPromptModal();
+
+    // Initialize help link from settings
+    initializeSettingsHelpLink();
+}
+
+/**
+ * Initialize the help link in the settings modal
+ */
+function initializeSettingsHelpLink() {
+    const openHelpFromSettingsLink = document.getElementById('open-help-from-settings-link');
+    const helpModal = document.getElementById('help-modal');
+
+    if (openHelpFromSettingsLink && helpModal) {
+        openHelpFromSettingsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // Close the settings modal first
+            const settingsModalContent = settingsModal?.querySelector('.modal-content');
+            if (settingsModal) {
+                if (settingsModalContent) {
+                    settingsModalContent.classList.add('animate-modal-out');
+                    setTimeout(() => {
+                        settingsModal.classList.add('hidden');
+                        settingsModalContent.classList.remove('animate-modal-out');
+
+                        // Then open the help modal
+                        helpModal.classList.remove('hidden');
+                        const helpModalContent = helpModal.querySelector('.modal-content');
+                        if (helpModalContent) {
+                            helpModalContent.classList.add('animate-modal-in');
+
+                            // Reset scroll position to top
+                            const scrollableContent = helpModal.querySelector('.overflow-y-auto');
+                            if (scrollableContent) {
+                                scrollableContent.scrollTop = 0;
+                            }
+
+                            setTimeout(() => {
+                                helpModalContent.classList.remove('animate-modal-in');
+                            }, 300);
+                        }
+                    }, 300);
+                } else {
+                    // Fallback if modalContent is null
+                    settingsModal.classList.add('hidden');
+                    helpModal.classList.remove('hidden');
+                }
+            }
+        });
+    }
 }

@@ -1,0 +1,84 @@
+function removeAds() {
+    if (window.AndroidBilling && typeof window.AndroidBilling.purchaseAdRemoval === 'function') {
+        window.AndroidBilling.purchaseAdRemoval();
+    } else {
+        console.log('Billing interface not available or incorrect function name.');
+    }
+}
+
+function restorePurchases() {
+    // Check if the AndroidBilling interface is available
+    if (window.AndroidBilling && typeof window.AndroidBilling.restorePurchases === 'function') {
+        console.log('Calling AndroidBilling.restorePurchases()');
+        window.AndroidBilling.restorePurchases();
+        // You can optionally show a message to the user, like an alert.
+        alert('Attempting to restore purchases. If you have a valid purchase, your premium status will be updated shortly.');
+    } else {
+        console.log('Billing interface not available. This is not an Android app environment.');
+        alert('This feature is only available in the Android app.');
+    }
+}
+
+// Updated UI function to manage premium status
+function updateUiForPremium(isPremium) {
+    console.log('Premium status updated:', isPremium);
+    const removeAdsBtn = document.getElementById('remove-ads-button');
+    if (removeAdsBtn) {
+        removeAdsBtn.style.display = isPremium ? 'none' : 'block';
+    }
+}
+
+/**
+ * Shows interstitial ad and executes callback when dismissed
+ * @param {string} action - The action to perform after ad (e.g., 'newChat')
+ * @param {Function} callback - Function to call after ad is dismissed
+ */
+function showInterstitialAd(action, callback) {
+    // Globably stop any playing TTS audio before showing a fullscreen ad
+    if (window.TTSService && typeof window.TTSService.stop === 'function') {
+        window.TTSService.stop();
+    }
+
+    if (window.AndroidBilling && typeof window.AndroidBilling.showInterstitialAdAndExecute === 'function') {
+        // Store callback for later execution
+        window._pendingAdCallback = callback;
+        window._pendingAdAction = action;
+
+        // Call Android to show ad
+        window.AndroidBilling.showInterstitialAdAndExecute(action);
+    } else {
+        // No ad interface available, just execute callback
+        console.log('Ad interface not available, proceeding without ad');
+        if (callback) callback();
+    }
+}
+
+/**
+ * Preloads interstitial ad for faster display
+ */
+function preloadInterstitialAd() {
+    if (window.AndroidBilling && typeof window.AndroidBilling.preloadInterstitialAd === 'function') {
+        window.AndroidBilling.preloadInterstitialAd();
+    }
+}
+
+/**
+ * Callback function called by Android after ad is dismissed
+ */
+function createNewChatAfterAd() {
+    if (window._pendingAdCallback) {
+        window._pendingAdCallback();
+        window._pendingAdCallback = null;
+    }
+}
+
+/**
+ * Checks if user should see ads (non-premium)
+ * @returns {boolean} - True if ads should be shown
+ */
+function shouldShowAds() {
+    if (window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function') {
+        return !window.AndroidBilling.checkPremiumStatus();
+    }
+    return false; // Default to no ads if interface unavailable
+}

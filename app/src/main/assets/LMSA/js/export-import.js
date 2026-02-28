@@ -820,11 +820,18 @@ function showSidebar() {
 /**
  * Shows the export success modal with a message
  * @param {number} chatCount - The number of chats exported
+ * @param {number} promptCount - The number of saved system prompts exported
  */
-function showExportSuccessModal(chatCount) {
+function showExportSuccessModal(chatCount, promptCount = 0) {
     if (exportSuccessModal && exportSuccessMessage) {
         // Set the success message with the chat count
-        exportSuccessMessage.textContent = `Successfully exported ${chatCount} chat${chatCount !== 1 ? 's' : ''}.`;
+        let message = `Successfully exported ${chatCount} chat${chatCount !== 1 ? 's' : ''}`;
+        if (promptCount > 0) {
+            message += ` and ${promptCount} saved system prompt${promptCount !== 1 ? 's' : ''}`;
+        }
+        message += '.';
+
+        exportSuccessMessage.textContent = message;
 
         // Show the modal
         exportSuccessModal.classList.remove('hidden');
@@ -886,9 +893,20 @@ export function exportChats() {
     // Get saved system prompts
     const savedSystemPrompts = getSavedSystemPrompts();
 
+    // Filter out empty chats (those with no messages)
+    const validChats = {};
+    if (chatHistoryData) {
+        for (const [id, chatData] of Object.entries(chatHistoryData)) {
+            const messages = Array.isArray(chatData) ? chatData : (chatData && chatData.messages);
+            if (messages && messages.length > 0) {
+                validChats[id] = chatData;
+            }
+        }
+    }
+
     // Create export data structure that includes both chats and saved system prompts
     const exportData = {
-        chats: chatHistoryData,
+        chats: validChats,
         savedSystemPrompts: savedSystemPrompts,
         exportVersion: '1.1', // Version to help with future compatibility
         exportDate: new Date().toISOString()

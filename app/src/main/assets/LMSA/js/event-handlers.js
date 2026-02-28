@@ -24,6 +24,7 @@ import {
     abortGeneration,
     setAbortController,
     createNewChat,
+    createNewChatWithAd,
     isFirstMessage,
     setIsFirstMessage,
     addTopicBoundary,
@@ -457,8 +458,7 @@ export function initializeEventHandlers() {
     // New chat button
     if (newChatButton) {
         newChatButton.addEventListener('click', () => {
-// Interstitial ad trigger removed
-            createNewChat();
+            createNewChatWithAd();
         });
     }
 
@@ -2408,16 +2408,37 @@ async function handleRegenerateText() {
  */
 function handleRefreshButtonClick() {
     debugLog('Refresh button clicked');
-    // Add visual feedback
-    refreshButton.classList.add('animate-spin');
-    // Disable the button to prevent multiple clicks
-    refreshButton.disabled = true;
 
-    // Remove focus to prevent the button from staying highlighted
-    refreshButton.blur();
+    // Check if user should see ads (non-premium)
+    if (shouldShowAds()) {
+        debugLog('Showing interstitial ad before reload');
+        // Add visual feedback
+        refreshButton.classList.add('animate-spin');
+        // Disable the button to prevent multiple clicks
+        refreshButton.disabled = true;
 
-    // Perform a full page refresh, equivalent to browser refresh
-    window.location.reload();
+        // Remove focus to prevent the button from staying highlighted
+        refreshButton.blur();
+
+        // Show interstitial ad before reload
+        showInterstitialAd('reload', () => {
+            debugLog('Ad dismissed, performing reload');
+            // Perform a full page refresh after ad is dismissed
+            window.location.reload();
+        });
+    } else {
+        debugLog('User is premium, skipping ad and reloading directly');
+        // Add visual feedback
+        refreshButton.classList.add('animate-spin');
+        // Disable the button to prevent multiple clicks
+        refreshButton.disabled = true;
+
+        // Remove focus to prevent the button from staying highlighted
+        refreshButton.blur();
+
+        // Perform a full page refresh, equivalent to browser refresh
+        window.location.reload();
+    }
 }
 
 /**
@@ -3011,8 +3032,6 @@ function toggleImportExportContainer() {
 function handleNewChatButtonClick() {
     debugLog('New chat button clicked');
 
-    // Interstitial ad trigger removed
-
     // Close the sidebar first
     closeSidebar();
 
@@ -3023,8 +3042,8 @@ function handleNewChatButtonClick() {
         optionsContainer.classList.remove('animate-fade-in');
     }
 
-    // Create a new chat
-    createNewChat();
+    // Create a new chat (with interstitial ad for non-premium users)
+    createNewChatWithAd();
 
     // Remove focus to prevent the button from staying highlighted
     if (newChatHeaderButton) {

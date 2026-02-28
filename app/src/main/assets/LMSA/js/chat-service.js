@@ -1350,6 +1350,11 @@ export function deleteChatHistory(id) {
     updateChatHistoryUI(); // This will also call updateChatHistoryScroll()
     saveChatHistory();
     if (id === currentChatId) {
+        // Stop any ongoing TTS playback
+        if (window.TTSService && typeof window.TTSService.stop === 'function') {
+            window.TTSService.stop();
+        }
+
         messagesContainer.innerHTML = '';
         showWelcomeMessage();
         currentChatId = Date.now();
@@ -1410,6 +1415,11 @@ export function loadChat(id, isFirstMessageReload = false) {
 
     // Update the current chat ID
     setCurrentChatId(id);
+
+    // Stop any ongoing TTS playback
+    if (window.TTSService && typeof window.TTSService.stop === 'function') {
+        window.TTSService.stop();
+    }
 
     const chatData = chatHistoryData[id];
 
@@ -1624,6 +1634,11 @@ export function lazyLoadMessages(messages, startIndex, chunkSize = 10) {
  * Clears all chats
  */
 export function clearAllChats() {
+    // Stop any ongoing TTS playback
+    if (window.TTSService && typeof window.TTSService.stop === 'function') {
+        window.TTSService.stop();
+    }
+
     messagesContainer.innerHTML = '';
     showWelcomeMessage();
     chatHistoryData = {};
@@ -1682,6 +1697,11 @@ export function clearAllChats() {
  * @returns {string} - The ID of the new chat
  */
 export function createNewChat() {
+
+    // Stop any ongoing TTS playback
+    if (window.TTSService && typeof window.TTSService.stop === 'function') {
+        window.TTSService.stop();
+    }
 
     // Generate a new chat ID
     const newChatId = Date.now().toString();
@@ -1770,6 +1790,25 @@ export function createNewChat() {
     }
 
     return newChatId;
+}
+
+/**
+ * Creates a new chat with interstitial ad for non-premium users
+ * @returns {string} - The ID of the new chat
+ */
+export function createNewChatWithAd() {
+    // Stop any ongoing TTS playback before showing ad
+    if (window.TTSService && typeof window.TTSService.stop === 'function') {
+        window.TTSService.stop();
+    }
+
+    if (shouldShowAds()) {
+        showInterstitialAd('newChat', () => {
+            createNewChat();
+        });
+    } else {
+        createNewChat();
+    }
 }
 
 /**

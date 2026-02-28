@@ -854,7 +854,8 @@ function displayAvailableModels(models, loadedModelId) {
             modelElement.style.color = `${modelTextColor} !important`;
 
             const isCurrentModel = model.id === currentLoadedModelId;
-            const isDefaultModel = model.id === getDefaultModelId();
+            const defaultModelId = getDefaultModelId();
+            const isDefaultModel = defaultModelId && model.id === defaultModelId;
 
             modelElement.className = 'model-item';
             modelElement.innerHTML = `

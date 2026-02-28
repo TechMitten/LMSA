@@ -9,7 +9,7 @@ let gotItButton;
 let versionElement;
 
 // Local storage keys
-const WHATS_NEW_VERSION = '9.3'; // Updated for new features: TTS Audio, Ollama Support
+const WHATS_NEW_VERSION = '9.8'; // Updated for new features: TTS Audio, Ollama Support
 
 // Flag to track if the modal has been shown in the current session
 let modalShownInCurrentSession = false;
@@ -345,8 +345,11 @@ export function initializeWhatsNew() {
     window.addEventListener('resize', adjustModalHeight);
 
     // Check if user has dismissed this specific version
-    const dismissedVersion = localStorage.getItem('whatsNewDismissedVersion');
+    // Check if user has dismissed this specific version
+    // const dismissedVersion = localStorage.getItem('whatsNewDismissedVersion');
 
+    // Automatic modal launch disabled by user request
+    /*
     // For version 8.8, always show the modal unless user has specifically dismissed it
     if (WHATS_NEW_VERSION === '8.8' && dismissedVersion !== WHATS_NEW_VERSION) {
         // Show the modal after a brief delay for version 8.8
@@ -362,4 +365,5 @@ export function initializeWhatsNew() {
             }, 1500);
         }
     }
+    */
 }

@@ -13,12 +13,15 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.WindowManager
 import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
+import android.webkit.ConsoleMessage
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.webkit.RenderProcessGoneDetail
 import java.io.IOException
 import android.util.Base64
 import android.speech.tts.TextToSpeech
@@ -47,6 +50,10 @@ import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import android.widget.FrameLayout
 import com.android.billingclient.api.*
 
@@ -60,8 +67,10 @@ class WebViewActivity : AppCompatActivity() {
     private var pendingFileContent: String? = null
     private var pendingFileName: String? = null
     private var isImageFile: Boolean = false
-    private lateinit var adContainerView: FrameLayout
-    private var adView: AdView? = null
+    private var mInterstitialAd: InterstitialAd? = null
+    private var isInterstitialAdLoading = false
+    private var isInterstitialAdShowing = false
+    private val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-1388425042154340/3976255369"
 
 
 
@@ -104,12 +113,26 @@ class WebViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_webview)
 
-        MobileAds.initialize(this) {}
-        adContainerView = findViewById(R.id.adViewContainer)
-        adContainerView.post {
-             // Initial load will happen in updatePremiumUiState if appropriate, 
-             // once the layout is ready or at least we can get width.
+        // Set up global exception handler to catch ad-related crashes
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            // Log the exception
+            Log.e(TAG, "Uncaught exception in thread ${thread.name}", throwable)
+
+            // Check if it's an ad-related error
+            if (throwable.stackTraceToString().contains("2mdn.net") ||
+                throwable.stackTraceToString().contains("googleads") ||
+                throwable.stackTraceToString().contains("doubleclick")) {
+                Log.w(TAG, "Ad-related crash detected, suppressing")
+                // Don't crash the app for ad errors
+                return@setDefaultUncaughtExceptionHandler
+            }
+
+            // For other exceptions, use the default handler
+            defaultHandler?.uncaughtException(thread, throwable)
         }
+
+        MobileAds.initialize(this) {}
 
         // Custom Splash Screen Logic
         val splashImage = findViewById<android.widget.ImageView>(R.id.splashImageView)
@@ -313,6 +336,11 @@ class WebViewActivity : AppCompatActivity() {
         webSettings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
         @Suppress("DEPRECATION")
         webSettings.databaseEnabled = false
+        // Allow mixed content for ads (HTTP content in HTTPS pages)
+        @Suppress("DEPRECATION")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            webSettings.mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+        }
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
 
         webView.clearCache(true)
@@ -332,9 +360,37 @@ class WebViewActivity : AppCompatActivity() {
                 // Now that the page is loaded, update the UI with the persisted premium status
                 updatePremiumUiState()
             }
+
+            // Handle renderer crashes (e.g., from ad errors)
+            override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {
+                Log.w(TAG, "Renderer crashed, recovering...")
+                // Don't destroy the activity, just return true to indicate we handled it
+                // The WebView will automatically recover
+                return true
+            }
         }
 
         webView.webChromeClient = object : WebChromeClient() {
+            override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
+                // Log JavaScript errors but don't let them crash the app
+                if (consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.ERROR) {
+                    val sourceId = consoleMessage.sourceId()
+                    val lineNumber = consoleMessage.lineNumber()
+
+                    // Filter out ad-related errors that are common in test mode
+                    if (sourceId.contains("2mdn.net") ||
+                        sourceId.contains("googleads") ||
+                        sourceId.contains("doubleclick") ||
+                        consoleMessage.message().contains("setRushSimulatedLocalEvents")) {
+                        Log.w(TAG, "Ad JS error (ignored): ${consoleMessage.message()} at $sourceId:$lineNumber")
+                        return true // Suppress the error
+                    }
+
+                    Log.e(TAG, "JS Error: ${consoleMessage.message()} at $sourceId:$lineNumber")
+                }
+                return false
+            }
+
             override fun onShowFileChooser(
                 webView: WebView?,
                 filePathCallbackIn: ValueCallback<Array<Uri>>?,
@@ -404,53 +460,144 @@ class WebViewActivity : AppCompatActivity() {
             val effectivePremium = isPremium && !isDebugMode
             val webView: WebView = findViewById(R.id.webView)
 
-            if (effectivePremium) {
-                adContainerView.visibility = View.GONE
-                adView?.let { 
-                    adContainerView.removeView(it)
-                    it.destroy() 
-                }
-                adView = null
-            } else {
-                if (adContainerView.visibility != View.VISIBLE || adView == null) {
-                     loadBanner()
-                }
-            }
-            
             val jsCommand = "if(typeof updateUiForPremium === 'function') { updateUiForPremium($effectivePremium); }"
             webView.evaluateJavascript(jsCommand, null)
         }
     }
 
-    private fun loadBanner() {
-        // Create an ad request.
-        adView = AdView(this)
-        adView!!.adUnitId = "ca-app-pub-1388425042154340/3920449156"
-        adContainerView.removeAllViews()
-        adContainerView.addView(adView)
-
-        val adSize = getAdSize()
-        adView!!.setAdSize(adSize)
-
-        val adRequest = AdRequest.Builder().build()
-        adView!!.loadAd(adRequest)
-        adContainerView.visibility = View.VISIBLE
+    private fun hideSystemBars() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // For Android 11 (API level 30) and above
+            window.setDecorFitsSystemWindows(false)
+            window.insetsController?.let { controller ->
+                // Hide all system bar types for maximum full screen
+                controller.hide(android.view.WindowInsets.Type.systemBars())
+                controller.hide(android.view.WindowInsets.Type.statusBars())
+                controller.hide(android.view.WindowInsets.Type.navigationBars())
+                // Set behavior to show transient bars on swipe
+                controller.systemBarsBehavior = android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            // For Android 10 (API level 29) and below
+            @Suppress("DEPRECATION")
+            val decorView = window.decorView
+            @Suppress("DEPRECATION")
+            decorView.systemUiVisibility = (
+                android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
+                or android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                or android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                or android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            )
+        }
     }
 
-    private fun getAdSize(): AdSize {
-        val display = windowManager.defaultDisplay
-        val outMetrics = android.util.DisplayMetrics()
-        display.getMetrics(outMetrics)
-
-        val density = outMetrics.density
-
-        var adWidthPixels = adContainerView.width.toFloat()
-        if (adWidthPixels == 0f) {
-            adWidthPixels = outMetrics.widthPixels.toFloat()
+    private fun showSystemBars() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(true)
+            window.insetsController?.let { controller ->
+                controller.show(android.view.WindowInsets.Type.systemBars())
+                controller.show(android.view.WindowInsets.Type.statusBars())
+                controller.show(android.view.WindowInsets.Type.navigationBars())
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            val decorView = window.decorView
+            @Suppress("DEPRECATION")
+            decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         }
 
-        val adWidth = (adWidthPixels / density).toInt()
-        return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth)
+        // Clear fullscreen flags
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
+            window.clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+        }
+    }
+
+    private fun loadInterstitialAd(onAdLoaded: () -> Unit = {}, onAdFailedToLoad: () -> Unit = {}) {
+        val effectivePremium = isPremium && !isDebugMode
+        if (effectivePremium) {
+            onAdFailedToLoad()
+            return
+        }
+
+        if (isInterstitialAdLoading) {
+            onAdFailedToLoad()
+            return
+        }
+
+        if (mInterstitialAd != null) {
+            onAdLoaded()
+            return
+        }
+
+        isInterstitialAdLoading = true
+
+        val adRequest = AdRequest.Builder().build()
+        InterstitialAd.load(this, INTERSTITIAL_AD_UNIT_ID, adRequest,
+            object : InterstitialAdLoadCallback() {
+                override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                    mInterstitialAd = interstitialAd
+                    isInterstitialAdLoading = false
+                    Log.d(TAG, "Interstitial ad loaded successfully")
+                    onAdLoaded()
+                }
+
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    mInterstitialAd = null
+                    isInterstitialAdLoading = false
+                    Log.d(TAG, "Interstitial ad failed to load: ${adError.message}")
+                    onAdFailedToLoad()
+                }
+            })
+    }
+
+    private fun showInterstitialAd(onAdDismissed: () -> Unit) {
+        val effectivePremium = isPremium && !isDebugMode
+
+        if (effectivePremium) {
+            onAdDismissed()
+            return
+        }
+
+        if (mInterstitialAd == null) {
+            loadInterstitialAd(
+                onAdLoaded = { showInterstitialAd(onAdDismissed) },
+                onAdFailedToLoad = {
+                    Log.d(TAG, "Proceeding without interstitial ad")
+                    onAdDismissed()
+                }
+            )
+            return
+        }
+
+        mInterstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdShowedFullScreenContent() {
+                isInterstitialAdShowing = true
+                Log.d(TAG, "Interstitial ad showed in full screen")
+            }
+
+            override fun onAdDismissedFullScreenContent() {
+                isInterstitialAdShowing = false
+                mInterstitialAd = null
+                Log.d(TAG, "Interstitial ad dismissed")
+                onAdDismissed()
+            }
+
+            override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
+                isInterstitialAdShowing = false
+                mInterstitialAd = null
+                Log.e(TAG, "Failed to show interstitial ad: ${adError.message}")
+                onAdDismissed()
+            }
+        }
+
+        mInterstitialAd?.show(this@WebViewActivity)
     }
 
     private fun checkAndRequestStoragePermissions() {
@@ -518,10 +665,16 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        adView?.destroy()
+        mInterstitialAd?.fullScreenContentCallback = null
+        mInterstitialAd = null
 
         textToSpeech?.shutdown()
         super.onDestroy()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        // No longer using immersive mode, so don't hide system bars
     }
 
     private fun isNetworkAvailable(): Boolean {
@@ -811,6 +964,27 @@ class WebViewActivity : AppCompatActivity() {
             }
             updatePremiumUiState()
         }
+
+        @JavascriptInterface
+        fun showInterstitialAdAndExecute(actionName: String) {
+            runOnUiThread {
+                showInterstitialAd {
+                    // Execute the pending callback for both newChat and reload actions
+                    val webView: WebView = findViewById(R.id.webView)
+                    webView.evaluateJavascript(
+                        "if(typeof createNewChatAfterAd === 'function') { createNewChatAfterAd(); }",
+                        null
+                    )
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun preloadInterstitialAd() {
+            runOnUiThread {
+                loadInterstitialAd()
+            }
+        }
     }
 
     inner class TTSInterface {
@@ -926,7 +1100,7 @@ class WebViewActivity : AppCompatActivity() {
                         // This regex matches most emoji ranges
                         .replace(Regex("[\\p{So}\\p{Sk}\\p{Cn}]"), " ")
                         // Remove other problematic unicode characters but keep basic text
-                        .replace(Regex("[^\\p{L}\\p{N}\\s.,!?;:()\\-'\"]"), " ")
+                        .replace(Regex("[^\\p{L}\\p{N}\\s.,!?;:()\\-'\" ]"), " ")
                         // Fix common abbreviations
                         .replace(Regex("\\bAPI\\b"), "A P I")
                         .replace(Regex("\\bURL\\b"), "U R L")
@@ -1230,7 +1404,7 @@ class WebViewActivity : AppCompatActivity() {
                                 }
 
                                 // Create a JSON object for each voice with extracted metadata
-                                """{"name":"${voice.name.replace("\"", "\\\"")}","locale":"${voice.locale}","quality":"${if (voice.quality == android.speech.tts.Voice.QUALITY_VERY_HIGH) "Very High" else if (voice.quality == android.speech.tts.Voice.QUALITY_HIGH) "High" else if (voice.quality == android.speech.tts.Voice.QUALITY_NORMAL) "Normal" else "Low"}","isNetworkConnectionRequired":${isNetwork},"gender":"${gender}"}"""
+                                """{"name":"${voice.name.replace("\"", "'")}","locale":"${voice.locale}","quality":"${if (voice.quality == android.speech.tts.Voice.QUALITY_VERY_HIGH) "Very High" else if (voice.quality == android.speech.tts.Voice.QUALITY_HIGH) "High" else if (voice.quality == android.speech.tts.Voice.QUALITY_NORMAL) "Normal" else "Low"}","isNetworkConnectionRequired":${isNetwork},"gender":"${gender}"}"""
                             } catch (e: Exception) {
                                 Log.e(TAG, "Error processing voice: ${e.message}")
                                 null

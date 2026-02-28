@@ -1,0 +1,118 @@
+/* Improved styling for the form container */
+.contact-form-container {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+
+/* Button animations */
+@keyframes pulse-subtle {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.animate-pulse-subtle {
+    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom styling for context menus */
+#context-menu,
+#send-context-menu {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(12px);
+}
+
+#context-menu button,
+#send-context-menu button {
+    transition: all 0.2s ease;
+    color: #e2e8f0;
+}
+
+#context-menu button:hover,
+#send-context-menu button:hover {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: #ffffff;
+}
+
+#context-menu button i,
+#send-context-menu button i {
+    color: #60a5fa;
+    width: 1.5rem;
+    text-align: center;
+}
+
+.menu-header {
+    background-color: rgba(0, 0, 0, 0.2);
+    color: #94a3b8;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.menu-divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 0.25rem 0;
+}
+
+/* Updated scrollbar styling for textarea */
+#user-input::-webkit-scrollbar {
+    width: 6px;
+}
+
+#user-input::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#user-input::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+}
+
+/* Loading spinner animation */
+@keyframes spin-loader {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.loader-element {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 4px solid transparent;
+    border-top-color: #3b82f6;
+    animation: spin-loader 1s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+}
+
+/* Active Template Indicator in Sidebar */
+#template-indicator {
+    transition: all 0.2s ease;
+}
+
+#template-indicator #disable-template-btn:hover {
+    background: rgba(96, 165, 250, 0.2) !important;
+    transform: scale(1.1);
+}
+
+#template-indicator #disable-template-btn:active {
+    transform: scale(0.95);
+}
