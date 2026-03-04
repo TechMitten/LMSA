@@ -1793,22 +1793,16 @@ export function createNewChat() {
 }
 
 /**
- * Creates a new chat with interstitial ad for non-premium users
+ * Creates a new chat (ad removed - ads now show after model load)
  * @returns {string} - The ID of the new chat
  */
 export function createNewChatWithAd() {
-    // Stop any ongoing TTS playback before showing ad
+    // Stop any ongoing TTS playback
     if (window.TTSService && typeof window.TTSService.stop === 'function') {
         window.TTSService.stop();
     }
 
-    if (shouldShowAds()) {
-        showInterstitialAd('newChat', () => {
-            createNewChat();
-        });
-    } else {
-        createNewChat();
-    }
+    createNewChat();
 }
 
 /**

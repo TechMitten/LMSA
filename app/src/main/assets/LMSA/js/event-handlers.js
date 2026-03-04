@@ -13,6 +13,7 @@ import {
 } from './dom-elements.js';
 import { showSettingsModal, hideSettingsModal } from './settings-modal-manager.js';
 import { getEnterSendsNewline } from './settings-manager.js';
+import { checkAndShowPromoAd } from './promo-ad-manager.js';
 import {
     showWelcomeMessage, hideWelcomeMessage, toggleSidebar, closeSidebar, showLoadingIndicator,
     hideLoadingIndicator, toggleSendStopButton, hideConfirmationModal, showConfirmationModal,
@@ -351,7 +352,7 @@ export function initializeEventHandlers() {
             // Handle Enter key based on settings
             if (e.key === 'Enter') {
                 const enterForNewline = getEnterSendsNewline();
-                
+
                 // If enterForNewline is true: Shift+Enter sends, Enter adds newline
                 // If enterForNewline is false: Enter sends, Shift+Enter adds newline
                 const shouldSend = enterForNewline ? e.shiftKey : !e.shiftKey;
@@ -930,6 +931,12 @@ export function initializeEventHandlers() {
                         modalContent.classList.remove('animate-modal-in');
                     }, 300);
                 }
+
+                // Check and show promo ad after a short delay
+                // This ensures it doesn't interrupt the modal opening animation
+                setTimeout(() => {
+                    checkAndShowPromoAd();
+                }, 500);
             }
         });
         debugLog('About button event handler attached during initialization');
@@ -2080,6 +2087,12 @@ function handleOptionsButtonClick() {
                                 modalContent.classList.remove('animate-modal-in');
                             }, 300);
                         }
+
+                        // Check and show promo ad after a short delay
+                        // This ensures it doesn't interrupt the modal opening animation
+                        setTimeout(() => {
+                            checkAndShowPromoAd();
+                        }, 500);
                     }
                 });
                 debugLog('About button event handler reattached');
@@ -2404,41 +2417,21 @@ async function handleRegenerateText() {
 }
 
 /**
- * Handles refresh button click
+ * Handles refresh button click (ad removed - ads now show after model load)
  */
 function handleRefreshButtonClick() {
     debugLog('Refresh button clicked');
 
-    // Check if user should see ads (non-premium)
-    if (shouldShowAds()) {
-        debugLog('Showing interstitial ad before reload');
-        // Add visual feedback
-        refreshButton.classList.add('animate-spin');
-        // Disable the button to prevent multiple clicks
-        refreshButton.disabled = true;
+    // Add visual feedback
+    refreshButton.classList.add('animate-spin');
+    // Disable the button to prevent multiple clicks
+    refreshButton.disabled = true;
 
-        // Remove focus to prevent the button from staying highlighted
-        refreshButton.blur();
+    // Remove focus to prevent the button from staying highlighted
+    refreshButton.blur();
 
-        // Show interstitial ad before reload
-        showInterstitialAd('reload', () => {
-            debugLog('Ad dismissed, performing reload');
-            // Perform a full page refresh after ad is dismissed
-            window.location.reload();
-        });
-    } else {
-        debugLog('User is premium, skipping ad and reloading directly');
-        // Add visual feedback
-        refreshButton.classList.add('animate-spin');
-        // Disable the button to prevent multiple clicks
-        refreshButton.disabled = true;
-
-        // Remove focus to prevent the button from staying highlighted
-        refreshButton.blur();
-
-        // Perform a full page refresh, equivalent to browser refresh
-        window.location.reload();
-    }
+    // Perform a full page refresh
+    window.location.reload();
 }
 
 /**

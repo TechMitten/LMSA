@@ -77,8 +77,22 @@ function createNewChatAfterAd() {
  * @returns {boolean} - True if ads should be shown
  */
 function shouldShowAds() {
+    // First check: Premium users never see ads
     if (window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function') {
-        return !window.AndroidBilling.checkPremiumStatus();
+        if (window.AndroidBilling.checkPremiumStatus()) {
+            return false; // Premium user, no ads
+        }
     }
-    return false; // Default to no ads if interface unavailable
+
+    // All checks passed - show ads
+    return true;
+}
+
+/**
+ * Checks if a model is currently loaded
+ * @returns {boolean} - True if a model is loaded
+ */
+function isModelLoadedForAds() {
+    // Check the global currentLoadedModel variable (set by api-service.js)
+    return window.currentLoadedModel && window.currentLoadedModel !== null;
 }

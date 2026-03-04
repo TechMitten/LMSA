@@ -8870,3 +8870,133 @@ body.light-theme #template-indicator #disable-template-btn {
 body.light-theme #template-indicator #disable-template-btn:hover {
     background: rgba(59, 130, 246, 0.25) !important;
 }
+
+/* ========================================
+   Promo Ad Modal Styles
+   ======================================== */
+
+/* Promo Ad Modal Container */
+#promo-ad-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* Promo Ad Modal Content */
+#promo-ad-modal .modal-content {
+    max-width: 420px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* Promo Ad Icon Wrapper */
+#promo-ad-modal .icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(to bottom right, #facc15, #f97316);
+    color: #1e293b;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+/* Promo Ad Feature Items */
+#promo-ad-modal .feature-item {
+    margin-bottom: 0.75rem;
+}
+
+#promo-ad-modal .feature-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    background: rgba(59, 130, 246, 0.2);
+    flex-shrink: 0;
+}
+
+/* Promo Ad Content Area */
+#promo-ad-modal .promo-content {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+/* Promo Ad Buttons */
+#promo-ad-modal button {
+    transition: all 0.2s ease;
+}
+
+#promo-ad-modal #maybe-later-promo-ad:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Debug Preview Button */
+.debug-preview-promo-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.3);
+    transition: all 0.2s ease;
+}
+
+.debug-preview-promo-btn:hover {
+    background: linear-gradient(135deg, #8b5cf6, #c084fc);
+    box-shadow: 0 6px 12px -1px rgba(124, 58, 237, 0.4);
+    transform: translateY(-1px);
+}
+
+.debug-preview-promo-btn:active {
+    transform: translateY(0);
+}
+
+/* Light theme support for promo ad modal */
+body.light-theme #promo-ad-modal {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+body.light-theme #promo-ad-modal .modal-content {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+body.light-theme #promo-ad-modal h2 {
+    color: #1e293b !important;
+}
+
+body.light-theme #promo-ad-modal .feature-title {
+    color: #0f172a !important;
+}
+
+body.light-theme #promo-ad-modal .feature-description {
+    color: #475569 !important;
+}
+
+body.light-theme #promo-ad-modal #maybe-later-promo-ad {
+    color: #64748b !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+body.light-theme #promo-ad-modal #maybe-later-promo-ad:hover {
+    color: #334155 !important;
+    background: rgba(0, 0, 0, 0.05) !important;
+}

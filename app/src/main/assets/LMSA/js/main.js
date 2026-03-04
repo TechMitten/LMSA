@@ -17,6 +17,7 @@ import { initializeWhatsNew } from './whats-new.js';
 import { initializeSettingsModal } from './settings-modal-manager.js';
 import { initializeIpPortConfirmationModal } from './ip-port-confirmation-modal.js';
 import { initializeTemplateIndicator } from './template-indicator.js';
+import { initializePromoAdManager, checkAndShowPromoAd } from './promo-ad-manager.js';
 
 // Optimization modules removed
 
@@ -164,9 +165,13 @@ export async function initializeApp() {
 
     initializeExportImport();
     initializeWhatsNew();
+    initializePromoAdManager();
 
     updateConfirmationModalTheme();
     updateExportImportModalsTheme();
+
+    // Preload interstitial ad for faster display
+    preloadInterstitialAd();
 
     // Initialize scroll button state - ensure it's hidden on startup
     const messagesContainer = document.getElementById('messages');

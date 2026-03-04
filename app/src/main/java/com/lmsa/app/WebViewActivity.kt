@@ -587,6 +587,9 @@ class WebViewActivity : AppCompatActivity() {
                 mInterstitialAd = null
                 Log.d(TAG, "Interstitial ad dismissed")
                 onAdDismissed()
+
+                // Preload next ad immediately after dismissal for faster display next time
+                loadInterstitialAd()
             }
 
             override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
@@ -594,6 +597,9 @@ class WebViewActivity : AppCompatActivity() {
                 mInterstitialAd = null
                 Log.e(TAG, "Failed to show interstitial ad: ${adError.message}")
                 onAdDismissed()
+
+                // Try to preload next ad after failure
+                loadInterstitialAd()
             }
         }
 
