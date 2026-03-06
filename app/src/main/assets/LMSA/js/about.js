@@ -1,8 +1,6 @@
 // Import the checkAndShowWelcomeMessage function
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { showExternalSiteModal } from './external-site-confirmation-modal.js';
-import { forceShowPromoAd } from './promo-ad-manager.js';
-import { initializePromoAdModal, showPromoAdModal } from './components/modals/promo-ad-modal.js';
 
 // Get DOM elements
 const aboutButtonElement = document.getElementById('about-btn');
@@ -167,97 +165,3 @@ if (versionBadge) {
         }
     });
 }
-
-// Debug Preview Button for Promo Ad
-// Add a preview button when debug mode is enabled
-function updateDebugPreviewButton() {
-    console.log('[Promo Ad Debug] updateDebugPreviewButton called, isDebugMode:', window.isDebugMode);
-
-    const aboutContent = document.querySelector('#about-modal .modal-content');
-    if (!aboutContent) {
-        console.log('[Promo Ad Debug] About modal content not found');
-        return;
-    }
-
-    // Remove existing button if any
-    const existingBtn = document.getElementById('debug-preview-promo-btn');
-    if (existingBtn) {
-        console.log('[Promo Ad Debug] Removing existing preview button');
-        existingBtn.remove();
-    }
-
-    // Add button if debug mode is enabled
-    if (window.isDebugMode) {
-        console.log('[Promo Ad Debug] Adding preview button to About modal');
-        const previewBtn = document.createElement('button');
-        previewBtn.id = 'debug-preview-promo-btn';
-        previewBtn.className = 'debug-preview-promo-btn';
-        previewBtn.innerHTML = '<i class="fas fa-eye mr-2"></i>Preview Promo Ad';
-        previewBtn.style.marginTop = '1rem';
-        previewBtn.onclick = () => {
-            console.log('[Promo Ad Debug] Preview button clicked');
-            try {
-                console.log('[Promo Ad Debug] Initializing promo ad modal...');
-                initializePromoAdModal();
-                console.log('[Promo Ad Debug] Showing promo ad modal...');
-                showPromoAdModal();
-            } catch (err) {
-                console.error('[Promo Ad Debug] Error showing promo ad modal:', err);
-            }
-        };
-
-        // Append to the modal content
-        aboutContent.appendChild(previewBtn);
-        console.log('[Promo Ad Debug] Preview button added successfully');
-    } else {
-        console.log('[Promo Ad Debug] Debug mode not enabled, not adding button');
-    }
-}
-
-// Watch for debug mode changes
-let lastDebugMode = window.isDebugMode;
-setInterval(() => {
-    if (window.isDebugMode !== lastDebugMode) {
-        console.log('[Promo Ad Debug] Debug mode changed from', lastDebugMode, 'to', window.isDebugMode);
-        lastDebugMode = window.isDebugMode;
-        // Update button when debug mode changes
-        setTimeout(updateDebugPreviewButton, 200);
-    }
-}, 500);
-
-// Update the debug preview button when debug mode toggles
-// Initial check when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', updateDebugPreviewButton);
-} else {
-    // Delay to ensure modal is ready
-    setTimeout(updateDebugPreviewButton, 500);
-}
-
-// Also update when About modal is opened
-const aboutBtnForDebug = document.getElementById('about-btn');
-if (aboutBtnForDebug) {
-    aboutBtnForDebug.addEventListener('click', () => {
-        console.log('[Promo Ad Debug] About button clicked, will update preview button');
-        setTimeout(updateDebugPreviewButton, 100);
-    });
-}
-
-// Add a global test function
-window.testPromoAd = function() {
-    console.log('[Promo Ad Debug] Manual test initiated');
-    console.log('[Promo Ad Debug] Debug mode:', window.isDebugMode);
-    console.log('[Promo Ad Debug] About modal exists:', !!document.getElementById('about-modal'));
-    console.log('[Promo Ad Debug] About modal visible:', !document.getElementById('about-modal')?.classList.contains('hidden'));
-
-    console.log('[Promo Ad Debug] Initializing and showing promo ad modal...');
-    try {
-        initializePromoAdModal();
-        showPromoAdModal();
-        console.log('[Promo Ad Debug] Promo ad modal should now be visible');
-    } catch (err) {
-        console.error('[Promo Ad Debug] Error:', err);
-    }
-};
-
-console.log('[Promo Ad Debug] About.js loaded. Type testPromoAd() in console to test the promo ad manually.');

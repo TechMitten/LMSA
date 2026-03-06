@@ -13,7 +13,6 @@ import {
 } from './dom-elements.js';
 import { showSettingsModal, hideSettingsModal } from './settings-modal-manager.js';
 import { getEnterSendsNewline } from './settings-manager.js';
-import { checkAndShowPromoAd } from './promo-ad-manager.js';
 import {
     showWelcomeMessage, hideWelcomeMessage, toggleSidebar, closeSidebar, showLoadingIndicator,
     hideLoadingIndicator, toggleSendStopButton, hideConfirmationModal, showConfirmationModal,
@@ -931,12 +930,6 @@ export function initializeEventHandlers() {
                         modalContent.classList.remove('animate-modal-in');
                     }, 300);
                 }
-
-                // Check and show promo ad after a short delay
-                // This ensures it doesn't interrupt the modal opening animation
-                setTimeout(() => {
-                    checkAndShowPromoAd();
-                }, 500);
             }
         });
         debugLog('About button event handler attached during initialization');
@@ -2087,12 +2080,6 @@ function handleOptionsButtonClick() {
                                 modalContent.classList.remove('animate-modal-in');
                             }, 300);
                         }
-
-                        // Check and show promo ad after a short delay
-                        // This ensures it doesn't interrupt the modal opening animation
-                        setTimeout(() => {
-                            checkAndShowPromoAd();
-                        }, 500);
                     }
                 });
                 debugLog('About button event handler reattached');
