@@ -1,8 +1,8 @@
 // Chat Service for handling chat functionality
 import { messagesContainer, userInput, loadedModelDisplay } from './dom-elements.js';
-import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll } from './ui-manager.js';
+import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll, renderSmartReplies, hideSmartReplies, showSmartRepliesLoading } from './ui-manager.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
-import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled } from './settings-manager.js';
+import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply } from './settings-manager.js';
 import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
 
@@ -118,6 +118,7 @@ export async function generateAIResponse(userMessage, fileContents = []) {
  */
 async function generateAIResponseInternal(userMessage, fileContents = []) {
     showLoadingIndicator();
+    hideSmartReplies();
     ensureFirstMessageInitialized();
 
     // Reset the flags
@@ -166,6 +167,12 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
 
         // Add the system prompt only if one is explicitly set by the user
         const systemPrompt = getSystemPrompt();
+
+        // Note: Smart reply instructions are NOT added to the system prompt.
+        // Embedding smart reply XML tags in the system prompt causes reasoning models
+        // to stop mid-think on the first prompt. Smart replies are generated via a
+        // separate lightweight API call after the main response completes instead.
+
         if (systemPrompt && systemPrompt.trim() !== '') {
             messages.push({ role: 'system', content: systemPrompt });
         }
@@ -603,12 +610,14 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                     // hasThinkTags already declared above, reuse it
 
                                     // Check if we're in a thinking section (between <think> and </think>)
-                                    const inThinkingSection = hasThinkTags && aiMessage.lastIndexOf('</think>') < aiMessage.lastIndexOf('<think>');
+                                    // No smart_replies stripping needed during streaming since we no longer embed them.
+                                    let visibleStreamingMessage = aiMessage.trim();
+                                    const inThinkingSection = hasThinkTags && visibleStreamingMessage.lastIndexOf('</think>') < visibleStreamingMessage.lastIndexOf('<think>');
 
                                     // Check if content after </think> exists
                                     let contentAfterThink = "";
-                                    if (hasThinkTags && aiMessage.includes('</think>')) {
-                                        const afterThinkMatch = aiMessage.match(/<\/think>([\s\S]*)$/);
+                                    if (hasThinkTags && visibleStreamingMessage.includes('</think>')) {
+                                        const afterThinkMatch = visibleStreamingMessage.match(/<\/think>([\s\S]*)$/);
                                         if (afterThinkMatch && afterThinkMatch[1]) {
                                             contentAfterThink = afterThinkMatch[1].trim();
                                         }
@@ -620,7 +629,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                             // When hide thinking is enabled, always hide thinking tags and content
                                             if (contentAfterThink !== "") {
                                                 // We have content after </think>, show ONLY that content (streaming)
-                                                const processedContent = aiMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
+                                                const processedContent = visibleStreamingMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
                                                 contentContainer.innerHTML = basicSanitizeInput(processedContent);
 
                                                 // Remove any thinking indicator that might exist
@@ -666,19 +675,19 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                             } else {
                                                 // Hide thinking is enabled but we're not in thinking section and no content after think
                                                 // This means thinking tags are complete but no content after them yet
-                                                const processedContent = aiMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
+                                                const processedContent = visibleStreamingMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
                                                 contentContainer.innerHTML = basicSanitizeInput(processedContent);
                                             }
                                         } else {
                                             // Hide thinking is disabled, show everything including thinking tags (streaming)
-                                            contentContainer.innerHTML = sanitizeInput(aiMessage);
+                                            contentContainer.innerHTML = sanitizeInput(visibleStreamingMessage);
                                         }
 
                                         // Mark this message as having thinking
                                         aiMessageElement.dataset.hasThinking = 'true';
                                     } else if (contentContainer) {
                                         // For non-reasoning models, apply basic sanitization
-                                        contentContainer.innerHTML = basicSanitizeInput(aiMessage);
+                                        contentContainer.innerHTML = basicSanitizeInput(visibleStreamingMessage);
                                         // Mark this message as a non-reasoning model response
                                         aiMessageElement.dataset.hasThinking = 'false';
                                     }
@@ -727,6 +736,9 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             }
         }
 
+        // Smart replies are now generated via a separate post-response call (see generateSmartReplies below).
+        // No extraction from the main aiMessage is needed.
+
         // Apply final content processing based on thinking tags and settings
         const hideThinking = getHideThinking();
         const hasThinkTags = aiMessage.includes('<think>') || aiMessage.includes('</think>');
@@ -767,6 +779,16 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         }
 
         // Review trigger removed
+
+        // Generate smart replies via a separate lightweight call if enabled
+        if (getAutoSmartReply()) {
+            showSmartRepliesLoading();                               // show placeholder immediately
+            generateSmartReplies(userMessage, aiMessage).catch(err => {
+                debugLog('Smart reply generation failed (non-critical):', err);
+            });
+        } else {
+            hideSmartReplies();
+        }
 
         // Set isFirstMessage to false after first successful message
         if (isFirstMessage) {
@@ -2403,6 +2425,9 @@ let regenerationAttemptTimer = null;
  */
 export async function regenerateLastResponse(isRetry = false) {
     try {
+        // Clear smart replies before regenerating
+        hideSmartReplies();
+
         // Clear any existing timer
         if (regenerationAttemptTimer) {
             clearTimeout(regenerationAttemptTimer);
@@ -2524,10 +2549,13 @@ export async function regenerateLastResponse(isRetry = false) {
             // Get the system prompt
             const systemPrompt = getSystemPrompt();
 
+            // Note: Smart reply instructions are NOT added to the system prompt.
+            // They are generated via a separate post-response call instead.
+
             // Create messages array for the API request
             const apiMessages = [];
 
-            // Add system prompt only if one is explicitly set by the user
+            // Add system prompt only if one is explicitly set by the user (or smart replies enabled)
             if (systemPrompt && systemPrompt.trim() !== '') {
                 apiMessages.push({ role: 'system', content: systemPrompt });
             }
@@ -2871,6 +2899,9 @@ export async function regenerateLastResponse(isRetry = false) {
                 }
             }
 
+            // Smart replies are now generated via a separate post-response call.
+            // No extraction from the main aiMessage is needed.
+
             // Apply final content processing based on thinking tags and settings
             const hideThinking = getHideThinking();
             const hasThinkTags = aiMessage.includes('<think>') || aiMessage.includes('</think>');
@@ -2936,6 +2967,16 @@ export async function regenerateLastResponse(isRetry = false) {
 
             // Update the UI to reflect the changes
             updateChatHistoryUI();
+
+            // Generate smart replies via a separate lightweight call if enabled
+            if (getAutoSmartReply()) {
+                showSmartRepliesLoading();                               // show placeholder immediately
+                generateSmartReplies(lastUserMessage, aiMessage).catch(err => {
+                    debugLog('Smart reply generation failed (non-critical):', err);
+                });
+            } else {
+                hideSmartReplies();
+            }
 
             // Final processing for thinking tags
             if (getHideThinking()) {
@@ -3062,6 +3103,106 @@ export async function regenerateLastResponse(isRetry = false) {
         }
     }
 }
+
+/**
+ * Generates smart reply suggestions via a separate lightweight API call.
+ * Called after the main AI response stream has fully completed.
+ * This avoids embedding instructions into the main system prompt which
+ * causes reasoning models to stop mid-think on their first prompt.
+ *
+ * @param {string} userMessage - The user's last message
+ * @param {string} aiMessage - The AI's completed response (think-tags stripped for context)
+ */
+async function generateSmartReplies(userMessage, aiMessage) {
+    try {
+        if (!(await isServerRunning())) return;
+
+        const availableModels = getAvailableModels();
+        if (availableModels.length === 0) return;
+
+        // Use the clean AI message (without think tags) as context.
+        // Truncate to keep the call fast — we only need enough context for relevant replies.
+        const cleanAiMessage = removeThinkTags(aiMessage).trim();
+        if (!cleanAiMessage) return;
+        const contextSnippet = cleanAiMessage.length > 800
+            ? cleanAiMessage.slice(-800)   // last 800 chars gives the final/relevant portion
+            : cleanAiMessage;
+
+        const smartReplySystemPrompt =
+            'Output exactly 3 short suggested replies the USER could send next. ' +
+            'Write them from the USER\'s perspective. ' +
+            'Keep each reply under 8 words. ' +
+            'Separate the 3 replies with the pipe character "|". ' +
+            'Output ONLY the replies and nothing else — no preamble, no numbering, no think tags.';
+
+        const requestBody = {
+            model: availableModels[0],
+            messages: [
+                { role: 'system', content: smartReplySystemPrompt },
+                { role: 'user', content: userMessage },
+                { role: 'assistant', content: contextSnippet },
+                { role: 'user', content: 'Give me 3 short replies I could send next, separated by |.' }
+            ],
+            temperature: 0.7,
+            stream: false,
+            // Generous token budget: reasoning models need room to think before outputting
+            // replies. 80 was too small — the model would exhaust its budget inside <think>.
+            max_tokens: 500,
+        };
+
+        const response = await fetch(getApiUrl(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const rawText = data?.choices?.[0]?.message?.content?.trim();
+        if (!rawText) return;
+
+        // Strip any think tags the model may have generated
+        const cleanText = removeThinkTags(rawText).trim();
+        if (!cleanText) return;
+
+        // --- Robust multi-format parsing ---
+        // Primary: pipe-separated  "Reply one|Reply two|Reply three"
+        let replies = cleanText
+            .split('|')
+            .map(r => r.trim())
+            .filter(r => r.length > 0 && r.length < 120);
+
+        // Fallback: newline-separated (numbered "1. X", bulleted "- X", or plain)
+        if (replies.length < 2) {
+            replies = cleanText
+                .split(/\n/)
+                .map(r => r.replace(/^[\d]+[.)]\s*/, '').replace(/^[-*•]\s*/, '').trim())
+                .filter(r => r.length > 0 && r.length < 120);
+        }
+
+        // Fallback: semicolons
+        if (replies.length < 2) {
+            replies = cleanText
+                .split(';')
+                .map(r => r.trim())
+                .filter(r => r.length > 0 && r.length < 120);
+        }
+
+        // Keep at most 3 suggestions
+        replies = replies.slice(0, 3);
+
+        if (replies.length > 0) {
+            renderSmartReplies(replies);
+        } else {
+            hideSmartReplies();
+        }
+    } catch (err) {
+        debugLog('generateSmartReplies error (non-critical):', err);
+        hideSmartReplies();
+    }
+}
+
 
 // Add this new function for faster chat history updates before reload
 /**

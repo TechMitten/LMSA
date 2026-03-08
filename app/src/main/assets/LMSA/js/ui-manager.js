@@ -1,7 +1,8 @@
 // UI Manager for handling UI-related functionality
 import {
     messagesContainer, welcomeMessage, sidebar, settingsModal,
-    loadingIndicator, sendButton, stopButton, loadedModelDisplay
+    loadingIndicator, sendButton, stopButton, loadedModelDisplay,
+    smartRepliesContainer, userInput
 } from './dom-elements.js';
 import { basicSanitizeInput, sanitizeInput, initializeCodeMirror, scrollToBottom, copyToClipboard, debugLog, debugError, processCodeBlocks, decodeHtmlEntities, htmlToFormattedText } from './utils.js';
 import { getHideThinking } from './settings-manager.js';
@@ -2386,3 +2387,133 @@ export function addSpeakerButtonsToExistingMessages() {
 setTimeout(() => {
     addSpeakerButtonsToExistingMessages();
 }, 100);
+
+/**
+ * Shows a loading placeholder in the smart replies bar while suggestions are being generated.
+ */
+export function showSmartRepliesLoading() {
+    if (!smartRepliesContainer) return;
+
+    // Clear any previous content
+    smartRepliesContainer.innerHTML = '';
+
+    // Build an animated placeholder chip
+    const placeholder = document.createElement('div');
+    placeholder.className = 'smart-replies-loading';
+    placeholder.innerHTML =
+        '<i class="fas fa-circle-notch fa-spin" style="margin-right:6px;font-size:0.8em;"></i>' +
+        'Generating Smart Replies\u2026';
+    placeholder.style.cssText = [
+        'display:inline-flex',
+        'align-items:center',
+        'padding:5px 14px',
+        'border-radius:9999px',
+        'border:1px solid rgba(255,255,255,0.1)',
+        'font-size:0.82rem',
+        'color:rgba(200,200,220,0.75)',
+        'white-space:nowrap',
+        'flex-shrink:0',
+        'pointer-events:none',
+    ].join(';');
+
+    smartRepliesContainer.appendChild(placeholder);
+    smartRepliesContainer.classList.remove('hidden');
+    smartRepliesContainer.style.opacity = '1';
+    smartRepliesContainer.scrollLeft = 0;
+
+    // Adjust scroll-to-bottom button position
+    const scrollBtn = document.getElementById('scroll-to-bottom');
+    if (scrollBtn) {
+        scrollBtn.style.transition = 'margin-bottom 0.2s ease-in-out, opacity 0.3s, background-color 0.3s';
+        const containerHeight = smartRepliesContainer.offsetHeight || 40;
+        scrollBtn.style.marginBottom = `${containerHeight + 12}px`;
+    }
+}
+
+/**
+ * Renders smart reply chips above the chat input
+ * @param {string[]} replies - Array of string replies to suggest
+ */
+export function renderSmartReplies(replies) {
+    if (!smartRepliesContainer || !replies || replies.length === 0) {
+        hideSmartReplies();
+        return;
+    }
+
+    // Clear container
+    smartRepliesContainer.innerHTML = '';
+
+    replies.forEach(reply => {
+        if (!reply.trim()) return;
+
+        const btn = document.createElement('button');
+        btn.className = 'px-3 py-1.5 bg-darkTertiary hover:bg-darkHover text-gray-200 text-sm rounded-full border border-gray-600/50 transition-colors whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px] flex-shrink-0';
+        btn.textContent = reply.trim();
+        btn.title = reply.trim();
+
+        btn.addEventListener('click', () => {
+            if (userInput) {
+                // Remove placeholder and set value
+                userInput.value = reply.trim();
+
+                // Trigger input event to resize textarea if needed
+                userInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+                // Keep focus on input
+                userInput.focus();
+
+                // Trigger auto-send since it's a "quick reply"
+                if (sendButton && !sendButton.classList.contains('hidden') && !sendButton.disabled) {
+                    sendButton.click();
+                }
+            }
+
+            // Hide the suggestions after clicking
+            hideSmartReplies();
+        });
+
+        smartRepliesContainer.appendChild(btn);
+    });
+
+    // Show container
+    if (smartRepliesContainer.children.length > 0) {
+        smartRepliesContainer.classList.remove('hidden');
+        // Add minimal animation
+        smartRepliesContainer.style.opacity = '0';
+        requestAnimationFrame(() => {
+            smartRepliesContainer.style.transition = 'opacity 0.2s ease-in-out';
+            smartRepliesContainer.style.opacity = '1';
+
+            // Always reset horizontal scroll to the start so the first suggestion is fully visible
+            smartRepliesContainer.scrollLeft = 0;
+
+            // Adjust scroll-to-bottom button position to prevent overlap
+            const scrollBtn = document.getElementById('scroll-to-bottom');
+            if (scrollBtn) {
+                // Ensure transition for smooth movement
+                scrollBtn.style.transition = 'margin-bottom 0.2s ease-in-out, opacity 0.3s, background-color 0.3s';
+
+                // Set margin-bottom to avoid overlap, using container height + padding
+                const containerHeight = smartRepliesContainer.offsetHeight || 0;
+                scrollBtn.style.marginBottom = `${containerHeight + 12}px`;
+            }
+        });
+    }
+}
+
+/**
+ * Hides the smart replies container
+ */
+export function hideSmartReplies() {
+    if (smartRepliesContainer) {
+        smartRepliesContainer.classList.add('hidden');
+        smartRepliesContainer.innerHTML = '';
+
+        // Reset scroll-to-bottom button position
+        const scrollBtn = document.getElementById('scroll-to-bottom');
+        if (scrollBtn) {
+            scrollBtn.style.transition = 'margin-bottom 0.2s ease-in-out, opacity 0.3s, background-color 0.3s';
+            scrollBtn.style.marginBottom = '0px';
+        }
+    }
+}

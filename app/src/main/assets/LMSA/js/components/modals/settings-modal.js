@@ -144,6 +144,19 @@ export const settingsModal = `
 
                     <div class="mb-5">
                         <div class="flex justify-between items-center mb-2">
+                            <label for="auto-smart-reply" class="text-sm font-medium">
+                                <i class="fas fa-reply mr-2 text-blue-400"></i>Enable Smart Reply</label>
+                            <div class="toggle-container">
+                                <input type="checkbox" id="auto-smart-reply">
+                                <div class="toggle-switch"></div>
+                                <div class="toggle-dot"></div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">When enabled, the LLM will analyze the conversation and suggest interactive tap-to-reply options above the chat input.</p>
+                    </div>
+
+                    <div class="mb-5">
+                        <div class="flex justify-between items-center mb-2">
                             <label for="auto-scroll" class="text-sm font-medium">
                                 <i class="fas fa-arrow-down mr-2 text-blue-400"></i>Auto-Scroll to Bottom</label>
                             <div class="toggle-container">

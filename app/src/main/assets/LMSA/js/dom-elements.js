@@ -5,7 +5,7 @@ class DOMElementCache {
         this.observers = new Map();
         this.setupCleanup();
     }
-    
+
     get(id) {
         if (this.cache.has(id)) {
             const element = this.cache.get(id);
@@ -18,7 +18,7 @@ class DOMElementCache {
                 this.observers.delete(id);
             }
         }
-        
+
         // Get fresh element
         const element = document.getElementById(id);
         if (element) {
@@ -27,10 +27,10 @@ class DOMElementCache {
         }
         return element;
     }
-    
+
     observeElement(id, element) {
         if (!window.MutationObserver || this.observers.has(id)) return;
-        
+
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.type === 'childList') {
@@ -44,11 +44,11 @@ class DOMElementCache {
                 }
             });
         });
-        
+
         observer.observe(document.body, { childList: true, subtree: true });
         this.observers.set(id, observer);
     }
-    
+
     setupCleanup() {
         // Clean up cache periodically
         setInterval(() => {
@@ -68,7 +68,7 @@ class DOMElementCache {
             });
         }, 60000); // Clean up every minute
     }
-    
+
     clear() {
         this.cache.clear();
         this.observers.forEach(observer => observer.disconnect());
@@ -105,6 +105,8 @@ export const closeSidebarButton = domCache.get('close-sidebar');
 export const loadedModelDisplay = domCache.get('loaded-model');
 export const hideThinkingCheckbox = domCache.get('hide-thinking');
 export const autoGenerateTitlesCheckbox = domCache.get('auto-generate-titles');
+export const autoSmartReplyCheckbox = domCache.get('auto-smart-reply');
+export const smartRepliesContainer = domCache.get('smart-replies-container');
 export const themeToggleCheckbox = domCache.get('theme-toggle');
 export const ollamaToggleCheckbox = domCache.get('ollama-toggle');
 

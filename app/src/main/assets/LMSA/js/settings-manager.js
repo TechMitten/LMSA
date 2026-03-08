@@ -3,6 +3,7 @@ import {
   systemPromptInput,
   hideThinkingCheckbox,
   autoGenerateTitlesCheckbox,
+  autoSmartReplyCheckbox,
   themeToggleCheckbox,
   ollamaToggleCheckbox,
 } from "./dom-elements.js";
@@ -18,6 +19,7 @@ let isUserCreatedSystemPrompt = false; // Flag to track if the system prompt was
 let temperature = 0.3;
 let hideThinking = false;
 let autoGenerateTitles = false;
+let autoSmartReply = false;
 let useOllama = false;
 let lightThemeEnabled = false;
 let autoScrollEnabled = false; // Auto-scroll to bottom during LLM streaming
@@ -440,6 +442,46 @@ export function loadAutoGenerateTitlesSetting() {
       saveAutoGenerateTitlesSetting
     );
   }
+}
+
+/**
+ * Loads the auto-smart reply setting from localStorage
+ */
+export function loadAutoSmartReplySetting() {
+  if (autoSmartReplyCheckbox) {
+    const savedAutoSmartReply = localStorage.getItem("autoSmartReply");
+    if (savedAutoSmartReply === "true") {
+      autoSmartReplyCheckbox.checked = true;
+      autoSmartReply = true;
+    } else {
+      autoSmartReplyCheckbox.checked = false;
+      autoSmartReply = false;
+    }
+
+    // Add event listener for the checkbox
+    autoSmartReplyCheckbox.addEventListener(
+      "change",
+      saveAutoSmartReplySetting
+    );
+  }
+}
+
+/**
+ * Saves the auto-smart reply setting to localStorage
+ */
+export function saveAutoSmartReplySetting() {
+  if (autoSmartReplyCheckbox) {
+    autoSmartReply = autoSmartReplyCheckbox.checked;
+    localStorage.setItem("autoSmartReply", autoSmartReply);
+  }
+}
+
+/**
+ * Gets the current auto-smart reply setting
+ * @returns {boolean} - True if auto-smart reply is enabled, false otherwise
+ */
+export function getAutoSmartReply() {
+  return autoSmartReply;
 }
 
 /**
@@ -967,6 +1009,7 @@ export function loadSettings() {
   initializeTemperature();
   loadHideThinkingSetting();
   loadAutoGenerateTitlesSetting();
+  loadAutoSmartReplySetting();
   loadAutoScrollSetting();
   loadEnterSendsNewlineSetting();
   loadThemeSetting();
