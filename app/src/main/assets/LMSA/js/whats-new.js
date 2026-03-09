@@ -9,7 +9,7 @@ let gotItButton;
 let versionElement;
 
 // Local storage keys
-const WHATS_NEW_VERSION = '9.8'; // Updated for new features: TTS Audio, Ollama Support
+const WHATS_NEW_VERSION = '10.0'; // Updated to version 10
 
 // Flag to track if the modal has been shown in the current session
 let modalShownInCurrentSession = false;
@@ -100,12 +100,8 @@ export function showWhatsNewModal(forceShow = false) {
  */
 function hideWhatsNewModal() {
     if (whatsNewModal) {
-        // For version 8.8, save to dismissal tracking; for others, use the original logic
-        if (WHATS_NEW_VERSION === '8.8') {
-            localStorage.setItem('whatsNewDismissedVersion', WHATS_NEW_VERSION);
-        } else {
-            localStorage.setItem('whatsNewSeenVersion', WHATS_NEW_VERSION);
-        }
+        // Save the version as seen when modal is dismissed
+        localStorage.setItem('whatsNewSeenVersion', WHATS_NEW_VERSION);
 
         const modalContent = whatsNewModal.querySelector('.modal-content');
         if (modalContent) {
@@ -344,26 +340,12 @@ export function initializeWhatsNew() {
     // Add window resize listener to adjust modal height when window size changes
     window.addEventListener('resize', adjustModalHeight);
 
-    // Check if user has dismissed this specific version
-    // Check if user has dismissed this specific version
-    // const dismissedVersion = localStorage.getItem('whatsNewDismissedVersion');
-
-    // Automatic modal launch disabled by user request
-    /*
-    // For version 8.8, always show the modal unless user has specifically dismissed it
-    if (WHATS_NEW_VERSION === '8.8' && dismissedVersion !== WHATS_NEW_VERSION) {
-        // Show the modal after a brief delay for version 8.8
+    // Check if user has seen this specific version
+    const seenVersion = localStorage.getItem('whatsNewSeenVersion');
+    if (seenVersion !== WHATS_NEW_VERSION) {
+        // Show the modal after a brief delay to allow app to finish loading
         setTimeout(() => {
             showWhatsNewModal();
-        }, 1500); // 1.5 second delay to allow app to finish loading
-    } else if (WHATS_NEW_VERSION !== '8.8') {
-        // For future versions, use the original logic
-        const seenVersion = localStorage.getItem('whatsNewSeenVersion');
-        if (seenVersion !== WHATS_NEW_VERSION) {
-            setTimeout(() => {
-                showWhatsNewModal();
-            }, 1500);
-        }
+        }, 1500); // 1.5 second delay
     }
-    */
 }

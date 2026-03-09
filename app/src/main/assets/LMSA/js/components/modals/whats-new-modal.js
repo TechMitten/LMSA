@@ -13,7 +13,7 @@ export const whatsNewModal = `
                     <div class="flex flex-col">
                         <span class="text-blue-400 font-extrabold">What's New</span>
                         <span class="text-xs text-blue-300/80 font-medium">v<span
-                                id="whats-new-version">9.8</span></span>
+                                id="whats-new-version">10.0</span></span>
                     </div>
                 </h2>
                 <button id="close-whats-new"
@@ -27,191 +27,24 @@ export const whatsNewModal = `
                     <div class="feature-item">
                         <div class="relative overflow-hidden">
                             <div
-                                class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-purple-500/10 to-pink-700/5 rounded-full blur-xl">
-                            </div>
-                            <div class="flex items-start relative z-10">
-                                <div
-                                    class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-purple-500/20 w-10 h-10 shadow-sm">
-                                    <i class="fas fa-th-large text-purple-400"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center">
-                                        <h3 class="feature-title">Templates</h3>
-                                        <span
-                                            class="ml-2 px-1.5 py-0.5 bg-purple-500/20 text-purple-300 text-xs rounded-full font-medium">NEW</span>
-                                    </div>
-                                    <div class="feature-description">
-                                        <p class="mb-3">Choose from specialized AI personas like Math Tutor, Code
-                                            Assistant, Fitness Coach, and more. You can now also create your own
-                                            <strong>Custom Templates</strong> with personalized avatars and system
-                                            prompts.</p>
-                                        <p class="mb-3">Use the new <strong>AI Generator</strong> to automatically
-                                            craft high-quality system prompts for your custom personas with a single
-                                            tap.</p>
-                                        <p>Note: Template effectiveness varies based on your LM Studio model.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="relative overflow-hidden">
-                            <div
-                                class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-yellow-500/10 to-orange-700/5 rounded-full blur-xl">
-                            </div>
-                            <div class="flex items-start relative z-10">
-                                <div
-                                    class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-yellow-500/20 w-10 h-10 shadow-sm">
-                                    <i class="fas fa-star text-yellow-400"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center">
-                                        <h3 class="feature-title">Ollama Support & Updates</h3>
-                                        <span
-                                            class="ml-2 px-1.5 py-0.5 bg-yellow-500/20 text-yellow-300 text-xs rounded-full font-medium">NEW</span>
-                                    </div>
-                                    <div class="feature-description">
-                                        <p class="mb-3">Fixed a bug that was causing the volume to increase every time
-                                            the app was launched.</p>
-                                        <p class="mb-3">Made improvements to the menu system flow for a smoother
-                                            experience when switching models or setting a default model.</p>
-                                        <p>Added support for Ollama - users can now connect LMSA to Ollama server
-                                            running on their PC. Check the Help menu for more information on how to get
-                                            started.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="feature-item">
-                        <div class="relative overflow-hidden">
-                            <div
-                                class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-indigo-500/10 to-purple-700/5 rounded-full blur-xl">
-                            </div>
-                            <div class="flex items-start relative z-10">
-                                <div
-                                    class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-indigo-500/20 w-10 h-10 shadow-sm">
-                                    <i class="fas fa-volume-up text-indigo-400"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center">
-                                        <h3 class="feature-title">TTS Audio</h3>
-                                        <span
-                                            class="ml-2 px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 text-xs rounded-full font-medium">NEW</span>
-                                    </div>
-                                    <div class="feature-description">
-                                        <p class="mb-3">You can now tap the speaker icon in the AI response chat bubbles
-                                            to hear the AI response read out loud. This text-to-speech feature makes it
-                                            easier to consume AI responses while multitasking or when you prefer audio
-                                            content.</p>
-                                        <p>Perfect for accessibility, hands-free operation, or when you want to listen
-                                            to responses while doing other tasks.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="feature-item">
-                        <div class="relative overflow-hidden">
-                            <div
-                                class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-blue-500/10 to-cyan-700/5 rounded-full blur-xl">
+                                class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-blue-500/10 to-purple-700/5 rounded-full blur-xl">
                             </div>
                             <div class="flex items-start relative z-10">
                                 <div
                                     class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-blue-500/20 w-10 h-10 shadow-sm">
-                                    <i class="fas fa-key text-blue-400"></i>
+                                    <i class="fas fa-bolt text-blue-400"></i>
                                 </div>
                                 <div class="flex-1">
                                     <div class="flex items-center">
-                                        <h3 class="feature-title">Legacy Access for Previous Purchasers</h3>
+                                        <h3 class="feature-title">Smart Reply</h3>
+                                        <span
+                                            class="ml-2 px-1.5 py-0.5 bg-blue-500/20 text-blue-300 text-xs rounded-full font-medium">NEW</span>
                                     </div>
                                     <div class="feature-description">
-                                        <p class="mb-2">If you purchased an old version of LMSA, you can receive a free
-                                            code that will grant you lifetime access to LMSA Premium, removing
-                                            advertising.</p>
-                                        <p class="mb-2">Please email <strong>support@lmsa.app</strong> with your order
-                                            number to receive your free code.</p>
-                                        <p><a href="#" id="whats-new-locate-order-number-link"
-                                                class="text-blue-400 hover:text-blue-300 underline">Locate order
-                                                number</a></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="feature-item">
-                        <div class="relative overflow-hidden">
-                            <div
-                                class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-emerald-500/10 to-teal-700/5 rounded-full blur-xl">
-                            </div>
-                            <div class="flex items-start relative z-10">
-                                <div
-                                    class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-emerald-500/20 w-10 h-10 shadow-sm">
-                                    <i class="fas fa-shield-alt text-emerald-400"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center">
-                                        <h3 class="feature-title">IP/Port Verification Checklist</h3>
-                                    </div>
-                                    <div class="feature-description">
-                                        <p class="mb-3">Added a verification checklist that appears when changes are
-                                            detected in the IP and/or port input fields. This helpful reminder ensures
-                                            you don't forget important CORS and local network setting changes that are
-                                            required for LMSA to work properly with your LM Studio instance.</p>
-                                        <p>The checklist guides you through the essential configuration steps, making
-                                            setup more reliable and reducing connection issues.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="feature-item">
-                        <div class="relative overflow-hidden">
-                            <div
-                                class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-blue-500/10 to-indigo-700/5 rounded-full blur-xl">
-                            </div>
-                            <div class="flex items-start relative z-10">
-                                <div
-                                    class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-blue-500/20 w-10 h-10 shadow-sm">
-                                    <i class="fas fa-edit text-blue-400"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center">
-                                        <h3 class="feature-title">Improved Message Input Field</h3>
-                                    </div>
-                                    <div class="feature-description">
-                                        <p class="mb-3">The message input field now automatically adjusts its height to
-                                            accommodate longer messages, making it much easier to edit and review your
-                                            text before sending. No more cramped single-line input that cuts off your
-                                            thoughts!</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="feature-item">
-                        <div class="relative overflow-hidden">
-                            <div
-                                class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-green-500/10 to-emerald-700/5 rounded-full blur-xl">
-                            </div>
-                            <div class="flex items-start relative z-10">
-                                <div
-                                    class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-green-500/20 w-10 h-10 shadow-sm">
-                                    <i class="fas fa-comments text-green-400"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center">
-                                        <h3 class="feature-title">Enhanced Chat Bubble UI</h3>
-                                    </div>
-                                    <div class="feature-description">
-                                        <p class="mb-3">Chat bubbles now have a cleaner, more modern look with improved
-                                            spacing, typography, and visual hierarchy. The overall chat experience feels
-                                            more polished and professional.</p>
+                                        <p class="mb-3">Experience faster conversations with AI-powered smart replies. After each AI response, you'll see 3 contextually relevant suggestions that you can click to instantly continue the conversation.</p>
+                                        <p class="mb-3">Simply tap a suggestion to automatically send it - no typing required. Perfect for quick follow-ups and keeping conversations flowing naturally.</p>
+                                        <p class="mb-3">Enable or disable this feature in Settings under "Enable Smart Reply". Suggestions are tailored to your conversation context for maximum relevance.</p>
+                                        <p class="text-yellow-300/90 text-xs italic border-l-2 border-yellow-500/50 pl-2 py-1 bg-yellow-500/5 rounded-r"><strong>Note:</strong> Smart Reply is currently in <span class="font-semibold">BETA</span>. The quality of suggestions will vary depending on which AI model you're using. Some models may provide more relevant responses than others.</p>
                                     </div>
                                 </div>
                             </div>
