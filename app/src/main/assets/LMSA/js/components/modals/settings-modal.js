@@ -250,6 +250,34 @@ export const settingsModal = `
                         </p>
                     </div>
 
+                    <div class="mb-5">
+                        <label for="chat-font-family-select" class="block text-sm font-medium mb-2">
+                            <i class="fas fa-font mr-2 text-blue-400"></i>Chat Bubble Font</label>
+                        <select id="chat-font-family-select"
+                            class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500">
+                            <option value="system-ui, sans-serif">System Default</option>
+                            <option value="Roboto, sans-serif">Roboto</option>
+                            <option value="Arial, Helvetica, sans-serif">Sans-Serif (Arial)</option>
+                            <option value="Georgia, serif">Serif (Georgia)</option>
+                            <option value="'Courier New', monospace">Monospace (Courier)</option>
+                        </select>
+                        <p class="text-xs text-gray-400 mt-1">Select the font used in chat message bubbles</p>
+                    </div>
+
+                    <div class="mb-5">
+                        <label for="chat-font-size-select" class="block text-sm font-medium mb-2">
+                            <i class="fas fa-text-height mr-2 text-blue-400"></i>Chat Bubble Font Size</label>
+                        <select id="chat-font-size-select"
+                            class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500">
+                            <option value="0.8rem">Extra Small</option>
+                            <option value="0.9rem">Small</option>
+                            <option value="1rem" selected>Medium (Default)</option>
+                            <option value="1.125rem">Large</option>
+                            <option value="1.25rem">Extra Large</option>
+                        </select>
+                        <p class="text-xs text-gray-400 mt-1">Select the text size used in chat message bubbles</p>
+                    </div>
+
 
 
                 </div>

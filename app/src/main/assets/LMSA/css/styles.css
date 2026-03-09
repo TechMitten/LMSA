@@ -95,6 +95,8 @@ body.preview-mode {
     padding: 0.75rem 1rem;
     border-radius: 0.75rem;
     line-height: 1.5;
+    font-family: var(--chat-font-family, system-ui, sans-serif);
+    font-size: var(--chat-font-size, 1rem);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
     /* Prevent message bubbles from being compressed */
@@ -106,9 +108,9 @@ body.preview-mode {
         max-width: 85%;
         /* Slightly wider on mobile */
         padding: 0.625rem 0.875rem;
-        /* Smaller padding */
-        font-size: 0.95rem;
-        /* Slightly smaller font */
+        /* Slightly smaller padding */
+        font-size: var(--chat-font-size, 0.95rem);
+        /* Font size controlled by user setting */
     }
 }
 

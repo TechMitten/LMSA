@@ -34,6 +34,8 @@ let selectedTTSVoice = null; // Selected TTS voice name
 let useOpenRouter = false; // Use OpenRouter cloud API
 let openRouterApiKey = ''; // OpenRouter API key
 let showModelLabel = true; // Show model name on AI message bubbles
+let chatFontFamily = 'system-ui, sans-serif'; // Font family for chat message bubbles
+let chatFontSize = '1rem'; // Font size for chat message bubbles
 
 /**
  * Initializes temperature settings
@@ -1205,8 +1207,78 @@ export async function setSelectedTTSVoice(voiceName) {
 }
 
 /**
- * Loads all settings
+ * Applies the current chat font settings via CSS custom properties on the root element.
  */
+function applyFontSettings() {
+  document.documentElement.style.setProperty('--chat-font-family', chatFontFamily);
+  document.documentElement.style.setProperty('--chat-font-size', chatFontSize);
+}
+
+/**
+ * Loads the chat font family and font size settings from localStorage.
+ */
+export function loadChatFontSettings() {
+  const savedFontFamily = localStorage.getItem('chatFontFamily');
+  const savedFontSize = localStorage.getItem('chatFontSize');
+
+  if (savedFontFamily) {
+    chatFontFamily = savedFontFamily;
+  }
+  if (savedFontSize) {
+    chatFontSize = savedFontSize;
+  }
+
+  applyFontSettings();
+
+  const fontFamilySelect = document.getElementById('chat-font-family-select');
+  const fontSizeSelect = document.getElementById('chat-font-size-select');
+
+  if (fontFamilySelect) {
+    fontFamilySelect.value = chatFontFamily;
+    fontFamilySelect.addEventListener('change', saveChatFontSettings);
+  }
+
+  if (fontSizeSelect) {
+    fontSizeSelect.value = chatFontSize;
+    fontSizeSelect.addEventListener('change', saveChatFontSettings);
+  }
+}
+
+/**
+ * Saves the chat font settings to localStorage and applies them immediately.
+ */
+export function saveChatFontSettings() {
+  const fontFamilySelect = document.getElementById('chat-font-family-select');
+  const fontSizeSelect = document.getElementById('chat-font-size-select');
+
+  if (fontFamilySelect) {
+    chatFontFamily = fontFamilySelect.value;
+    localStorage.setItem('chatFontFamily', chatFontFamily);
+  }
+  if (fontSizeSelect) {
+    chatFontSize = fontSizeSelect.value;
+    localStorage.setItem('chatFontSize', chatFontSize);
+  }
+
+  applyFontSettings();
+}
+
+/**
+ * Gets the current chat font family setting.
+ * @returns {string}
+ */
+export function getChatFontFamily() {
+  return chatFontFamily;
+}
+
+/**
+ * Gets the current chat font size setting.
+ * @returns {string}
+ */
+export function getChatFontSize() {
+  return chatFontSize;
+}
+
 export function loadSettings() {
   initializeSystemPrompt();
   initializeTemperature();
@@ -1221,6 +1293,7 @@ export function loadSettings() {
   loadOllamaSetting();
   loadOpenRouterSettings();
   loadShowModelLabelSetting();
+  loadChatFontSettings();
   // TTS voice selection will be initialized separately when settings modal opens
 }
 
