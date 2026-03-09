@@ -6,6 +6,9 @@ import { debugLog } from './utils.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { getApiUrl, getAvailableModels, isServerRunning } from './api-service.js';
 
+// Holds a reference to the internal showStep function once the modal is initialised
+let _navigateToStep = null;
+
 
 
 /**
@@ -127,7 +130,45 @@ export async function showSettingsModal() {
 export function hideSettingsModal() {
     if (!settingsModal) return;
 
-    debugLog('Closing settings modal');
+    // --- OpenRouter key validation ---
+    // Block closing if the user enabled OpenRouter but hasn't entered an API key.
+    const orToggle = document.getElementById('openrouter-toggle');
+    const orKeyInput = document.getElementById('openrouter-api-key');
+    if (orToggle && orToggle.checked && orKeyInput && orKeyInput.value.trim() === '') {
+        // Navigate back to the connection step so the field is visible
+        if (_navigateToStep) _navigateToStep('connection');
+
+        // Shake the input wrapper and show an error message
+        const wrapper = document.querySelector('.openrouter-key-input-wrapper');
+        if (wrapper) {
+            wrapper.classList.add('key-required');          // ensure pulse is on
+            wrapper.classList.remove('key-error-shake');    // reset before re-triggering
+            void wrapper.offsetWidth;                        // force reflow
+            wrapper.classList.add('key-error-shake');
+            wrapper.addEventListener('animationend', () => wrapper.classList.remove('key-error-shake'), { once: true });
+        }
+
+        // Show inline error message (create once, reuse)
+        const keyContainer = document.getElementById('openrouter-key-container');
+        if (keyContainer) {
+            let errEl = document.getElementById('openrouter-key-error-msg');
+            if (!errEl) {
+                errEl = document.createElement('p');
+                errEl.id = 'openrouter-key-error-msg';
+                errEl.className = 'text-xs mt-1 openrouter-key-error-text';
+                errEl.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i>An API key is required to use OpenRouter.';
+                keyContainer.appendChild(errEl);
+            }
+            errEl.style.display = 'block';
+            // Auto-hide the message after 4 s
+            clearTimeout(errEl._hideTimer);
+            errEl._hideTimer = setTimeout(() => { errEl.style.display = 'none'; }, 4000);
+        }
+
+        orKeyInput.focus();
+        return;  // prevent close
+    }
+    // --- end validation ---
 
     // Get the modal content for animation
     const modalContent = settingsModal.querySelector('.modal-content');
@@ -244,6 +285,8 @@ export function initializeSettingsModalNavigation() {
 
     // Function to show a specific step
     function showStep(stepName, direction = null) {
+        // Expose to module scope so hideSettingsModal can use it
+        _navigateToStep = showStep;
         // Get current active step
         const currentActiveStep = document.querySelector('.settings-step.active');
         const currentStepName = currentActiveStep ? currentActiveStep.getAttribute('data-step-name').toLowerCase() : '';

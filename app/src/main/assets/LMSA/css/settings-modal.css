@@ -462,6 +462,42 @@
   overflow: visible;
 }
 
+/* Pulsing blue glow keyframe — draws attention to the key field after enabling */
+@keyframes openrouter-key-pulse {
+  0%   { border-color: rgba(59, 130, 246, 0.55); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.0),  0 4px 10px rgba(0,0,0,0.25); }
+  50%  { border-color: rgba(99, 165, 255, 1);    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35), 0 4px 10px rgba(0,0,0,0.25), 0 0 18px rgba(59,130,246,0.45); }
+  100% { border-color: rgba(59, 130, 246, 0.55); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.0),  0 4px 10px rgba(0,0,0,0.25); }
+}
+
+.openrouter-key-input-wrapper.key-required {
+  animation: openrouter-key-pulse 1.6s ease-in-out infinite;
+  border-color: rgba(59, 130, 246, 0.55);
+}
+
+/* Shake animation when user tries to close without a key */
+@keyframes openrouter-key-shake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-6px); }
+  30%       { transform: translateX(6px); }
+  45%       { transform: translateX(-5px); }
+  60%       { transform: translateX(5px); }
+  75%       { transform: translateX(-3px); }
+  90%       { transform: translateX(3px); }
+}
+
+.openrouter-key-input-wrapper.key-error-shake {
+  animation: openrouter-key-shake 0.45s ease-in-out,
+             openrouter-key-pulse 1.6s ease-in-out 0.45s infinite;
+  border-color: rgba(239, 68, 68, 0.85);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3), 0 4px 10px rgba(0,0,0,0.25);
+}
+
+/* Inline error message below the key field */
+.openrouter-key-error-text {
+  color: #f87171;
+  font-style: italic;
+}
+
 /* Wrapper for the API key input + reveal button — acts as the styled "input" */
 .openrouter-key-input-wrapper {
   display: flex;

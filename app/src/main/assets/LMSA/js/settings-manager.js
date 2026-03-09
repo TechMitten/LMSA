@@ -14,6 +14,7 @@ import {
 import { applyThinkingVisibility, refreshAllMessages, applyModelLabelVisibility } from "./ui-manager.js";
 import { debugLog } from "./utils.js";
 import { showSmartReplyWarningModal } from "./components/modals/smart-reply-warning-modal.js";
+import { showOpenRouterWarningModal } from "./components/modals/openrouter-warning-modal.js";
 
 // Default system prompt is empty unless user explicitly sets one
 const DEFAULT_SYSTEM_PROMPT = "";
@@ -989,11 +990,21 @@ function updateOpenRouterUI(isEnabled) {
     if (ipPortLabel) ipPortLabel.style.display = 'none';
     if (ipPortInfo) ipPortInfo.style.display = 'none';
     if (keyContainer) keyContainer.classList.remove('hidden');
+    // Pulse the input wrapper if no key has been entered yet
+    const wrapper = document.querySelector('.openrouter-key-input-wrapper');
+    if (wrapper) {
+      const hasKey = (openRouterApiKeyInput && openRouterApiKeyInput.value.trim().length > 0)
+                     || (localStorage.getItem('openRouterApiKey') || '').length > 0;
+      if (!hasKey) wrapper.classList.add('key-required');
+    }
   } else {
     ipPortContainers.forEach(el => { if (el) el.style.display = ''; });
     if (ipPortLabel) ipPortLabel.style.display = '';
     if (ipPortInfo) ipPortInfo.style.display = '';
     if (keyContainer) keyContainer.classList.add('hidden');
+    // Remove pulse when container is hidden
+    const wrapper = document.querySelector('.openrouter-key-input-wrapper');
+    if (wrapper) wrapper.classList.remove('key-required');
   }
 
   // Smart Reply is incompatible with OpenRouter — disable/enable toggle accordingly
@@ -1043,6 +1054,11 @@ export function loadOpenRouterSettings() {
     openRouterApiKeyInput.addEventListener('input', () => {
       openRouterApiKey = openRouterApiKeyInput.value;
       localStorage.setItem('openRouterApiKey', openRouterApiKey);
+      // Stop pulsing once the user starts typing a key
+      if (openRouterApiKey.length > 0) {
+        const wrapper = document.querySelector('.openrouter-key-input-wrapper');
+        if (wrapper) wrapper.classList.remove('key-required');
+      }
     });
   }
 
@@ -1053,20 +1069,44 @@ export function loadOpenRouterSettings() {
  * Saves the OpenRouter settings to localStorage
  */
 export function saveOpenRouterSettings() {
-  if (openRouterToggleCheckbox) {
-    useOpenRouter = openRouterToggleCheckbox.checked;
-    localStorage.setItem('useOpenRouter', useOpenRouter);
-  }
-  if (openRouterApiKeyInput) {
-    openRouterApiKey = openRouterApiKeyInput.value;
-    localStorage.setItem('openRouterApiKey', openRouterApiKey);
-  }
-  updateOpenRouterUI(useOpenRouter);
-  // Mutual exclusivity: disable Ollama when OpenRouter is enabled
-  if (useOpenRouter && useOllama) {
-    useOllama = false;
-    localStorage.setItem('useOllama', 'false');
-    if (ollamaToggleCheckbox) ollamaToggleCheckbox.checked = false;
+  const isEnabling = openRouterToggleCheckbox && openRouterToggleCheckbox.checked;
+
+  if (isEnabling) {
+    // Temporarily revert the checkbox until the user confirms the warning
+    openRouterToggleCheckbox.checked = false;
+
+    showOpenRouterWarningModal(
+      () => {
+        // User confirmed — enable OpenRouter
+        openRouterToggleCheckbox.checked = true;
+        useOpenRouter = true;
+        localStorage.setItem('useOpenRouter', 'true');
+        if (openRouterApiKeyInput) {
+          openRouterApiKey = openRouterApiKeyInput.value;
+          localStorage.setItem('openRouterApiKey', openRouterApiKey);
+        }
+        updateOpenRouterUI(true);
+        // Mutual exclusivity: disable Ollama when OpenRouter is enabled
+        if (useOllama) {
+          useOllama = false;
+          localStorage.setItem('useOllama', 'false');
+          if (ollamaToggleCheckbox) ollamaToggleCheckbox.checked = false;
+        }
+      },
+      () => {
+        // User cancelled — keep OpenRouter disabled
+        openRouterToggleCheckbox.checked = false;
+      }
+    );
+  } else {
+    // User is disabling OpenRouter — no warning needed
+    useOpenRouter = false;
+    localStorage.setItem('useOpenRouter', 'false');
+    if (openRouterApiKeyInput) {
+      openRouterApiKey = openRouterApiKeyInput.value;
+      localStorage.setItem('openRouterApiKey', openRouterApiKey);
+    }
+    updateOpenRouterUI(false);
   }
 }
 
