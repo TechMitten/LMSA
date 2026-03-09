@@ -30,57 +30,52 @@ export const settingsModal = `
                 style="overflow-y: auto; overflow-x: hidden; touch-action: pan-y; overscroll-behavior: contain;">
                 <!-- Step 1: Connection Settings (always visible first) -->
                 <div id="settings-step-connection" class="settings-step active" data-step-name="Connection">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium mb-1 text-gray-200">
-                            <i class="fas fa-server mr-2 text-blue-400"></i>LM Studio Server Connection:
-                        </label>
-                        <div class="flex space-x-2 ip-port-container">
-                            <div class="flex-grow">
-                                <label for="server-ip" class="block text-xs text-gray-300 mb-1">IP Address</label>
-                                <input type="text" id="server-ip"
-                                    class="w-full text-gray-100 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
-                                    placeholder="e.g. 192.168.1.100" pattern="^[0-9.]*$" inputmode="numeric"
-                                    onkeypress="return event.charCode === 46 || (event.charCode >= 48 && event.charCode <= 57)"
-                                    autocomplete="off" data-form-type="other">
-                            </div>
-                            <div class="w-32 port-input-container"> <!-- Increased width from w-28 to w-32 -->
-                                <label for="server-port" class="block text-xs text-gray-300 mb-1">Port</label>
-                                <input type="text" id="server-port"
-                                    class="w-full text-gray-100 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
-                                    placeholder="1234" pattern="^[0-9]*$" inputmode="numeric"
-                                    onkeypress="return event.charCode >= 48 && event.charCode <= 57" autocomplete="off"
-                                    data-form-type="other">
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-300 mt-1">Need help? Visit the <a href="#" id="open-help-from-settings-link" class="text-blue-400 hover:text-blue-300 underline">LMSA Help section</a>.</p>
+                    <!-- Hidden checkbox retained for JS/event compatibility -->
+                    <input type="checkbox" id="openrouter-toggle" class="sr-only" aria-hidden="true" tabindex="-1">
+
+                    <!-- Connection Type Selector -->
+                    <div class="connection-type-selector mb-4">
+                        <button id="select-local-server" class="connection-type-btn active" type="button" aria-pressed="true">
+                            <div class="connection-type-icon"><i class="fas fa-server"></i></div>
+                            <span class="connection-type-name">Local Server</span>
+                        </button>
+                        <button id="select-openrouter" class="connection-type-btn" type="button" aria-pressed="false">
+                            <div class="connection-type-icon"><i class="fas fa-cloud"></i></div>
+                            <span class="connection-type-name">OpenRouter</span>
+                        </button>
                     </div>
 
-                    <!-- OpenRouter BYOK Section -->
-                    <div class="mb-4 pt-3 border-t border-gray-700/50">
-                        <div class="flex justify-between items-center mb-1">
-                            <label for="openrouter-toggle" class="text-sm font-medium">
-                                <i class="fas fa-cloud mr-2 text-blue-400"></i>Use OpenRouter (Cloud AI)</label>
-                            <div class="toggle-container">
-                                <input type="checkbox" id="openrouter-toggle">
-                                <div class="toggle-switch"></div>
-                                <div class="toggle-dot"></div>
+                    <!-- Local Server Panel -->
+                    <div id="local-server-settings" class="connection-settings-panel">
+                        <!-- Server address status row -->
+                        <div class="connection-status-row">
+                            <div class="connection-status-info">
+                                <i class="fas fa-network-wired connection-status-icon"></i>
+                                <span id="local-server-status-text" class="connection-status-text">Not configured</span>
                             </div>
+                            <button id="configure-local-server-btn" type="button"
+                                class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
+                                <i class="fas fa-pencil-alt text-xs"></i>
+                                <span>Configure</span>
+                            </button>
                         </div>
-                        <p class="text-xs text-gray-400 mb-3">Connect to cloud AI models via your own OpenRouter API key. Disables local server connection.</p>
-                        <div id="openrouter-key-container" class="hidden">
-                            <label for="openrouter-api-key" class="block text-xs text-gray-300 mb-1">OpenRouter API Key</label>
-                            <div class="openrouter-key-input-wrapper">
-                                <input type="password" id="openrouter-api-key"
-                                    class="flex-1 py-2 min-w-0"
-                                    placeholder="sk-or-v1-..." autocomplete="off" data-form-type="other">
-                                <button type="button" id="openrouter-api-key-reveal"
-                                    class="openrouter-key-reveal-btn"
-                                    title="Show/hide API key"
-                                    onclick="(function(){var i=document.getElementById('openrouter-api-key'),b=document.getElementById('openrouter-api-key-reveal');if(i.type==='password'){i.type='text';b.innerHTML='<i class=&quot;fas fa-eye-slash&quot;></i>';}else{i.type='password';b.innerHTML='<i class=&quot;fas fa-eye&quot;></i>';}})()">
-                                    <i class="fas fa-eye"></i>
-                                </button>
+                        <p class="text-xs text-gray-300 mt-2">Need help? Visit the <a href="#" id="open-help-from-settings-link" class="text-blue-400 hover:text-blue-300 underline">LMSA Help section</a>.</p>
+                    </div>
+
+                    <!-- OpenRouter Panel -->
+                    <div id="openrouter-settings" class="connection-settings-panel hidden">
+                        <p class="text-xs text-gray-400 mb-3">Connect to cloud AI models via your own OpenRouter API key. Smart Reply is unavailable with OpenRouter.</p>
+                        <!-- API key status row -->
+                        <div class="connection-status-row">
+                            <div class="connection-status-info">
+                                <i class="fas fa-key connection-status-icon"></i>
+                                <span id="openrouter-key-status-text" class="connection-status-text">No API key saved</span>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1"><i class="fas fa-lock mr-1"></i>Stored locally on your device only.</p>
+                            <button id="configure-openrouter-key-btn" type="button"
+                                class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
+                                <i class="fas fa-pencil-alt text-xs"></i>
+                                <span>Configure</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -418,6 +413,96 @@ export const settingsModal = `
                 });
             </script>
 
+        </div>
+    </div>
+
+    <!-- IP/Port Input Modal -->
+    <div id="ip-port-input-modal"
+        class="fixed inset-0 items-center justify-center hidden modal-container"
+        style="z-index: 2500; background: rgba(0,0,0,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);"
+        role="dialog" aria-modal="true" aria-labelledby="ip-port-input-title">
+        <div class="connection-input-modal-box animate-modal-in">
+            <div class="connection-input-modal-accent connection-input-modal-accent--blue"></div>
+            <div class="flex justify-between items-center mb-5">
+                <h3 id="ip-port-input-title" class="text-lg font-bold flex items-center" style="color: var(--settings-title-color, #f1f5f9);">
+                    <i class="fas fa-server text-blue-400 mr-2"></i>Local Server Address
+                </h3>
+                <button id="close-ip-port-input-modal" type="button" class="conn-modal-close-btn" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <p class="text-sm mb-4" style="color: var(--settings-help-text, #9ca3af);">Enter the IP address and port of your local AI server (e.g. LM Studio).</p>
+            <div class="flex gap-3 mb-5">
+                <div class="flex-1 min-w-0">
+                    <label for="server-ip" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">IP Address</label>
+                    <input type="text" id="server-ip"
+                        class="connection-modal-input w-full"
+                        placeholder="e.g. 192.168.1.100" pattern="^[0-9.]*$" inputmode="decimal"
+                        onkeypress="return event.charCode === 46 || (event.charCode >= 48 && event.charCode <= 57)"
+                        autocomplete="off" data-form-type="other">
+                </div>
+                <div style="width: 110px; flex-shrink: 0;">
+                    <label for="server-port" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Port</label>
+                    <input type="text" id="server-port"
+                        class="connection-modal-input w-full"
+                        placeholder="1234" pattern="^[0-9]*$" inputmode="numeric"
+                        onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                        autocomplete="off" data-form-type="other">
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button id="cancel-ip-port-input-modal" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    Cancel
+                </button>
+                <button id="save-ip-port-input-modal" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
+                    <i class="fas fa-check mr-2"></i>Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- OpenRouter API Key Input Modal -->
+    <div id="openrouter-key-input-modal"
+        class="fixed inset-0 items-center justify-center hidden modal-container"
+        style="z-index: 2500; background: rgba(0,0,0,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);"
+        role="dialog" aria-modal="true" aria-labelledby="openrouter-key-input-title">
+        <div class="connection-input-modal-box animate-modal-in">
+            <div class="connection-input-modal-accent connection-input-modal-accent--purple"></div>
+            <div class="flex justify-between items-center mb-5">
+                <h3 id="openrouter-key-input-title" class="text-lg font-bold flex items-center" style="color: var(--settings-title-color, #f1f5f9);">
+                    <i class="fas fa-cloud text-blue-400 mr-2"></i>OpenRouter API Key
+                </h3>
+                <button id="close-openrouter-key-input-modal" type="button" class="conn-modal-close-btn" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <p class="text-sm mb-4" style="color: var(--settings-help-text, #9ca3af);">Enter your OpenRouter API key to access cloud AI models.</p>
+            <div class="mb-5">
+                <label for="openrouter-api-key" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">API Key</label>
+                <div class="openrouter-key-input-wrapper">
+                    <input type="password" id="openrouter-api-key"
+                        placeholder="sk-or-v1-..." autocomplete="off" data-form-type="other">
+                    <button type="button" id="openrouter-api-key-reveal"
+                        class="openrouter-key-reveal-btn"
+                        title="Show/hide API key"
+                        onclick="(function(){var i=document.getElementById('openrouter-api-key'),b=document.getElementById('openrouter-api-key-reveal');if(i.type==='password'){i.type='text';b.innerHTML='<i class=&quot;fas fa-eye-slash&quot;></i>';}else{i.type='password';b.innerHTML='<i class=&quot;fas fa-eye&quot;></i>';}})()">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);"><i class="fas fa-lock mr-1"></i>Stored locally on your device only.</p>
+            </div>
+            <div class="flex gap-3">
+                <button id="cancel-openrouter-key-input-modal" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    Cancel
+                </button>
+                <button id="save-openrouter-key-input-modal" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
+                    <i class="fas fa-check mr-2"></i>Save
+                </button>
+            </div>
         </div>
     </div>
 `;

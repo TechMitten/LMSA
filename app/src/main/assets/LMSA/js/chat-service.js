@@ -3305,23 +3305,66 @@ function stripSmartReplyPreamble(text) {
 
 /**
  * Returns true if a reply candidate looks like reasoning/meta-commentary rather than
- * a genuine short user reply.  Used to filter out reasoning that leaks through when
- * a model does not wrap its thinking in <think> tags.
+ * a genuine short user reply.
+ *
+ * Structural approach: instead of enumerating every possible leaked phrase, we ask:
+ *   (a) Is it too long to be a chat message?
+ *   (b) Does it contain leftover markup?
+ *   (c) Does it contain "meta-words" — words that indicate the text is ABOUT generating
+ *       replies rather than BEING a reply?
+ *   (d) Does it end with ':' (a header/label line)?
+ *   (e) Does it start with a gerund that narrates the user's action rather than voicing it?
  * @param {string} reply
  * @returns {boolean}
  */
 function isReasoningText(reply) {
     if (!reply) return true;
     const t = reply.trim();
-    // Replies should be short — the prompt asks for ≤8 words; allow up to 12 for safety.
-    if (t.split(/\s+/).length > 12) return true;
-    // 8 words × ~8 chars average + spaces ≈ 72 chars; 80 is a generous ceiling.
-    if (t.length > 80) return true;
+
+    // (a) Length guard — prompt asks ≤8 words; allow up to 15 for safety.
+    if (t.split(/\s+/).length > 15) return true;
+    if (t.length > 100) return true;
+
+    // (b) Leftover tag fragments mean think-tag stripping didn't fully clean this candidate.
+    if (/<[a-z\/]/i.test(t)) return true;
+
+    // (b2) Any remaining parenthetical means the candidate still has a meta-annotation.
+    if (/\([^)]*\)/.test(t)) return true;
+
+    // (d) Ends with ':' — a label/header line, not a sendable message.
+    if (/:\s*$/.test(t)) return true;
+
     const lower = t.toLowerCase();
-    // Definitive reasoning / meta-commentary prefixes that no real user reply starts with:
-    if (/^(let me think|here are|these are|based on|looking at|considering|i need to come up|i should come up|i'll think of|i can think of)/.test(lower)) return true;
-    if (/(suggestions?|options?|replies)\s+(below|above|follow)|following\s+(suggestions?|replies|options?)/.test(lower)) return true;
-    if (/^(sure|of course|certainly),?\s*(here are|here's|i can provide|i'll provide)/.test(lower)) return true;
+
+    // (c) Meta-word check: does the text talk ABOUT the task rather than being a reply?
+    // These terms appear in the model's reasoning about generating replies, not in real
+    // user messages. We check them in context to avoid false positives on innocuous uses.
+    const META_WORDS = [
+        // Task/output framing
+        /\b(generat|creat|provid|suggest|craft|formulat)(ing|e|ed)?\s+(a |the |some |these )?(reply|replies|suggestion|response|option)/i,
+        // Self-referential commentary about what the user "would" do
+        /\b(the user|the human|the person|a user|a person|someone)\s+(would|might|could|should|wants? to|is likely|may)/i,
+        // Explicit list/section labels
+        /^(possible|suggested?|sample|example|potential|here are|these are)\s+(replies|reply|suggestions?|options?|responses?|messages?)/i,
+        // Reasoning-process phrases
+        /^(let me|i need to|i should|i will|i('ll| am going to))\s+(think|consider|analyze|generat|provid|come up)/i,
+        /^(based on|looking at|considering|given (the|this)|taking into account)/i,
+        /^(alright|okay|ok|right|so|well)[,.]?\s+(let('s| me)|i('ll| need| should| will)|the (user|human))/i,
+        /^(step \d|first[,:]|now[,:]|next[,:]|finally[,:])/i,
+        // Narrating the context or the conversation
+        /^(the conversation|the context|the question|the topic|the message|the request|the ai|the model|the assistant|the response)/i,
+    ];
+    for (const re of META_WORDS) {
+        if (re.test(lower)) return true;
+    }
+
+    // (e) Gerund narration: present-participle + object describing what the user would do,
+    // rather than being the message itself.
+    // e.g. "Asking for more jokes", "Expressing appreciation", "Requesting an example"
+    // Distinguishable from real messages because a real message would start with a pronoun,
+    // interjection, verb, or question word — not a bare -ing word describing an action.
+    if (/^[A-Z][a-z]+(ing)\s+(for|about|if|that|to|a|an|the|another|more|with|on|in|my|his|her|their|this|which|how|whether)/.test(t)) return true;
+
     return false;
 }
 
@@ -3332,7 +3375,7 @@ function isReasoningText(reply) {
  * causes reasoning models to stop mid-think on their first prompt.
  *
  * @param {string} userMessage - The user's last message
- * @param {string} aiMessage - The AI's completed response (think-tags stripped for context)
+ * @param {string} aiMessage - The AI's raw completed response (may contain think/reasoning tags — stripped internally)
  */
 async function generateSmartReplies(userMessage, aiMessage) {
     try {
@@ -3355,20 +3398,30 @@ async function generateSmartReplies(userMessage, aiMessage) {
             return;
         }
 
-        // Check if the cleaning was too aggressive (removed more than 90% of content)
+        // Check if the cleaning was too aggressive (removed more than 90% of content),
+        // which likely means the model wrapped its entire output in a single reasoning block
+        // with malformed or non-standard tags.  Try to extract whatever comes after the last
+        // closing reasoning tag of any supported variant.
         if (cleanAiMessage.length < originalLength * 0.1) {
             debugLog('Smart reply generation skipped: think tag removal was too aggressive, likely malformed tags');
-            // Try fallback: extract content after last closing think tag
-            const fallbackMatch = aiMessage.match(/<\/think>([\s\S]*)$/);
-            if (fallbackMatch && fallbackMatch[1].trim().length > 10) {
-                debugLog('Using fallback: extracting content after closing think tag');
-                const fallbackContent = fallbackMatch[1].trim();
-                if (fallbackContent.length > 800) {
-                    const contextSnippet = fallbackContent.slice(-800);
+            // Find the position of the last closing reasoning tag across all supported variants
+            const closingTags = ['</think>', '</thinking>', '</reason>', '</reasoning>'];
+            let lastTagEnd = -1;
+            for (const tag of closingTags) {
+                const idx = aiMessage.toLowerCase().lastIndexOf(tag);
+                if (idx !== -1) {
+                    const end = idx + tag.length;
+                    if (end > lastTagEnd) lastTagEnd = end;
+                }
+            }
+            if (lastTagEnd !== -1) {
+                const fallbackContent = aiMessage.substring(lastTagEnd).trim();
+                if (fallbackContent.length > 10) {
+                    debugLog('Using fallback: extracting content after last closing reasoning tag');
+                    const contextSnippet = fallbackContent.length > 800
+                        ? fallbackContent.slice(-800)
+                        : fallbackContent;
                     await generateSmartRepliesAPI(userMessage, contextSnippet, availableModels[0]);
-                    return;
-                } else {
-                    await generateSmartRepliesAPI(userMessage, fallbackContent, availableModels[0]);
                     return;
                 }
             }
@@ -3380,11 +3433,14 @@ async function generateSmartReplies(userMessage, aiMessage) {
             : cleanAiMessage;
 
         const smartReplySystemPrompt =
-            'Output exactly 3 short suggested replies the USER could send next. ' +
-            'Write them from the USER\'s perspective. ' +
-            'Keep each reply under 8 words. ' +
-            'Separate the 3 replies with the pipe character "|". ' +
-            'Output ONLY the replies and nothing else — no preamble, no numbering, no think tags.';
+            'You are generating quick-reply button text for a chat app. ' +
+            'You will be given a conversation: the human\'s message followed by the AI assistant\'s response. ' +
+            'Output 3 short messages the human would type next — actual words they would send, not a description of what they might say. ' +
+            'WRONG (description): "Asking for another joke" — RIGHT (actual message): "Tell me another one!" ' +
+            'WRONG (description): "Expressing that they enjoyed it" — RIGHT (actual message): "Ha, that was great!" ' +
+            'Each reply must feel like a real, natural follow-up given both the original question and the AI\'s answer. ' +
+            'Keep each reply under 8 words. No trailing parentheses, no labels, no explanations. ' +
+            'Output exactly 3 replies separated by "|" and nothing else.';
 
         const requestBody = {
             model: availableModels[0],
@@ -3392,7 +3448,7 @@ async function generateSmartReplies(userMessage, aiMessage) {
                 { role: 'system', content: smartReplySystemPrompt },
                 { role: 'user', content: userMessage },
                 { role: 'assistant', content: contextSnippet },
-                { role: 'user', content: 'Give me 3 short replies I could send next, separated by |.' }
+                { role: 'user', content: '3 replies I could send next, pipe-separated:' }
             ],
             temperature: 0.7,
             stream: false,
@@ -3422,26 +3478,46 @@ async function generateSmartReplies(userMessage, aiMessage) {
         const replyText = stripSmartReplyPreamble(cleanText);
 
         // --- Robust multi-format parsing ---
+        // Helper: strip label prefixes, trailing annotations, and spurious trailing punctuation
+        // that a reasoning model may add.
+        // e.g. "Reply 1: ...", "Option 2- ...", "... (4 words)", "... (~3 words)"
+        // Also removes a trailing "?" from replies that don't actually start with a question
+        // word — the model often appends "?" to statements/requests as well as questions.
+        const QUESTION_START = /^(what|when|where|who|which|why|how|is|are|was|were|do|does|did|can|could|would|should|will|have|has|had|may|might)\b/i;
+        const stripLabel = r => {
+            let s = r
+                .replace(/^(?:reply|option|suggestion)\s*\d*\s*[:.-]\s*/i, '')
+                // Strip ALL trailing parentheticals — word counts, reasoning notes, etc.
+                // e.g. "(4 words)", "(since they asked)", "(follow-up)"
+                .replace(/\s*\([^)]*\)\s*$/i, '')
+                .trim();
+            // Remove trailing '?' only when the reply is not a genuine question
+            if (s.endsWith('?') && !QUESTION_START.test(s)) {
+                s = s.slice(0, -1).trimEnd();
+            }
+            return s;
+        };
+
         // Primary: pipe-separated  "Reply one|Reply two|Reply three"
         let replies = replyText
             .split('|')
-            .map(r => r.trim())
-            .filter(r => !isReasoningText(r));
+            .map(r => stripLabel(r.trim()))
+            .filter(r => r.length > 0 && !isReasoningText(r));
 
         // Fallback: newline-separated (numbered "1. X", bulleted "- X", or plain)
         if (replies.length < 2) {
             replies = replyText
                 .split(/\n/)
-                .map(r => r.replace(/^[\d]+[.)]\s*/, '').replace(/^[-*•]\s*/, '').trim())
-                .filter(r => !isReasoningText(r));
+                .map(r => stripLabel(r.replace(/^[\d]+[.)]\s*/, '').replace(/^[-*•]\s*/, '').trim()))
+                .filter(r => r.length > 0 && !isReasoningText(r));
         }
 
         // Fallback: semicolons
         if (replies.length < 2) {
             replies = replyText
                 .split(';')
-                .map(r => r.trim())
-                .filter(r => !isReasoningText(r));
+                .map(r => stripLabel(r.trim()))
+                .filter(r => r.length > 0 && !isReasoningText(r));
         }
 
         // Keep at most 3 suggestions
@@ -3468,11 +3544,14 @@ async function generateSmartReplies(userMessage, aiMessage) {
 async function generateSmartRepliesAPI(userMessage, contextSnippet, model) {
     try {
         const smartReplySystemPrompt =
-            'Output exactly 3 short suggested replies the USER could send next. ' +
-            'Write them from the USER\'s perspective. ' +
-            'Keep each reply under 8 words. ' +
-            'Separate the 3 replies with the pipe character "|". ' +
-            'Output ONLY the replies and nothing else — no preamble, no numbering, no think tags.';
+            'You are generating quick-reply button text for a chat app. ' +
+            'You will be given a conversation: the human\'s message followed by the AI assistant\'s response. ' +
+            'Output 3 short messages the human would type next — actual words they would send, not a description of what they might say. ' +
+            'WRONG (description): "Asking for another joke" — RIGHT (actual message): "Tell me another one!" ' +
+            'WRONG (description): "Expressing that they enjoyed it" — RIGHT (actual message): "Ha, that was great!" ' +
+            'Each reply must feel like a real, natural follow-up given both the original question and the AI\'s answer. ' +
+            'Keep each reply under 8 words. No trailing parentheses, no labels, no explanations. ' +
+            'Output exactly 3 replies separated by "|" and nothing else.';
 
         const requestBody = {
             model: model,
@@ -3480,7 +3559,7 @@ async function generateSmartRepliesAPI(userMessage, contextSnippet, model) {
                 { role: 'system', content: smartReplySystemPrompt },
                 { role: 'user', content: userMessage },
                 { role: 'assistant', content: contextSnippet },
-                { role: 'user', content: 'Give me 3 short replies I could send next, separated by |.' }
+                { role: 'user', content: '3 replies I could send next, pipe-separated:' }
             ],
             temperature: 0.7,
             stream: false,
@@ -3518,26 +3597,46 @@ async function generateSmartRepliesAPI(userMessage, contextSnippet, model) {
         const replyText = stripSmartReplyPreamble(cleanText);
 
         // --- Robust multi-format parsing ---
+        // Helper: strip label prefixes, trailing annotations, and spurious trailing punctuation
+        // that a reasoning model may add.
+        // e.g. "Reply 1: ...", "Option 2- ...", "... (4 words)", "... (~3 words)"
+        // Also removes a trailing "?" from replies that don't actually start with a question
+        // word — the model often appends "?" to statements/requests as well as questions.
+        const QUESTION_START = /^(what|when|where|who|which|why|how|is|are|was|were|do|does|did|can|could|would|should|will|have|has|had|may|might)\b/i;
+        const stripLabel = r => {
+            let s = r
+                .replace(/^(?:reply|option|suggestion)\s*\d*\s*[:.-]\s*/i, '')
+                // Strip ALL trailing parentheticals — word counts, reasoning notes, etc.
+                // e.g. "(4 words)", "(since they asked)", "(follow-up)"
+                .replace(/\s*\([^)]*\)\s*$/i, '')
+                .trim();
+            // Remove trailing '?' only when the reply is not a genuine question
+            if (s.endsWith('?') && !QUESTION_START.test(s)) {
+                s = s.slice(0, -1).trimEnd();
+            }
+            return s;
+        };
+
         // Primary: pipe-separated  "Reply one|Reply two|Reply three"
         let replies = replyText
             .split('|')
-            .map(r => r.trim())
-            .filter(r => !isReasoningText(r));
+            .map(r => stripLabel(r.trim()))
+            .filter(r => r.length > 0 && !isReasoningText(r));
 
         // Fallback: newline-separated (numbered "1. X", bulleted "- X", or plain)
         if (replies.length < 2) {
             replies = replyText
                 .split(/\n/)
-                .map(r => r.replace(/^[\d]+[.)]\s*/, '').replace(/^[-*•]\s*/, '').trim())
-                .filter(r => !isReasoningText(r));
+                .map(r => stripLabel(r.replace(/^[\d]+[.)]\s*/, '').replace(/^[-*•]\s*/, '').trim()))
+                .filter(r => r.length > 0 && !isReasoningText(r));
         }
 
         // Fallback: semicolons
         if (replies.length < 2) {
             replies = replyText
                 .split(';')
-                .map(r => r.trim())
-                .filter(r => !isReasoningText(r));
+                .map(r => stripLabel(r.trim()))
+                .filter(r => r.length > 0 && !isReasoningText(r));
         }
 
         // Keep at most 3 suggestions

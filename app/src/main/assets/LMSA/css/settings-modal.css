@@ -118,6 +118,65 @@
   touch-action: auto;
 }
 
+/* Responsive padding for different screen sizes */
+#settings-modal .modal-content {
+  padding: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  #settings-modal .modal-content {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #settings-modal .modal-content {
+    padding: 1rem;
+  }
+}
+
+/* Global text size optimization for keyboard display */
+@media (max-height: 600px) {
+
+  /* Reduce label sizes */
+  label {
+    font-size: 0.8125rem !important;
+  }
+
+  /* Reduce body text */
+  p,
+  span {
+    font-size: 0.8125rem !important;
+  }
+
+  .text-xs {
+    font-size: 0.6875rem !important;
+  }
+
+  .text-sm {
+    font-size: 0.8125rem !important;
+  }
+}
+
+@media (max-height: 500px) {
+  label {
+    font-size: 0.75rem !important;
+  }
+
+  p,
+  span {
+    font-size: 0.75rem !important;
+  }
+
+  .text-xs {
+    font-size: 0.625rem !important;
+  }
+
+  .text-sm {
+    font-size: 0.75rem !important;
+  }
+}
+
 /* Premium edge highlight with animated gradient border */
 #settings-modal .modal-content::before {
   content: "";
@@ -464,9 +523,20 @@
 
 /* Pulsing blue glow keyframe — draws attention to the key field after enabling */
 @keyframes openrouter-key-pulse {
-  0%   { border-color: rgba(59, 130, 246, 0.55); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.0),  0 4px 10px rgba(0,0,0,0.25); }
-  50%  { border-color: rgba(99, 165, 255, 1);    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35), 0 4px 10px rgba(0,0,0,0.25), 0 0 18px rgba(59,130,246,0.45); }
-  100% { border-color: rgba(59, 130, 246, 0.55); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.0),  0 4px 10px rgba(0,0,0,0.25); }
+  0% {
+    border-color: rgba(59, 130, 246, 0.55);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.0), 0 4px 10px rgba(0, 0, 0, 0.25);
+  }
+
+  50% {
+    border-color: rgba(99, 165, 255, 1);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35), 0 4px 10px rgba(0, 0, 0, 0.25), 0 0 18px rgba(59, 130, 246, 0.45);
+  }
+
+  100% {
+    border-color: rgba(59, 130, 246, 0.55);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.0), 0 4px 10px rgba(0, 0, 0, 0.25);
+  }
 }
 
 .openrouter-key-input-wrapper.key-required {
@@ -476,20 +546,42 @@
 
 /* Shake animation when user tries to close without a key */
 @keyframes openrouter-key-shake {
-  0%, 100% { transform: translateX(0); }
-  15%       { transform: translateX(-6px); }
-  30%       { transform: translateX(6px); }
-  45%       { transform: translateX(-5px); }
-  60%       { transform: translateX(5px); }
-  75%       { transform: translateX(-3px); }
-  90%       { transform: translateX(3px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  15% {
+    transform: translateX(-6px);
+  }
+
+  30% {
+    transform: translateX(6px);
+  }
+
+  45% {
+    transform: translateX(-5px);
+  }
+
+  60% {
+    transform: translateX(5px);
+  }
+
+  75% {
+    transform: translateX(-3px);
+  }
+
+  90% {
+    transform: translateX(3px);
+  }
 }
 
 .openrouter-key-input-wrapper.key-error-shake {
   animation: openrouter-key-shake 0.45s ease-in-out,
-             openrouter-key-pulse 1.6s ease-in-out 0.45s infinite;
+    openrouter-key-pulse 1.6s ease-in-out 0.45s infinite;
   border-color: rgba(239, 68, 68, 0.85);
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3), 0 4px 10px rgba(0,0,0,0.25);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3), 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
 /* Inline error message below the key field */
@@ -1160,6 +1252,27 @@
   /* Critical: allows the element to shrink and scroll */
 }
 
+/* When viewport is narrow (likely mobile with keyboard), be more aggressive with height */
+@media (max-height: 600px) {
+  #settings-content-wrapper {
+    max-height: calc(100vh - 140px);
+  }
+}
+
+/* Very constrained viewport (keyboard definitely open) */
+@media (max-height: 500px) {
+  #settings-content-wrapper {
+    max-height: calc(100vh - 120px);
+  }
+}
+
+/* Extreme constraint (small device, keyboard open, browser UI) */
+@media (max-height: 400px) {
+  #settings-content-wrapper {
+    max-height: calc(100vh - 100px);
+  }
+}
+
 /* Webkit scrollbar styles */
 #settings-content-wrapper::-webkit-scrollbar {
   width: 8px;
@@ -1290,6 +1403,67 @@
   /* Prevent body scroll when reaching top/bottom */
 }
 
+/* Optimize spacing for keyboard display */
+@media (max-height: 600px) {
+  #settings-modal .mb-4 {
+    margin-bottom: 1rem !important;
+  }
+
+  #settings-modal .mb-5 {
+    margin-bottom: 1.125rem !important;
+  }
+
+  #settings-modal .mb-6 {
+    margin-bottom: 1.25rem !important;
+  }
+
+  #settings-modal .mb-2 {
+    margin-bottom: 0.375rem !important;
+  }
+
+  #settings-modal .mb-1 {
+    margin-bottom: 0.25rem !important;
+  }
+
+  #settings-modal .mt-1 {
+    margin-top: 0.25rem !important;
+  }
+
+  #settings-modal .mt-2 {
+    margin-top: 0.375rem !important;
+  }
+}
+
+@media (max-height: 500px) {
+  #settings-modal .mb-4 {
+    margin-bottom: 0.875rem !important;
+  }
+
+  #settings-modal .mb-5 {
+    margin-bottom: 1rem !important;
+  }
+
+  #settings-modal .mb-6 {
+    margin-bottom: 1rem !important;
+  }
+
+  #settings-modal .mb-2 {
+    margin-bottom: 0.25rem !important;
+  }
+
+  #settings-modal .mb-1 {
+    margin-bottom: 0.125rem !important;
+  }
+
+  #settings-modal .mt-1 {
+    margin-top: 0.125rem !important;
+  }
+
+  #settings-modal .mt-2 {
+    margin-top: 0.25rem !important;
+  }
+}
+
 /* Ensure action buttons never get cut off on any screen size */
 #settings-step-actions .mb-4 {
   padding-top: 0 !important;
@@ -1307,6 +1481,22 @@
   margin: 0.5rem 2px !important;
   overflow: hidden !important;
   position: relative !important;
+}
+
+@media (max-height: 600px) {
+  #settings-step-actions .professional-button {
+    margin: 0.375rem 2px !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.9375rem !important;
+  }
+}
+
+@media (max-height: 500px) {
+  #settings-step-actions .professional-button {
+    margin: 0.25rem 2px !important;
+    padding: 0.625rem 0.875rem !important;
+    font-size: 0.875rem !important;
+  }
 }
 
 #settings-step-actions .professional-button:last-child {
@@ -1719,4 +1909,604 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
     max-height: calc(100vh - 12px) !important;
     padding: 0.75rem !important;
   }
+}
+
+/* ============================================================
+   Responsive Header & Layout Optimization for Keyboard
+   ============================================================ */
+
+/* Optimize header spacing on smaller screens */
+#settings-modal>.modal-content>.flex.flex-col {
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 640px) {
+  #settings-modal>.modal-content>.flex.flex-col {
+    margin-bottom: 0.875rem;
+  }
+}
+
+@media (max-height: 600px) {
+
+  /* Compressed header for keyboard display */
+  #settings-modal>.modal-content>.flex.flex-col {
+    margin-bottom: 0.75rem;
+  }
+
+  /* Reduce title font size slightly */
+  #settings-modal #settings-title {
+    font-size: 1.375rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Reduce subtitle size */
+  #settings-modal #settings-step-subtitle {
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Compress step indicators */
+  #settings-modal .flex.justify-center.space-x-3 {
+    gap: 8px !important;
+    padding-top: 0.75rem;
+  }
+
+  #settings-modal .flex.justify-center.space-x-3 div {
+    width: 6px !important;
+    height: 1.5px !important;
+  }
+}
+
+@media (max-height: 500px) {
+  #settings-modal #settings-title {
+    font-size: 1.25rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  #settings-modal #settings-title i {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1rem;
+  }
+
+  #settings-modal #settings-step-subtitle {
+    font-size: 0.8125rem;
+    margin-bottom: 0.75rem;
+  }
+
+  #settings-modal .flex.justify-center.space-x-3 {
+    gap: 6px !important;
+    padding-top: 0.5rem;
+  }
+
+  #settings-modal .flex.justify-center.space-x-3 div {
+    width: 5px !important;
+    height: 1px !important;
+  }
+}
+
+/* Input field optimization for keyboard */
+@media (max-height: 600px) {
+
+  input[type="text"],
+  input[type="password"],
+  textarea,
+  select {
+    padding: 0.625rem 0.75rem !important;
+    font-size: 16px !important;
+  }
+}
+
+@media (max-height: 500px) {
+
+  input[type="text"],
+  input[type="password"],
+  textarea,
+  select {
+    padding: 0.5rem 0.625rem !important;
+    font-size: 15px !important;
+  }
+}
+
+/* Settings content wrapper margin optimization */
+@media (max-height: 600px) {
+  #settings-content-wrapper {
+    padding-right: 4px;
+  }
+}
+
+/* ============================================================
+   Connection Type Selector (Local Server / OpenRouter)
+   ============================================================ */
+
+.connection-type-selector {
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .connection-type-selector {
+    gap: 8px;
+  }
+}
+
+.connection-type-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 10px;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.1s ease;
+  min-height: 72px;
+  text-align: center;
+  min-width: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (max-width: 640px) {
+  .connection-type-btn {
+    gap: 6px;
+    padding: 12px 8px;
+    min-height: 64px;
+  }
+}
+
+@media (max-height: 600px) {
+  .connection-type-btn {
+    gap: 6px;
+    padding: 10px 8px;
+    min-height: 58px;
+  }
+}
+
+@media (max-height: 500px) {
+  .connection-type-btn {
+    gap: 4px;
+    padding: 8px 6px;
+    min-height: 50px;
+  }
+}
+
+.connection-type-btn:active {
+  transform: scale(0.97);
+}
+
+.connection-type-btn.active {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.light-theme .connection-type-btn {
+  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.light-theme .connection-type-btn.active {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.connection-type-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #9ca3af;
+  font-size: 18px;
+  flex-shrink: 0;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+@media (max-width: 640px) {
+  .connection-type-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+  }
+}
+
+@media (max-height: 600px) {
+  .connection-type-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
+  }
+}
+
+@media (max-height: 500px) {
+  .connection-type-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+}
+
+.connection-type-btn.active .connection-type-icon {
+  background: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+}
+
+.light-theme .connection-type-icon {
+  background: rgba(0, 0, 0, 0.06);
+  color: #6b7280;
+}
+
+.light-theme .connection-type-btn.active .connection-type-icon {
+  background: rgba(59, 130, 246, 0.15);
+  color: #2563eb;
+}
+
+.connection-type-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #d1d5db;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .connection-type-name {
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-height: 600px) {
+  .connection-type-name {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-height: 500px) {
+  .connection-type-name {
+    font-size: 0.75rem;
+  }
+}
+
+.connection-type-btn.active .connection-type-name {
+  color: #eff6ff;
+}
+
+.light-theme .connection-type-name {
+  color: #374151;
+}
+
+.light-theme .connection-type-btn.active .connection-type-name {
+  color: #1e3a8a;
+}
+
+
+/* Connection settings panels - animated reveal */
+.connection-settings-panel {
+  border-radius: 10px;
+  padding-top: 2px;
+}
+
+.connection-settings-panel:not(.hidden) {
+  animation: connectionPanelReveal 0.2s ease;
+}
+
+@keyframes connectionPanelReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   Connection Status Row — shown in Local Server / OpenRouter panels
+   in place of the inline input fields
+   ============================================================ */
+
+.connection-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0;
+}
+
+.connection-status-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.connection-status-icon {
+  color: var(--settings-help-text, #6b7280);
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.connection-status-text {
+  font-size: 0.875rem;
+  color: var(--settings-input-text, #d1d5db);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   Connection Input Modals — IP/Port and OpenRouter Key
+   ============================================================ */
+
+.connection-input-modal-box {
+  position: relative;
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 420px;
+  max-width: 92vw;
+  max-height: 85vh;
+  max-height: 85dvh;
+  /* Ensure content scrolls when keyboard appears */
+  -webkit-overflow-scrolling: touch;
+  background: var(--modal-bg);
+  border: 1px solid var(--border-color);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+/* Coloured accent bar along the top edge */
+.connection-input-modal-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 1.25rem 1.25rem 0 0;
+}
+
+.connection-input-modal-accent--blue {
+  background: linear-gradient(to right, #3b82f6, #6366f1, #3b82f6);
+}
+
+.connection-input-modal-accent--purple {
+  background: linear-gradient(to right, #8b5cf6, #3b82f6, #8b5cf6);
+}
+
+/* Close (×) button */
+.conn-modal-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--settings-help-text, #9ca3af);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.conn-modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+/* Text input inside the connection modals */
+.connection-modal-input {
+  background: var(--settings-input-bg);
+  color: var(--settings-input-text);
+  border: 1px solid var(--settings-input-border);
+  border-radius: 0.55rem;
+  padding: 0.625rem 0.75rem;
+  font-size: 1rem; /* Prevents iOS/Android auto-zoom */
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.connection-modal-input:focus {
+  border-color: var(--toggle-active-bg, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Action buttons (Cancel / Save) */
+.conn-modal-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+  border: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.conn-modal-action-btn:active {
+  transform: scale(0.97);
+}
+
+.conn-modal-action-btn--cancel {
+  background: var(--settings-input-bg, rgba(255, 255, 255, 0.07));
+  color: var(--settings-input-text, #d1d5db);
+  border: 1px solid var(--settings-input-border, rgba(255, 255, 255, 0.12));
+}
+
+.conn-modal-action-btn--cancel:hover {
+  opacity: 0.8;
+}
+
+.conn-modal-action-btn--save {
+  background: linear-gradient(135deg, #3b82f6, #4f46e5);
+  color: #ffffff;
+}
+
+.conn-modal-action-btn--save:hover {
+  opacity: 0.9;
+}
+
+/* Light theme overrides */
+body.light-theme .connection-input-modal-box {
+  background: linear-gradient(to bottom, rgba(255,255,255,0.98), rgba(248,250,252,0.95));
+  border: 1px solid rgba(203, 213, 225, 0.5);
+  box-shadow:
+    0 25px 50px -12px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+}
+
+body.light-theme .conn-modal-close-btn {
+  color: #64748b;
+}
+
+body.light-theme .conn-modal-close-btn:hover {
+  background: rgba(0, 0, 0, 0.07);
+  color: #1e293b;
+}
+
+body.light-theme .connection-modal-input {
+  background: rgba(255, 255, 255, 0.9);
+  color: #1e293b;
+  border-color: rgba(203, 213, 225, 0.8);
+}
+
+body.light-theme .conn-modal-action-btn--cancel {
+  background: rgba(241, 245, 249, 0.9);
+  color: #475569;
+  border-color: rgba(203, 213, 225, 0.7);
+}
+
+/* OpenRouter key input wrapper with reveal button */
+.openrouter-key-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: var(--settings-input-bg);
+  border: 1px solid var(--settings-input-border);
+  border-radius: 0.55rem;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.openrouter-key-input-wrapper:focus-within {
+  border-color: var(--toggle-active-bg, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.openrouter-key-input-wrapper input {
+  background: transparent;
+  border: none;
+  color: var(--settings-input-text);
+  padding: 0.625rem 0.75rem;
+  font-size: 1rem;
+  outline: none;
+  flex: 1;
+  min-width: 0;
+}
+
+.openrouter-key-input-wrapper input::placeholder {
+  color: var(--settings-help-text, #9ca3af);
+}
+
+.openrouter-key-reveal-btn {
+  background: transparent;
+  border: none;
+  color: var(--settings-help-text, #9ca3af);
+  cursor: pointer;
+  padding: 0.625rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.openrouter-key-reveal-btn:active {
+  color: var(--toggle-active-bg, #3b82f6);
+}
+
+body.light-theme .openrouter-key-input-wrapper {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(203, 213, 225, 0.8);
+}
+
+body.light-theme .openrouter-key-input-wrapper input {
+  color: #1e293b;
+}
+
+body.light-theme .openrouter-key-reveal-btn {
+  color: #94a3b8;
+}
+
+body.light-theme .openrouter-key-reveal-btn:active {
+  color: #3b82f6;
+}
+
+/* Tablet adjustments */
+@media (max-width: 768px) {
+  .connection-input-modal-box {
+    max-height: 80vh;
+    max-height: 80dvh;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .connection-input-modal-box {
+    padding: 1.125rem;
+    border-radius: 1rem;
+    max-width: 96vw;
+    max-height: 75vh;
+    max-height: 75dvh;
+  }
+
+  /* Increase button sizes slightly for easier tapping on mobile */
+  .conn-modal-action-btn {
+    font-size: 0.875rem;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 360px) {
+  .connection-input-modal-box {
+    padding: 1rem;
+    max-width: 98vw;
+    max-height: 70vh;
+    max-height: 70dvh;
+  }
+
+  .connection-input-modal-box h3 {
+    font-size: 1rem;
+  }
+
+  .connection-input-modal-box p {
+    font-size: 0.8125rem;
+  }
+
+  .connection-modal-input,
+  .openrouter-key-input-wrapper input {
+    padding: 0.5rem;
+    font-size: 0.95rem;
+  }
+}
 }

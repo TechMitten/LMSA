@@ -42,21 +42,33 @@ export function removeThinkTags(text) {
     // Make a copy of the text to avoid modifying the original
     let cleanedText = String(text);
 
-    // Strategy: Be aggressive about removing thinking content while preserving actual response
-    // Step 1: Remove all complete think tag pairs
-    cleanedText = cleanedText.replace(/<think>[\s\S]*?<\/think>/g, '');
+    // Strategy: Be aggressive about removing thinking content while preserving actual response.
+    // Handles multiple reasoning tag variants used by different models:
+    //   <think>      — DeepSeek-R1, Qwen-QwQ, etc.
+    //   <thinking>   — Claude extended thinking, some OpenAI o-series wrappers
+    //   <reason>     — some fine-tuned models
+    //   <reasoning>  — some fine-tuned models
 
-    // Second pass: Handle unclosed think tags by removing tag and everything after it
-    // This prevents thinking content from leaking into the actual response
-    const lastClosingTag = cleanedText.lastIndexOf('</think>');
-    const lastOpeningTag = cleanedText.lastIndexOf('<think>');
+    // Step 1: Remove all complete tag pairs (case-insensitive)
+    cleanedText = cleanedText.replace(/<think>[\s\S]*?<\/think>/gi, '');
+    cleanedText = cleanedText.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+    cleanedText = cleanedText.replace(/<reason>[\s\S]*?<\/reason>/gi, '');
+    cleanedText = cleanedText.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
 
-    if (lastOpeningTag > lastClosingTag) {
-        // Unclosed opening tag found - remove everything from it to the end
-        cleanedText = cleanedText.substring(0, lastOpeningTag);
+    // Step 2: Handle unclosed opening tags — remove the tag and everything after it.
+    // This prevents thinking content from leaking into the actual response when the
+    // model was truncated mid-thought.
+    const lc = cleanedText.toLowerCase();
+    for (const tag of ['<think>', '<thinking>', '<reason>', '<reasoning>']) {
+        const closeTag = tag.replace('<', '</');
+        const openIdx = lc.lastIndexOf(tag);
+        const closeIdx = lc.lastIndexOf(closeTag);
+        if (openIdx !== -1 && openIdx > closeIdx) {
+            cleanedText = cleanedText.substring(0, openIdx);
+        }
     }
 
-    // Same check for HTML-escaped tags
+    // Step 3: HTML-escaped <think> pairs and unclosed tags (legacy handling)
     const lastEscapedClosing = cleanedText.lastIndexOf('&lt;/think&gt;');
     const lastEscapedOpening = cleanedText.lastIndexOf('&lt;think&gt;');
 
@@ -72,16 +84,17 @@ export function removeThinkTags(text) {
         }
     }
 
-    // Step 3: Remove any remaining standalone tags
-    cleanedText = cleanedText.replace(/<think>/g, '');
+    // Step 4: Remove any remaining standalone tags (open or close)
+    cleanedText = cleanedText.replace(/<\/?think>/gi, '');
+    cleanedText = cleanedText.replace(/<\/?thinking>/gi, '');
+    cleanedText = cleanedText.replace(/<\/?reason>/gi, '');
+    cleanedText = cleanedText.replace(/<\/?reasoning>/gi, '');
 
-    // Remove HTML-escaped complete pairs
+    // Remove HTML-escaped complete pairs and any remaining standalone escaped tags
     cleanedText = cleanedText.replace(/&lt;think&gt;[\s\S]*?&lt;\/think&gt;/g, '');
-
-    // Remove any standalone opening or closing tags that might remain
-    cleanedText = cleanedText.replace(/<\/think>/g, '');
-    cleanedText = cleanedText.replace(/&lt;think&gt;/g, '');
-    cleanedText = cleanedText.replace(/&lt;\/think&gt;/g, '');
+    cleanedText = cleanedText.replace(/&lt;\/?think&gt;/g, '');
+    cleanedText = cleanedText.replace(/&lt;\/?thinking&gt;/g, '');
+    cleanedText = cleanedText.replace(/&lt;\/?reason(ing)?&gt;/g, '');
 
     // Trim any extra whitespace
     return cleanedText.trim();
@@ -249,9 +262,21 @@ export function basicSanitizeInput(input) {
         mathDisplayPlaceholders.push(content.trim());
         return '\nXXMATHDISP' + id + 'ENDMATHDISPXX\n';
     });
+    // Handle \[...\] display math (used by many LLMs including OpenRouter models)
+    processedInput = processedInput.replace(/\\\[([\s\S]*?)\\\]/g, (_match, content) => {
+        const id = mathDisplayPlaceholders.length;
+        mathDisplayPlaceholders.push(content.trim());
+        return '\nXXMATHDISP' + id + 'ENDMATHDISPXX\n';
+    });
     processedInput = processedInput.replace(/\$([^\$\n]+?)\$/g, (_match, content) => {
         // Skip plain dollar amounts (e.g. $3.99)
         if (/^[\d,.\s]+$/.test(content.trim())) return _match;
+        const id = mathInlinePlaceholders.length;
+        mathInlinePlaceholders.push(content);
+        return 'XXMATHINL' + id + 'ENDMATHINLXX';
+    });
+    // Handle \(...\) inline math (used by many LLMs including OpenRouter models)
+    processedInput = processedInput.replace(/\\\(([\s\S]*?)\\\)/g, (_match, content) => {
         const id = mathInlinePlaceholders.length;
         mathInlinePlaceholders.push(content);
         return 'XXMATHINL' + id + 'ENDMATHINLXX';
@@ -390,8 +415,20 @@ export function sanitizeInput(input) {
         mathDisplayPlaceholders.push(content.trim());
         return '\nXXMATHDISP' + id + 'ENDMATHDISPXX\n';
     });
+    // Handle \[...\] display math (used by many LLMs including OpenRouter models)
+    processedInput = processedInput.replace(/\\\[([\s\S]*?)\\\]/g, (_match, content) => {
+        const id = mathDisplayPlaceholders.length;
+        mathDisplayPlaceholders.push(content.trim());
+        return '\nXXMATHDISP' + id + 'ENDMATHDISPXX\n';
+    });
     processedInput = processedInput.replace(/\$([^\$\n]+?)\$/g, (_match, content) => {
         if (/^[\d,.\s]+$/.test(content.trim())) return _match;
+        const id = mathInlinePlaceholders.length;
+        mathInlinePlaceholders.push(content);
+        return 'XXMATHINL' + id + 'ENDMATHINLXX';
+    });
+    // Handle \(...\) inline math (used by many LLMs including OpenRouter models)
+    processedInput = processedInput.replace(/\\\(([\s\S]*?)\\\)/g, (_match, content) => {
         const id = mathInlinePlaceholders.length;
         mathInlinePlaceholders.push(content);
         return 'XXMATHINL' + id + 'ENDMATHINLXX';

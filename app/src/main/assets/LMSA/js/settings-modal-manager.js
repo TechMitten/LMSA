@@ -4,7 +4,9 @@
 import { settingsModal } from './dom-elements.js';
 import { debugLog } from './utils.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
-import { getApiUrl, getAvailableModels, isServerRunning } from './api-service.js';
+import { getApiUrl, getAvailableModels, isServerRunning, validateIpPort, saveServerSettings } from './api-service.js';
+import { showOpenRouterKeyRequiredModal, initOpenRouterKeyRequiredModal } from './components/modals/openrouter-key-required-modal.js';
+import { interceptIpPortChanges } from './ip-port-confirmation-modal.js';
 
 // Holds a reference to the internal showStep function once the modal is initialised
 let _navigateToStep = null;
@@ -50,13 +52,6 @@ export async function showSettingsModal() {
     // Prevent scrolling of the body
     document.body.style.overflow = 'hidden';
 
-    // Ensure IP/Port containers are visible when modal is opened
-    const connectionLabelContainer = document.querySelector('#settings-step-connection label.block.text-sm.font-medium');
-    const urlInfoContainer = document.querySelector('#settings-step-connection p.text-xs.text-gray-300.mt-1');
-
-    if (connectionLabelContainer) connectionLabelContainer.style.display = '';
-    if (urlInfoContainer) urlInfoContainer.style.display = '';
-
     // Get both modal container and content and ensure styles don't conflict
     const modalContent = settingsModal.querySelector('.modal-content');
     
@@ -80,6 +75,9 @@ export async function showSettingsModal() {
 
     // Add show class for animation
     settingsModal.classList.add('show');
+
+    // Refresh the connection status displays with current saved values
+    updateConnectionStatusDisplays();
 
     // Always use mobile/tablet stepped navigation for all device types
     {
@@ -131,45 +129,37 @@ export function hideSettingsModal() {
     if (!settingsModal) return;
 
     // --- OpenRouter key validation ---
-    // Block closing if the user enabled OpenRouter but hasn't entered an API key.
+    // Show advisory modal if the user enabled OpenRouter but hasn't entered an API key.
     const orToggle = document.getElementById('openrouter-toggle');
     const orKeyInput = document.getElementById('openrouter-api-key');
     if (orToggle && orToggle.checked && orKeyInput && orKeyInput.value.trim() === '') {
-        // Navigate back to the connection step so the field is visible
-        if (_navigateToStep) _navigateToStep('connection');
-
-        // Shake the input wrapper and show an error message
-        const wrapper = document.querySelector('.openrouter-key-input-wrapper');
-        if (wrapper) {
-            wrapper.classList.add('key-required');          // ensure pulse is on
-            wrapper.classList.remove('key-error-shake');    // reset before re-triggering
-            void wrapper.offsetWidth;                        // force reflow
-            wrapper.classList.add('key-error-shake');
-            wrapper.addEventListener('animationend', () => wrapper.classList.remove('key-error-shake'), { once: true });
-        }
-
-        // Show inline error message (create once, reuse)
-        const keyContainer = document.getElementById('openrouter-key-container');
-        if (keyContainer) {
-            let errEl = document.getElementById('openrouter-key-error-msg');
-            if (!errEl) {
-                errEl = document.createElement('p');
-                errEl.id = 'openrouter-key-error-msg';
-                errEl.className = 'text-xs mt-1 openrouter-key-error-text';
-                errEl.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i>An API key is required to use OpenRouter.';
-                keyContainer.appendChild(errEl);
+        // Show the advisory modal with options to cancel (disable) or later (close and keep enabled)
+        showOpenRouterKeyRequiredModal(
+            // Cancel callback - disable OpenRouter and return to settings
+            () => {
+                orToggle.checked = false;
+                // Trigger the change event to save the state
+                const event = new Event('change', { bubbles: true });
+                orToggle.dispatchEvent(event);
+                // Stay in settings modal - don't close it
+            },
+            // Later callback - close the settings modal and keep OpenRouter enabled
+            () => {
+                proceedWithHideSettingsModal();
             }
-            errEl.style.display = 'block';
-            // Auto-hide the message after 4 s
-            clearTimeout(errEl._hideTimer);
-            errEl._hideTimer = setTimeout(() => { errEl.style.display = 'none'; }, 4000);
-        }
-
-        orKeyInput.focus();
-        return;  // prevent close
+        );
+        return;  // Don't proceed with closing yet
     }
     // --- end validation ---
 
+    proceedWithHideSettingsModal();
+}
+
+/**
+ * Proceeds with hiding the settings modal after all validations are complete.
+ * Handles the animation and cleanup.
+ */
+function proceedWithHideSettingsModal() {
     // Get the modal content for animation
     const modalContent = settingsModal.querySelector('.modal-content');
 
@@ -183,13 +173,6 @@ export function hideSettingsModal() {
 
     // Re-enable scrolling
     document.body.style.overflow = 'auto';
-
-    // Ensure IP/Port containers are visible when modal is closed
-    const connectionLabelContainer = document.querySelector('#settings-step-connection label.block.text-sm.font-medium');
-    const urlInfoContainer = document.querySelector('#settings-step-connection p.text-xs.text-gray-300.mt-1');
-
-    if (connectionLabelContainer) connectionLabelContainer.style.display = '';
-    if (urlInfoContainer) urlInfoContainer.style.display = '';
 
     // After animation completes, hide the modal
     setTimeout(() => {
@@ -290,15 +273,6 @@ export function initializeSettingsModalNavigation() {
         // Get current active step
         const currentActiveStep = document.querySelector('.settings-step.active');
         const currentStepName = currentActiveStep ? currentActiveStep.getAttribute('data-step-name').toLowerCase() : '';
-
-        // If navigating away from connection step, ensure IP/Port containers are visible
-        if (currentStepName === 'connection' && stepName !== 'connection') {
-            const connectionLabelContainer = document.querySelector('#settings-step-connection label.block.text-sm.font-medium');
-            const urlInfoContainer = document.querySelector('#settings-step-connection p.text-xs.text-gray-300.mt-1');
-
-            if (connectionLabelContainer) connectionLabelContainer.style.display = '';
-            if (urlInfoContainer) urlInfoContainer.style.display = '';
-        }
 
         // Always use stepped navigation regardless of screen size
         // Removed desktop-specific logic that showed all steps at once
@@ -570,13 +544,6 @@ function resetModalState() {
     const fontButtons = document.getElementById('font-step-buttons');
     const actionsButtons = document.getElementById('actions-step-buttons');
 
-    // Ensure IP/Port containers are visible when modal is reopened
-    const connectionLabelContainer = document.querySelector('#settings-step-connection label.block.text-sm.font-medium');
-    const urlInfoContainer = document.querySelector('#settings-step-connection p.text-xs.text-gray-300.mt-1');
-
-    if (connectionLabelContainer) connectionLabelContainer.style.display = '';
-    if (urlInfoContainer) urlInfoContainer.style.display = '';
-
     // For mobile/tablet view, reset to first step
     if (window.innerWidth < 1024) {
         // Hide all steps except the first one
@@ -622,14 +589,6 @@ function initializeManualInputFocus() {
         // Find system prompt textarea specifically
         const systemPromptTextarea = document.getElementById('system-prompt');
 
-        // Find IP and Port input fields specifically
-        const serverIpInput = document.getElementById('server-ip');
-        const serverPortInput = document.getElementById('server-port');
-
-        // Find the containers that need to be hidden/shown
-        const connectionLabelContainer = document.querySelector('#settings-step-connection label.block.text-sm.font-medium');
-        const urlInfoContainer = document.querySelector('#settings-step-connection p.text-xs.text-gray-300.mt-1');
-
         // Add special handling for system prompt textarea
         if (systemPromptTextarea && !systemPromptTextarea.dataset.focusHandlerAttached) {
             systemPromptTextarea.dataset.focusHandlerAttached = 'true';
@@ -673,130 +632,6 @@ function initializeManualInputFocus() {
             }, { passive: false, capture: true });
         }
 
-        // Add special handling for IP and Port input fields
-        if (serverIpInput && serverPortInput && connectionLabelContainer && urlInfoContainer) {
-            // Only add event listeners if they haven't been added before
-            if (!serverIpInput.dataset.ipPortFocusHandlerAttached) {
-                serverIpInput.dataset.ipPortFocusHandlerAttached = 'true';
-                serverPortInput.dataset.ipPortFocusHandlerAttached = 'true';
-
-                // Function to hide containers
-                const hideContainers = () => {
-                    connectionLabelContainer.style.display = 'none';
-                    urlInfoContainer.style.display = 'none';
-                };
-
-                // Function to show containers
-                const showContainers = () => {
-                    connectionLabelContainer.style.display = '';
-                    urlInfoContainer.style.display = '';
-                };
-
-                // Add focus event listeners to both inputs
-                serverIpInput.addEventListener('focus', function(e) {
-                    hideContainers();
-                    // On mobile, scroll the input into view when keyboard appears
-                    if (window.matchMedia('(max-width: 767px)').matches) {
-                        setTimeout(() => {
-                            this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 300); // Wait for keyboard to appear
-                    }
-                });
-                
-                serverPortInput.addEventListener('focus', function(e) {
-                    hideContainers();
-                    // On mobile, scroll the input into view when keyboard appears
-                    if (window.matchMedia('(max-width: 767px)').matches) {
-                        setTimeout(() => {
-                            this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 300); // Wait for keyboard to appear
-                    }
-                });
-
-                // Add click event listeners to ensure focus on mobile
-                serverIpInput.addEventListener('click', function(e) {
-                    this.focus();
-                    hideContainers();
-                });
-
-                serverPortInput.addEventListener('click', function(e) {
-                    this.focus();
-                    hideContainers();
-                });
-
-                // Add blur event listeners to both inputs
-                serverIpInput.addEventListener('blur', function(e) {
-                    // Check if the button clicked flag is set
-                    if (serverIpInput.dataset.buttonClicked === 'true' || serverPortInput.dataset.buttonClicked === 'true') {
-                        // Reset the flag but don't show containers
-                        serverIpInput.dataset.buttonClicked = 'false';
-                        serverPortInput.dataset.buttonClicked = 'false';
-                        return;
-                    }
-
-                    // Only show containers if the other input is not focused
-                    if (document.activeElement !== serverPortInput) {
-                        showContainers();
-                    }
-                });
-
-                serverPortInput.addEventListener('blur', function(e) {
-                    // Check if the button clicked flag is set
-                    if (serverIpInput.dataset.buttonClicked === 'true' || serverPortInput.dataset.buttonClicked === 'true') {
-                        // Reset the flag but don't show containers
-                        serverIpInput.dataset.buttonClicked = 'false';
-                        serverPortInput.dataset.buttonClicked = 'false';
-                        return;
-                    }
-
-                    // Only show containers if the other input is not focused
-                    if (document.activeElement !== serverIpInput) {
-                        showContainers();
-                    }
-                });
-
-                // Add special handling for the Apply Changes button
-                const closeSettingsButton = document.getElementById('close-settings');
-                if (closeSettingsButton) {
-                    // Add mousedown event listener to ensure it captures the event before blur
-                    closeSettingsButton.addEventListener('mousedown', function(e) {
-                        // If either input is focused, prevent the containers from showing
-                        if (document.activeElement === serverIpInput || document.activeElement === serverPortInput) {
-                            // Set a flag to indicate we're handling a button click
-                            serverIpInput.dataset.buttonClicked = 'true';
-                            serverPortInput.dataset.buttonClicked = 'true';
-
-                            // Don't show containers - they'll be shown when the modal is reopened
-                        }
-                    });
-
-                    // Also handle touchstart for mobile devices
-                    closeSettingsButton.addEventListener('touchstart', function(e) {
-                        // If either input is focused, prevent the containers from showing
-                        if (document.activeElement === serverIpInput || document.activeElement === serverPortInput) {
-                            // Set a flag to indicate we're handling a button click
-                            serverIpInput.dataset.buttonClicked = 'true';
-                            serverPortInput.dataset.buttonClicked = 'true';
-
-                            // Don't show containers - they'll be shown when the modal is reopened
-                        }
-                    }, { passive: true });
-
-                    // Add click event handler to ensure the button's click event is processed
-                    closeSettingsButton.addEventListener('click', function(e) {
-                        // If either input is focused, blur it to ensure the input's value is saved
-                        if (document.activeElement === serverIpInput || document.activeElement === serverPortInput) {
-                            document.activeElement.blur();
-
-                            // Trigger the change event to ensure the value is saved
-                            const event = new Event('change', { bubbles: true });
-                            document.activeElement.dispatchEvent(event);
-                        }
-                    });
-                }
-            }
-        }
-
         // Process all other input fields with standard handling
         textInputs.forEach(input => {
             // Skip if this input already has our custom handler
@@ -804,9 +639,6 @@ function initializeManualInputFocus() {
 
             // Skip the system prompt as it has special handling
             if (input.id === 'system-prompt') return;
-
-            // Skip the IP and Port inputs as they have special handling
-            if (input.id === 'server-ip' || input.id === 'server-port') return;
 
             // Skip checkboxes completely to ensure toggle switches work
             if (input.type === 'checkbox') return;
@@ -1440,10 +1272,213 @@ function initializeClearSystemPromptModal() {
 }
 
 /**
+ * Updates the status display text in the connection panels inside the settings modal.
+ * Called on modal open and after saving from an input sub-modal.
+ */
+export function updateConnectionStatusDisplays() {
+    const localStatusEl = document.getElementById('local-server-status-text');
+    const orKeyStatusEl = document.getElementById('openrouter-key-status-text');
+
+    if (localStatusEl) {
+        const ip = localStorage.getItem('serverIp') || '';
+        const port = localStorage.getItem('serverPort') || '';
+        if (ip && port) {
+            localStatusEl.textContent = `${ip}:${port}`;
+            localStatusEl.style.color = 'var(--accent-green, #10b981)';
+        } else {
+            localStatusEl.textContent = 'Not configured';
+            localStatusEl.style.color = '';
+        }
+    }
+
+    if (orKeyStatusEl) {
+        const key = localStorage.getItem('openRouterApiKey') || '';
+        if (key) {
+            const masked = key.length > 14
+                ? key.substring(0, 10) + '\u2026' + key.slice(-4)
+                : '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
+            orKeyStatusEl.textContent = `Key saved (${masked})`;
+            orKeyStatusEl.style.color = 'var(--accent-green, #10b981)';
+        } else {
+            orKeyStatusEl.textContent = 'No API key saved';
+            orKeyStatusEl.style.color = '';
+        }
+    }
+}
+
+/**
+ * Initialises the IP/Port and OpenRouter-key input sub-modals that appear
+ * on top of the settings modal, keeping the main settings modal unaffected
+ * by the Android native keyboard.
+ */
+function initializeConnectionInputModals() {
+    const ipPortModal = document.getElementById('ip-port-input-modal');
+    const orKeyModal = document.getElementById('openrouter-key-input-modal');
+
+    if (!ipPortModal || !orKeyModal) {
+        debugLog('Connection input modals not found');
+        return;
+    }
+
+    // ----- helpers -----
+
+    function showInputModal(modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        const box = modal.querySelector('.connection-input-modal-box');
+        if (box) {
+            box.classList.remove('animate-modal-out');
+            box.classList.add('animate-modal-in');
+        }
+        
+        // On Android, when the keyboard appears, focus events may be delayed.
+        // Use a small timeout to allow the modal to render, then focus the first input
+        setTimeout(() => {
+            let firstInput = modal.querySelector('input[type="text"]') || 
+                           modal.querySelector('input[type="password"]') ||
+                           modal.querySelector('input');
+            if (firstInput) {
+                firstInput.focus();
+                // Ensure focused input is visible by scrolling to it
+                firstInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
+    }
+
+    function hideInputModal(modal) {
+        const box = modal.querySelector('.connection-input-modal-box');
+        if (box) {
+            box.classList.remove('animate-modal-in');
+            box.classList.add('animate-modal-out');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+                box.classList.remove('animate-modal-out');
+            }, 280);
+        } else {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+        }
+        // Blur any focused input so the keyboard dismisses
+        if (document.activeElement && document.activeElement.blur) {
+            document.activeElement.blur();
+        }
+    }
+
+    // Seed status displays with current saved values
+    updateConnectionStatusDisplays();
+
+    // ----- IP / Port modal -----
+
+    const configLocalBtn = document.getElementById('configure-local-server-btn');
+    if (configLocalBtn) {
+        configLocalBtn.addEventListener('click', () => showInputModal(ipPortModal));
+    }
+
+    const closeIpPortBtnX = document.getElementById('close-ip-port-input-modal');
+    const cancelIpPortBtn = document.getElementById('cancel-ip-port-input-modal');
+    const saveIpPortBtn = document.getElementById('save-ip-port-input-modal');
+
+    const dismissIpPortModal = () => {
+        // Restore inputs to last-saved values on dismiss
+        const ipInput = document.getElementById('server-ip');
+        const portInput = document.getElementById('server-port');
+        if (ipInput) ipInput.value = localStorage.getItem('serverIp') || '';
+        if (portInput) portInput.value = localStorage.getItem('serverPort') || '';
+        hideInputModal(ipPortModal);
+    };
+
+    if (closeIpPortBtnX) closeIpPortBtnX.addEventListener('click', dismissIpPortModal);
+    if (cancelIpPortBtn) cancelIpPortBtn.addEventListener('click', dismissIpPortModal);
+
+    if (saveIpPortBtn) {
+        saveIpPortBtn.addEventListener('click', () => {
+            if (!validateIpPort()) return; // error modal shown by validateIpPort
+            interceptIpPortChanges(() => {
+                saveServerSettings();
+                updateConnectionStatusDisplays();
+                hideInputModal(ipPortModal);
+            });
+        });
+    }
+
+    // Close on backdrop tap
+    ipPortModal.addEventListener('click', e => {
+        if (e.target === ipPortModal) dismissIpPortModal();
+    });
+
+    // Ensure inputs scroll into view when focused (helps with Android keyboard)
+    const ipPortInputs = ipPortModal.querySelectorAll('input');
+    ipPortInputs.forEach(input => {
+        input.addEventListener('focus', () => {
+            const box = ipPortModal.querySelector('.connection-input-modal-box');
+            if (box) {
+                input.scrollIntoView({ behavior: 'auto', block: 'center' });
+            }
+        });
+    });
+
+    // ----- OpenRouter Key modal -----
+
+    const configOrKeyBtn = document.getElementById('configure-openrouter-key-btn');
+    if (configOrKeyBtn) {
+        configOrKeyBtn.addEventListener('click', () => showInputModal(orKeyModal));
+    }
+
+    const closeOrKeyBtnX = document.getElementById('close-openrouter-key-input-modal');
+    const cancelOrKeyBtn = document.getElementById('cancel-openrouter-key-input-modal');
+    const saveOrKeyBtn = document.getElementById('save-openrouter-key-input-modal');
+
+    const dismissOrKeyModal = () => {
+        // Restore input to last-saved value on dismiss
+        const keyInput = document.getElementById('openrouter-api-key');
+        if (keyInput) {
+            keyInput.value = localStorage.getItem('openRouterApiKey') || '';
+            // Reset reveal button to password state
+            keyInput.type = 'password';
+            const revealBtn = document.getElementById('openrouter-api-key-reveal');
+            if (revealBtn) revealBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        }
+        hideInputModal(orKeyModal);
+    };
+
+    if (closeOrKeyBtnX) closeOrKeyBtnX.addEventListener('click', dismissOrKeyModal);
+    if (cancelOrKeyBtn) cancelOrKeyBtn.addEventListener('click', dismissOrKeyModal);
+
+    if (saveOrKeyBtn) {
+        saveOrKeyBtn.addEventListener('click', () => {
+            const keyInput = document.getElementById('openrouter-api-key');
+            const key = keyInput ? keyInput.value.trim() : '';
+            localStorage.setItem('openRouterApiKey', key);
+            // Fire input event so settings-manager.js picks up the new value
+            if (keyInput) keyInput.dispatchEvent(new Event('input', { bubbles: true }));
+            updateConnectionStatusDisplays();
+            hideInputModal(orKeyModal);
+        });
+    }
+
+    // Close on backdrop tap
+    orKeyModal.addEventListener('click', e => {
+        if (e.target === orKeyModal) dismissOrKeyModal();
+    });
+
+    // Ensure input scrolls into view when focused (helps with Android keyboard)
+    const orKeyInput = orKeyModal.querySelector('input[type="password"]') || 
+                       orKeyModal.querySelector('input[type="text"]');
+    if (orKeyInput) {
+        orKeyInput.addEventListener('focus', () => {
+            const box = orKeyModal.querySelector('.connection-input-modal-box');
+            if (box) {
+                orKeyInput.scrollIntoView({ behavior: 'auto', block: 'center' });
+            }
+        });
+    }
+}
+
+/**
  * Initializes the settings modal
  */
 export function initializeSettingsModal() {
-    debugLog('Initializing settings modal');
 
     // Close modal when clicking outside
     if (settingsModal) {
@@ -1476,6 +1511,9 @@ export function initializeSettingsModal() {
     // Initialize manual input focus handling
     initializeManualInputFocus();
 
+    // Initialize collapse connection input sub-modals (IP/Port and OpenRouter key)
+    initializeConnectionInputModals();
+
     // Initialize the system prompt overlay editor
     initializeSystemPromptOverlay();
 
@@ -1484,6 +1522,9 @@ export function initializeSettingsModal() {
 
     // Initialize help link from settings
     initializeSettingsHelpLink();
+
+    // Initialize OpenRouter key required modal
+    initOpenRouterKeyRequiredModal();
 }
 
 /**

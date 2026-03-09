@@ -1016,34 +1016,34 @@ export function getUseOllama() {
 }
 
 /**
- * Updates the OpenRouter UI: shows/hides key input and IP/Port fields,
+ * Updates the OpenRouter UI: shows/hides connection panels and selector button states,
  * and disables Smart Reply when OpenRouter is enabled (incompatible features).
  * @param {boolean} isEnabled
  */
 function updateOpenRouterUI(isEnabled) {
-  const ipPortContainers = document.querySelectorAll('.ip-port-container, .port-input-container');
-  const keyContainer = document.getElementById('openrouter-key-container');
-  const ipPortLabel = document.querySelector('#settings-step-connection label.block.text-sm.font-medium');
-  const ipPortInfo = document.querySelector('#settings-step-connection p.text-xs.text-gray-300.mt-1');
+  const localPanel = document.getElementById('local-server-settings');
+  const openRouterPanel = document.getElementById('openrouter-settings');
+  const localBtn = document.getElementById('select-local-server');
+  const openRouterBtn = document.getElementById('select-openrouter');
 
   if (isEnabled) {
-    ipPortContainers.forEach(el => { if (el) el.style.display = 'none'; });
-    if (ipPortLabel) ipPortLabel.style.display = 'none';
-    if (ipPortInfo) ipPortInfo.style.display = 'none';
-    if (keyContainer) keyContainer.classList.remove('hidden');
+    if (localPanel) localPanel.classList.add('hidden');
+    if (openRouterPanel) openRouterPanel.classList.remove('hidden');
+    if (localBtn) { localBtn.classList.remove('active'); localBtn.setAttribute('aria-pressed', 'false'); }
+    if (openRouterBtn) { openRouterBtn.classList.add('active'); openRouterBtn.setAttribute('aria-pressed', 'true'); }
     // Pulse the input wrapper if no key has been entered yet
     const wrapper = document.querySelector('.openrouter-key-input-wrapper');
     if (wrapper) {
       const hasKey = (openRouterApiKeyInput && openRouterApiKeyInput.value.trim().length > 0)
-                     || (localStorage.getItem('openRouterApiKey') || '').length > 0;
+        || (localStorage.getItem('openRouterApiKey') || '').length > 0;
       if (!hasKey) wrapper.classList.add('key-required');
     }
   } else {
-    ipPortContainers.forEach(el => { if (el) el.style.display = ''; });
-    if (ipPortLabel) ipPortLabel.style.display = '';
-    if (ipPortInfo) ipPortInfo.style.display = '';
-    if (keyContainer) keyContainer.classList.add('hidden');
-    // Remove pulse when container is hidden
+    if (localPanel) localPanel.classList.remove('hidden');
+    if (openRouterPanel) openRouterPanel.classList.add('hidden');
+    if (localBtn) { localBtn.classList.add('active'); localBtn.setAttribute('aria-pressed', 'true'); }
+    if (openRouterBtn) { openRouterBtn.classList.remove('active'); openRouterBtn.setAttribute('aria-pressed', 'false'); }
+    // Remove pulse when OpenRouter panel is hidden
     const wrapper = document.querySelector('.openrouter-key-input-wrapper');
     if (wrapper) wrapper.classList.remove('key-required');
   }
@@ -1099,6 +1099,28 @@ export function loadOpenRouterSettings() {
       if (openRouterApiKey.length > 0) {
         const wrapper = document.querySelector('.openrouter-key-input-wrapper');
         if (wrapper) wrapper.classList.remove('key-required');
+      }
+    });
+  }
+
+  // Click handlers for the connection type selector buttons
+  const localServerBtn = document.getElementById('select-local-server');
+  const openRouterSelectorBtn = document.getElementById('select-openrouter');
+
+  if (localServerBtn) {
+    localServerBtn.addEventListener('click', () => {
+      if (useOpenRouter) {
+        if (openRouterToggleCheckbox) openRouterToggleCheckbox.checked = false;
+        saveOpenRouterSettings();
+      }
+    });
+  }
+
+  if (openRouterSelectorBtn) {
+    openRouterSelectorBtn.addEventListener('click', () => {
+      if (!useOpenRouter) {
+        if (openRouterToggleCheckbox) openRouterToggleCheckbox.checked = true;
+        saveOpenRouterSettings();
       }
     });
   }

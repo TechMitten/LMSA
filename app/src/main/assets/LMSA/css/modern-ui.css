@@ -1609,51 +1609,38 @@ body.light-theme #welcome-message {
   height: 100% !important;
 }
 
-/* Position Remove Ads banner at the midpoint between welcome content and input */
+/* Remove Ads banner - flows as a normal grid item inside the welcome screen */
 #remove-ads-banner {
-  /* Position absolutely within the flex container */
-  position: absolute !important;
-  left: 0;
-  right: 0;
-
-  /* Calculate midpoint:
-     - Welcome content is centered in the chat-container (which takes flex-1)
-     - Input area is at the bottom with margin-top: auto
-     - We position at a percentage that places it in the space between
-  */
-  top: 78% !important;
-  /* Position at 78% of container height - centered between welcome content and input */
-  transform: translateY(-50%) !important;
-  padding-top: 1.5rem !important;
-  margin-top: 1rem !important;
-
-  /* Ensure proper stacking */
-  z-index: 5;
-
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  transform: none !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+  z-index: auto;
+  width: 100%;
   /* Hide when welcome message is hidden (controlled via JS) */
   transition: opacity 0.3s ease;
 }
 
-/* Responsive adjustments for different screen sizes */
+/* Responsive adjustments - keep static in all sizes */
 @media (max-height: 700px) {
   #remove-ads-banner {
-    top: 75% !important;
-    /* Slightly lower position for compact screens */
+    top: auto !important;
   }
 }
 
 @media (min-height: 900px) {
   #remove-ads-banner {
-    top: 80% !important;
-    /* Higher position for tall screens */
+    top: auto !important;
   }
 }
 
 /* Landscape orientation adjustments */
 @media (orientation: landscape) and (max-height: 600px) {
   #remove-ads-banner {
-    top: 72% !important;
-    /* Lower position for landscape mode */
+    top: auto !important;
   }
 }
 
@@ -3452,6 +3439,77 @@ body.light-theme #welcome-help-btn.professional-button:hover {
     inset 0 1px 0 rgba(255, 255, 255, 0.15),
     inset 0 -1px 0 rgba(0, 0, 0, 0.1),
     0 0 0 2px rgba(245, 158, 11, 0.4);
+}
+
+@keyframes removeAdsBorderPulse {
+  0%, 100% {
+    border-color: rgba(236, 72, 153, 0.6);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.12),
+      0 4px 16px rgba(0, 0, 0, 0.08),
+      0 2px 8px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+      0 0 0 1px rgba(236, 72, 153, 0.3);
+  }
+  50% {
+    border-color: rgba(236, 72, 153, 0.85);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.12),
+      0 4px 16px rgba(0, 0, 0, 0.08),
+      0 2px 8px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+      0 0 6px 2px rgba(236, 72, 153, 0.35),
+      0 0 0 2px rgba(236, 72, 153, 0.5);
+  }
+}
+
+#remove-ads-banner-button.professional-button {
+  border-color: rgba(236, 72, 153, 0.6);
+  border-width: 2px;
+  animation: removeAdsBorderPulse 2s ease-in-out infinite;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(236, 72, 153, 0.3);
+}
+
+#remove-ads-banner-button.professional-button:hover {
+  animation-play-state: paused;
+  border-color: rgba(236, 72, 153, 0.8);
+  box-shadow:
+    0 12px 40px rgba(236, 72, 153, 0.25),
+    0 6px 20px rgba(219, 39, 119, 0.15),
+    0 3px 10px rgba(190, 24, 93, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    0 0 0 2px rgba(236, 72, 153, 0.4);
+}
+
+body.light-theme #remove-ads-banner-button.professional-button {
+  border-color: rgba(236, 72, 153, 0.7);
+  box-shadow:
+    0 8px 32px rgba(15, 23, 42, 0.15),
+    0 4px 16px rgba(30, 41, 59, 0.1),
+    0 2px 8px rgba(51, 65, 85, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(236, 72, 153, 0.4);
+}
+
+body.light-theme #remove-ads-banner-button.professional-button:hover {
+  border-color: rgba(236, 72, 153, 0.9);
+  box-shadow:
+    0 12px 40px rgba(236, 72, 153, 0.3),
+    0 6px 20px rgba(219, 39, 119, 0.2),
+    0 3px 10px rgba(190, 24, 93, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+    0 0 0 2px rgba(236, 72, 153, 0.5);
 }
 
 /* Mobile optimizations for professional buttons */

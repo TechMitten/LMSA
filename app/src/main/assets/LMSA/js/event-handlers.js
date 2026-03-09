@@ -40,13 +40,13 @@ import {
     addUserMessageToHistory
 } from './chat-service.js';
 import { resetApp, initializeResetAppButton } from './reset-app.js';
-import { fetchAvailableModels, isServerRunning, getAvailableModels, validateIpPort, saveServerSettings } from './api-service.js';
+import { fetchAvailableModels, isServerRunning, getAvailableModels } from './api-service.js';
 import { resetUploadedFiles, getUploadedFiles, uploadFilesToLMStudio } from './file-upload.js';
 import { setActionToPerform, getActionToPerform } from './shared-state.js';
 import { closeSidebarExport } from './export-import.js';
 import { showModelModal } from './model-manager.js';
 import { showWhatsNewModal } from './whats-new.js';
-import { interceptIpPortChanges } from './ip-port-confirmation-modal.js';
+
 import { showExternalSiteModal } from './external-site-confirmation-modal.js';
 import { debugLog, debugError, formatDate } from './utils.js';
 import { closeApplication, copyToClipboard, sanitizeInput, scrollToBottom, scrollToBottomManual, handleScroll, ensureCursorVisible } from './utils.js';
@@ -1872,35 +1872,21 @@ function handleSettingsButtonClick() {
  * Handles close settings button click
  */
 function handleCloseSettingsButtonClick() {
-    // Validate IP/Port settings first
-    // This will show the error modal if validation fails
-    if (!validateIpPort()) {
-        return; // Don't close the settings modal if validation fails
+    // IP/Port and OpenRouter key are now saved via their own sub-modals,
+    // so no validation or saving is needed here — just close the settings modal.
+    document.body.removeEventListener('click', handleSidebarOutsideClick);
+
+    hideSettingsModal();
+
+    // Re-attach the sidebar click handler after the modal finishes hiding
+    setTimeout(() => {
+        document.addEventListener('click', handleSidebarOutsideClick);
+    }, 400);
+
+    // If there are no messages, show the welcome message again
+    if (messagesContainer && messagesContainer.children.length === 0) {
+        showWelcomeMessage();
     }
-
-    // Use IP/Port confirmation modal to intercept changes
-    interceptIpPortChanges(() => {
-        // This callback will be executed after user confirms or if no changes detected
-
-        // Save the settings now that they are confirmed/validated
-        saveServerSettings();
-
-        // Immediately prevent any sidebar interactions
-        document.body.removeEventListener('click', handleSidebarOutsideClick);
-
-        // Use the centralized settings modal manager
-        hideSettingsModal();
-
-        // Re-attach the sidebar click handler after a short delay
-        setTimeout(() => {
-            document.addEventListener('click', handleSidebarOutsideClick);
-        }, 400); // Slightly longer delay to ensure modal is fully hidden
-
-        // If there are no messages, show the welcome message again
-        if (messagesContainer && messagesContainer.children.length === 0) {
-            showWelcomeMessage();
-        }
-    });
 }
 
 /**

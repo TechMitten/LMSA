@@ -43,9 +43,13 @@ export const smartReplyWarningModal = `
                             <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #fcd34d; flex-shrink: 0;"></i>
                             <span>Quality and relevance of suggestions will vary</span>
                         </li>
-                        <li class="flex items-start">
+                        <li class="flex items-start mb-2">
                             <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #fcd34d; flex-shrink: 0;"></i>
                             <span>Some models may not generate useful suggestions</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #fcd34d; flex-shrink: 0;"></i>
+                            <span>Not recommended for use with thinking/reasoning models</span>
                         </li>
                     </ul>
                     <p class="text-gray-400 text-xs mt-3 italic">The feature can be disabled at any time in settings.</p>
