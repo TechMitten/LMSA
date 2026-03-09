@@ -26,6 +26,12 @@ function updateUiForPremium(isPremium) {
     if (removeAdsBtn) {
         removeAdsBtn.style.display = isPremium ? 'none' : 'block';
     }
+
+    // Hide the Remove Ads banner for premium users
+    const removeAdsBanner = document.getElementById('remove-ads-banner');
+    if (removeAdsBanner) {
+        removeAdsBanner.style.display = isPremium ? 'none' : 'flex';
+    }
 }
 
 /**

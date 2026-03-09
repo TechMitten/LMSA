@@ -43,42 +43,22 @@ export function removeThinkTags(text) {
     let cleanedText = String(text);
 
     // Strategy: Be aggressive about removing thinking content while preserving actual response
-    // Step 1: Remove all complete think tag pairs
+    // Step 1: Remove all complete think tag pairs (both normal and HTML-escaped)
+    cleanedText = cleanedText.replace(/<think> tags and their content (standard format)
     cleanedText = cleanedText.replace(/<think>[\s\S]*?<\/think>/g, '');
 
-    // Second pass: Handle unclosed think tags by removing tag and everything after it
-    // This prevents thinking content from leaking into the actual response
-    const lastClosingTag = cleanedText.lastIndexOf('</think>');
-    const lastOpeningTag = cleanedText.lastIndexOf('<think>');
+    // Second pass: Handle unclosed think tags by removing only the tag itself
+    // This preserves any actual content that comes after malformed tags
+    cleanedText = cleanedText.replace(/<think>[\s\S]*/g, '');
 
-    if (lastOpeningTag > lastClosingTag) {
-        // Unclosed opening tag found - remove everything from it to the end
-        cleanedText = cleanedText.substring(0, lastOpeningTag);
-    }
-
-    // Same check for HTML-escaped tags
-    const lastEscapedClosing = cleanedText.lastIndexOf('&lt;/think&gt;');
-    const lastEscapedOpening = cleanedText.lastIndexOf('&lt;think&gt;');
-
-    if (lastEscapedOpening > lastEscapedClosing) {
-        const removeStart = lastEscapedOpening;
-        const removeEnd = cleanedText.indexOf('&lt;/think&gt;', removeStart);
-        if (removeEnd === -1) {
-            // No closing tag - remove everything from opening tag
-            cleanedText = cleanedText.substring(0, removeStart);
-        } else {
-            // Has closing tag - remove from opening to closing tag
-            cleanedText = cleanedText.substring(0, removeStart) + cleanedText.substring(removeEnd + '&lt;/think&gt;'.length);
-        }
-    }
-
-    // Step 3: Remove any remaining standalone tags
-    cleanedText = cleanedText.replace(/<think>/g, '');
-
-    // Remove HTML-escaped complete pairs
+    // Remove HTML-escaped &lt;think&gt; tags and their content (standard format)
     cleanedText = cleanedText.replace(/&lt;think&gt;[\s\S]*?&lt;\/think&gt;/g, '');
 
+    // Remove any escaped unclosed opening think tags
+    cleanedText = cleanedText.replace(/&lt;think&gt;/g, '');
+
     // Remove any standalone opening or closing tags that might remain
+    cleanedText = cleanedText.replace(/<think>/g, '');
     cleanedText = cleanedText.replace(/<\/think>/g, '');
     cleanedText = cleanedText.replace(/&lt;think&gt;/g, '');
     cleanedText = cleanedText.replace(/&lt;\/think&gt;/g, '');
@@ -272,52 +252,17 @@ export function basicSanitizeInput(input) {
     // Handle links
     sanitized = sanitized.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" class="text-blue-400 hover:text-blue-300">$1</a>');
 
-    // Handle horizontal rules
-    sanitized = sanitized.replace(/^(?:---|\.{3}|\*\*\*|___)$/gm, '<hr>');
-
-    // Handle markdown tables
-    sanitized = sanitized.replace(
-        /^(\|.+\|[ \t]*)\n(\|[-:| \t]+\|[ \t]*)\n((?:\|.+\|[ \t]*\n?)+)/gm,
-        (match, headerRow, separatorRow, bodyRows) => {
-            const headers = headerRow.split('|').slice(1, -1).map(h => h.trim());
-            const separators = separatorRow.split('|').slice(1, -1).map(s => s.trim());
-            const alignments = separators.map(s => {
-                if (s.startsWith(':') && s.endsWith(':')) return 'center';
-                if (s.endsWith(':')) return 'right';
-                return 'left';
-            });
-            const theadHtml = '<thead><tr>' +
-                headers.map((h, i) => `<th style="text-align:${alignments[i] || 'left'}">${h}</th>`).join('') +
-                '</tr></thead>';
-            const rows = bodyRows.trim().split('\n').filter(row => row.trim() && row.includes('|'));
-            const tbodyHtml = '<tbody>' +
-                rows.map(row => {
-                    const cells = row.split('|').slice(1, -1).map(c => c.trim());
-                    return '<tr>' +
-                        cells.map((c, i) => `<td style="text-align:${alignments[i] || 'left'}">${c}</td>`).join('') +
-                        '</tr>';
-                }).join('') +
-                '</tbody>';
-            return `<div class="table-wrapper"><table class="markdown-table">${theadHtml}${tbodyHtml}</table></div>`;
-        }
-    );
-
     // Handle paragraphs - treat all newlines as paragraph breaks
     // First, split the text by newlines and wrap each paragraph in <p> tags
     const paragraphs = sanitized.split(/\n/);
     sanitized = paragraphs.map(p => {
         const trimmed = p.trim();
         if (!trimmed) return '';
-
-        // Don't wrap block-level HTML elements in <p> tags
-        if (/^<(h[1-6]|div|ul|ol|li|pre|blockquote|table|thead|tbody|tr|td|th|hr)\b/.test(trimmed)) {
-            return trimmed;
-        }
-
+        
         // Check if this line contains HTML-like content that should be displayed as text
         // Look for patterns like &lt;tag&gt; which indicate escaped HTML
         const hasEscapedHtml = /&lt;\/?[a-zA-Z][^&]*&gt;/.test(trimmed);
-
+        
         if (hasEscapedHtml) {
             // For lines containing escaped HTML, use a pre-formatted style to preserve formatting
             return `<div class="html-code-line">${trimmed}</div>`;
@@ -326,6 +271,9 @@ export function basicSanitizeInput(input) {
             return `<p>${trimmed}</p>`;
         }
     }).join('\n');
+
+    // Add extra spacing between regular paragraphs with CSS
+    sanitized = sanitized.replace(/<\/p>\s*<p>/g, '</p><p style="margin-top: 1.5em;">');
 
     return sanitized;
 }
@@ -483,52 +431,17 @@ export function sanitizeInput(input) {
     // Handle links
     sanitized = sanitized.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" class="text-blue-400 hover:text-blue-300">$1</a>');
 
-    // Handle horizontal rules
-    sanitized = sanitized.replace(/^(?:---|\.{3}|\*\*\*|___)$/gm, '<hr>');
-
-    // Handle markdown tables
-    sanitized = sanitized.replace(
-        /^(\|.+\|[ \t]*)\n(\|[-:| \t]+\|[ \t]*)\n((?:\|.+\|[ \t]*\n?)+)/gm,
-        (match, headerRow, separatorRow, bodyRows) => {
-            const headers = headerRow.split('|').slice(1, -1).map(h => h.trim());
-            const separators = separatorRow.split('|').slice(1, -1).map(s => s.trim());
-            const alignments = separators.map(s => {
-                if (s.startsWith(':') && s.endsWith(':')) return 'center';
-                if (s.endsWith(':')) return 'right';
-                return 'left';
-            });
-            const theadHtml = '<thead><tr>' +
-                headers.map((h, i) => `<th style="text-align:${alignments[i] || 'left'}">${h}</th>`).join('') +
-                '</tr></thead>';
-            const rows = bodyRows.trim().split('\n').filter(row => row.trim() && row.includes('|'));
-            const tbodyHtml = '<tbody>' +
-                rows.map(row => {
-                    const cells = row.split('|').slice(1, -1).map(c => c.trim());
-                    return '<tr>' +
-                        cells.map((c, i) => `<td style="text-align:${alignments[i] || 'left'}">${c}</td>`).join('') +
-                        '</tr>';
-                }).join('') +
-                '</tbody>';
-            return `<div class="table-wrapper"><table class="markdown-table">${theadHtml}${tbodyHtml}</table></div>`;
-        }
-    );
-
     // Handle paragraphs - treat all newlines as paragraph breaks
     // First, split the text by newlines and wrap each paragraph in <p> tags
     const paragraphs = sanitized.split(/\n/);
     sanitized = paragraphs.map(p => {
         const trimmed = p.trim();
         if (!trimmed) return '';
-
-        // Don't wrap block-level HTML elements in <p> tags
-        if (/^<(h[1-6]|div|ul|ol|li|pre|blockquote|table|thead|tbody|tr|td|th|hr)\b/.test(trimmed)) {
-            return trimmed;
-        }
-
+        
         // Check if this line contains HTML-like content that should be displayed as text
         // Look for patterns like &lt;tag&gt; which indicate escaped HTML
         const hasEscapedHtml = /&lt;\/?[a-zA-Z][^&]*&gt;/.test(trimmed);
-
+        
         if (hasEscapedHtml) {
             // For lines containing escaped HTML, use a pre-formatted style to preserve formatting
             return `<div class="html-code-line">${trimmed}</div>`;
@@ -537,6 +450,9 @@ export function sanitizeInput(input) {
             return `<p>${trimmed}</p>`;
         }
     }).join('\n');
+
+    // Add extra spacing between regular paragraphs with CSS
+    sanitized = sanitized.replace(/<\/p>\s*<p>/g, '</p><p style="margin-top: 1.5em;">');
 
     // Close thinking section div if it was opened
     if (sanitized.includes('think') && !sanitized.includes('reasoning-content')) {
@@ -1673,47 +1589,12 @@ if (typeof window !== 'undefined') {
                 // Handle links
                 sanitized = sanitized.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" class="text-blue-400 hover:text-blue-300">$1</a>');
 
-                // Handle horizontal rules
-                sanitized = sanitized.replace(/^(?:---|\.{3}|\*\*\*|___)$/gm, '<hr>');
-
-                // Handle markdown tables
-                sanitized = sanitized.replace(
-                    /^(\|.+\|[ \t]*)\n(\|[-:| \t]+\|[ \t]*)\n((?:\|.+\|[ \t]*\n?)+)/gm,
-                    (match, headerRow, separatorRow, bodyRows) => {
-                        const headers = headerRow.split('|').slice(1, -1).map(h => h.trim());
-                        const separators = separatorRow.split('|').slice(1, -1).map(s => s.trim());
-                        const alignments = separators.map(s => {
-                            if (s.startsWith(':') && s.endsWith(':')) return 'center';
-                            if (s.endsWith(':')) return 'right';
-                            return 'left';
-                        });
-                        const theadHtml = '<thead><tr>' +
-                            headers.map((h, i) => `<th style="text-align:${alignments[i] || 'left'}">${h}</th>`).join('') +
-                            '</tr></thead>';
-                        const rows = bodyRows.trim().split('\n').filter(row => row.trim() && row.includes('|'));
-                        const tbodyHtml = '<tbody>' +
-                            rows.map(row => {
-                                const cells = row.split('|').slice(1, -1).map(c => c.trim());
-                                return '<tr>' +
-                                    cells.map((c, i) => `<td style="text-align:${alignments[i] || 'left'}">${c}</td>`).join('') +
-                                    '</tr>';
-                            }).join('') +
-                            '</tbody>';
-                        return `<div class="table-wrapper"><table class="markdown-table">${theadHtml}${tbodyHtml}</table></div>`;
-                    }
-                );
-
                 // Handle paragraphs - treat all newlines as paragraph breaks
                 const paragraphs = sanitized.split(/\n/);
-                sanitized = paragraphs.map(p => {
-                    const trimmed = p.trim();
-                    if (!trimmed) return '';
-                    // Don't wrap block-level HTML elements in <p> tags
-                    if (/^<(h[1-6]|div|ul|ol|li|pre|blockquote|table|thead|tbody|tr|td|th|hr)\b/.test(trimmed)) {
-                        return trimmed;
-                    }
-                    return `<p>${trimmed}</p>`;
-                }).join('\n');
+                sanitized = paragraphs.map(p => p.trim() ? `<p>${p}</p>` : '').join('\n');
+
+                // Add extra spacing between paragraphs with CSS
+                sanitized = sanitized.replace(/<\/p>\s*<p>/g, '</p><p style="margin-top: 1.5em;">');
 
                 contentDiv.innerHTML = sanitized;
 

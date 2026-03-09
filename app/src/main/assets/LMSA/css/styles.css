@@ -4663,6 +4663,19 @@ body.light-theme .regenerate-btn:hover {
     width: 100%;
 }
 
+/* Uniform vertical spacing between all direct block children */
+.message-content > * + * {
+    margin-top: 1em;
+}
+
+/* Horizontal rules inside messages */
+.message-content hr {
+    border: none;
+    border-top: 1px solid var(--ai-message-border);
+    margin: 0.75em 0;
+    opacity: 0.6;
+}
+
 /* Ensure code blocks within message content are properly styled */
 .message-content pre,
 .message-content .cm-editor {
@@ -4672,6 +4685,61 @@ body.light-theme .regenerate-btn:hover {
 
 .message-content code {
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Expand AI message bubble to near full width when it contains a table */
+#messages > div.ai:has(.table-wrapper) {
+    max-width: 96%;
+}
+
+/* Markdown table styles */
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 1em 0;
+}
+
+.markdown-table {
+    border-collapse: collapse;
+    /* min-width: 100% fills the wrapper; width: max-content lets wide tables grow
+       beyond the wrapper so overflow-x: auto on .table-wrapper kicks in */
+    min-width: 100%;
+    width: max-content;
+    font-size: 0.9em;
+    color: var(--text-primary);
+}
+
+.markdown-table th,
+.markdown-table td {
+    border: 1px solid var(--ai-message-border);
+    padding: 8px 12px;
+    vertical-align: top;
+}
+
+/* Headers stay on one line so columns are never thinner than their label */
+.markdown-table th {
+    background-color: rgba(255, 255, 255, 0.06);
+    font-weight: 600;
+    white-space: nowrap;
+    word-break: normal;
+    overflow-wrap: normal;
+    text-align: left;
+}
+
+/* Data cells can wrap, but never go below a readable minimum width */
+.markdown-table td {
+    min-width: 80px;
+    word-break: break-word;
+    text-align: left;
+}
+
+.markdown-table tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.markdown-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.06);
 }
 
 

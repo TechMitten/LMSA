@@ -10,6 +10,7 @@ import {
 
 import { applyThinkingVisibility, refreshAllMessages } from "./ui-manager.js";
 import { debugLog } from "./utils.js";
+import { showSmartReplyWarningModal } from "./components/modals/smart-reply-warning-modal.js";
 
 // Default system prompt is empty unless user explicitly sets one
 const DEFAULT_SYSTEM_PROMPT = "";
@@ -458,10 +459,10 @@ export function loadAutoSmartReplySetting() {
       autoSmartReply = false;
     }
 
-    // Add event listener for the checkbox
+    // Add event listener for the checkbox with warning modal
     autoSmartReplyCheckbox.addEventListener(
       "change",
-      saveAutoSmartReplySetting
+      handleAutoSmartReplyToggle
     );
   }
 }
@@ -482,6 +483,35 @@ export function saveAutoSmartReplySetting() {
  */
 export function getAutoSmartReply() {
   return autoSmartReply;
+}
+
+/**
+ * Handles the Smart Reply toggle change event
+ * Shows warning modal when enabling the feature
+ * @param {Event} event - The change event from the checkbox
+ */
+function handleAutoSmartReplyToggle(event) {
+  const isChecked = event.target.checked;
+
+  console.log('Smart Reply toggle changed, checked:', isChecked);
+
+  if (isChecked) {
+    // Prevent checkbox from staying checked until user confirms
+    event.target.checked = false;
+    console.log('Checkbox temporarily unchecked, showing warning modal');
+
+    // Show warning modal with callback
+    showSmartReplyWarningModal(() => {
+      // User confirmed - enable the feature
+      console.log('User confirmed, enabling Smart Reply');
+      event.target.checked = true;
+      saveAutoSmartReplySetting();
+    });
+  } else {
+    // User is disabling - no warning needed, save directly
+    console.log('User disabling Smart Reply, saving directly');
+    saveAutoSmartReplySetting();
+  }
 }
 
 /**

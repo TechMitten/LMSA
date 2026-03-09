@@ -16,6 +16,8 @@ import { initializeModelManager } from './model-manager.js';
 import { initializeWhatsNew } from './whats-new.js';
 import { initializeSettingsModal } from './settings-modal-manager.js';
 import { initializeIpPortConfirmationModal } from './ip-port-confirmation-modal.js';
+import { initPremiumModal } from './components/modals/premium-modal.js';
+import { initSmartReplyWarningModal } from './components/modals/smart-reply-warning-modal.js';
 import { initializeTemplateIndicator } from './template-indicator.js';
 
 // Optimization modules removed
@@ -140,6 +142,8 @@ export async function initializeApp() {
     initializeCollapsibleSections();
     initializeSettingsModal();
     initializeIpPortConfirmationModal();
+    initPremiumModal();
+    initSmartReplyWarningModal();
     initializeTemplateIndicator();
 
     // Pre-initialize TTS service to prevent double-tap issues

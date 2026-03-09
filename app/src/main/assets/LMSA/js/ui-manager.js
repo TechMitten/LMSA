@@ -31,6 +31,15 @@ export function showWelcomeMessage() {
             messagesContainer.style.visibility = 'hidden';
             messagesContainer.style.display = 'none';
         }
+        // Show the Remove Ads banner when welcome screen is displayed (for non-premium users)
+        const removeAdsBanner = document.getElementById('remove-ads-banner');
+        if (removeAdsBanner) {
+            // Only show if user is not premium
+            const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
+            if (!isPremium) {
+                removeAdsBanner.style.display = 'flex';
+            }
+        }
     }).then(() => {
         // Force reflow and position adjustment after DOM writes
         if (welcomeMessage) {
@@ -59,6 +68,12 @@ export function hideWelcomeMessage() {
             messagesContainer.style.height = '100%';
             messagesContainer.style.opacity = '1';
             messagesContainer.style.visibility = 'visible';
+        }
+
+        // Hide the Remove Ads banner when leaving the welcome screen
+        const removeAdsBanner = document.getElementById('remove-ads-banner');
+        if (removeAdsBanner) {
+            removeAdsBanner.style.display = 'none';
         }
     });
 }

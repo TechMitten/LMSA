@@ -1,6 +1,7 @@
 // Chat Service for handling chat functionality
 import { messagesContainer, userInput, loadedModelDisplay } from './dom-elements.js';
 import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll, renderSmartReplies, hideSmartReplies, showSmartRepliesLoading } from './ui-manager.js';
+import { openHelpModal } from './help.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
 import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply } from './settings-manager.js';
 import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton } from './utils.js';
@@ -141,7 +142,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
 
     try {
         if (!(await isServerRunning())) {
-            throw new Error('LM Studio server is not running');
+            throw new Error('LM_STUDIO_SERVER_NOT_RUNNING');
         }
 
         // Get the latest available models
@@ -837,17 +838,40 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         } else {
             debugError('Error:', error);
 
-            // Special handling for "No models available" error
-            if (error.message === 'No models available') {
+            // Special handling for specific error messages
+            if (error.message === 'LM_STUDIO_SERVER_NOT_RUNNING') {
+                appendMessage('error',
+                    '<div class="error-message-content">' +
+                    '<div class="error-title">Unable to connect to LM Studio</div>' +
+                    '<div class="error-body">' +
+                    'Please check that:<br>' +
+                    '• LM Studio application is running<br>' +
+                    '• The server is started (green toggle switch in LM Studio)<br>' +
+                    '• Correct IP address and port are configured in <a href="#" onclick="event.preventDefault(); window.showSettingsModal && window.showSettingsModal();">Settings</a>' +
+                    '</div>' +
+                    '<div class="error-help-link">' +
+                    '<a href="#" onclick="event.preventDefault(); window.openHelpModal && window.openHelpModal();">View Help Guide</a> for detailed setup instructions' +
+                    '</div>' +
+                    '</div>'
+                );
+            } else if (error.message === 'No models available') {
                 // Don't show any error message during initial startup
                 if (!window.isInitialStartup) {
-                    // Show a clear message to the user about loading a model
-                    appendMessage('error', 'No models are currently loaded. Click the "Models" button in the sidebar to load a model.');
+                    appendMessage('error',
+                        '<div class="error-message-content">' +
+                        '<div class="error-title">No models loaded</div>' +
+                        '<div class="error-body">' +
+                        'Click the <strong>Models</strong> button in the sidebar to load a model. ' +
+                        'You need to load at least one model in LM Studio before sending messages.' +
+                        '</div>' +
+                        '<div class="error-help-link">' +
+                        '<a href="#" onclick="event.preventDefault(); window.openHelpModal && window.openHelpModal();">View Help Guide</a> for more information' +
+                        '</div>' +
+                        '</div>'
+                    );
                 } else {
                     debugLog('Suppressing "No models available" error during initial startup');
                 }
-
-                // Don't automatically show model modal - let user decide when to load a model
             } else {
                 appendMessage('error', `An error occurred: ${error.message}`);
             }
@@ -1745,6 +1769,9 @@ export function createNewChat() {
     // Hide the scroll-to-bottom button when starting a new chat
     hideScrollToBottomButton();
 
+    // Clear smart replies from previous chat
+    hideSmartReplies();
+
     // Update UI
     updateChatHistoryUI();
     document.querySelectorAll('.chat-item').forEach(item => {
@@ -2265,7 +2292,7 @@ export async function generateChatTitle(userMessage) {
 
     try {
         if (!(await isServerRunning())) {
-            throw new Error('LM Studio server is not running');
+            throw new Error('LM_STUDIO_SERVER_NOT_RUNNING');
         }
 
         // Get the latest available models
@@ -3075,17 +3102,40 @@ export async function regenerateLastResponse(isRetry = false) {
     } catch (error) {
         debugError('Error in regenerateLastResponse:', error);
 
-        // Special handling for "No models available" error
-        if (error.message === 'No models available') {
+        // Special handling for specific error messages
+        if (error.message === 'LM_STUDIO_SERVER_NOT_RUNNING') {
+            appendMessage('error',
+                '<div class="error-message-content">' +
+                '<div class="error-title">Unable to connect to LM Studio</div>' +
+                '<div class="error-body">' +
+                'Please check that:<br>' +
+                '• LM Studio application is running<br>' +
+                '• The server is started (green play button in LM Studio)<br>' +
+                '• Correct IP address and port are configured in Settings' +
+                '</div>' +
+                '<div class="error-help-link">' +
+                '<a href="#" onclick="event.preventDefault(); window.openHelpModal && window.openHelpModal();">View Help Guide</a> for detailed setup instructions' +
+                '</div>' +
+                '</div>'
+            );
+        } else if (error.message === 'No models available') {
             // Don't show any error message during initial startup
             if (!window.isInitialStartup) {
-                // Show a clear message to the user about loading a model
-                appendMessage('error', 'No models are currently loaded. Click the "Models" button in the sidebar to load a model.');
+                appendMessage('error',
+                    '<div class="error-message-content">' +
+                    '<div class="error-title">No models loaded</div>' +
+                    '<div class="error-body">' +
+                    'Click the <strong>Models</strong> button in the sidebar to load a model. ' +
+                    'You need to load at least one model in LM Studio before sending messages.' +
+                    '</div>' +
+                    '<div class="error-help-link">' +
+                    '<a href="#" onclick="event.preventDefault(); window.openHelpModal && window.openHelpModal();">View Help Guide</a> for more information' +
+                    '</div>' +
+                    '</div>'
+                );
             } else {
                 debugLog('Suppressing "No models available" error during initial startup');
             }
-
-            // Don't automatically show model modal - let user decide when to load a model
         } else {
             appendMessage('error', 'An error occurred: ' + error.message);
         }
@@ -3102,6 +3152,56 @@ export async function regenerateLastResponse(isRetry = false) {
             toggleSendStopButton();
         }
     }
+}
+
+/**
+ * Strips any preamble/reasoning text that appears before the pipe-separated replies.
+ * Handles cases where a model outputs "Here are some suggestions: Reply A | Reply B"
+ * without using <think> tags -- the colon-prefixed preamble is detected and removed.
+ * @param {string} text - Cleaned text (think-tags already removed)
+ * @returns {string}
+ */
+function stripSmartReplyPreamble(text) {
+    if (!text.includes('|')) return text;
+    const firstPipe = text.indexOf('|');
+    const beforePipe = text.substring(0, firstPipe);
+    const lastColon = beforePipe.lastIndexOf(':');
+    if (lastColon !== -1) {
+        const afterColon = beforePipe.substring(lastColon + 1).trim();
+        if (afterColon.length === 0) {
+            // Nothing between the colon and the first pipe — the preamble is everything
+            // before the first pipe, so skip it and start from the next reply.
+            return text.substring(firstPipe + 1).trim();
+        }
+        const preColon = beforePipe.substring(0, lastColon).trim();
+        if (preColon.length > 10) {
+            // There is a meaningful preamble before the colon; keep only what follows it.
+            return afterColon + text.substring(firstPipe);
+        }
+    }
+    return text;
+}
+
+/**
+ * Returns true if a reply candidate looks like reasoning/meta-commentary rather than
+ * a genuine short user reply.  Used to filter out reasoning that leaks through when
+ * a model does not wrap its thinking in <think> tags.
+ * @param {string} reply
+ * @returns {boolean}
+ */
+function isReasoningText(reply) {
+    if (!reply) return true;
+    const t = reply.trim();
+    // Replies should be short — the prompt asks for ≤8 words; allow up to 12 for safety.
+    if (t.split(/\s+/).length > 12) return true;
+    // 8 words × ~8 chars average + spaces ≈ 72 chars; 80 is a generous ceiling.
+    if (t.length > 80) return true;
+    const lower = t.toLowerCase();
+    // Definitive reasoning / meta-commentary prefixes that no real user reply starts with:
+    if (/^(let me think|here are|these are|based on|looking at|considering|i need to come up|i should come up|i'll think of|i can think of)/.test(lower)) return true;
+    if (/(suggestions?|options?|replies)\s+(below|above|follow)|following\s+(suggestions?|replies|options?)/.test(lower)) return true;
+    if (/^(sure|of course|certainly),?\s*(here are|here's|i can provide|i'll provide)/.test(lower)) return true;
+    return false;
 }
 
 /**
@@ -3122,8 +3222,38 @@ async function generateSmartReplies(userMessage, aiMessage) {
 
         // Use the clean AI message (without think tags) as context.
         // Truncate to keep the call fast — we only need enough context for relevant replies.
+        const originalLength = aiMessage.length;
         const cleanAiMessage = removeThinkTags(aiMessage).trim();
-        if (!cleanAiMessage) return;
+
+        // Debug logging to track think tag removal
+        debugLog(`Smart reply context: original=${originalLength} chars, cleaned=${cleanAiMessage.length} chars, removed=${originalLength - cleanAiMessage.length} chars`);
+
+        // Validate that we have meaningful content after removing think tags
+        if (!cleanAiMessage) {
+            debugLog('Smart reply generation skipped: no content after removing think tags');
+            return;
+        }
+
+        // Check if the cleaning was too aggressive (removed more than 90% of content)
+        if (cleanAiMessage.length < originalLength * 0.1) {
+            debugLog('Smart reply generation skipped: think tag removal was too aggressive, likely malformed tags');
+            // Try fallback: extract content after last closing think tag
+            const fallbackMatch = aiMessage.match(/<\/think>([\s\S]*)$/);
+            if (fallbackMatch && fallbackMatch[1].trim().length > 10) {
+                debugLog('Using fallback: extracting content after closing think tag');
+                const fallbackContent = fallbackMatch[1].trim();
+                if (fallbackContent.length > 800) {
+                    const contextSnippet = fallbackContent.slice(-800);
+                    await generateSmartRepliesAPI(userMessage, contextSnippet, availableModels[0]);
+                    return;
+                } else {
+                    await generateSmartRepliesAPI(userMessage, fallbackContent, availableModels[0]);
+                    return;
+                }
+            }
+            return;
+        }
+
         const contextSnippet = cleanAiMessage.length > 800
             ? cleanAiMessage.slice(-800)   // last 800 chars gives the final/relevant portion
             : cleanAiMessage;
@@ -3166,27 +3296,31 @@ async function generateSmartReplies(userMessage, aiMessage) {
         const cleanText = removeThinkTags(rawText).trim();
         if (!cleanText) return;
 
+        // Strip any preamble the model may have prepended before the actual replies
+        // (e.g. "Here are 3 suggestions: Reply A | Reply B | Reply C")
+        const replyText = stripSmartReplyPreamble(cleanText);
+
         // --- Robust multi-format parsing ---
         // Primary: pipe-separated  "Reply one|Reply two|Reply three"
-        let replies = cleanText
+        let replies = replyText
             .split('|')
             .map(r => r.trim())
-            .filter(r => r.length > 0 && r.length < 120);
+            .filter(r => !isReasoningText(r));
 
         // Fallback: newline-separated (numbered "1. X", bulleted "- X", or plain)
         if (replies.length < 2) {
-            replies = cleanText
+            replies = replyText
                 .split(/\n/)
                 .map(r => r.replace(/^[\d]+[.)]\s*/, '').replace(/^[-*•]\s*/, '').trim())
-                .filter(r => r.length > 0 && r.length < 120);
+                .filter(r => !isReasoningText(r));
         }
 
         // Fallback: semicolons
         if (replies.length < 2) {
-            replies = cleanText
+            replies = replyText
                 .split(';')
                 .map(r => r.trim())
-                .filter(r => r.length > 0 && r.length < 120);
+                .filter(r => !isReasoningText(r));
         }
 
         // Keep at most 3 suggestions
@@ -3199,6 +3333,94 @@ async function generateSmartReplies(userMessage, aiMessage) {
         }
     } catch (err) {
         debugLog('generateSmartReplies error (non-critical):', err);
+        hideSmartReplies();
+    }
+}
+
+
+/**
+ * Helper function to make the actual API call for smart reply generation
+ * @param {string} userMessage - The user's last message
+ * @param {string} contextSnippet - The context snippet to use
+ * @param {string} model - The model to use for generation
+ */
+async function generateSmartRepliesAPI(userMessage, contextSnippet, model) {
+    try {
+        const smartReplySystemPrompt =
+            'Output exactly 3 short suggested replies the USER could send next. ' +
+            'Write them from the USER\'s perspective. ' +
+            'Keep each reply under 8 words. ' +
+            'Separate the 3 replies with the pipe character "|". ' +
+            'Output ONLY the replies and nothing else — no preamble, no numbering, no think tags.';
+
+        const requestBody = {
+            model: model,
+            messages: [
+                { role: 'system', content: smartReplySystemPrompt },
+                { role: 'user', content: userMessage },
+                { role: 'assistant', content: contextSnippet },
+                { role: 'user', content: 'Give me 3 short replies I could send next, separated by |.' }
+            ],
+            temperature: 0.7,
+            stream: false,
+            // Generous token budget: reasoning models need room to think before outputting
+            // replies. 80 was too small — the model would exhaust its budget inside </think>.
+            max_tokens: 500,
+        };
+
+        const response = await fetch(getApiUrl(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const rawText = data?.choices?.[0]?.message?.content?.trim();
+        if (!rawText) return;
+
+        // Strip any think tags the model may have generated
+        const cleanText = removeThinkTags(rawText).trim();
+        if (!cleanText) return;
+
+        // Strip any preamble the model may have prepended before the actual replies
+        // (e.g. "Here are 3 suggestions: Reply A | Reply B | Reply C")
+        const replyText = stripSmartReplyPreamble(cleanText);
+
+        // --- Robust multi-format parsing ---
+        // Primary: pipe-separated  "Reply one|Reply two|Reply three"
+        let replies = replyText
+            .split('|')
+            .map(r => r.trim())
+            .filter(r => !isReasoningText(r));
+
+        // Fallback: newline-separated (numbered "1. X", bulleted "- X", or plain)
+        if (replies.length < 2) {
+            replies = replyText
+                .split(/\n/)
+                .map(r => r.replace(/^[\d]+[.)]\s*/, '').replace(/^[-*•]\s*/, '').trim())
+                .filter(r => !isReasoningText(r));
+        }
+
+        // Fallback: semicolons
+        if (replies.length < 2) {
+            replies = replyText
+                .split(';')
+                .map(r => r.trim())
+                .filter(r => !isReasoningText(r));
+        }
+
+        // Keep at most 3 suggestions
+        replies = replies.slice(0, 3);
+
+        if (replies.length > 0) {
+            renderSmartReplies(replies);
+        } else {
+            hideSmartReplies();
+        }
+    } catch (err) {
+        debugLog('generateSmartRepliesAPI error (non-critical):', err);
         hideSmartReplies();
     }
 }

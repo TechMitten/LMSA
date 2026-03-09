@@ -11,6 +11,8 @@ import { modelModals } from './modals/model-modals.js';
 import { confirmationModals } from './modals/confirmation-modals.js';
 import { promptModals } from './modals/prompt-modals.js';
 import { settingsModal } from './modals/settings-modal.js';
+import { premiumModal } from './modals/premium-modal.js';
+import { smartReplyWarningModal } from './modals/smart-reply-warning-modal.js';
 
 /**
  * Loads all modal components into the DOM
@@ -25,7 +27,7 @@ export function loadModals() {
     // We insert them at the beginning of the body or a specific container
     // The previous location was directly inside body, before #main-app-container
 
-    tempDiv.innerHTML = termsModal + privacyPolicyModal + helpModal + contactModal + aboutModal + whatsNewModal + contextMenus + importModals + exportModals + modelModals + confirmationModals + promptModals + settingsModal;
+    tempDiv.innerHTML = termsModal + privacyPolicyModal + helpModal + contactModal + aboutModal + whatsNewModal + contextMenus + importModals + exportModals + modelModals + confirmationModals + promptModals + settingsModal + premiumModal + smartReplyWarningModal;
 
     while (tempDiv.firstChild) {
         modalContainer.appendChild(tempDiv.firstChild);

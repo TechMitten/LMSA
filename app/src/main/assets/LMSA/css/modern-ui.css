@@ -867,6 +867,10 @@ body.light-theme .modal-content {
 }
 
 .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
   background: linear-gradient(90deg, rgba(59, 130, 246, 0.1), transparent);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -874,6 +878,33 @@ body.light-theme .modal-content {
 body.light-theme .modal-header {
   background: linear-gradient(90deg, rgba(59, 130, 246, 0.1), transparent);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.close-btn:active {
+  transform: scale(0.95);
+}
+
+body.light-theme .close-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .modal-title {
@@ -1551,6 +1582,48 @@ body.light-theme #welcome-message {
   bottom: 0 !important;
   width: 100% !important;
   height: 100% !important;
+}
+
+/* Position Remove Ads banner at the midpoint between welcome content and input */
+#remove-ads-banner {
+  /* Position absolutely within the flex container */
+  position: absolute !important;
+  left: 0;
+  right: 0;
+
+  /* Calculate midpoint:
+     - Welcome content is centered in the chat-container (which takes flex-1)
+     - Input area is at the bottom with margin-top: auto
+     - We position at a percentage that places it in the space between
+  */
+  top: 78% !important;  /* Position at 78% of container height - centered between welcome content and input */
+  transform: translateY(-50%) !important;
+
+  /* Ensure proper stacking */
+  z-index: 5;
+
+  /* Hide when welcome message is hidden (controlled via JS) */
+  transition: opacity 0.3s ease;
+}
+
+/* Responsive adjustments for different screen sizes */
+@media (max-height: 700px) {
+  #remove-ads-banner {
+    top: 75% !important;  /* Slightly lower position for compact screens */
+  }
+}
+
+@media (min-height: 900px) {
+  #remove-ads-banner {
+    top: 80% !important;  /* Higher position for tall screens */
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (orientation: landscape) and (max-height: 600px) {
+  #remove-ads-banner {
+    top: 72% !important;  /* Lower position for landscape mode */
+  }
 }
 
 /* Icon container default styling */
@@ -4578,4 +4651,44 @@ body.light-theme #reset-app.settings-action-button:hover {
 #privacy-policy-btn.menu-item:hover i {
   color: #3b82f6 !important;
   transform: scale(1.1);
+}
+
+/* Enhanced error message styling */
+.error-message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.error-title {
+  font-weight: 600;
+  color: #f87171;
+}
+
+.error-body {
+  line-height: 1.6;
+}
+
+.error-body a {
+  color: #60a5fa;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.error-body a:hover {
+  color: #3b82f6;
+}
+
+.error-help-link {
+  margin-top: 0.5rem;
+}
+
+.error-help-link a {
+  color: #60a5fa;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.error-help-link a:hover {
+  color: #3b82f6;
 }

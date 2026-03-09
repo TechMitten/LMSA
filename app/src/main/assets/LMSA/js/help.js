@@ -1,6 +1,39 @@
 // Import required functions
-import { checkAndShowWelcomeMessage } from './ui-manager.js';
+import { checkAndShowWelcomeMessage, closeSidebar } from './ui-manager.js';
 import { showExternalSiteModal } from './external-site-confirmation-modal.js';
+import { showSettingsModal } from './settings-modal-manager.js';
+
+// Export openHelpModal so other modules can use it
+export function openHelpModal() {
+    const helpModal = document.getElementById('help-modal');
+
+    if (helpModal) {
+        // Close the sidebar first using the imported function
+        closeSidebar();
+
+        // Show the help modal
+        helpModal.classList.remove('hidden');
+
+        const modalContent = helpModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.classList.add('animate-modal-in');
+
+            setTimeout(() => {
+                modalContent.classList.remove('animate-modal-in');
+            }, 300);
+        }
+
+        // Reset scroll position to top
+        const scrollableContent = helpModal.querySelector('.overflow-y-auto');
+        if (scrollableContent) {
+            scrollableContent.scrollTop = 0;
+        }
+    }
+}
+
+// Make available globally for onclick handlers in error messages
+window.openHelpModal = openHelpModal;
+window.showSettingsModal = showSettingsModal;
 
 document.addEventListener('DOMContentLoaded', () => {
     const helpBtn = document.getElementById('help-btn');
@@ -12,45 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalContent = helpModal ? helpModal.querySelector('.modal-content') : null;
     const openSettingsLink = document.getElementById('open-settings-link');
     const settingsModal = document.getElementById('settings-modal');
-
-    // Function to close sidebar
-    function closeSidebar() {
-        if (sidebarElement) {
-            sidebarElement.classList.add('hidden');
-            sidebarElement.classList.remove('active');
-            document.body.classList.remove('sidebar-open');
-
-            // Also close the options container
-            const optionsContainer = document.getElementById('options-container');
-            if (optionsContainer) {
-                optionsContainer.classList.add('hidden');
-                optionsContainer.classList.remove('animate-fade-in');
-            }
-
-            // Remove the sidebar overlay
-            const sidebarOverlay = document.getElementById('sidebar-overlay');
-            if (sidebarOverlay) {
-                sidebarOverlay.classList.remove('active');
-                sidebarOverlay.classList.add('hidden');
-            }
-
-            // Collapse all sections when sidebar is closed
-            const sectionHeaders = sidebarElement.querySelectorAll('.section-header');
-            const chatHistorySection = sidebarElement.querySelector('.sidebar-section:last-child');
-            sectionHeaders.forEach(header => {
-                header.classList.remove('active');
-                const content = header.nextElementSibling;
-                if (content && content.classList.contains('collapsible-content')) {
-                    content.classList.remove('show');
-                }
-            });
-
-            // Ensure chat history is visible when sidebar is closed
-            if (chatHistorySection) {
-                chatHistorySection.classList.remove('chat-history-hidden');
-            }
-        }
-    }
 
     // Function to close help modal
     function closeHelpModal() {
@@ -73,28 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 300);
         }
     }
-
-    // Function to open help modal
-    function openHelpModal() {
-        if (helpModal && modalContent) {
-            // Close the sidebar first
-            closeSidebar();
-            // Show the help modal
-            helpModal.classList.remove('hidden');
-            modalContent.classList.add('animate-modal-in');
-
-            // Reset scroll position to top
-            const scrollableContent = helpModal.querySelector('.overflow-y-auto');
-            if (scrollableContent) {
-                scrollableContent.scrollTop = 0;
-            }
-
-            setTimeout(() => {
-                modalContent.classList.remove('animate-modal-in');
-            }, 300);
-        }
-    }
-
 
     // Event listeners
     if (helpBtn) {
