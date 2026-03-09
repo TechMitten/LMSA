@@ -958,7 +958,7 @@ function displayAvailableModels(models, loadedModelId) {
             const defaultModelId = getDefaultModelId();
             const isDefaultModel = defaultModelId && model.id === defaultModelId;
 
-            modelElement.className = 'model-item';
+            modelElement.className = isCurrentModel ? 'model-item loaded' : 'model-item';
             modelElement.innerHTML = `
                 <div class="model-icon ${isCurrentModel ? 'bg-green-500/20 text-green-400 loaded' : 'bg-blue-500/20 text-blue-400'}" data-model-id="${model.id}" title="Click to see full model name">
                     <i class="fas fa-robot"></i>

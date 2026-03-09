@@ -7240,6 +7240,28 @@ body.light-theme #model-modal #current-model .model-name {
     transform: translateY(-1px);
 }
 
+/* Loaded model item — stands out with green accent */
+#model-modal #available-models-list .model-item.loaded {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.35);
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.15), 0 4px 16px rgba(16, 185, 129, 0.12);
+}
+
+#model-modal #available-models-list .model-item.loaded:hover {
+    border-color: rgba(16, 185, 129, 0.55);
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.25), 0 6px 20px rgba(16, 185, 129, 0.18);
+    transform: translateY(-1px);
+}
+
+#model-modal #available-models-list .model-item.loaded .model-name {
+    color: #6ee7b7;
+}
+
+#model-modal #available-models-list .model-item.loaded .model-icon {
+    background: rgba(16, 185, 129, 0.2) !important;
+    color: #34d399 !important;
+}
+
 /* Model icon styling */
 #model-modal .model-icon {
     flex-shrink: 0;
@@ -7406,6 +7428,23 @@ body.light-theme #model-modal #available-models-list .model-item:hover {
     background: rgba(255, 255, 255, 1);
     border-color: rgba(59, 130, 246, 0.3);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+}
+
+body.light-theme #model-modal #available-models-list .model-item.loaded {
+    background: rgba(16, 185, 129, 0.06);
+    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.15), 0 3px 10px rgba(16, 185, 129, 0.1);
+}
+
+body.light-theme #model-modal #available-models-list .model-item.loaded:hover {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.55);
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2), 0 5px 14px rgba(16, 185, 129, 0.15);
+    transform: translateY(-1px);
+}
+
+body.light-theme #model-modal #available-models-list .model-item.loaded .model-name {
+    color: #047857;
 }
 
 body.light-theme #model-modal .model-name {
