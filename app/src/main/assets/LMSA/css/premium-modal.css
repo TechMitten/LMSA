@@ -1,0 +1,325 @@
+/* Premium Modal - Modern Professional Design */
+
+/* Modal container styling */
+#premium-modal {
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(8px) saturate(180%);
+    -webkit-backdrop-filter: blur(8px) saturate(180%);
+    animation: fadeIn 0.3s ease-out;
+    padding: 1rem !important;
+    box-sizing: border-box;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Modal content base styling */
+#premium-modal .modal-content {
+    background: var(--modal-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1.75rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3),
+        0 0 0 1px var(--border-color) inset,
+        0 8px 16px rgba(59, 130, 246, 0.1);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: slideInUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-height: 90vh;
+    width: 100%;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Light theme adjustments */
+body.light-theme #premium-modal .modal-content {
+    background: linear-gradient(to bottom,
+        rgba(255, 255, 255, 0.98),
+        rgba(248, 250, 252, 0.95));
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15),
+        0 0 0 1px rgba(226, 232, 240, 0.6) inset,
+        0 8px 16px rgba(59, 130, 246, 0.08);
+    border-color: rgba(226, 232, 240, 0.8);
+}
+
+/* Premium icon animation */
+@keyframes premiumIconPulse {
+    0%, 100% {
+        box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 16px 40px rgba(59, 130, 246, 0.4);
+        transform: scale(1.05);
+    }
+}
+
+/* Close button styling */
+#close-premium-modal {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    cursor: pointer;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
+    padding: 0.5rem !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.25rem !important;
+}
+
+#close-premium-modal:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+    transform: scale(1.1);
+}
+
+#close-premium-modal:active {
+    transform: scale(0.95);
+}
+
+/* Primary upgrade button */
+#premium-upgrade-button {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3),
+        0 4px 12px rgba(139, 92, 246, 0.2),
+        0 2px 8px rgba(236, 72, 153, 0.1);
+    border: none !important;
+    outline: none !important;
+    padding: 0.875rem !important;
+    border-radius: 0.875rem !important;
+}
+
+#premium-upgrade-button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+#premium-upgrade-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px rgba(59, 130, 246, 0.4),
+        0 6px 16px rgba(139, 92, 246, 0.25),
+        0 3px 10px rgba(236, 72, 153, 0.15);
+}
+
+#premium-upgrade-button:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+#premium-upgrade-button:active {
+    transform: translateY(0);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.25);
+}
+
+/* Secondary button styling */
+#close-premium-modal-secondary {
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-color) !important;
+    background: transparent !important;
+    color: var(--text-primary) !important;
+    cursor: pointer;
+    padding: 0.75rem !important;
+    border-radius: 0.875rem !important;
+}
+
+#close-premium-modal-secondary:hover {
+    background: var(--bg-tertiary) !important;
+    border-color: var(--border-color) !important;
+    transform: translateY(-1px);
+}
+
+#close-premium-modal-secondary:active {
+    transform: translateY(0);
+}
+
+body.light-theme #close-premium-modal-secondary {
+    border-color: rgba(226, 232, 240, 0.6) !important;
+    color: rgba(15, 23, 42, 0.9) !important;
+}
+
+body.light-theme #close-premium-modal-secondary:hover {
+    background: rgba(226, 232, 240, 0.4) !important;
+}
+
+/* Benefit cards hover effects */
+#premium-modal [style*="grid-template-columns: 1fr"] > div {
+    transition: all 0.3s ease;
+}
+
+#premium-modal [style*="grid-template-columns: 1fr"] > div:hover {
+    transform: translateY(-3px);
+}
+
+body.light-theme #premium-modal [style*="rgba(59, 130, 246, 0.15)"] {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%) !important;
+    border-color: rgba(59, 130, 246, 0.15) !important;
+}
+
+body.light-theme #premium-modal [style*="rgba(139, 92, 246, 0.15)"] {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(139, 92, 246, 0.02) 100%) !important;
+    border-color: rgba(139, 92, 246, 0.15) !important;
+}
+
+body.light-theme #premium-modal [style*="rgba(236, 72, 153, 0.15)"] {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.08) 0%, rgba(236, 72, 153, 0.02) 100%) !important;
+    border-color: rgba(236, 72, 153, 0.15) !important;
+}
+
+/* Text color adjustments for light theme */
+body.light-theme #premium-modal h2,
+body.light-theme #premium-modal h3 {
+    color: rgba(15, 23, 42, 0.95) !important;
+}
+
+body.light-theme #premium-modal p {
+    color: rgba(15, 23, 42, 0.75) !important;
+}
+
+body.light-theme #premium-modal [style*="text-secondary"] {
+    color: rgba(15, 23, 42, 0.6) !important;
+}
+
+/* Responsive design - tablet and smaller */
+@media (max-width: 768px) {
+    #premium-modal {
+        padding: 0.75rem !important;
+    }
+
+    #premium-modal .modal-content {
+        border-radius: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #premium-modal {
+        padding: 0.5rem !important;
+    }
+
+    #premium-modal .modal-content {
+        border-radius: 1.25rem;
+        max-height: 85vh;
+    }
+
+    #premium-modal h2 {
+        font-size: 1.375rem !important;
+    }
+
+    #close-premium-modal {
+        width: 1.75rem !important;
+        height: 1.75rem !important;
+    }
+}
+
+/* Very small screens (less than 360px wide) */
+@media (max-width: 360px) {
+    #premium-modal .modal-content {
+        max-height: 80vh;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+    #premium-modal .modal-content {
+        border-width: 2px;
+    }
+
+    #premium-upgrade-button,
+    #close-premium-modal-secondary {
+        border-width: 2px !important;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    #premium-modal .modal-content,
+    #premium-upgrade-button,
+    #close-premium-modal-secondary,
+    #premium-modal [style*="grid-template-columns: 1fr"] > div {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* Dark mode enhancements */
+body:not(.light-theme) #premium-modal {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+body:not(.light-theme) #premium-modal .modal-content {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(59, 130, 246, 0.2) inset,
+        0 8px 16px rgba(59, 130, 246, 0.15);
+}
+
+/* Accessibility improvements */
+@media (prefers-color-scheme: dark) {
+    #premium-modal {
+        background: rgba(0, 0, 0, 0.7);
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    #premium-modal {
+        background: rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* Focus states for accessibility */
+#premium-upgrade-button:focus-visible,
+#close-premium-modal:focus-visible,
+#close-premium-modal-secondary:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* Scrollable content support */
+#premium-modal .modal-content > div[style*="overflow-y: auto"] {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(59, 130, 246, 0.5) transparent;
+}
+
+#premium-modal .modal-content > div[style*="overflow-y: auto"]::-webkit-scrollbar {
+    width: 6px;
+}
+
+#premium-modal .modal-content > div[style*="overflow-y: auto"]::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#premium-modal .modal-content > div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.5);
+    border-radius: 3px;
+}
+
+#premium-modal .modal-content > div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.7);
+}
