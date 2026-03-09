@@ -88,6 +88,14 @@ body.preview-mode {
     /* Hide scrollbar in Chrome/Safari/WebView */
 }
 
+#smart-replies-container::-webkit-scrollbar {
+    display: none;
+}
+#smart-replies-container {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
 /* Show scrollbar when user opts in via settings */
 #messages.show-scrollbar {
     scrollbar-width: thin;
