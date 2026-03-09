@@ -35,6 +35,7 @@ let selectedTTSVoice = null; // Selected TTS voice name
 let useOpenRouter = false; // Use OpenRouter cloud API
 let openRouterApiKey = ''; // OpenRouter API key
 let showModelLabel = true; // Show model name on AI message bubbles
+let showChatScrollbar = false; // Show scrollbar in chat message area
 let chatFontFamily = 'system-ui, sans-serif'; // Font family for chat message bubbles
 let chatFontSize = '1rem'; // Font size for chat message bubbles
 
@@ -616,6 +617,46 @@ export function getEnterSendsNewline() {
 /**
  * Loads the show model label setting from localStorage
  */
+export function applyScrollbarVisibility() {
+  const messages = document.getElementById('messages');
+  if (messages) {
+    if (showChatScrollbar) {
+      messages.classList.add('show-scrollbar');
+    } else {
+      messages.classList.remove('show-scrollbar');
+    }
+  }
+}
+
+export function loadShowChatScrollbarSetting() {
+  const checkbox = document.getElementById('show-chat-scrollbar');
+  if (checkbox) {
+    const saved = localStorage.getItem('showChatScrollbar');
+    if (saved === 'true') {
+      checkbox.checked = true;
+      showChatScrollbar = true;
+    } else {
+      checkbox.checked = false;
+      showChatScrollbar = false;
+    }
+    applyScrollbarVisibility();
+    checkbox.addEventListener('change', saveShowChatScrollbarSetting);
+  }
+}
+
+export function saveShowChatScrollbarSetting() {
+  const checkbox = document.getElementById('show-chat-scrollbar');
+  if (checkbox) {
+    showChatScrollbar = checkbox.checked;
+    localStorage.setItem('showChatScrollbar', showChatScrollbar);
+    applyScrollbarVisibility();
+  }
+}
+
+export function getShowChatScrollbar() {
+  return showChatScrollbar;
+}
+
 export function loadShowModelLabelSetting() {
   if (showModelLabelCheckbox) {
     const savedShowModelLabel = localStorage.getItem("showModelLabel");
@@ -1342,6 +1383,7 @@ export function loadSettings() {
   loadOllamaSetting();
   loadOpenRouterSettings();
   loadShowModelLabelSetting();
+  loadShowChatScrollbarSetting();
   loadChatFontSettings();
   // TTS voice selection will be initialized separately when settings modal opens
 }

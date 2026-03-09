@@ -77,8 +77,36 @@ body.preview-mode {
     z-index: 1;
     scroll-behavior: smooth;
     /* Enable smooth scrolling behavior */
+    scrollbar-width: none;
+    /* Hide scrollbar in Firefox */
+    -ms-overflow-style: none;
+    /* Hide scrollbar in IE/Edge */
+}
+
+#messages::-webkit-scrollbar {
+    display: none;
+    /* Hide scrollbar in Chrome/Safari/WebView */
+}
+
+/* Show scrollbar when user opts in via settings */
+#messages.show-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: var(--accent-color) transparent;
+    -ms-overflow-style: auto;
+}
+
+#messages.show-scrollbar::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+}
+
+#messages.show-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--accent-color);
+    border-radius: 3px;
+}
+
+#messages.show-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 /* Add a container for messages to ensure they appear at the bottom when content is short */

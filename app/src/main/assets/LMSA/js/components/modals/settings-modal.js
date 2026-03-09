@@ -227,6 +227,19 @@ export const settingsModal = `
                         <p class="text-xs text-gray-400 mt-1">When enabled, shows the AI model name used to generate each response at the bottom of the message bubble.</p>
                     </div>
 
+                    <div class="mb-5">
+                        <div class="flex justify-between items-center mb-2">
+                            <label for="show-chat-scrollbar" class="text-sm font-medium">
+                                <i class="fas fa-bars mr-2 text-blue-400"></i>Show Chat Scrollbar</label>
+                            <div class="toggle-container">
+                                <input type="checkbox" id="show-chat-scrollbar">
+                                <div class="toggle-switch"></div>
+                                <div class="toggle-dot"></div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">When enabled, shows a scrollbar on the side of the chat message area.</p>
+                    </div>
+
                     <div class="mb-5 hidden">
                         <div class="flex justify-between items-center mb-2">
                             <label for="theme-toggle" class="text-sm font-medium">
