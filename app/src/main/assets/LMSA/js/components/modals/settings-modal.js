@@ -300,6 +300,11 @@ export const settingsModal = `
                             <i class="fas fa-exclamation-triangle text-sm"></i>
                             <span>Reset App</span>
                         </button>
+
+                        <button id="clear-openrouter-key" class="settings-action-button">
+                            <i class="fas fa-key text-sm"></i>
+                            <span>Clear OpenRouter API Key</span>
+                        </button>
                     </div>
                 </div>
             </div>

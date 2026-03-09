@@ -1087,6 +1087,15 @@ export function getOpenRouterApiKey() {
 }
 
 /**
+ * Clears the OpenRouter API key from memory, localStorage, and the input field
+ */
+export function clearOpenRouterApiKey() {
+  openRouterApiKey = '';
+  localStorage.removeItem('openRouterApiKey');
+  if (openRouterApiKeyInput) openRouterApiKeyInput.value = '';
+}
+
+/**
  * Initialize TTS voice selection
  */
 export async function initializeTTSVoiceSelection() {

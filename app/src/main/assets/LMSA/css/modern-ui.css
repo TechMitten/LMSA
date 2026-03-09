@@ -4557,7 +4557,6 @@ body.light-theme textarea.text-gray-100 {
 #reset-app.settings-action-button {
   border-color: rgba(153, 27, 27, 0.6);
   color: #f87171;
-  margin-bottom: 0;
 }
 
 #reset-app.settings-action-button:hover {
@@ -4566,6 +4565,23 @@ body.light-theme textarea.text-gray-100 {
     0 12px 40px rgba(153, 27, 27, 0.25),
     0 6px 20px rgba(127, 29, 29, 0.15),
     0 3px 10px rgba(105, 30, 30, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Clear OpenRouter API Key Button - Orange-Red Theme */
+#clear-openrouter-key.settings-action-button {
+  border-color: rgba(194, 65, 12, 0.6);
+  color: #fdba74;
+  margin-bottom: 0;
+}
+
+#clear-openrouter-key.settings-action-button:hover {
+  border-color: rgba(194, 65, 12, 0.8);
+  box-shadow:
+    0 12px 40px rgba(194, 65, 12, 0.25),
+    0 6px 20px rgba(154, 52, 18, 0.15),
+    0 3px 10px rgba(124, 45, 18, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.15),
     inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 }
@@ -4621,6 +4637,21 @@ body.light-theme #reset-app.settings-action-button:hover {
     0 12px 40px rgba(153, 27, 27, 0.3),
     0 6px 20px rgba(127, 29, 29, 0.2),
     0 3px 10px rgba(105, 30, 30, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+}
+
+body.light-theme #clear-openrouter-key.settings-action-button {
+  border-color: rgba(194, 65, 12, 0.7);
+  color: #c2410c;
+}
+
+body.light-theme #clear-openrouter-key.settings-action-button:hover {
+  border-color: rgba(194, 65, 12, 0.9);
+  box-shadow:
+    0 12px 40px rgba(194, 65, 12, 0.3),
+    0 6px 20px rgba(154, 52, 18, 0.2),
+    0 3px 10px rgba(124, 45, 18, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
     inset 0 -1px 0 rgba(0, 0, 0, 0.15);
 }
