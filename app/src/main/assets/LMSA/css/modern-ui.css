@@ -804,6 +804,19 @@ body.light-theme #active-character-display {
   filter: brightness(1.1);
 }
 
+/* Stop button red styling */
+#chat-form #stop-button {
+  background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 100%);
+  box-shadow: var(--modern-shadow), 0 0 0 1px rgba(220, 38, 38, 0.4);
+  color: #fee2e2;
+}
+
+#chat-form #stop-button:hover {
+  background: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
+  box-shadow: var(--modern-shadow-md), 0 0 0 1px rgba(239, 68, 68, 0.6);
+  filter: brightness(1.1);
+}
+
 @media (max-width: 768px) {
   #user-input {
     border-radius: 0.75rem 0 0 0.75rem;
@@ -835,9 +848,20 @@ body.light-theme #chat-form #stop-button {
   box-shadow: var(--modern-shadow), 0 0 0 1px rgba(59, 130, 246, 0.3);
 }
 
-body.light-theme #chat-form #send-button:hover,
-body.light-theme #chat-form #stop-button:hover {
+body.light-theme #chat-form #send-button:hover {
   box-shadow: var(--modern-shadow-md), 0 0 0 1px rgba(59, 130, 246, 0.5);
+}
+
+/* Light theme stop button red styling */
+body.light-theme #chat-form #stop-button {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: var(--modern-shadow), 0 0 0 1px rgba(220, 38, 38, 0.3);
+  color: #fff;
+}
+
+body.light-theme #chat-form #stop-button:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: var(--modern-shadow-md), 0 0 0 1px rgba(239, 68, 68, 0.5);
 }
 
 #user-input:focus {

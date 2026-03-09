@@ -31,6 +31,9 @@ export function setIsFirstMessage(value) {
     isFirstMessage = value;
 }
 
+// Expose regenerateLastResponse globally so inline onclick handlers in error messages can call it
+window.regenerateLastResponse = (...args) => regenerateLastResponse(...args);
+
 /**
  * Ensures isFirstMessage is properly initialized
  */
@@ -433,11 +436,20 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
 
         if (!response.ok) {
             console.error('API request failed with status:', response.status, response.statusText);
+            // Handle 429 Rate Limit specifically before reading the body
+            if (response.status === 429) {
+                throw new Error('OPENROUTER_RATE_LIMITED');
+            }
             let errorText;
             try {
                 const errorData = await response.json();
                 console.error('Error data from API:', errorData);
-                errorText = errorData.error || errorData.message || `HTTP Error: ${response.status} ${response.statusText}`;
+                const rawError = errorData.error || errorData.message;
+                if (rawError && typeof rawError === 'object') {
+                    errorText = rawError.message || `HTTP Error: ${response.status} ${response.statusText}`;
+                } else {
+                    errorText = rawError || `HTTP Error: ${response.status} ${response.statusText}`;
+                }
             } catch (jsonError) {
                 console.error('Failed to parse error response:', jsonError);
                 errorText = `HTTP Error: ${response.status} ${response.statusText}`;
@@ -895,7 +907,23 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             debugError('Error:', error);
 
             // Special handling for specific error messages
-            if (error.message === 'LM_STUDIO_SERVER_NOT_RUNNING') {
+            if (error.message === 'OPENROUTER_RATE_LIMITED') {
+                appendMessage('error',
+                    '<div class="error-message-content">' +
+                    '<div class="error-title">Rate limit reached</div>' +
+                    '<div class="error-body">' +
+                    'OpenRouter has rate-limited this request (429 Too Many Requests).<br>' +
+                    'This usually means you\'ve exceeded the free-tier limit for this model. You can:<br>' +
+                    '• Wait a moment, then tap <strong>Try again</strong> below<br>' +
+                    '• Switch to a different model in the <strong>Models</strong> menu<br>' +
+                    '• Add credits to your OpenRouter account at openrouter.ai/credits' +
+                    '</div>' +
+                    '<div class="error-help-link">' +
+                    '<a href="#" onclick="event.preventDefault(); window.regenerateLastResponse && window.regenerateLastResponse();">Try again</a>' +
+                    '</div>' +
+                    '</div>'
+                );
+            } else if (error.message === 'LM_STUDIO_SERVER_NOT_RUNNING') {
                 appendMessage('error',
                     '<div class="error-message-content">' +
                     '<div class="error-title">Unable to connect to LM Studio</div>' +
@@ -2694,11 +2722,17 @@ export async function regenerateLastResponse(isRetry = false) {
             });
 
             // Send request to API with timeout protection
+            const regenHeaders = {
+                'Content-Type': 'application/json',
+            };
+            if (getUseOpenRouter()) {
+                regenHeaders['Authorization'] = `Bearer ${getOpenRouterApiKey()}`;
+                regenHeaders['HTTP-Referer'] = 'https://lmsa.app';
+                regenHeaders['X-Title'] = 'LMSA';
+            }
             const fetchPromise = fetch(getApiUrl(), {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: regenHeaders,
                 body: JSON.stringify(requestBody),
                 signal: signal
             });
@@ -2712,10 +2746,18 @@ export async function regenerateLastResponse(isRetry = false) {
             }
 
             if (!response.ok) {
+                if (response.status === 429) {
+                    throw new Error('OPENROUTER_RATE_LIMITED');
+                }
                 let errorText;
                 try {
                     const errorData = await response.json();
-                    errorText = errorData.error || errorData.message || `HTTP Error: ${response.status} ${response.statusText}`;
+                    const rawError = errorData.error || errorData.message;
+                    if (rawError && typeof rawError === 'object') {
+                        errorText = rawError.message || `HTTP Error: ${response.status} ${response.statusText}`;
+                    } else {
+                        errorText = rawError || `HTTP Error: ${response.status} ${response.statusText}`;
+                    }
                 } catch (jsonError) {
                     errorText = `HTTP Error: ${response.status} ${response.statusText}`;
                 }
@@ -3099,6 +3141,22 @@ export async function regenerateLastResponse(isRetry = false) {
 
             if (error.name === 'AbortError') {
                 debugLog('Fetch aborted');
+            } else if (error.message === 'OPENROUTER_RATE_LIMITED') {
+                appendMessage('error',
+                    '<div class="error-message-content">' +
+                    '<div class="error-title">Rate limit reached</div>' +
+                    '<div class="error-body">' +
+                    'OpenRouter has rate-limited this request (429 Too Many Requests).<br>' +
+                    'This usually means you\'ve exceeded the free-tier limit for this model. You can:<br>' +
+                    '\u2022 Wait a moment, then tap <strong>Try again</strong> below<br>' +
+                    '\u2022 Switch to a different model in the <strong>Models</strong> menu<br>' +
+                    '\u2022 Add credits to your OpenRouter account at openrouter.ai/credits' +
+                    '</div>' +
+                    '<div class="error-help-link">' +
+                    '<a href="#" onclick="event.preventDefault(); window.regenerateLastResponse && window.regenerateLastResponse();">Try again</a>' +
+                    '</div>' +
+                    '</div>'
+                );
             } else {
                 debugError('Error during regeneration:', error);
                 appendMessage('error', 'An error occurred while regenerating the response: ' + error.message);

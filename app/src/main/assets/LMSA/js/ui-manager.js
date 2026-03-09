@@ -890,10 +890,10 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                     copyToClipboard(contentWithoutThinking)
                         .then(() => {
                             // Success: Show copied feedback
-                            copyButton.innerHTML = '<i class="fas fa-check"></i>';
+                            copyButton.innerHTML = '<i class="fas fa-check" style="color: #4ade80; font-weight: 900; font-size: 14px;"></i>';
                             setTimeout(() => {
                                 copyButton.innerHTML = originalHTML;
-                            }, 1000);
+                            }, 2500);
                         })
                         .catch((error) => {
                             // Error: Show error feedback
@@ -1406,10 +1406,10 @@ export function refreshAllMessages() {
                         copyToClipboard(contentWithoutThinking)
                             .then(() => {
                                 // Success: Show copied feedback
-                                copyButton.innerHTML = '<i class="fas fa-check"></i>';
+                                copyButton.innerHTML = '<i class="fas fa-check" style="color: #4ade80; font-weight: 900; font-size: 14px;"></i>';
                                 setTimeout(() => {
                                     copyButton.innerHTML = originalHTML;
-                                }, 2000);
+                                }, 2500);
                             })
                             .catch((error) => {
                                 // Error: Show error feedback
