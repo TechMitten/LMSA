@@ -152,6 +152,41 @@ export const modelModals = `
         </div>
     </div>
 
+    <!-- Local Model Loaded Confirmation modal -->
+    <style>
+        #local-model-loaded-modal .modal-content-green { border-color: rgba(34, 197, 94, 0.3); }
+        #local-model-loaded-modal .border-b-green { border-bottom-color: rgba(34, 197, 94, 0.2); }
+        #local-model-loaded-modal .bg-green-icon { background-color: rgba(34, 197, 94, 0.2); }
+        #local-model-loaded-modal .text-green-custom { color: #4ade80; }
+        
+        body.light-theme #local-model-loaded-modal .text-green-custom { color: #16a34a; }
+        body.light-theme #local-model-loaded-modal .bg-green-icon { background-color: rgba(34, 197, 94, 0.15); }
+    </style>
+    <div id="local-model-loaded-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm items-center justify-center hidden modal-container"
+        aria-labelledby="local-model-loaded-title" role="dialog" aria-modal="true" style="z-index: 2200;">
+        <div class="bg-gradient-to-b from-[#0a192f]/95 via-[#0c1e36]/95 to-[#0a192f]/95 light:bg-gradient-to-b light:from-[#f8fafc] light:via-[#f1f5f9] light:to-[#f8fafc] p-6 rounded-xl w-[500px] max-w-[90%] shadow-2xl modal-content border modal-content-green"
+            style="background: var(--modal-bg);">
+            <div class="mb-5 border-b border-b-green pb-2">
+                <h2 id="local-model-loaded-title" class="text-xl font-bold flex items-center modal-title">
+                    <span class="icon-wrapper mr-3 inline-flex items-center justify-center rounded-full bg-green-icon text-green-custom shadow-lg w-9 h-9">
+                        <i class="fas fa-check"></i>
+                    </span>
+                    <span class="text-green-custom font-extrabold">Model Loaded</span>
+                </h2>
+            </div>
+            <div class="p-5 bg-darkTertiary-30 light:bg-green-50 rounded-xl shadow-md border border-white/5">
+                <div class="flex items-center mb-3">
+                    <i class="fas fa-robot text-green-custom mr-2"></i>
+                    <h3 class="text-sm font-semibold text-gray-300 light:text-gray-600">Now loaded</h3>
+                </div>
+                <div id="local-model-loaded-name"
+                    class="text-base font-medium text-white light:text-gray-800 p-4 bg-darkBg-70 light:bg-white rounded-lg border border-white/5 shadow-inner break-all">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Confirm Default Model Modal -->
     <div id="confirm-default-model-modal"
         class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm items-center justify-center hidden modal-container"

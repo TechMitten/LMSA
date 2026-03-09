@@ -937,7 +937,8 @@ body.light-theme .close-btn:hover {
   letter-spacing: -0.02em;
   text-shadow: var(--title-shadow);
   position: relative;
-  display: inline-block;
+  display: flex;
+  align-items: center;
   padding-bottom: 2px;
   border-bottom: 2px solid var(--title-border);
 }

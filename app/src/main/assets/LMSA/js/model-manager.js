@@ -808,6 +808,9 @@ async function loadModel(modelId) {
             // Hide loading modal — models modal stays open
             hideModelLoadingModal(() => {
                 console.log('Model loaded successfully with ad');
+                if (!isAutoLoadingDefaultModel) {
+                    showLocalModelLoadedModal(modelId);
+                }
                 if (isAutoLoadingDefaultModel) {
                     isAutoLoadingDefaultModel = false;
                 }
@@ -836,6 +839,7 @@ async function loadModel(modelId) {
             if (!isAutoLoadingDefaultModel) {
                 hideModelLoadingModal(() => {
                     console.log('Model loaded successfully');
+                    showLocalModelLoadedModal(modelId);
                     if (isAutoLoadingDefaultModel) {
                         isAutoLoadingDefaultModel = false;
                     }
@@ -1580,6 +1584,41 @@ function showDefaultModelLoadedModal(modelName) {
 function showOpenRouterModelSelectedModal(modelId) {
     const modal = document.getElementById('openrouter-model-selected-modal');
     const nameDisplay = document.getElementById('openrouter-model-selected-name');
+    if (!modal || !nameDisplay) return;
+
+    nameDisplay.textContent = modelId;
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+
+    const modalContent = modal.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.classList.add('animate-modal-in');
+        setTimeout(() => modalContent.classList.remove('animate-modal-in'), 300);
+    }
+
+    // Auto-close after 3 seconds
+    setTimeout(() => {
+        if (modalContent) {
+            modalContent.classList.add('animate-modal-out');
+            setTimeout(() => {
+                modalContent.classList.remove('animate-modal-out');
+                modal.classList.add('hidden');
+                modal.style.display = '';
+            }, 300);
+        } else {
+            modal.classList.add('hidden');
+            modal.style.display = '';
+        }
+    }, 3000);
+}
+
+/**
+ * Shows a brief confirmation modal when a local AI model is successfully loaded.
+ * @param {string} modelId - The ID of the loaded model
+ */
+function showLocalModelLoadedModal(modelId) {
+    const modal = document.getElementById('local-model-loaded-modal');
+    const nameDisplay = document.getElementById('local-model-loaded-name');
     if (!modal || !nameDisplay) return;
 
     nameDisplay.textContent = modelId;
