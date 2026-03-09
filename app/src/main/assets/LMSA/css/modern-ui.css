@@ -1596,8 +1596,11 @@ body.light-theme #welcome-message {
      - Input area is at the bottom with margin-top: auto
      - We position at a percentage that places it in the space between
   */
-  top: 78% !important;  /* Position at 78% of container height - centered between welcome content and input */
+  top: 78% !important;
+  /* Position at 78% of container height - centered between welcome content and input */
   transform: translateY(-50%) !important;
+  padding-top: 1.5rem !important;
+  margin-top: 1rem !important;
 
   /* Ensure proper stacking */
   z-index: 5;
@@ -1609,20 +1612,23 @@ body.light-theme #welcome-message {
 /* Responsive adjustments for different screen sizes */
 @media (max-height: 700px) {
   #remove-ads-banner {
-    top: 75% !important;  /* Slightly lower position for compact screens */
+    top: 75% !important;
+    /* Slightly lower position for compact screens */
   }
 }
 
 @media (min-height: 900px) {
   #remove-ads-banner {
-    top: 80% !important;  /* Higher position for tall screens */
+    top: 80% !important;
+    /* Higher position for tall screens */
   }
 }
 
 /* Landscape orientation adjustments */
 @media (orientation: landscape) and (max-height: 600px) {
   #remove-ads-banner {
-    top: 72% !important;  /* Lower position for landscape mode */
+    top: 72% !important;
+    /* Lower position for landscape mode */
   }
 }
 
