@@ -5,7 +5,7 @@ import {
     smartRepliesContainer, userInput
 } from './dom-elements.js';
 import { basicSanitizeInput, sanitizeInput, initializeCodeMirror, scrollToBottom, copyToClipboard, debugLog, debugError, processCodeBlocks, decodeHtmlEntities, htmlToFormattedText } from './utils.js';
-import { getHideThinking } from './settings-manager.js';
+import { getHideThinking, getShowModelLabel } from './settings-manager.js';
 import { domBatcher, rafThrottle } from './optimized-utils.js';
 
 
@@ -620,7 +620,7 @@ export function toggleSendStopButton() {
  * @param {Array} files - Optional array of file objects
  * @param {boolean} isStreaming - Whether the message is being streamed
  */
-export function appendMessage(sender, message, files = null, isStreaming = false) {
+export function appendMessage(sender, message, files = null, isStreaming = false, modelName = null) {
     // If this is a streaming update to an existing message, find and update that message
     if (isStreaming) {
         const existingMessages = messagesContainer.querySelectorAll(`.${sender}`);
@@ -1039,6 +1039,17 @@ export function appendMessage(sender, message, files = null, isStreaming = false
             }
 
             messageElement.appendChild(controlsContainer);
+
+            // Add model label for AI messages
+            if (sender === 'ai') {
+                const effectiveModel = modelName || window.currentLoadedModel;
+                if (effectiveModel) {
+                    const modelLabelEl = document.createElement('div');
+                    modelLabelEl.classList.add('model-label');
+                    modelLabelEl.textContent = effectiveModel;
+                    messageElement.appendChild(modelLabelEl);
+                }
+            }
         }
     } else if (sender === 'system' || sender === 'error' || sender === 'warning') {
         // System messages get simpler formatting
@@ -1054,6 +1065,19 @@ export function appendMessage(sender, message, files = null, isStreaming = false
     // Remove auto-scroll during streaming
 
     return messageElement;
+}
+
+/**
+ * Applies the model label visibility setting to all messages
+ */
+export function applyModelLabelVisibility() {
+    if (messagesContainer) {
+        if (getShowModelLabel()) {
+            messagesContainer.classList.add('show-model-labels');
+        } else {
+            messagesContainer.classList.remove('show-model-labels');
+        }
+    }
 }
 
 /**

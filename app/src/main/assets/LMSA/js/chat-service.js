@@ -1114,7 +1114,7 @@ export async function updateChatHistory(userMessage, aiMessage, fileContents = [
     }
 
     // Add the AI response
-    messages.push({ role: 'assistant', content: aiMessage });
+    messages.push({ role: 'assistant', content: aiMessage, model: getSelectedModel() });
 
     // Log the current chat history for debugging
     debugLog('Updated chat history:',
@@ -1717,7 +1717,7 @@ export function lazyLoadMessages(messages, startIndex, chunkSize = 10) {
         }
 
         // Use appendMessage to ensure proper message formatting and controls
-        appendMessage(message.role === 'user' ? 'user' : 'ai', contentDisplay);
+        appendMessage(message.role === 'user' ? 'user' : 'ai', contentDisplay, null, false, message.model);
     }
 
     // If there are more messages to load, schedule the next chunk
@@ -3043,7 +3043,7 @@ export async function regenerateLastResponse(isRetry = false) {
             }
 
             // Add the new AI response
-            chatHistoryData[currentChatId].messages.push({ role: 'assistant', content: aiMessage });
+            chatHistoryData[currentChatId].messages.push({ role: 'assistant', content: aiMessage, model: getSelectedModel() });
 
             // Make sure to save to localStorage before any other operations
             // This ensures the chat is saved even if there's an issue with subsequent operations
@@ -3561,7 +3561,7 @@ async function fastUpdateChatHistoryBeforeReload(userMessage, aiMessage, fileCon
     }
 
     // Add the AI response
-    messages.push({ role: 'assistant', content: aiMessage });
+    messages.push({ role: 'assistant', content: aiMessage, model: getSelectedModel() });
 
     // Just save to localStorage quickly without UI updates
     try {

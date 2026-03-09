@@ -4318,6 +4318,21 @@ span.visible-content {
     /* Add spacing between buttons for better touch targets */
 }
 
+/* Model label shown at bottom of AI message bubbles */
+.model-label {
+    display: none;
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 6px;
+    text-align: right;
+    font-style: italic;
+    letter-spacing: 0.01em;
+}
+
+.show-model-labels .model-label {
+    display: block;
+}
+
 .user:hover .message-controls {
     opacity: 1;
     transform: translateY(0);

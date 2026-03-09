@@ -631,11 +631,78 @@ async function loadModel(modelId) {
         // Set loading flag to true
         isModelLoading = true;
 
-        // OpenRouter: model selection is instant — skip loading modal and ads
+        // OpenRouter: model selection
         if (getUseOpenRouter()) {
-            await apiLoadModel(modelId);
-            await updateModelDisplay(modelId);
-            showOpenRouterModelSelectedModal(modelId);
+            const showAdDuringLoad = !isAutoLoadingDefaultModel && shouldShowAds();
+
+            if (showAdDuringLoad) {
+                console.log('Showing interstitial ad during OpenRouter model load for:', modelId);
+
+                showModelLoadingModal(modelId, true);
+                disableLoadButtons();
+
+                // Show loading indicator
+                const modelElement = document.getElementById(`model-${modelId}`);
+                if (modelElement) {
+                    const actionSpan = modelElement.querySelector('.model-action');
+                    if (actionSpan) {
+                        actionSpan.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Selecting...';
+                    }
+                }
+
+                if (currentModelDisplay) {
+                    currentModelDisplay.innerHTML = `
+                        <div class="flex items-center text-yellow-500">
+                            <i class="fas fa-spinner fa-spin mr-2 flex-shrink-0"></i>
+                            <span class="truncate">Switching to: ${modelId}</span>
+                        </div>
+                    `;
+                }
+
+                let adDismissed = false;
+                let modelResult = null;
+
+                const adPromise = new Promise((resolve) => {
+                    setTimeout(() => {
+                        modelLoadingModal.classList.add('hidden');
+                        modelLoadingModal.style.display = 'none';
+
+                        showInterstitialAd('modelLoad', () => {
+                            console.log('Ad dismissed during OpenRouter model load');
+                            adDismissed = true;
+
+                            if (modelResult === null) {
+                                showModelLoadingModal(modelId, false);
+                            }
+                            resolve();
+                        });
+                    }, 2500);
+                });
+
+                const modelPromise = apiLoadModel(modelId).then(success => {
+                    modelResult = success;
+                    return success;
+                });
+
+                await Promise.all([adPromise, modelPromise]);
+
+                await updateModelDisplay(modelId);
+
+                hideModelLoadingModal(() => {
+                    showOpenRouterModelSelectedModal(modelId);
+                });
+            } else {
+                await apiLoadModel(modelId);
+                await updateModelDisplay(modelId);
+                if (!isAutoLoadingDefaultModel) {
+                    showOpenRouterModelSelectedModal(modelId);
+                }
+            }
+
+            if (isAutoLoadingDefaultModel) {
+                isAutoLoadingDefaultModel = false;
+            }
+
             isModelLoading = false;
             enableLoadButtons();
             return true;

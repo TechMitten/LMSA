@@ -8,9 +8,10 @@ import {
   ollamaToggleCheckbox,
   openRouterToggleCheckbox,
   openRouterApiKeyInput,
+  showModelLabelCheckbox,
 } from "./dom-elements.js";
 
-import { applyThinkingVisibility, refreshAllMessages } from "./ui-manager.js";
+import { applyThinkingVisibility, refreshAllMessages, applyModelLabelVisibility } from "./ui-manager.js";
 import { debugLog } from "./utils.js";
 import { showSmartReplyWarningModal } from "./components/modals/smart-reply-warning-modal.js";
 
@@ -32,6 +33,7 @@ let defaultModelId = null; // Default model to auto-select when models load
 let selectedTTSVoice = null; // Selected TTS voice name
 let useOpenRouter = false; // Use OpenRouter cloud API
 let openRouterApiKey = ''; // OpenRouter API key
+let showModelLabel = true; // Show model name on AI message bubbles
 
 /**
  * Initializes temperature settings
@@ -609,6 +611,45 @@ export function getEnterSendsNewline() {
 }
 
 /**
+ * Loads the show model label setting from localStorage
+ */
+export function loadShowModelLabelSetting() {
+  if (showModelLabelCheckbox) {
+    const savedShowModelLabel = localStorage.getItem("showModelLabel");
+    if (savedShowModelLabel === null || savedShowModelLabel === "true") {
+      showModelLabelCheckbox.checked = true;
+      showModelLabel = true;
+    } else {
+      showModelLabelCheckbox.checked = false;
+      showModelLabel = false;
+    }
+    applyModelLabelVisibility();
+
+    // Add event listener for the checkbox
+    showModelLabelCheckbox.addEventListener("change", saveShowModelLabelSetting);
+  }
+}
+
+/**
+ * Saves the show model label setting to localStorage
+ */
+export function saveShowModelLabelSetting() {
+  if (showModelLabelCheckbox) {
+    showModelLabel = showModelLabelCheckbox.checked;
+    localStorage.setItem("showModelLabel", showModelLabel);
+    applyModelLabelVisibility();
+  }
+}
+
+/**
+ * Gets the current show model label setting
+ * @returns {boolean} - True if model labels should be shown
+ */
+export function getShowModelLabel() {
+  return showModelLabel;
+}
+
+/**
  * Loads the theme setting from localStorage
  */
 export function loadThemeSetting() {
@@ -1003,23 +1044,6 @@ export function loadOpenRouterSettings() {
     });
   }
 
-  // Wire up the reveal/hide toggle button for the API key field
-  const revealBtn = document.getElementById('openrouter-key-reveal-btn');
-  const revealIcon = document.getElementById('openrouter-key-reveal-icon');
-  if (revealBtn && openRouterApiKeyInput && !revealBtn.dataset.revealHandlerAttached) {
-    revealBtn.dataset.revealHandlerAttached = 'true';
-    revealBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const isPassword = openRouterApiKeyInput.type === 'password';
-      openRouterApiKeyInput.type = isPassword ? 'text' : 'password';
-      if (revealIcon) {
-        revealIcon.classList.toggle('fa-eye', !isPassword);
-        revealIcon.classList.toggle('fa-eye-slash', isPassword);
-      }
-    });
-  }
-
   updateOpenRouterUI(useOpenRouter);
 }
 
@@ -1196,6 +1220,7 @@ export function loadSettings() {
   loadDefaultModelSetting();
   loadOllamaSetting();
   loadOpenRouterSettings();
+  loadShowModelLabelSetting();
   // TTS voice selection will be initialized separately when settings modal opens
 }
 
