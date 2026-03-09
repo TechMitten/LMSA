@@ -291,6 +291,9 @@ export function basicSanitizeInput(input) {
     sanitized = sanitized.replace(/`([^`]+)`/g, '<code>$1</code>');
 
     // Handle headers
+    sanitized = sanitized.replace(/^###### (.+)$/gm, '<h6>$1</h6>');
+    sanitized = sanitized.replace(/^##### (.+)$/gm, '<h5>$1</h5>');
+    sanitized = sanitized.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
     sanitized = sanitized.replace(/^### (.+)$/gm, '<h3>$1</h3>');
     sanitized = sanitized.replace(/^## (.+)$/gm, '<h2>$1</h2>');
     sanitized = sanitized.replace(/^# (.+)$/gm, '<h1>$1</h1>');
@@ -519,6 +522,9 @@ export function sanitizeInput(input) {
     sanitized = sanitized.replace(/`([^`]+)`/g, '<code>$1</code>');
 
     // Handle headers
+    sanitized = sanitized.replace(/^###### (.+)$/gm, '<h6>$1</h6>');
+    sanitized = sanitized.replace(/^##### (.+)$/gm, '<h5>$1</h5>');
+    sanitized = sanitized.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
     sanitized = sanitized.replace(/^### (.+)$/gm, '<h3>$1</h3>');
     sanitized = sanitized.replace(/^## (.+)$/gm, '<h2>$1</h2>');
     sanitized = sanitized.replace(/^# (.+)$/gm, '<h1>$1</h1>');
@@ -1710,6 +1716,9 @@ if (typeof window !== 'undefined') {
                 sanitized = sanitized.replace(/`([^`]+)`/g, '<code>$1</code>');
 
                 // Handle headers
+                sanitized = sanitized.replace(/^###### (.+)$/gm, '<h6>$1</h6>');
+                sanitized = sanitized.replace(/^##### (.+)$/gm, '<h5>$1</h5>');
+                sanitized = sanitized.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
                 sanitized = sanitized.replace(/^### (.+)$/gm, '<h3>$1</h3>');
                 sanitized = sanitized.replace(/^## (.+)$/gm, '<h2>$1</h2>');
                 sanitized = sanitized.replace(/^# (.+)$/gm, '<h1>$1</h1>');
