@@ -39,26 +39,18 @@
   bottom: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(
-      circle at 20% 35%,
+  background: radial-gradient(circle at 20% 35%,
       rgba(76, 29, 149, 0.15) 0%,
-      transparent 45%
-    ),
-    radial-gradient(
-      circle at 80% 10%,
+      transparent 45%),
+    radial-gradient(circle at 80% 10%,
       rgba(59, 130, 246, 0.12) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      circle at 40% 80%,
+      transparent 50%),
+    radial-gradient(circle at 40% 80%,
       rgba(236, 72, 153, 0.1) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      circle at 85% 75%,
+      transparent 50%),
+    radial-gradient(circle at 85% 75%,
       rgba(16, 185, 129, 0.08) 0%,
-      transparent 45%
-    );
+      transparent 45%);
   z-index: -1;
   opacity: 1;
 }
@@ -90,11 +82,9 @@
 
   /* Enhanced appearance for light mode */
   .light-theme & {
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.98),
-      rgba(248, 250, 252, 0.95)
-    );
+    background: linear-gradient(to bottom,
+        rgba(255, 255, 255, 0.98),
+        rgba(248, 250, 252, 0.95));
     box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15),
       0 0 0 1px rgba(226, 232, 240, 0.7) inset,
       0 1px 3px 0 rgba(226, 232, 240, 0.5) inset,
@@ -110,7 +100,8 @@
   bottom: auto !important;
   transform: none !important;
   overflow-x: hidden;
-  overflow-y: hidden; /* Parent doesn't scroll - settings-content-wrapper handles it */
+  overflow-y: hidden;
+  /* Parent doesn't scroll - settings-content-wrapper handles it */
   z-index: 1052;
   /* Responsive sizing that works across all devices */
   width: min(750px, calc(100vw - 32px));
@@ -137,15 +128,13 @@
   height: 100%;
   border-radius: 1.5rem;
   padding: 1.5px;
-  background: linear-gradient(
-    300deg,
-    rgba(59, 130, 246, 0.7) 0%,
-    rgba(147, 51, 234, 0.7) 20%,
-    rgba(236, 72, 153, 0.7) 40%,
-    rgba(16, 185, 129, 0.7) 60%,
-    rgba(245, 158, 11, 0.7) 80%,
-    rgba(59, 130, 246, 0.7) 100%
-  );
+  background: linear-gradient(300deg,
+      rgba(59, 130, 246, 0.7) 0%,
+      rgba(147, 51, 234, 0.7) 20%,
+      rgba(236, 72, 153, 0.7) 40%,
+      rgba(16, 185, 129, 0.7) 60%,
+      rgba(245, 158, 11, 0.7) 80%,
+      rgba(59, 130, 246, 0.7) 100%);
   background-size: 300% 300%;
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -199,11 +188,9 @@
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  background: linear-gradient(
-    135deg,
-    rgba(59, 130, 246, 0.9),
-    rgba(79, 70, 229, 0.9)
-  );
+  background: linear-gradient(135deg,
+      rgba(59, 130, 246, 0.9),
+      rgba(79, 70, 229, 0.9));
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15),
     0 0 0 1px rgba(255, 255, 255, 0.1) inset;
@@ -214,11 +201,9 @@
 /* Icon subtle hover effect */
 /* Icon subtle hover effect */
 #settings-modal #settings-title i:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(79, 70, 229, 0.9),
-    rgba(59, 130, 246, 0.9)
-  );
+  background: linear-gradient(135deg,
+      rgba(79, 70, 229, 0.9),
+      rgba(59, 130, 246, 0.9));
 }
 
 /* Icon content positioning */
@@ -259,11 +244,9 @@
 
   /* Enhanced appearance for light mode */
   .light-theme & {
-    background: linear-gradient(
-      135deg,
-      rgba(248, 250, 252, 0.9),
-      rgba(241, 245, 249, 0.9)
-    );
+    background: linear-gradient(135deg,
+        rgba(248, 250, 252, 0.9),
+        rgba(241, 245, 249, 0.9));
     color: #1e293b;
     box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05),
       0 0 0 1px rgba(226, 232, 240, 0.8) inset, 0 0 10px rgba(59, 130, 246, 0.1);
@@ -359,8 +342,11 @@
   font-size: 0.95rem;
   position: relative;
   width: 100%;
-  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
-    sans-serif;
+  font-family: "Segoe UI",
+  system-ui,
+  -apple-system,
+  BlinkMacSystemFont,
+  sans-serif;
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
 }
@@ -471,8 +457,105 @@
 
 /* OpenRouter API key container */
 #openrouter-key-container {
-  padding-right: 2px;
   box-sizing: border-box;
+  width: 100%;
+  overflow: visible;
+}
+
+/* Wrapper for the API key input + reveal button — acts as the styled "input" */
+.openrouter-key-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  box-sizing: border-box;
+  /* Mirror the visual styling of a normal settings input */
+  background: var(--settings-input-bg);
+  color: var(--settings-input-text);
+  border: 1px solid var(--settings-input-border);
+  border-radius: 0.55rem;
+  padding: 0 0.5rem 0 1.2rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 4px 10px var(--modal-overlay),
+    inset 0 1px 3px var(--modal-overlay), 0 0 0 1px var(--border-color);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+/* Focus ring on the wrapper when its inner input is focused */
+.openrouter-key-input-wrapper:focus-within {
+  border-color: var(--toggle-active-bg);
+  box-shadow: 0 4px 15px var(--modal-overlay),
+    0 0 0 1px var(--toggle-active-border), 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+/* Strip the native input's own visual styling — the wrapper provides it */
+.openrouter-key-input-wrapper input[type="password"],
+.openrouter-key-input-wrapper input[type="text"] {
+  /* Remove the per-input visual chrome */
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  /* Vertical padding only — horizontal is handled by the wrapper */
+  padding: 0.25rem 0.25rem 0.25rem 0 !important;
+  width: 100%;
+  -webkit-user-select: auto !important;
+  user-select: auto !important;
+}
+
+/* Hide scrollbar for the scroll box to keep it looking clean */
+.openrouter-key-scroll-box::-webkit-scrollbar {
+  display: none;
+}
+
+.openrouter-key-scroll-box {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  /* Keep text styling */
+  font-size: 0.95rem;
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--settings-input-text);
+  /* Override any positioning that conflicts */
+  position: static !important;
+  transform: none !important;
+}
+
+/* Reveal/hide button — plain flex sibling, no absolute positioning */
+.openrouter-key-reveal-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0.4rem 0.35rem;
+  cursor: pointer;
+  color: var(--settings-help-text, #6b7280);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  transition: color 0.2s ease, opacity 0.2s ease;
+  opacity: 0.6;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.openrouter-key-reveal-btn:hover {
+  color: var(--toggle-active-bg, #3b82f6);
+  opacity: 1;
+}
+
+.openrouter-key-reveal-btn:focus {
+  outline: none;
+}
+
+.openrouter-key-reveal-btn:focus-visible {
+  outline: 2px solid var(--toggle-active-bg, #3b82f6);
+  outline-offset: 2px;
+  border-radius: 4px;
+  opacity: 1;
 }
 
 /* IP and Port container */
@@ -612,11 +695,9 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(
-    circle at 30% 50%,
-    var(--toggle-active-border),
-    transparent 50%
-  );
+  background: radial-gradient(circle at 30% 50%,
+      var(--toggle-active-border),
+      transparent 50%);
   opacity: 0;
 
   z-index: 1;
@@ -647,7 +728,7 @@
 }
 
 /* Improved active toggle with subtle effect */
-#settings-modal input[type="checkbox"]:checked ~ .toggle-switch {
+#settings-modal input[type="checkbox"]:checked~.toggle-switch {
   background: #3b82f6;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #2563eb;
@@ -661,24 +742,22 @@
 }
 
 /* Active toggle switch inner glow */
-#settings-modal input[type="checkbox"]:checked ~ .toggle-switch::after {
+#settings-modal input[type="checkbox"]:checked~.toggle-switch::after {
   content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(
-    circle at 70% 50%,
-    rgba(96, 165, 250, 0.6),
-    transparent 70%
-  );
+  background: radial-gradient(circle at 70% 50%,
+      rgba(96, 165, 250, 0.6),
+      transparent 70%);
   z-index: 1;
   opacity: 0.8;
   border-radius: 1rem;
 }
 
-#settings-modal input[type="checkbox"]:checked ~ .toggle-dot {
+#settings-modal input[type="checkbox"]:checked~.toggle-dot {
   background: white;
   transform: translateX(28px);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -700,10 +779,7 @@
   }
 }
 
-#settings-modal
-  .toggle-container:hover
-  input[type="checkbox"]:checked
-  ~ .toggle-dot {
+#settings-modal .toggle-container:hover input[type="checkbox"]:checked~.toggle-dot {
   transform: translateX(28px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 
@@ -818,11 +894,9 @@
 
   /* Enhanced appearance for light mode */
   .light-theme & {
-    background: linear-gradient(
-      to bottom,
-      rgba(248, 250, 252, 0.9),
-      rgba(241, 245, 249, 0.9)
-    );
+    background: linear-gradient(to bottom,
+        rgba(248, 250, 252, 0.9),
+        rgba(241, 245, 249, 0.9));
     color: #1e293b;
     border: 1px solid rgba(203, 213, 225, 0.5);
     box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05),
@@ -873,8 +947,7 @@
 }
 
 /* Responsive adjustments for iPhone SE and other small screens */
-@media (max-width: 375px) {
-}
+@media (max-width: 375px) {}
 
 /* Save button */
 #settings-modal #close-settings {
@@ -900,7 +973,9 @@
   /* Reduced top margin to minimize gap with navigation buttons */
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
   letter-spacing: 0.03em;
-  font-family: "Segoe UI", system-ui, sans-serif;
+  font-family: "Segoe UI",
+  system-ui,
+  sans-serif;
   font-size: 0.95rem;
   width: 100%;
   flex-shrink: 0;
@@ -1045,7 +1120,8 @@
   pointer-events: auto !important;
   /* Flex properties to ensure scrolling works in flex container */
   flex: 1 1 auto;
-  min-height: 0; /* Critical: allows the element to shrink and scroll */
+  min-height: 0;
+  /* Critical: allows the element to shrink and scroll */
 }
 
 /* Webkit scrollbar styles */
@@ -1218,16 +1294,8 @@
 }
 
 /* Fallback: Even more specific with additional width reduction */
-html
-  body
-  #settings-modal
-  #settings-step-actions
-  #clear-chat.professional-button,
-html
-  body
-  #settings-modal
-  #settings-step-actions
-  #reset-app.professional-button {
+html body #settings-modal #settings-step-actions #clear-chat.professional-button,
+html body #settings-modal #settings-step-actions #reset-app.professional-button {
   width: calc(100% - 24px) !important;
   max-width: calc(100% - 24px) !important;
   margin: 0.5rem 12px !important;
@@ -1237,11 +1305,7 @@ html
   border-width: 2px !important;
 }
 
-html
-  body
-  #settings-modal
-  #settings-step-actions
-  #reset-app.professional-button {
+html body #settings-modal #settings-step-actions #reset-app.professional-button {
   margin-bottom: 0.5rem !important;
 }
 
@@ -1289,6 +1353,7 @@ html
 
 /* Mobile/tablet navigation buttons */
 @media (max-width: 1023px) {
+
   /* Ensure navigation buttons are visible and properly styled */
   #settings-navigation-buttons {
     display: flex !important;
@@ -1320,6 +1385,7 @@ html
 
   /* Close button mobile positioning */
   @media (max-width: 767px) {
+
     /* Fix for small screens to prevent toggle switches from being cut off */
     /* Adjust toggle container layout */
     #settings-modal .flex.justify-between.items-center:not(.mb-2) {
@@ -1393,6 +1459,7 @@ html
 
   /* iPhone SE and very small screens specific optimizations */
   @media (max-width: 375px) {
+
     /* Ensure modal doesn't get cut off on very small screens */
     #settings-modal {
       padding: 8px;
@@ -1557,6 +1624,7 @@ html
 
 /* Simplified mobile keyboard handling for settings modal */
 @media (max-width: 767px) {
+
   /* Input field adjustments for mobile */
   #settings-modal input[type="text"],
   #settings-modal input[type="number"] {

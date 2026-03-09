@@ -1003,6 +1003,23 @@ export function loadOpenRouterSettings() {
     });
   }
 
+  // Wire up the reveal/hide toggle button for the API key field
+  const revealBtn = document.getElementById('openrouter-key-reveal-btn');
+  const revealIcon = document.getElementById('openrouter-key-reveal-icon');
+  if (revealBtn && openRouterApiKeyInput && !revealBtn.dataset.revealHandlerAttached) {
+    revealBtn.dataset.revealHandlerAttached = 'true';
+    revealBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isPassword = openRouterApiKeyInput.type === 'password';
+      openRouterApiKeyInput.type = isPassword ? 'text' : 'password';
+      if (revealIcon) {
+        revealIcon.classList.toggle('fa-eye', !isPassword);
+        revealIcon.classList.toggle('fa-eye-slash', isPassword);
+      }
+    });
+  }
+
   updateOpenRouterUI(useOpenRouter);
 }
 

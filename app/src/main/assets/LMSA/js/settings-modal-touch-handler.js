@@ -21,15 +21,15 @@ export function initializeSettingsModalTouchHandler() {
     // that call stopPropagation() or preventDefault(). The browser needs to handle
     // touch scrolling natively. The CSS properties (touch-action: pan-y, 
     // -webkit-overflow-scrolling: touch, overflow-y: auto) handle everything.
-    
+
     // Only ensure the wrapper has the correct styles applied programmatically
     // in case CSS isn't loading properly
     if (settingsContentWrapper) {
         // Apply touch scrolling styles programmatically as a backup
         settingsContentWrapper.style.overflowY = 'auto';
-        settingsContentWrapper.style.touchAction = 'pan-y';
+        settingsContentWrapper.style.touchAction = 'pan-x pan-y';
         settingsContentWrapper.style.overscrollBehavior = 'contain';
-        
+
         debugLog('Settings content wrapper touch styles applied');
     }
 
@@ -53,14 +53,14 @@ export function initializeSettingsModalTouchHandler() {
             button.parentNode.replaceChild(newButton, button);
 
             // Add click event - this works for both mouse and touch after touchend
-            newButton.addEventListener('click', function(e) {
+            newButton.addEventListener('click', function (e) {
                 debugLog(`Navigation button ${buttonId} clicked`);
                 // Don't stop propagation - let the click bubble normally
             });
 
             // Add touchend handler with preventDefault to ensure the button action fires
             // This is necessary because touch devices sometimes have issues with click events
-            newButton.addEventListener('touchend', function(e) {
+            newButton.addEventListener('touchend', function (e) {
                 debugLog(`Navigation button ${buttonId} touchend`);
                 // Prevent the default to avoid any ghost clicks
                 e.preventDefault();
@@ -78,7 +78,7 @@ export function initializeSettingsModalTouchHandler() {
                 const target = mutation.target;
                 if (target.classList.contains('settings-step') && target.classList.contains('active')) {
                     // Apply touch scrolling styles to active steps
-                    target.style.touchAction = 'pan-y';
+                    target.style.touchAction = 'pan-x pan-y';
                     target.style.webkitOverflowScrolling = 'touch';
                     target.style.overscrollBehavior = 'contain';
                 }
@@ -90,10 +90,10 @@ export function initializeSettingsModalTouchHandler() {
     const settingsSteps = settingsModal.querySelectorAll('.settings-step');
     settingsSteps.forEach(step => {
         observer.observe(step, { attributes: true });
-        
+
         // Also apply initial styles to active steps
         if (step.classList.contains('active')) {
-            step.style.touchAction = 'pan-y';
+            step.style.touchAction = 'pan-x pan-y';
             step.style.webkitOverflowScrolling = 'touch';
             step.style.overscrollBehavior = 'contain';
         }

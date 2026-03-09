@@ -25,7 +25,7 @@ export const settingsModal = `
 
             <!-- Settings Content - Multi-step on mobile -->
             <div id="settings-content-wrapper" class="relative px-1"
-                style="overflow-y: auto; overflow-x: hidden; touch-action: pan-y; overscroll-behavior: contain;">
+                style="overflow-y: auto; overflow-x: hidden; touch-action: pan-x pan-y; overscroll-behavior: contain;">
                 <!-- Step 1: Connection Settings (always visible first) -->
                 <div id="settings-step-connection" class="settings-step active" data-step-name="Connection">
                     <div class="mb-4">
@@ -67,9 +67,18 @@ export const settingsModal = `
                         <p class="text-xs text-gray-400 mb-3">Connect to cloud AI models via your own OpenRouter API key. Disables local server connection.</p>
                         <div id="openrouter-key-container" class="hidden">
                             <label for="openrouter-api-key" class="block text-xs text-gray-300 mb-1">OpenRouter API Key</label>
-                            <input type="password" id="openrouter-api-key"
-                                class="w-full text-gray-100 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
-                                placeholder="sk-or-v1-..." autocomplete="off" data-form-type="other">
+                            <div class="openrouter-key-input-wrapper">
+                                <div class="openrouter-key-scroll-box" style="flex: 1; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y;">
+                                    <input type="password" id="openrouter-api-key"
+                                        class="w-full text-gray-100 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                                        placeholder="sk-or-v1-..." autocomplete="off" data-form-type="other" style="min-width: 25rem; width: 100%;">
+                                </div>
+                                <button type="button" id="openrouter-key-reveal-btn"
+                                    class="openrouter-key-reveal-btn"
+                                    aria-label="Toggle API key visibility">
+                                    <i class="fas fa-eye" id="openrouter-key-reveal-icon"></i>
+                                </button>
+                            </div>
                             <p class="text-xs text-gray-500 mt-1"><i class="fas fa-lock mr-1"></i>Stored locally on your device only.</p>
                         </div>
                     </div>
