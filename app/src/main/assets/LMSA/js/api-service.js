@@ -1,6 +1,6 @@
 // API Service for handling server communication
 import { serverIpInput, serverPortInput, loadedModelDisplay } from './dom-elements.js';
-import { getLightThemeEnabled, getUseOllama } from './settings-manager.js';
+import { getLightThemeEnabled, getUseOllama, getUseOpenRouter, getOpenRouterApiKey } from './settings-manager.js';
 import { showIpPortErrorModal, hideIpPortErrorModal } from './ui-manager.js';
 
 let API_URL = '';
@@ -120,6 +120,58 @@ function clearValidationErrors() {
  */
 export async function fetchAvailableModels() {
     try {
+        // OpenRouter branch: fetch cloud models using API key
+        if (getUseOpenRouter()) {
+            const apiKey = getOpenRouterApiKey();
+            if (!apiKey) {
+                console.error('OpenRouter API key is not set');
+                availableModels = [];
+                return [];
+            }
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                const response = await fetch('https://openrouter.ai/api/v1/models', {
+                    headers: { 'Authorization': `Bearer ${apiKey}` },
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                if (!response.ok) {
+                    console.error('OpenRouter models fetch failed:', response.status, response.statusText);
+                    availableModels = [];
+                    return [];
+                }
+                const data = await response.json();
+                if (!data || !data.data || !Array.isArray(data.data)) {
+                    console.error('Unexpected OpenRouter models response:', data);
+                    availableModels = [];
+                    return [];
+                }
+                const allModelIds = data.data.map(m => m.id);
+                const modelObjects = data.data.map(m => ({ id: m.id }));
+                console.log('OpenRouter models loaded:', allModelIds.length);
+
+                // Restore the previously selected model from localStorage
+                const savedSelection = localStorage.getItem('openRouterSelectedModel');
+                if (savedSelection && allModelIds.includes(savedSelection)) {
+                    window.currentLoadedModel = savedSelection;
+                    availableModels = [savedSelection];
+                    console.log('Restored OpenRouter selected model:', savedSelection);
+                } else {
+                    availableModels = allModelIds; // internal string list for getAvailableModels()
+                    // Clear stale saved selection if model no longer exists
+                    if (savedSelection) {
+                        localStorage.removeItem('openRouterSelectedModel');
+                    }
+                }
+                return modelObjects;
+            } catch (err) {
+                console.error('Error fetching OpenRouter models:', err);
+                availableModels = [];
+                return [];
+            }
+        }
+
         if (!serverIpInput || !serverPortInput) {
             console.error('Server IP or port input elements not found');
             return [];
@@ -480,6 +532,11 @@ export function hideLoadedModelDisplay(saveState = true) {
  */
 export async function isServerRunning() {
     try {
+        // OpenRouter: server is "running" when a non-empty API key is configured
+        if (getUseOpenRouter()) {
+            return getOpenRouterApiKey().trim().length > 0;
+        }
+
         if (!serverIpInput || !serverPortInput) {
             console.error('Server IP or port input elements not found');
             return false;
@@ -685,6 +742,20 @@ async function forceLoadModel(ip, port, modelId) {
  */
 export async function loadModel(modelId) {
     try {
+        // OpenRouter: no model loading needed — models are cloud-resident
+        if (getUseOpenRouter()) {
+            window.currentLoadedModel = modelId;
+            localStorage.setItem('openRouterSelectedModel', modelId);
+            updateLoadedModelDisplay(modelId);
+            try {
+                const { updateFileUploadCapabilities } = await import('./file-upload.js');
+                await updateFileUploadCapabilities();
+            } catch (error) {
+                console.error('Failed to update file upload capabilities:', error);
+            }
+            return true;
+        }
+
         if (!serverIpInput || !serverPortInput) {
             console.error('Server IP or port input elements not found');
             return false;
@@ -769,6 +840,11 @@ export async function loadModel(modelId) {
  */
 export async function ejectModel() {
     try {
+        // OpenRouter: nothing to eject
+        if (getUseOpenRouter()) {
+            return true;
+        }
+
         if (!serverIpInput || !serverPortInput) {
             console.error('Server IP or port input elements not found');
             return false;
@@ -900,6 +976,9 @@ export async function ejectModel() {
  * @returns {string} - The current API URL
  */
 export function getApiUrl() {
+    if (getUseOpenRouter()) {
+        return 'https://openrouter.ai/api/v1/chat/completions';
+    }
     if (!API_URL && serverIpInput && serverPortInput) {
         const ip = serverIpInput.value.trim();
         const port = serverPortInput.value.trim();

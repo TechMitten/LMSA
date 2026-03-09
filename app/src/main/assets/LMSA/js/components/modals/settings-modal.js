@@ -52,6 +52,27 @@ export const settingsModal = `
                         </div>
                         <p class="text-xs text-gray-300 mt-1">Need help? Visit the <a href="#" id="open-help-from-settings-link" class="text-blue-400 hover:text-blue-300 underline">LMSA Help section</a>.</p>
                     </div>
+
+                    <!-- OpenRouter BYOK Section -->
+                    <div class="mb-4 pt-3 border-t border-gray-700/50">
+                        <div class="flex justify-between items-center mb-1">
+                            <label for="openrouter-toggle" class="text-sm font-medium">
+                                <i class="fas fa-cloud mr-2 text-blue-400"></i>Use OpenRouter (Cloud AI)</label>
+                            <div class="toggle-container">
+                                <input type="checkbox" id="openrouter-toggle">
+                                <div class="toggle-switch"></div>
+                                <div class="toggle-dot"></div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-3">Connect to cloud AI models via your own OpenRouter API key. Disables local server connection.</p>
+                        <div id="openrouter-key-container" class="hidden">
+                            <label for="openrouter-api-key" class="block text-xs text-gray-300 mb-1">OpenRouter API Key</label>
+                            <input type="password" id="openrouter-api-key"
+                                class="w-full text-gray-100 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                                placeholder="sk-or-v1-..." autocomplete="off" data-form-type="other">
+                            <p class="text-xs text-gray-500 mt-1"><i class="fas fa-lock mr-1"></i>Stored locally on your device only.</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Step 2: System Prompt -->
@@ -142,7 +163,7 @@ export const settingsModal = `
                             words) that describes what the chat is about based on your first message.</p>
                     </div>
 
-                    <div class="mb-5">
+                    <div class="mb-5" id="smart-reply-setting">
                         <div class="flex justify-between items-center mb-2">
                             <label for="auto-smart-reply" class="text-sm font-medium">
                                 <i class="fas fa-reply mr-2 text-blue-400"></i>Enable Smart Reply</label>
@@ -152,7 +173,7 @@ export const settingsModal = `
                                 <div class="toggle-dot"></div>
                             </div>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">When enabled, the LLM will analyze the conversation and suggest interactive tap-to-reply options above the chat input.</p>
+                        <p id="smart-reply-description" class="text-xs text-gray-400 mt-1">When enabled, the LLM will analyze the conversation and suggest interactive tap-to-reply options above the chat input.</p>
                     </div>
 
                     <div class="mb-5">

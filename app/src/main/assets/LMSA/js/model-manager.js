@@ -20,7 +20,7 @@ import {
 } from './dom-elements.js';
 import { fetchAvailableModels, getAvailableModels, isServerRunning, loadModel as apiLoadModel } from './api-service.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
-import { getDefaultModelId, setDefaultModelId } from './settings-manager.js';
+import { getDefaultModelId, setDefaultModelId, getUseOpenRouter } from './settings-manager.js';
 
 // Flag to track if a model is actually loaded
 let isModelLoaded = false;
@@ -123,8 +123,21 @@ export function showModelModal() {
             closeFullModelNameButton.addEventListener('click', closeFullModelNameModal);
         }
 
-        // Show mobile instructions on smartphones
-        showMobileInstructionsIfNeeded();
+        // Show mobile instructions on smartphones (hide for OpenRouter - stacking tip doesn't apply)
+        if (!getUseOpenRouter()) {
+            showMobileInstructionsIfNeeded();
+        } else {
+            const mobileInstructionsEl = document.getElementById('mobile-instructions');
+            if (mobileInstructionsEl) mobileInstructionsEl.classList.add('hidden');
+        }
+
+        // Update section heading to match mode
+        const currentModelSectionHeading = modelModal.querySelector('.mb-6.p-5 h3');
+        if (currentModelSectionHeading) {
+            currentModelSectionHeading.innerHTML = getUseOpenRouter()
+                ? '<i class="fas fa-check-circle mr-2"></i>Active Model'
+                : '<i class="fas fa-check-circle mr-2"></i>Currently Loaded Model';
+        }
 
         // Load model information
         // If it's initial startup (which we can infer if the modal is being opened automatically by something else,
@@ -180,19 +193,22 @@ async function loadModelInformation(silent = false) {
             return;
         }
 
-        // Fetch all models from the server
-        const serverIp = document.getElementById('server-ip')?.value.trim() || '';
-        const serverPort = document.getElementById('server-port')?.value.trim() || '';
+        // For OpenRouter, no local server IP/port is needed — models are cloud-resident
+        if (!getUseOpenRouter()) {
+            // Fetch all models from the server
+            const serverIp = document.getElementById('server-ip')?.value.trim() || '';
+            const serverPort = document.getElementById('server-port')?.value.trim() || '';
 
-        // Store current server info for API calls
-        currentServerIp = serverIp;
-        currentServerPort = serverPort;
+            // Store current server info for API calls
+            currentServerIp = serverIp;
+            currentServerPort = serverPort;
 
-        if (!serverIp || !serverPort) {
-            displayServerError();
-            // Restore the original flag value
-            window.isInitialStartup = originalStartupFlag;
-            return;
+            if (!serverIp || !serverPort) {
+                displayServerError();
+                // Restore the original flag value
+                window.isInitialStartup = originalStartupFlag;
+                return;
+            }
         }
 
         // Fetch model info
@@ -615,6 +631,16 @@ async function loadModel(modelId) {
         // Set loading flag to true
         isModelLoading = true;
 
+        // OpenRouter: model selection is instant — skip loading modal and ads
+        if (getUseOpenRouter()) {
+            await apiLoadModel(modelId);
+            await updateModelDisplay(modelId);
+            showOpenRouterModelSelectedModal(modelId);
+            isModelLoading = false;
+            enableLoadButtons();
+            return true;
+        }
+
         // Determine if we should show an ad during loading
         const showAdDuringLoad = !isAutoLoadingDefaultModel && shouldShowAds();
 
@@ -896,6 +922,75 @@ function displayCurrentModel(modelName) {
 }
 
 /**
+ * Attaches a live search/filter bar to the model list (OpenRouter only).
+ * Must be called after the section title has been appended but before model items.
+ * @param {HTMLElement} container - The parent list container
+ * @param {boolean} isLightTheme
+ */
+function attachModelSearch(container, isLightTheme) {
+    const wrapper = document.createElement('div');
+    wrapper.id = 'or-model-search-wrapper';
+    wrapper.className = 'mb-5 pb-1';
+    wrapper.innerHTML = `
+        <div class="relative max-w-full" style="width: calc(100% - 16px); margin: 0 auto;">
+            <i class="fas fa-search absolute top-1/2 -translate-y-1/2 ${isLightTheme ? 'text-gray-400' : 'text-gray-500'} pointer-events-none text-sm" style="left: 0.75rem;"></i>
+            <input id="or-model-search"
+                type="text"
+                placeholder="Search models..."
+                autocomplete="off"
+                class="w-full pr-10 py-3 rounded-xl text-sm border outline-none transition-colors duration-200 ${isLightTheme ? 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-blue-500' : 'bg-darkBg-70 border-white/10 text-gray-200 placeholder-gray-500 focus:border-blue-500/60'}"
+                style="box-sizing: border-box; max-width: 100%; padding-left: 2rem;"
+            />
+            <button id="or-model-search-clear" class="absolute right-3 top-1/2 -translate-y-1/2 hidden text-gray-500 hover:text-gray-300 w-8 h-8 flex items-center justify-center">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+        <div id="or-model-search-count" class="mt-2 text-xs text-right" style="color: ${isLightTheme ? '#9ca3af' : '#6b7280'}; padding-right: 8px;"></div>
+    `;
+    container.appendChild(wrapper);
+
+    const searchInput = wrapper.querySelector('#or-model-search');
+    const clearBtn = wrapper.querySelector('#or-model-search-clear');
+    const countDisplay = wrapper.querySelector('#or-model-search-count');
+
+    function applyFilter() {
+        const q = searchInput.value.toLowerCase().trim();
+        clearBtn.classList.toggle('hidden', q === '');
+        const items = container.querySelectorAll('.model-item');
+        let visible = 0;
+        items.forEach(item => {
+            const name = (item.querySelector('.model-name')?.textContent || '').toLowerCase();
+            const show = q === '' || name.includes(q);
+            item.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        const noResultsId = 'or-model-search-empty';
+        let noResults = container.querySelector('#' + noResultsId);
+        if (q !== '' && visible === 0) {
+            if (!noResults) {
+                noResults = document.createElement('div');
+                noResults.id = noResultsId;
+                noResults.className = 'py-4 text-center text-sm';
+                noResults.style.color = isLightTheme ? '#6b7280' : '#9ca3af';
+                noResults.innerHTML = '<i class="fas fa-search mr-2 opacity-50"></i>No models match your search';
+                container.appendChild(noResults);
+            }
+            noResults.style.display = '';
+        } else if (noResults) {
+            noResults.style.display = 'none';
+        }
+        countDisplay.textContent = q !== '' ? `${visible} of ${items.length} models` : '';
+    }
+
+    searchInput.addEventListener('input', applyFilter);
+    clearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        applyFilter();
+        searchInput.focus();
+    });
+}
+
+/**
  * Displays all available models
  * @param {Object[]} models - Array of model objects
  * @param {string} loadedModelId - ID of the currently loaded model
@@ -919,6 +1014,9 @@ function displayAvailableModels(models, loadedModelId) {
             return;
         }
 
+        // Preserve any active search query so it survives the re-render
+        const existingSearchQuery = availableModelsList.querySelector('#or-model-search')?.value || '';
+
         // Clear the list
         availableModelsList.innerHTML = '';
 
@@ -931,10 +1029,25 @@ function displayAvailableModels(models, loadedModelId) {
             </div>
             <div>
                 <h3 class="text-lg font-semibold text-blue-400">Available Models</h3>
-                <p class="text-sm" style="color: ${isLightTheme ? '#6b7280' : '#9ca3af'} !important;">Click "Load" to switch to a different model</p>
+                <p class="text-sm" style="color: ${isLightTheme ? '#6b7280' : '#9ca3af'} !important;">${getUseOpenRouter() ? 'Click &quot;Select&quot; to use a different cloud model' : 'Click &quot;Load&quot; to switch to a different model'}</p>
             </div>
         `;
         availableModelsList.appendChild(titleElement);
+
+        // Inject live search bar for OpenRouter (catalog can have hundreds of models)
+        if (getUseOpenRouter()) {
+            attachModelSearch(availableModelsList, isLightTheme);
+
+            // Restore the previous search query (and re-apply the filter) so that
+            // selecting a model while a search is active doesn't reset the list.
+            if (existingSearchQuery) {
+                const newSearchInput = availableModelsList.querySelector('#or-model-search');
+                if (newSearchInput) {
+                    newSearchInput.value = existingSearchQuery;
+                    newSearchInput.dispatchEvent(new Event('input'));
+                }
+            }
+        }
 
         // IMPORTANT: Use the SAME loadedModelId that was passed in to ensure consistency between
         // the "Currently loaded model" header and the model marked as loaded in the list
@@ -943,23 +1056,24 @@ function displayAvailableModels(models, loadedModelId) {
         // Log for debugging
         console.log('Displaying models with loaded model ID:', currentLoadedModelId);
 
-        // Add each model to the list
-        models.forEach(model => {
-            const modelElement = document.createElement('div');
-            modelElement.id = `model-${model.id}`;
-            const modelBgClass = isLightTheme ? 'bg-gray-100' : 'bg-darkBg-70';
-            const modelBorderClass = isLightTheme ? 'border-gray-200' : 'border-white/5';
-            const modelTextColor = isLightTheme ? '#1f2937' : '#e5e7eb'; // gray-800 : gray-200
+        // Render models in chunks to avoid blocking the WebView's main thread.
+        // OpenRouter catalogs can have 300+ entries; appending them all synchronously
+        // causes the list to appear frozen/truncated on mobile.
+        const CHUNK_SIZE = 50;
+        let renderIndex = 0;
+        (function renderNextChunk() {
+            const end = Math.min(renderIndex + CHUNK_SIZE, models.length);
+            for (; renderIndex < end; renderIndex++) {
+                const model = models[renderIndex];
+                const modelElement = document.createElement('div');
+                modelElement.id = `model-${model.id}`;
 
-            modelElement.className = `p-4 ${modelBgClass} rounded-xl mb-3 border ${modelBorderClass} transition-all duration-300 hover:border-blue-500/30 hover:shadow-md`;
-            modelElement.style.color = `${modelTextColor} !important`;
+                const isCurrentModel = model.id === currentLoadedModelId;
+                const defaultModelId = getDefaultModelId();
+                const isDefaultModel = defaultModelId && model.id === defaultModelId;
 
-            const isCurrentModel = model.id === currentLoadedModelId;
-            const defaultModelId = getDefaultModelId();
-            const isDefaultModel = defaultModelId && model.id === defaultModelId;
-
-            modelElement.className = isCurrentModel ? 'model-item loaded' : 'model-item';
-            modelElement.innerHTML = `
+                modelElement.className = isCurrentModel ? 'model-item loaded' : 'model-item';
+                modelElement.innerHTML = `
                 <div class="model-icon ${isCurrentModel ? 'bg-green-500/20 text-green-400 loaded' : 'bg-blue-500/20 text-blue-400'}" data-model-id="${model.id}" title="Click to see full model name">
                     <i class="fas fa-robot"></i>
                 </div>
@@ -971,67 +1085,76 @@ function displayAvailableModels(models, loadedModelId) {
                         <i class="fas fa-star"></i>
                     </button>
                     ${isCurrentModel ?
-                    '<span class="model-loaded"><i class="fas fa-check-circle"></i>Loaded</span>' :
-                    '<button class="load-model-btn"><i class="fas fa-plug"></i>Load</button>'
-                }
+                        '<span class="model-loaded"><i class="fas fa-check-circle"></i>' + (getUseOpenRouter() ? 'Active' : 'Loaded') + '</span>' :
+                        '<button class="load-model-btn"><i class="fas fa-' + (getUseOpenRouter() ? 'check' : 'plug') + '"></i>' + (getUseOpenRouter() ? 'Select' : 'Load') + '</button>'
+                    }
                 </div>
             `;
 
-            availableModelsList.appendChild(modelElement);
+                availableModelsList.appendChild(modelElement);
 
-            // Add event listener to the load button if this is not the current model
-            if (!isCurrentModel) {
-                const loadButton = modelElement.querySelector('.load-model-btn');
-                if (loadButton) {
-                    loadButton.addEventListener('click', async (e) => {
-                        e.preventDefault();
-                        // Legacy ad trigger removed
-                        await loadModel(model.id);
-                    });
-
-                    // If a model is currently loading, disable this button
-                    if (isModelLoading) {
-                        loadButton.disabled = true;
-                        loadButton.classList.add('opacity-50', 'cursor-not-allowed');
-                        loadButton.classList.remove('hover:from-blue-600', 'hover:to-blue-700');
+                // Immediately apply the active search filter so items appended
+                // in later chunks are correctly hidden if they don't match.
+                if (getUseOpenRouter()) {
+                    const si = availableModelsList.querySelector('#or-model-search');
+                    if (si) {
+                        const q = si.value.toLowerCase().trim();
+                        if (q && !model.id.toLowerCase().includes(q)) {
+                            modelElement.style.display = 'none';
+                        }
                     }
                 }
-            }
 
-            // Add event listener to the model icon to show full model name
-            const modelIcon = modelElement.querySelector('.model-icon');
-            if (modelIcon) {
-                console.log('Setting up click handler for model icon:', model.id);
-                modelIcon.onclick = function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Model icon clicked:', model.id);
-                    currentModelFullName = model.id;
-                    showFullModelNameModal();
-                };
-            }
-
-            // Add event listener to the "Set Default" button
-            const setDefaultButton = modelElement.querySelector('.set-default-btn');
-            if (setDefaultButton) {
-                setDefaultButton.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    const modelId = setDefaultButton.dataset.modelId;
-                    const currentDefault = getDefaultModelId();
-
-                    if (currentDefault === modelId) {
-                        // Remove as default - No info modal needed
-                        setDefaultModelId(null);
-                        // Refresh the display to update the UI
-                        displayAvailableModels(allAvailableModels, currentLoadedModelId);
-                    } else {
-                        // Set as default - Show confirmation
-                        showDefaultModelConfirmationModal(modelId);
+                // Add event listener to the load button if this is not the current model
+                if (!isCurrentModel) {
+                    const loadButton = modelElement.querySelector('.load-model-btn');
+                    if (loadButton) {
+                        loadButton.addEventListener('click', async (e) => {
+                            e.preventDefault();
+                            await loadModel(model.id);
+                        });
+                        if (isModelLoading) {
+                            loadButton.disabled = true;
+                            loadButton.classList.add('opacity-50', 'cursor-not-allowed');
+                            loadButton.classList.remove('hover:from-blue-600', 'hover:to-blue-700');
+                        }
                     }
-                });
-            }
+                }
 
-        });
+                // Add event listener to the model icon to show full model name
+                const modelIcon = modelElement.querySelector('.model-icon');
+                if (modelIcon) {
+                    modelIcon.onclick = function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        currentModelFullName = model.id;
+                        showFullModelNameModal();
+                    };
+                }
+
+                // Add event listener to the "Set Default" button
+                const setDefaultButton = modelElement.querySelector('.set-default-btn');
+                if (setDefaultButton) {
+                    setDefaultButton.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        const modelId = setDefaultButton.dataset.modelId;
+                        const currentDefault = getDefaultModelId();
+                        if (currentDefault === modelId) {
+                            setDefaultModelId(null);
+                            displayAvailableModels(allAvailableModels, currentLoadedModelId);
+                        } else {
+                            showDefaultModelConfirmationModal(modelId);
+                        }
+                    });
+                }
+            }
+            // Update the search count display after each chunk
+            if (getUseOpenRouter()) {
+                const si = availableModelsList.querySelector('#or-model-search');
+                if (si && si.value.trim()) si.dispatchEvent(new Event('input'));
+            }
+            if (renderIndex < models.length) setTimeout(renderNextChunk, 0);
+        })();
     }
 }
 
@@ -1070,26 +1193,32 @@ function displayPotentialModels(models) {
             </div>
             <div>
                 <h3 class="text-lg font-semibold text-blue-400">Available Models</h3>
-                <p class="text-sm" style="color: ${isLightTheme ? '#6b7280' : '#9ca3af'} !important;">Select a model to load it</p>
+                <p class="text-sm" style="color: ${isLightTheme ? '#6b7280' : '#9ca3af'} !important;">${getUseOpenRouter() ? 'Click &quot;Select&quot; to use a cloud model' : 'Select a model to load it'}</p>
             </div>
         `;
         availableModelsList.appendChild(titleElement);
 
-        // Add each model to the list
-        models.forEach(model => {
-            const modelElement = document.createElement('div');
-            modelElement.id = `model-${model.id}`;
-            const modelBgClass = isLightTheme ? 'bg-gray-100' : 'bg-darkBg-70';
-            const modelBorderClass = isLightTheme ? 'border-gray-200' : 'border-white/5';
-            const modelTextColor = isLightTheme ? '#1f2937' : '#e5e7eb'; // gray-800 : gray-200
+        // Inject live search bar for OpenRouter (catalog can have hundreds of models)
+        if (getUseOpenRouter()) {
+            attachModelSearch(availableModelsList, isLightTheme);
+        }
 
-            modelElement.className = `p-4 ${modelBgClass} rounded-xl mb-3 border ${modelBorderClass} transition-all duration-300 hover:border-blue-500/30 hover:shadow-md`;
-            modelElement.style.color = `${modelTextColor} !important`;
+        // Render models in chunks to avoid blocking the WebView's main thread.
+        // OpenRouter catalogs can have 300+ entries; appending them all synchronously
+        // causes the list to appear frozen/truncated on mobile.
+        const CHUNK_SIZE = 50;
+        let renderIndex = 0;
+        (function renderNextChunk() {
+            const end = Math.min(renderIndex + CHUNK_SIZE, models.length);
+            for (; renderIndex < end; renderIndex++) {
+                const model = models[renderIndex];
+                const modelElement = document.createElement('div');
+                modelElement.id = `model-${model.id}`;
 
-            const isDefaultModel = model.id === getDefaultModelId();
+                const isDefaultModel = model.id === getDefaultModelId();
 
-            modelElement.className = 'model-item';
-            modelElement.innerHTML = `
+                modelElement.className = 'model-item';
+                modelElement.innerHTML = `
                 <div class="model-icon bg-blue-500/20 text-blue-400" data-model-id="${model.id}" title="Click to see full model name">
                     <i class="fas fa-robot"></i>
                 </div>
@@ -1100,63 +1229,72 @@ function displayPotentialModels(models) {
                     <button class="set-default-btn ${isDefaultModel ? 'default-active' : ''}" data-model-id="${model.id}" title="${isDefaultModel ? 'Remove as default' : 'Set as default'}">
                         <i class="fas fa-star"></i>
                     </button>
-                    <button class="load-model-btn"><i class="fas fa-plug"></i>Load</button>
+                    <button class="load-model-btn"><i class="fas fa-${getUseOpenRouter() ? 'check' : 'plug'}"></i>${getUseOpenRouter() ? 'Select' : 'Load'}</button>
                 </div>
             `;
 
-            availableModelsList.appendChild(modelElement);
+                availableModelsList.appendChild(modelElement);
 
-            // Add event listener to the load button
-            const loadButton = modelElement.querySelector('.load-model-btn');
-            if (loadButton) {
-                loadButton.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    // Legacy ad trigger removed
-                    await loadModel(model.id);
-                });
+                // Immediately apply the active search filter so items appended
+                // in later chunks are correctly hidden if they don't match.
+                if (getUseOpenRouter()) {
+                    const si = availableModelsList.querySelector('#or-model-search');
+                    if (si) {
+                        const q = si.value.toLowerCase().trim();
+                        if (q && !model.id.toLowerCase().includes(q)) {
+                            modelElement.style.display = 'none';
+                        }
+                    }
+                }
 
-                // If a model is currently loading, disable this button
-                if (isModelLoading) {
-                    loadButton.disabled = true;
-                    loadButton.classList.add('opacity-50', 'cursor-not-allowed');
-                    loadButton.classList.remove('hover:from-blue-600', 'hover:to-blue-700');
+                // Add event listener to the load button
+                const loadButton = modelElement.querySelector('.load-model-btn');
+                if (loadButton) {
+                    loadButton.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        await loadModel(model.id);
+                    });
+                    if (isModelLoading) {
+                        loadButton.disabled = true;
+                        loadButton.classList.add('opacity-50', 'cursor-not-allowed');
+                        loadButton.classList.remove('hover:from-blue-600', 'hover:to-blue-700');
+                    }
+                }
+
+                // Add event listener to the model icon to show full model name
+                const modelIcon = modelElement.querySelector('.model-icon');
+                if (modelIcon) {
+                    modelIcon.onclick = function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        currentModelFullName = model.id;
+                        showFullModelNameModal();
+                    };
+                }
+
+                // Add event listener to the "Set Default" button
+                const setDefaultButton = modelElement.querySelector('.set-default-btn');
+                if (setDefaultButton) {
+                    setDefaultButton.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        const modelId = setDefaultButton.dataset.modelId;
+                        const currentDefault = getDefaultModelId();
+                        if (currentDefault === modelId) {
+                            setDefaultModelId(null);
+                            displayPotentialModels(allAvailableModels);
+                        } else {
+                            showDefaultModelConfirmationModal(modelId);
+                        }
+                    });
                 }
             }
-
-            // Add event listener to the model icon to show full model name
-            const modelIcon = modelElement.querySelector('.model-icon');
-            if (modelIcon) {
-                console.log('Setting up click handler for potential model icon:', model.id);
-                modelIcon.onclick = function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Potential model icon clicked:', model.id);
-                    currentModelFullName = model.id;
-                    showFullModelNameModal();
-                };
+            // Update the search count display after each chunk
+            if (getUseOpenRouter()) {
+                const si = availableModelsList.querySelector('#or-model-search');
+                if (si && si.value.trim()) si.dispatchEvent(new Event('input'));
             }
-
-            // Add event listener to the "Set Default" button
-            const setDefaultButton = modelElement.querySelector('.set-default-btn');
-            if (setDefaultButton) {
-                setDefaultButton.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    const modelId = setDefaultButton.dataset.modelId;
-                    const currentDefault = getDefaultModelId();
-
-                    if (currentDefault === modelId) {
-                        // Remove as default - No info modal needed
-                        setDefaultModelId(null);
-                        // Refresh the display to update the UI
-                        displayPotentialModels(allAvailableModels);
-                    } else {
-                        // Set as default - Show confirmation
-                        showDefaultModelConfirmationModal(modelId);
-                    }
-                });
-            }
-
-        });
+            if (renderIndex < models.length) setTimeout(renderNextChunk, 0);
+        })();
     }
 }
 
@@ -1191,7 +1329,7 @@ function displayNoModelsLoaded() {
                     <i class="fas fa-exclamation-triangle text-sm"></i>
                 </div>
                 <div class="flex-1 min-w-0 current-model-name-container">
-                    <span class="break-words current-model-name">No model loaded</span>
+                    <span class="break-words current-model-name">${getUseOpenRouter() ? 'No model selected' : 'No model loaded'}</span>
                 </div>
             </div>
         `;
@@ -1366,6 +1504,41 @@ function showDefaultModelLoadedModal(modelName) {
         if (!modal) console.error('Modal element not found');
         if (!modelNameDisplay) console.error('Model name display element not found');
     }
+}
+
+/**
+ * Shows a brief confirmation modal when an OpenRouter model is selected.
+ * @param {string} modelId - The ID of the selected model
+ */
+function showOpenRouterModelSelectedModal(modelId) {
+    const modal = document.getElementById('openrouter-model-selected-modal');
+    const nameDisplay = document.getElementById('openrouter-model-selected-name');
+    if (!modal || !nameDisplay) return;
+
+    nameDisplay.textContent = modelId;
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+
+    const modalContent = modal.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.classList.add('animate-modal-in');
+        setTimeout(() => modalContent.classList.remove('animate-modal-in'), 300);
+    }
+
+    // Auto-close after 3 seconds
+    setTimeout(() => {
+        if (modalContent) {
+            modalContent.classList.add('animate-modal-out');
+            setTimeout(() => {
+                modalContent.classList.remove('animate-modal-out');
+                modal.classList.add('hidden');
+                modal.style.display = '';
+            }, 300);
+        } else {
+            modal.classList.add('hidden');
+            modal.style.display = '';
+        }
+    }, 3000);
 }
 
 /**

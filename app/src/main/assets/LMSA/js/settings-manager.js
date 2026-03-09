@@ -6,6 +6,8 @@ import {
   autoSmartReplyCheckbox,
   themeToggleCheckbox,
   ollamaToggleCheckbox,
+  openRouterToggleCheckbox,
+  openRouterApiKeyInput,
 } from "./dom-elements.js";
 
 import { applyThinkingVisibility, refreshAllMessages } from "./ui-manager.js";
@@ -28,6 +30,8 @@ let enterSendsNewline = false; // If true, Enter creates a new line, Shift+Enter
 let reasoningTimeout = 300; // Default 5 minutes for reasoning models (in seconds)
 let defaultModelId = null; // Default model to auto-select when models load
 let selectedTTSVoice = null; // Selected TTS voice name
+let useOpenRouter = false; // Use OpenRouter cloud API
+let openRouterApiKey = ''; // OpenRouter API key
 
 /**
  * Initializes temperature settings
@@ -479,9 +483,10 @@ export function saveAutoSmartReplySetting() {
 
 /**
  * Gets the current auto-smart reply setting
- * @returns {boolean} - True if auto-smart reply is enabled, false otherwise
+ * @returns {boolean} - True if auto-smart reply is enabled and OpenRouter is not active
  */
 export function getAutoSmartReply() {
+  if (useOpenRouter) return false;
   return autoSmartReply;
 }
 
@@ -491,6 +496,12 @@ export function getAutoSmartReply() {
  * @param {Event} event - The change event from the checkbox
  */
 function handleAutoSmartReplyToggle(event) {
+  // Smart Reply is unavailable when OpenRouter is active
+  if (useOpenRouter) {
+    event.target.checked = false;
+    return;
+  }
+
   const isChecked = event.target.checked;
 
   console.log('Smart Reply toggle changed, checked:', isChecked);
@@ -900,6 +911,14 @@ export function saveOllamaSetting() {
   if (ollamaToggleCheckbox) {
     useOllama = ollamaToggleCheckbox.checked;
     localStorage.setItem("useOllama", useOllama);
+    // Mutual exclusivity: disable OpenRouter when Ollama is enabled
+    if (useOllama && useOpenRouter) {
+      useOpenRouter = false;
+      openRouterApiKey = '';
+      localStorage.setItem("useOpenRouter", 'false');
+      if (openRouterToggleCheckbox) openRouterToggleCheckbox.checked = false;
+      updateOpenRouterUI(false);
+    }
   }
 }
 
@@ -909,6 +928,119 @@ export function saveOllamaSetting() {
  */
 export function getUseOllama() {
   return useOllama;
+}
+
+/**
+ * Updates the OpenRouter UI: shows/hides key input and IP/Port fields,
+ * and disables Smart Reply when OpenRouter is enabled (incompatible features).
+ * @param {boolean} isEnabled
+ */
+function updateOpenRouterUI(isEnabled) {
+  const ipPortContainers = document.querySelectorAll('.ip-port-container, .port-input-container');
+  const keyContainer = document.getElementById('openrouter-key-container');
+  const ipPortLabel = document.querySelector('#settings-step-connection label.block.text-sm.font-medium');
+  const ipPortInfo = document.querySelector('#settings-step-connection p.text-xs.text-gray-300.mt-1');
+
+  if (isEnabled) {
+    ipPortContainers.forEach(el => { if (el) el.style.display = 'none'; });
+    if (ipPortLabel) ipPortLabel.style.display = 'none';
+    if (ipPortInfo) ipPortInfo.style.display = 'none';
+    if (keyContainer) keyContainer.classList.remove('hidden');
+  } else {
+    ipPortContainers.forEach(el => { if (el) el.style.display = ''; });
+    if (ipPortLabel) ipPortLabel.style.display = '';
+    if (ipPortInfo) ipPortInfo.style.display = '';
+    if (keyContainer) keyContainer.classList.add('hidden');
+  }
+
+  // Smart Reply is incompatible with OpenRouter — disable/enable toggle accordingly
+  const smartReplyContainer = document.getElementById('smart-reply-setting');
+  const smartReplyDesc = document.getElementById('smart-reply-description');
+  if (isEnabled) {
+    // Visually disable and uncheck Smart Reply; don't overwrite localStorage so preference is restored later
+    if (autoSmartReplyCheckbox) {
+      autoSmartReplyCheckbox.checked = false;
+      autoSmartReplyCheckbox.disabled = true;
+    }
+    autoSmartReply = false;
+    if (smartReplyContainer) smartReplyContainer.style.opacity = '0.4';
+    if (smartReplyDesc) smartReplyDesc.textContent = 'Not available when OpenRouter is enabled. Smart Reply requires a local LLM connection.';
+  } else {
+    // Re-enable Smart Reply toggle and restore saved preference
+    if (autoSmartReplyCheckbox) {
+      autoSmartReplyCheckbox.disabled = false;
+      const savedAutoSmartReply = localStorage.getItem('autoSmartReply');
+      autoSmartReplyCheckbox.checked = savedAutoSmartReply === 'true';
+      autoSmartReply = savedAutoSmartReply === 'true';
+    }
+    if (smartReplyContainer) smartReplyContainer.style.opacity = '';
+    if (smartReplyDesc) smartReplyDesc.textContent = 'When enabled, the LLM will analyze the conversation and suggest interactive tap-to-reply options above the chat input.';
+  }
+}
+
+/**
+ * Loads the OpenRouter settings from localStorage
+ */
+export function loadOpenRouterSettings() {
+  const savedUseOpenRouter = localStorage.getItem('useOpenRouter');
+  useOpenRouter = savedUseOpenRouter === 'true';
+
+  if (openRouterToggleCheckbox) {
+    openRouterToggleCheckbox.checked = useOpenRouter;
+    openRouterToggleCheckbox.addEventListener('change', saveOpenRouterSettings);
+  }
+
+  const savedKey = localStorage.getItem('openRouterApiKey');
+  if (savedKey) {
+    openRouterApiKey = savedKey;
+    if (openRouterApiKeyInput) openRouterApiKeyInput.value = savedKey;
+  }
+
+  if (openRouterApiKeyInput) {
+    openRouterApiKeyInput.addEventListener('input', () => {
+      openRouterApiKey = openRouterApiKeyInput.value;
+      localStorage.setItem('openRouterApiKey', openRouterApiKey);
+    });
+  }
+
+  updateOpenRouterUI(useOpenRouter);
+}
+
+/**
+ * Saves the OpenRouter settings to localStorage
+ */
+export function saveOpenRouterSettings() {
+  if (openRouterToggleCheckbox) {
+    useOpenRouter = openRouterToggleCheckbox.checked;
+    localStorage.setItem('useOpenRouter', useOpenRouter);
+  }
+  if (openRouterApiKeyInput) {
+    openRouterApiKey = openRouterApiKeyInput.value;
+    localStorage.setItem('openRouterApiKey', openRouterApiKey);
+  }
+  updateOpenRouterUI(useOpenRouter);
+  // Mutual exclusivity: disable Ollama when OpenRouter is enabled
+  if (useOpenRouter && useOllama) {
+    useOllama = false;
+    localStorage.setItem('useOllama', 'false');
+    if (ollamaToggleCheckbox) ollamaToggleCheckbox.checked = false;
+  }
+}
+
+/**
+ * Gets the current OpenRouter enabled state
+ * @returns {boolean}
+ */
+export function getUseOpenRouter() {
+  return useOpenRouter;
+}
+
+/**
+ * Gets the current OpenRouter API key
+ * @returns {string}
+ */
+export function getOpenRouterApiKey() {
+  return openRouterApiKey;
 }
 
 /**
@@ -1046,6 +1178,7 @@ export function loadSettings() {
   loadReasoningTimeoutSetting();
   loadDefaultModelSetting();
   loadOllamaSetting();
+  loadOpenRouterSettings();
   // TTS voice selection will be initialized separately when settings modal opens
 }
 

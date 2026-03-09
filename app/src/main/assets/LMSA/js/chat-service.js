@@ -3,7 +3,7 @@ import { messagesContainer, userInput, loadedModelDisplay } from './dom-elements
 import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll, renderSmartReplies, hideSmartReplies, showSmartRepliesLoading } from './ui-manager.js';
 import { openHelpModal } from './help.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
-import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply } from './settings-manager.js';
+import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getOpenRouterApiKey } from './settings-manager.js';
 import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
 
@@ -13,6 +13,7 @@ let chatHistoryData = {};
 let isFirstMessage = true;
 let chatToDelete = null;
 let abortController = null;
+let smartReplyAbortController = null;
 let isGenerating = false;
 let isNewTopic = false;
 let isGeneratingTitle = false;
@@ -46,6 +47,10 @@ function ensureFirstMessageInitialized() {
  * @returns {string} - The ID of the selected model
  */
 function getSelectedModel() {
+    // Use the user-selected model stored in the global variable
+    if (window.currentLoadedModel) {
+        return window.currentLoadedModel;
+    }
     const availableModels = getAvailableModels();
     // Return the first available model or a default value if none available
     return availableModels.length > 0 ? availableModels[0] : 'unknown_model';
@@ -124,6 +129,13 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
 
     // Reset the flags
     isGenerating = true;
+
+    // Abort any ongoing smart replies generation to free up concurrent connection limits
+    if (smartReplyAbortController) {
+        debugLog('Aborting pending smart replies for new generation');
+        smartReplyAbortController.abort();
+        smartReplyAbortController = null;
+    }
 
     // Create a new AbortController instance for this request
     abortController = new AbortController();
@@ -358,6 +370,10 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             stream: true,
         };
 
+        if (getUseOpenRouter()) {
+            requestBody.include_reasoning = true;
+        }
+
         // Add max_tokens only if it's set to a valid value
         const maxTokens = getMaxTokens();
         if (maxTokens > 0) {
@@ -395,11 +411,17 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
 
         // Send the request to the API with timeout protection
         console.log('Sending fetch request to:', apiUrl);
+        const requestHeaders = {
+            'Content-Type': 'application/json',
+        };
+        if (getUseOpenRouter()) {
+            requestHeaders['Authorization'] = `Bearer ${getOpenRouterApiKey()}`;
+            requestHeaders['HTTP-Referer'] = 'https://lmsa.app';
+            requestHeaders['X-Title'] = 'LMSA';
+        }
         const fetchPromise = fetch(apiUrl, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: requestHeaders,
             body: JSON.stringify(requestBody),
             signal: signal
         });
@@ -436,6 +458,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         let lastChunkTime = Date.now();
         let isInThinkingProcess = false;
         let thinkingStartTime = null;
+        let isHandlingOpenRouterReasoning = false;
 
         // Streaming progress tracking for reasoning models
 
@@ -459,6 +482,12 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             const { done, value } = await reader.read();
 
             if (done) {
+                // Ensure we close any OpenRouter reasoning tags
+                if (isHandlingOpenRouterReasoning) {
+                    aiMessage += '\n</think>\n';
+                    isHandlingOpenRouterReasoning = false;
+                }
+
                 // Clear chunk timeout when stream is complete
                 if (chunkTimeoutId) {
                     clearTimeout(chunkTimeoutId);
@@ -519,13 +548,17 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             }
 
             // Handle the data stream based on format (OpenAI, Anthropic, etc.)
-            if (chunkText.startsWith('data: ')) {
-                // This is an OpenAI/LM Studio-style event stream (Server-Sent Events)
-                const lines = chunkText.split('\n');
+            // Split on both \r\n and \n to handle all SSE line endings.
+            // Do NOT gate on startsWith('data: ') — OpenRouter (and other APIs) may
+            // prefix chunks with SSE comments (e.g. ": OPENROUTER PROCESSING") or
+            // leading newlines between events, which would cause the entire chunk to
+            // be silently discarded. The inner line-level check is sufficient.
+            {
+                const lines = chunkText.split(/\r?\n/);
 
                 for (const line of lines) {
-                    // Skip empty lines and initial keep-alive messages
-                    if (!line.trim() || line === 'data: [DONE]' || line === 'data: ') {
+                    // Skip empty lines, SSE comments, and terminal [DONE] markers
+                    if (!line.trim() || line === 'data: [DONE]' || line === 'data: ' || line.startsWith(': ')) {
                         continue;
                     }
 
@@ -540,8 +573,25 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                             if (data.choices && data.choices[0] && data.choices[0].delta) {
                                 const delta = data.choices[0].delta;
 
+                                let chunkContent = '';
+                                if (delta.reasoning) {
+                                    if (!isHandlingOpenRouterReasoning) {
+                                        chunkContent += '<think>\n';
+                                        isHandlingOpenRouterReasoning = true;
+                                    }
+                                    chunkContent += delta.reasoning;
+                                }
+
+                                if (delta.content !== undefined && delta.content !== null && delta.content !== '') {
+                                    if (isHandlingOpenRouterReasoning) {
+                                        chunkContent += '\n</think>\n';
+                                        isHandlingOpenRouterReasoning = false;
+                                    }
+                                    chunkContent += delta.content;
+                                }
+
                                 // Add content if it exists in this chunk
-                                if (delta.content) {
+                                if (chunkContent) {
                                     // Create the AI message bubble on first content arrival
                                     if (!aiMessageElement) {
                                         // Hide loading indicator before showing the message
@@ -558,7 +608,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                         }
                                     }
 
-                                    aiMessage += delta.content;
+                                    aiMessage += chunkContent;
 
                                     // Track thinking process for progress indication
                                     const hasThinkTags = aiMessage.includes('<think>') || aiMessage.includes('</think>');
@@ -580,7 +630,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
 
                                     // Check if this is a code block outside of think tags
                                     if (!hasCodeBlock &&
-                                        (delta.content.includes('```') ||
+                                        (chunkContent.includes('```') ||
                                             aiMessage.includes('```'))) {
 
                                         // Only trigger reload for code blocks outside think tags
@@ -835,6 +885,12 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
 
         if (error.name === 'AbortError') {
             debugLog('Fetch aborted');
+            // Ensure UI is reset even when the stream is aborted
+            hideLoadingIndicator();
+            const stopButton = document.getElementById('stop-button');
+            if (stopButton && !stopButton.classList.contains('hidden')) {
+                toggleSendStopButton();
+            }
         } else {
             debugError('Error:', error);
 
@@ -2328,11 +2384,18 @@ export async function generateChatTitle(userMessage) {
 
         debugLog('Sending API request to generate chat title');
 
+        const requestHeaders = {
+            'Content-Type': 'application/json',
+        };
+        if (getUseOpenRouter()) {
+            requestHeaders['Authorization'] = `Bearer ${getOpenRouterApiKey()}`;
+            requestHeaders['HTTP-Referer'] = 'https://lmsa.app';
+            requestHeaders['X-Title'] = 'LMSA';
+        }
+
         const response = await fetch(getApiUrl(), {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: requestHeaders,
             body: JSON.stringify(requestBody),
         });
 
@@ -3368,15 +3431,23 @@ async function generateSmartRepliesAPI(userMessage, contextSnippet, model) {
             max_tokens: 500,
         };
 
+        smartReplyAbortController = new AbortController();
+
         const response = await fetch(getApiUrl(), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody),
+            signal: smartReplyAbortController.signal
         });
 
-        if (!response.ok) return;
+        if (!response.ok) {
+            smartReplyAbortController = null;
+            return;
+        }
 
         const data = await response.json();
+        smartReplyAbortController = null;
+
         const rawText = data?.choices?.[0]?.message?.content?.trim();
         if (!rawText) return;
 

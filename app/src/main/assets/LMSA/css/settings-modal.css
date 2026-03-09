@@ -336,12 +336,14 @@
 /* Premium input fields with immersive styling */
 #settings-modal input[type="text"],
 #settings-modal input[type="number"],
+#settings-modal input[type="password"],
 #settings-modal textarea {
   background: var(--settings-input-bg);
   color: var(--settings-input-text);
   border: 1px solid var(--settings-input-border);
   border-radius: 0.75rem;
   padding: 1rem 1.2rem;
+  box-sizing: border-box;
   box-shadow: 0 4px 10px var(--modal-overlay),
     inset 0 1px 3px var(--modal-overlay), 0 0 0 1px var(--border-color);
 
@@ -366,6 +368,7 @@
 /* Premium focus effect with glow */
 #settings-modal input[type="text"]:focus,
 #settings-modal input[type="number"]:focus,
+#settings-modal input[type="password"]:focus,
 #settings-modal textarea:focus {
   background: var(--settings-input-bg);
   border-color: var(--toggle-active-bg);
@@ -387,6 +390,7 @@
 /* Placeholder text */
 #settings-modal input[type="text"]::placeholder,
 #settings-modal input[type="number"]::placeholder,
+#settings-modal input[type="password"]::placeholder,
 #settings-modal textarea::placeholder {
   color: var(--input-placeholder);
   font-style: normal;
@@ -463,6 +467,12 @@
   border-color: var(--toggle-active-bg);
   text-indent: 0;
   /* No text indent for port field */
+}
+
+/* OpenRouter API key container */
+#openrouter-key-container {
+  padding-right: 2px;
+  box-sizing: border-box;
 }
 
 /* IP and Port container */
@@ -1025,8 +1035,6 @@
   overflow-y: auto !important;
   overflow-x: hidden !important;
   max-height: calc(85vh - 160px);
-  padding-right: 12px;
-  margin-right: -12px;
   scrollbar-width: thin;
   scrollbar-color: rgba(59, 130, 246, 0.5) rgba(30, 41, 59, 0.2);
   scroll-behavior: smooth;

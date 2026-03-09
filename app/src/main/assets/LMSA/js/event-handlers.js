@@ -1733,7 +1733,8 @@ async function handleChatFormSubmit(e) {
 
         // Create a new abort controller for this request
         // Important: ensure any existing controller is aborted and released first
-        import('./chat-service.js').then(module => {
+        try {
+            const module = await import('./chat-service.js');
             if (typeof module.setAbortController === 'function') {
                 // Create a new abort controller for this request
                 const controller = new AbortController();
@@ -1744,15 +1745,15 @@ async function handleChatFormSubmit(e) {
                 toggleSendStopButton();
 
                 // Process files if any
-                processFilesAndGenerateResponse();
+                await processFilesAndGenerateResponse();
             }
-        }).catch(error => {
+        } catch (error) {
             console.error('Error importing chat-service module:', error);
             // Fall back to basic processing if import fails
             showLoadingIndicator();
             toggleSendStopButton();
-            processFilesAndGenerateResponse();
-        });
+            await processFilesAndGenerateResponse();
+        }
 
         // Define the function to process files and generate response
         async function processFilesAndGenerateResponse() {
