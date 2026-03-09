@@ -9009,3 +9009,43 @@ body.light-theme #template-indicator #disable-template-btn:hover {
 .smart-reply-close-btn:hover {
     color: #ffffff !important;
 }
+
+/* ── Math expression rendering ─────────────────────────────────────────── */
+.math-display {
+    display: block;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.05em;
+    text-align: center;
+    padding: 0.6em 1.2em;
+    margin: 0.6em 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 3px solid var(--accent-color, #6366f1);
+    border-radius: 4px;
+    overflow-x: auto;
+    color: var(--text-primary, #e2e8f0);
+    line-height: 1.6;
+}
+
+.math-inline {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.95em;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0.05em 0.25em;
+    border-radius: 3px;
+    color: var(--text-primary, #e2e8f0);
+}
+
+/* KaTeX overrides for dark theme */
+.math-display .katex,
+.math-inline .katex {
+    font-size: 1em;
+}
+
+.math-display[data-math-rendered] {
+    font-family: inherit;
+    text-align: center;
+}
+
+.math-inline[data-math-rendered] {
+    font-family: inherit;
+}

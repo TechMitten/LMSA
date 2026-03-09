@@ -210,6 +210,29 @@ function formatHtmlAsCode(htmlContent) {
 }
 
 /**
+ * Restores math placeholders in sanitized HTML, wrapping them in
+ * styled elements for KaTeX auto-rendering.
+ */
+function restoreMathPlaceholders(sanitized, displayPlaceholders, inlinePlaceholders) {
+    displayPlaceholders.forEach((math, id) => {
+        const placeholder = 'XXMATHDISP' + id + 'ENDMATHDISPXX';
+        const safeAttr = math.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const html = '<div class="math-display" data-math="' + safeAttr + '">' + safeAttr + '</div>';
+        sanitized = sanitized.replace(new RegExp('<p>\\s*' + placeholder + '\\s*<\\/p>', 'g'), html);
+        sanitized = sanitized.replace(new RegExp(placeholder, 'g'), html);
+    });
+    inlinePlaceholders.forEach((math, id) => {
+        const placeholder = 'XXMATHINL' + id + 'ENDMATHINLXX';
+        const safeAttr = math.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        sanitized = sanitized.replace(
+            new RegExp(placeholder, 'g'),
+            '<span class="math-inline" data-math="' + safeAttr + '">' + safeAttr + '</span>'
+        );
+    });
+    return sanitized;
+}
+
+/**
  * Sanitizes input for non-reasoning models
  * @param {string} input - The input text to sanitize
  * @returns {string} - Sanitized HTML
@@ -217,6 +240,22 @@ function formatHtmlAsCode(htmlContent) {
 export function basicSanitizeInput(input) {
     // First, remove any <think> tags that might be present
     let processedInput = input.replace(/<think>[\s\S]*?<\/think>/g, '');
+
+    // Extract math expressions before HTML escaping to prevent paragraph fragmentation
+    const mathDisplayPlaceholders = [];
+    const mathInlinePlaceholders = [];
+    processedInput = processedInput.replace(/\$\$([\s\S]*?)\$\$/g, (_match, content) => {
+        const id = mathDisplayPlaceholders.length;
+        mathDisplayPlaceholders.push(content.trim());
+        return '\nXXMATHDISP' + id + 'ENDMATHDISPXX\n';
+    });
+    processedInput = processedInput.replace(/\$([^\$\n]+?)\$/g, (_match, content) => {
+        // Skip plain dollar amounts (e.g. $3.99)
+        if (/^[\d,.\s]+$/.test(content.trim())) return _match;
+        const id = mathInlinePlaceholders.length;
+        mathInlinePlaceholders.push(content);
+        return 'XXMATHINL' + id + 'ENDMATHINLXX';
+    });
 
     // Check if the entire content appears to be HTML code
     if (isHtmlContent(processedInput)) {
@@ -327,6 +366,7 @@ export function basicSanitizeInput(input) {
         }
     }).join('\n');
 
+    sanitized = restoreMathPlaceholders(sanitized, mathDisplayPlaceholders, mathInlinePlaceholders);
     return sanitized;
 }
 
@@ -338,6 +378,22 @@ export function basicSanitizeInput(input) {
 export function sanitizeInput(input) {
     // First extract all <think> tag contents before any HTML escaping
     let processedInput = input;
+
+    // Extract math expressions before anything else to prevent fragmentation
+    const mathDisplayPlaceholders = [];
+    const mathInlinePlaceholders = [];
+    processedInput = processedInput.replace(/\$\$([\s\S]*?)\$\$/g, (_match, content) => {
+        const id = mathDisplayPlaceholders.length;
+        mathDisplayPlaceholders.push(content.trim());
+        return '\nXXMATHDISP' + id + 'ENDMATHDISPXX\n';
+    });
+    processedInput = processedInput.replace(/\$([^\$\n]+?)\$/g, (_match, content) => {
+        if (/^[\d,.\s]+$/.test(content.trim())) return _match;
+        const id = mathInlinePlaceholders.length;
+        mathInlinePlaceholders.push(content);
+        return 'XXMATHINL' + id + 'ENDMATHINLXX';
+    });
+
     const thinkMatches = [];
     let hasThinkTag = false;
 
@@ -543,6 +599,7 @@ export function sanitizeInput(input) {
         sanitized += '</div>';
     }
 
+    sanitized = restoreMathPlaceholders(sanitized, mathDisplayPlaceholders, mathInlinePlaceholders);
     return sanitized;
 }
 

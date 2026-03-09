@@ -55,6 +55,10 @@ export async function initializeApp() {
     // Disable debug logging by default
     setDebugEnabled(false);
 
+    // Set up math rendering (KaTeX auto-render for $...$ and $$...$$)
+    if (typeof window.setupMathRendering === 'function') {
+        window.setupMathRendering();
+    }
 
     // Initialize Android WebView keyboard fix
     initializeAndroidKeyboardFix();

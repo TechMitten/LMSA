@@ -199,3 +199,99 @@ window.renderCodeWithFallback = function (container, code, language) {
 
     return pre;
 };
+
+// KaTeX lazy loader for math rendering
+window.loadKaTeXLibrary = function () {
+    return new Promise((resolve, reject) => {
+        if (window.katex) {
+            resolve(window.katex);
+            return;
+        }
+        if (window._katexLoading) {
+            window._katexLoading.then(resolve).catch(reject);
+            return;
+        }
+        window._katexLoading = new Promise((loadResolve, loadReject) => {
+            // Load KaTeX CSS first
+            if (!document.getElementById('katex-css')) {
+                const link = document.createElement('link');
+                link.id = 'katex-css';
+                link.rel = 'stylesheet';
+                link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css';
+                link.crossOrigin = 'anonymous';
+                document.head.appendChild(link);
+            }
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js';
+            script.crossOrigin = 'anonymous';
+            script.onload = () => {
+                console.log('KaTeX loaded successfully');
+                loadResolve(window.katex);
+            };
+            script.onerror = (e) => {
+                console.warn('KaTeX failed to load, math will show as plain text');
+                loadReject(e);
+            };
+            document.head.appendChild(script);
+        });
+        window._katexLoading.then(resolve).catch(reject);
+    });
+};
+
+// Render all unrendered math elements inside a container
+window._renderMathElements = function (elements) {
+    if (!window.katex || !elements || elements.length === 0) return;
+    elements.forEach(el => {
+        if (el.hasAttribute('data-math-rendered')) return;
+        const math = el.getAttribute('data-math');
+        if (!math) return;
+        const isDisplay = el.classList.contains('math-display');
+        try {
+            el.innerHTML = window.katex.renderToString(math, {
+                displayMode: isDisplay,
+                throwOnError: false,
+                output: 'html'
+            });
+            el.setAttribute('data-math-rendered', 'true');
+        } catch (e) {
+            // Leave as-is on KaTeX error
+        }
+    });
+};
+
+// Set up a MutationObserver to auto-render math when new math elements enter the DOM
+window.setupMathRendering = function () {
+    // Try to load KaTeX eagerly (will silently fail if offline)
+    window.loadKaTeXLibrary().then(() => {
+        // Render any math already in the DOM
+        const existing = document.querySelectorAll('.math-display:not([data-math-rendered]), .math-inline:not([data-math-rendered])');
+        window._renderMathElements(Array.from(existing));
+    }).catch(() => {});
+
+    const observer = new MutationObserver((mutations) => {
+        const newMathEls = [];
+        mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+                if (node.nodeType !== 1) return;
+                if (node.classList && (node.classList.contains('math-display') || node.classList.contains('math-inline'))) {
+                    newMathEls.push(node);
+                }
+                if (node.querySelectorAll) {
+                    node.querySelectorAll('.math-display:not([data-math-rendered]), .math-inline:not([data-math-rendered])').forEach(el => newMathEls.push(el));
+                }
+            });
+        });
+        if (newMathEls.length === 0) return;
+        // Debounce so streaming doesn't trigger excessive renders
+        clearTimeout(window._mathRenderTimer);
+        window._mathRenderTimer = setTimeout(() => {
+            if (window.katex) {
+                window._renderMathElements(newMathEls);
+            } else {
+                window.loadKaTeXLibrary().then(() => window._renderMathElements(newMathEls)).catch(() => {});
+            }
+        }, 80);
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+};
