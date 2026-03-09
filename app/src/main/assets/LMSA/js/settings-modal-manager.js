@@ -90,9 +90,10 @@ export async function showSettingsModal() {
             // Make sure all other steps are hidden
             const promptStep = document.getElementById('settings-step-prompt');
             const optionsStep = document.getElementById('settings-step-options');
+            const fontStep = document.getElementById('settings-step-font');
             const actionsStep = document.getElementById('settings-step-actions');
 
-            [promptStep, optionsStep, actionsStep].forEach(step => {
+            [promptStep, optionsStep, fontStep, actionsStep].forEach(step => {
                 if (step) {
                     step.classList.add('hidden');
                     step.classList.remove('active', 'slide-in-right', 'slide-in-left');
@@ -103,10 +104,11 @@ export async function showSettingsModal() {
             const connectionButtons = document.getElementById('connection-step-buttons');
             const promptButtons = document.getElementById('prompt-step-buttons');
             const optionsButtons = document.getElementById('options-step-buttons');
+            const fontButtons = document.getElementById('font-step-buttons');
             const actionsButtons = document.getElementById('actions-step-buttons');
 
             // Hide all button containers first
-            [promptButtons, optionsButtons, actionsButtons].forEach(container => {
+            [promptButtons, optionsButtons, fontButtons, actionsButtons].forEach(container => {
                 if (container) {
                     container.classList.add('hidden');
                 }
@@ -183,7 +185,8 @@ export function updateStepIndicators(currentStep) {
         connection: document.getElementById('step-indicator-1'),
         prompt: document.getElementById('step-indicator-2'),
         options: document.getElementById('step-indicator-3'),
-        actions: document.getElementById('step-indicator-4')
+        font: document.getElementById('step-indicator-4'),
+        actions: document.getElementById('step-indicator-5')
     };
 
     // Reset all indicators to gray
@@ -210,14 +213,17 @@ export function initializeSettingsModalNavigation() {
     const backToConnectionBtn = document.getElementById('back-to-connection-btn');
     const toOptionsBtn = document.getElementById('to-options-step-btn');
     const backToPromptBtn = document.getElementById('back-to-prompt-btn');
-    const toActionsBtn = document.getElementById('to-actions-step-btn');
+    const toFontBtn = document.getElementById('to-font-step-btn');
     const backToOptionsBtn = document.getElementById('back-to-options-btn');
+    const toActionsBtn = document.getElementById('to-actions-step-btn');
+    const backToFontBtn = document.getElementById('back-to-font-btn');
 
     // Get all steps
     const steps = {
         connection: document.getElementById('settings-step-connection'),
         prompt: document.getElementById('settings-step-prompt'),
         options: document.getElementById('settings-step-options'),
+        font: document.getElementById('settings-step-font'),
         actions: document.getElementById('settings-step-actions')
     };
 
@@ -279,7 +285,8 @@ export function initializeSettingsModalNavigation() {
             connection: document.getElementById('step-indicator-1'),
             prompt: document.getElementById('step-indicator-2'),
             options: document.getElementById('step-indicator-3'),
-            actions: document.getElementById('step-indicator-4')
+            font: document.getElementById('step-indicator-4'),
+            actions: document.getElementById('step-indicator-5')
         };
 
         // Reset all indicators to gray
@@ -303,10 +310,11 @@ export function initializeSettingsModalNavigation() {
         const connectionButtons = document.getElementById('connection-step-buttons');
         const promptButtons = document.getElementById('prompt-step-buttons');
         const optionsButtons = document.getElementById('options-step-buttons');
+        const fontButtons = document.getElementById('font-step-buttons');
         const actionsButtons = document.getElementById('actions-step-buttons');
 
         // Hide all button containers first
-        [connectionButtons, promptButtons, optionsButtons, actionsButtons].forEach(container => {
+        [connectionButtons, promptButtons, optionsButtons, fontButtons, actionsButtons].forEach(container => {
             if (container) {
                 container.classList.add('hidden');
             }
@@ -322,6 +330,9 @@ export function initializeSettingsModalNavigation() {
                 break;
             case 'options':
                 if (optionsButtons) optionsButtons.classList.remove('hidden');
+                break;
+            case 'font':
+                if (fontButtons) fontButtons.classList.remove('hidden');
                 break;
             case 'actions':
                 if (actionsButtons) actionsButtons.classList.remove('hidden');
@@ -391,8 +402,10 @@ export function initializeSettingsModalNavigation() {
     addButtonEventListener(backToConnectionBtn, 'connection', 'left');
     addButtonEventListener(toOptionsBtn, 'options', 'right');
     addButtonEventListener(backToPromptBtn, 'prompt', 'left');
-    addButtonEventListener(toActionsBtn, 'actions', 'right');
+    addButtonEventListener(toFontBtn, 'font', 'right');
     addButtonEventListener(backToOptionsBtn, 'options', 'left');
+    addButtonEventListener(toActionsBtn, 'actions', 'right');
+    addButtonEventListener(backToFontBtn, 'font', 'left');
 
     // Initialize with stepped navigation for all screen sizes
     showStep('connection');
@@ -429,10 +442,11 @@ export function initializeSettingsModalNavigation() {
             const connectionButtons = document.getElementById('connection-step-buttons');
             const promptButtons = document.getElementById('prompt-step-buttons');
             const optionsButtons = document.getElementById('options-step-buttons');
+            const fontButtons = document.getElementById('font-step-buttons');
             const actionsButtons = document.getElementById('actions-step-buttons');
 
             // Hide all button containers first
-            [promptButtons, optionsButtons, actionsButtons].forEach(container => {
+            [promptButtons, optionsButtons, fontButtons, actionsButtons].forEach(container => {
                 if (container) {
                     container.classList.add('hidden');
                 }
@@ -476,6 +490,7 @@ function resetModalState() {
         connection: document.getElementById('settings-step-connection'),
         prompt: document.getElementById('settings-step-prompt'),
         options: document.getElementById('settings-step-options'),
+        font: document.getElementById('settings-step-font'),
         actions: document.getElementById('settings-step-actions')
     };
 
@@ -483,6 +498,7 @@ function resetModalState() {
     const connectionButtons = document.getElementById('connection-step-buttons');
     const promptButtons = document.getElementById('prompt-step-buttons');
     const optionsButtons = document.getElementById('options-step-buttons');
+    const fontButtons = document.getElementById('font-step-buttons');
     const actionsButtons = document.getElementById('actions-step-buttons');
 
     // Ensure IP/Port containers are visible when modal is reopened
@@ -510,7 +526,7 @@ function resetModalState() {
         });
 
         // Hide all button containers except the first one
-        [promptButtons, optionsButtons, actionsButtons].forEach(container => {
+        [promptButtons, optionsButtons, fontButtons, actionsButtons].forEach(container => {
             if (container) {
                 container.classList.add('hidden');
             }

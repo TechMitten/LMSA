@@ -20,6 +20,7 @@ export const settingsModal = `
                     <div class="w-8 h-2 rounded-full bg-gray-600" id="step-indicator-2"></div>
                     <div class="w-8 h-2 rounded-full bg-gray-600" id="step-indicator-3"></div>
                     <div class="w-8 h-2 rounded-full bg-gray-600" id="step-indicator-4"></div>
+                    <div class="w-8 h-2 rounded-full bg-gray-600" id="step-indicator-5"></div>
                 </div>
             </div>
 
@@ -74,7 +75,7 @@ export const settingsModal = `
                                 <button type="button" id="openrouter-api-key-reveal"
                                     class="openrouter-key-reveal-btn"
                                     title="Show/hide API key"
-                                    onclick="(function(){var i=document.getElementById('openrouter-api-key'),b=document.getElementById('openrouter-api-key-reveal');if(i.type==='password'){i.type='text';b.innerHTML='<i class=\'fas fa-eye-slash\'></i>';}else{i.type='password';b.innerHTML='<i class=\'fas fa-eye\'></i>';}})()">
+                                    onclick="(function(){var i=document.getElementById('openrouter-api-key'),b=document.getElementById('openrouter-api-key-reveal');if(i.type==='password'){i.type='text';b.innerHTML='<i class=&quot;fas fa-eye-slash&quot;></i>';}else{i.type='password';b.innerHTML='<i class=&quot;fas fa-eye&quot;></i>';}})()">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
@@ -250,6 +251,10 @@ export const settingsModal = `
                         </p>
                     </div>
 
+                </div>
+
+                <!-- Step 4: Font -->
+                <div id="settings-step-font" class="settings-step hidden" data-step-name="Font">
                     <div class="mb-5">
                         <label for="chat-font-family-select" class="block text-sm font-medium mb-2">
                             <i class="fas fa-font mr-2 text-blue-400"></i>Chat Bubble Font</label>
@@ -277,12 +282,9 @@ export const settingsModal = `
                         </select>
                         <p class="text-xs text-gray-400 mt-1">Select the text size used in chat message bubbles</p>
                     </div>
-
-
-
                 </div>
 
-                <!-- Step 4: Actions -->
+                <!-- Step 5: Actions -->
                 <div id="settings-step-actions" class="settings-step hidden" data-step-name="Actions">
                     <div class="mb-4">
                         <h3 class="text-sm font-medium mb-3 text-gray-200">
@@ -333,6 +335,20 @@ export const settingsModal = `
                         <i class="fas fa-arrow-left text-sm"></i>
                         <span class="button-text">Back</span>
                     </button>
+                    <button id="to-font-step-btn"
+                        class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                        <i class="fas fa-arrow-right text-sm"></i>
+                        <span class="button-text">Next</span>
+                    </button>
+                </div>
+
+                <!-- Font step buttons -->
+                <div class="justify-between navigation-buttons hidden" id="font-step-buttons">
+                    <button id="back-to-options-btn"
+                        class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                        <i class="fas fa-arrow-left text-sm"></i>
+                        <span class="button-text">Back</span>
+                    </button>
                     <button id="to-actions-step-btn"
                         class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
                         <i class="fas fa-arrow-right text-sm"></i>
@@ -342,7 +358,7 @@ export const settingsModal = `
 
                 <!-- Actions step buttons -->
                 <div class="navigation-buttons hidden" id="actions-step-buttons">
-                    <button id="back-to-options-btn"
+                    <button id="back-to-font-btn"
                         class="professional-button flex items-center justify-center gap-3 w-full h-[48px]">
                         <i class="fas fa-arrow-left text-sm"></i>
                         <span class="button-text">Back</span>
