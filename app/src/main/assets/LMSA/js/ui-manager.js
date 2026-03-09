@@ -930,10 +930,10 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                         textToSpeak = visibleAfterThinkElement.textContent.trim();
                     } else if (messageContentElement) {
                         // Get text content, excluding thinking elements
-                        const thinkingElements = messageContentElement.querySelectorAll('.thinking-section, .thinking-indicator');
+                        const thinkingElements = messageContentElement.querySelectorAll('.think, .thinking-indicator');
                         const clonedElement = messageContentElement.cloneNode(true);
                         thinkingElements.forEach(el => {
-                            const clonedThinking = clonedElement.querySelector('.thinking-section, .thinking-indicator');
+                            const clonedThinking = clonedElement.querySelector('.think, .thinking-indicator');
                             if (clonedThinking) clonedThinking.remove();
                         });
                         textToSpeak = clonedElement.textContent.trim();
@@ -1446,10 +1446,10 @@ export function refreshAllMessages() {
                             textToSpeak = visibleAfterThinkElement.textContent.trim();
                         } else if (messageContentElement) {
                             // Get text content, excluding thinking elements
-                            const thinkingElements = messageContentElement.querySelectorAll('.thinking-section, .thinking-indicator');
+                            const thinkingElements = messageContentElement.querySelectorAll('.think, .thinking-indicator');
                             const clonedElement = messageContentElement.cloneNode(true);
                             thinkingElements.forEach(el => {
-                                const clonedThinking = clonedElement.querySelector('.thinking-section, .thinking-indicator');
+                                const clonedThinking = clonedElement.querySelector('.think, .thinking-indicator');
                                 if (clonedThinking) clonedThinking.remove();
                             });
                             textToSpeak = clonedElement.textContent.trim();
@@ -2322,10 +2322,10 @@ export function addSpeakerButtonsToExistingMessages() {
                     textToSpeak = visibleAfterThinkElement.textContent.trim();
                 } else if (messageContentElement) {
                     // Get text content, excluding thinking elements
-                    const thinkingElements = messageContentElement.querySelectorAll('.thinking-section, .thinking-indicator');
+                    const thinkingElements = messageContentElement.querySelectorAll('.think, .thinking-indicator');
                     const clonedElement = messageContentElement.cloneNode(true);
                     thinkingElements.forEach(el => {
-                        const clonedThinking = clonedElement.querySelector('.thinking-section, .thinking-indicator');
+                        const clonedThinking = clonedElement.querySelector('.think, .thinking-indicator');
                         if (clonedThinking) clonedThinking.remove();
                     });
                     textToSpeak = clonedElement.textContent.trim();

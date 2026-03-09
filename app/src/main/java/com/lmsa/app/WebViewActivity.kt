@@ -1095,6 +1095,7 @@ class WebViewActivity : AppCompatActivity() {
                     
                     // Clean the text to remove markdown and HTML
                     val cleanText = text
+                        .replace(Regex("<think>[\\s\\S]*?</think>"), "") // Remove thinking/reasoning blocks
                         .replace(Regex("<[^>]*>"), "") // Remove HTML tags
                         .replace(Regex("\\*\\*([^*]+)\\*\\*"), "$1") // Remove bold markdown
                         .replace(Regex("\\*([^*]+)\\*"), "$1") // Remove italic markdown
