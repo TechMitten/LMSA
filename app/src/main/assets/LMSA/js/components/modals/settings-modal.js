@@ -5,7 +5,7 @@ export const settingsModal = `
         <div class="modal-content">
             <!-- Settings Header -->
             <div class="flex flex-col sticky top-0 z-10 mb-6 pb-1 border-b border-gray-700/30 bg-inherit">
-                <div class="flex justify-between items-center mb-2">
+                <div class="flex justify-between items-center mb-1">
                     <h2 id="settings-title" class="text-xl font-bold flex items-center">
                         <i class="fas fa-cog text-blue-400 mr-2"></i>Settings
                     </h2>
@@ -13,6 +13,7 @@ export const settingsModal = `
                         <i class="fas fa-times text-lg"></i>
                     </button>
                 </div>
+                <p id="settings-step-subtitle" class="text-sm text-blue-400 font-medium mb-2">Server Connection</p>
 
                 <!-- Step indicators - visible on all screen sizes -->
                 <div class="flex justify-center space-x-3 py-2">

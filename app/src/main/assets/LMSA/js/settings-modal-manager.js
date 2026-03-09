@@ -202,6 +202,19 @@ export function updateStepIndicators(currentStep) {
         stepIndicators[currentStep].classList.remove('bg-gray-600');
         stepIndicators[currentStep].classList.add('bg-blue-500');
     }
+
+    // Update the page subtitle
+    const subtitleEl = document.getElementById('settings-step-subtitle');
+    if (subtitleEl) {
+        const subtitles = {
+            connection: 'Server Connection',
+            prompt: 'System Prompt',
+            options: 'Options',
+            font: 'Font & Layout',
+            actions: 'Actions'
+        };
+        subtitleEl.textContent = subtitles[currentStep] || '';
+    }
 }
 
 /**
@@ -301,6 +314,19 @@ export function initializeSettingsModalNavigation() {
         if (stepIndicators[currentStep]) {
             stepIndicators[currentStep].classList.remove('bg-gray-600');
             stepIndicators[currentStep].classList.add('bg-blue-500');
+        }
+
+        // Update the page subtitle
+        const subtitleEl = document.getElementById('settings-step-subtitle');
+        if (subtitleEl) {
+            const subtitles = {
+                connection: 'Server Connection',
+                prompt: 'System Prompt',
+                options: 'Options',
+                font: 'Font & Layout',
+                actions: 'Actions'
+            };
+            subtitleEl.textContent = subtitles[currentStep] || '';
         }
     }
 
