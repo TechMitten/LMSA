@@ -8939,3 +8939,17 @@ body.light-theme #template-indicator #disable-template-btn {
 body.light-theme #template-indicator #disable-template-btn:hover {
     background: rgba(59, 130, 246, 0.25) !important;
 }
+
+/* ── Smart Reply Warning Modal ───────────────────────────────────────────── */
+.smart-reply-confirm-btn:hover {
+    background: linear-gradient(to right, #d97706, #f59e0b) !important;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+
+.smart-reply-confirm-btn {
+    transition: box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.smart-reply-close-btn:hover {
+    color: #ffffff !important;
+}

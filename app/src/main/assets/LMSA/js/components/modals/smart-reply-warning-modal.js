@@ -6,52 +6,56 @@
 export const smartReplyWarningModal = `
     <!-- Smart Reply Warning Modal -->
     <div id="smart-reply-warning-modal"
-        class="fixed inset-0 bg-black/80 dark:bg-black/80 light:bg-gray-900/50 backdrop-blur-sm items-center justify-center hidden modal-container z-[9999]"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm items-center justify-center hidden modal-container"
+        style="z-index: 9999;"
         aria-labelledby="smart-reply-warning-title" role="dialog" aria-modal="true">
         <div
-            class="bg-gradient-to-b from-amber-950/95 to-amber-900/95 dark:from-[#2d1a0a] dark:to-[#3d2a0a] light:from-amber-50 light:to-amber-100 p-6 rounded-xl w-[420px] max-w-[90%] shadow-2xl modal-content border border-amber-900/30 dark:border-amber-900/30 light:border-amber-200 overflow-hidden">
+            class="p-6 rounded-xl shadow-2xl modal-content overflow-hidden"
+            style="background: linear-gradient(to bottom, #2d1a0a, #3d2a0a); border: 1px solid rgba(120,53,15,0.4); width: 420px; max-width: 90%;">
             <div class="flex justify-between items-center mb-4">
                 <h2 id="smart-reply-warning-title" class="text-xl font-bold flex items-center">
                     <div
-                        class="icon-wrapper mr-3 flex items-center justify-center rounded-full bg-amber-500/20 dark:bg-amber-500/20 light:bg-amber-500/10 w-10 h-10 text-amber-400 dark:text-amber-400 light:text-amber-600">
+                        class="mr-3 flex items-center justify-center rounded-full w-10 h-10"
+                        style="background: rgba(245,158,11,0.2); color: #fbbf24;">
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
-                    <span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300 dark:from-amber-400 dark:to-amber-300 light:from-amber-600 light:to-amber-700">Enable
-                        Smart Reply</span>
+                    <span style="color: #fbbf24;">Enable Smart Reply</span>
                 </h2>
                 <button id="close-smart-reply-warning-modal"
-                    class="text-gray-400 hover:text-white dark:text-gray-400 dark:hover:text-white light:text-gray-600 light:hover:text-gray-800 focus:outline-none rounded-full w-8 h-8 flex items-center justify-center">
+                    class="smart-reply-close-btn rounded-full w-8 h-8 flex items-center justify-center"
+                    style="background: transparent; border: none; color: #9ca3af; cursor: pointer; outline: none;">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
 
             <div class="mb-6">
                 <div
-                    class="p-4 rounded-lg bg-amber-900/20 dark:bg-amber-900/20 light:bg-amber-100/80 border border-amber-800/30 dark:border-amber-800/30 light:border-amber-300 mb-4">
-                    <p class="text-gray-300 dark:text-gray-300 light:text-black mb-3">Smart Reply provides AI-suggested responses based on conversation context.</p>
-                    <p class="text-amber-300 dark:text-amber-300 light:text-black text-sm font-semibold mb-2">Please note:</p>
-                    <ul class="text-amber-200 dark:text-amber-200 light:text-black text-sm space-y-1.5 ml-4">
-                        <li class="flex items-start">
-                            <i class="fas fa-circle mt-1.5 mr-2 text-[6px] text-amber-300 dark:text-amber-300 light:text-amber-600"></i>
+                    class="p-4 rounded-lg mb-4"
+                    style="background: rgba(120,53,15,0.25); border: 1px solid rgba(146,64,14,0.35);">
+                    <p class="text-gray-300 mb-3">Smart Reply provides AI-suggested responses based on conversation context.</p>
+                    <p class="text-sm font-semibold mb-2" style="color: #fcd34d;">Please note:</p>
+                    <ul class="text-sm ml-4" style="color: #fde68a; list-style: none; padding: 0;">
+                        <li class="flex items-start mb-2">
+                            <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #fcd34d; flex-shrink: 0;"></i>
                             <span>This feature may not work with all LLM models</span>
                         </li>
-                        <li class="flex items-start">
-                            <i class="fas fa-circle mt-1.5 mr-2 text-[6px] text-amber-300 dark:text-amber-300 light:text-amber-600"></i>
+                        <li class="flex items-start mb-2">
+                            <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #fcd34d; flex-shrink: 0;"></i>
                             <span>Quality and relevance of suggestions will vary</span>
                         </li>
                         <li class="flex items-start">
-                            <i class="fas fa-circle mt-1.5 mr-2 text-[6px] text-amber-300 dark:text-amber-300 light:text-amber-600"></i>
+                            <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #fcd34d; flex-shrink: 0;"></i>
                             <span>Some models may not generate useful suggestions</span>
                         </li>
                     </ul>
-                    <p class="text-gray-400 dark:text-gray-400 light:text-gray-600 text-xs mt-3 italic">The feature can be disabled at any time in settings.</p>
+                    <p class="text-gray-400 text-xs mt-3 italic">The feature can be disabled at any time in settings.</p>
                 </div>
             </div>
 
             <div class="flex justify-center">
                 <button id="confirm-smart-reply-warning"
-                    class="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-600 hover:to-amber-500 dark:from-amber-700 dark:to-amber-600 dark:hover:from-amber-600 dark:hover:to-amber-500 light:from-amber-600 light:to-amber-500 light:hover:from-amber-500 light:hover:to-amber-400 text-white shadow-lg hover:shadow-amber-500/20 font-semibold">
+                    class="smart-reply-confirm-btn w-full px-4 rounded-lg text-white shadow-lg font-semibold"
+                    style="background: linear-gradient(to right, #b45309, #d97706); border: none; padding-top: 10px; padding-bottom: 10px; cursor: pointer;">
                     <i class="fas fa-check mr-2"></i>I Understand
                 </button>
             </div>
