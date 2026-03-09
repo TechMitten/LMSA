@@ -43,6 +43,12 @@ export const helpModal = `
                                 <i class="fas fa-terminal mr-2 text-sm"></i>
                                 <span>Ollama Setup</span>
                             </a>
+                            <a href="#section-openrouter"
+                                class="toc-link flex items-center p-2 rounded transition-colors"
+                                style="color: #facc15;">
+                                <i class="fas fa-cloud mr-2 text-sm"></i>
+                                <span>OpenRouter Setup</span>
+                            </a>
                             <a href="#section-templates"
                                 class="toc-link flex items-center p-2 rounded transition-colors"
                                 style="color: #a78bfa;">
@@ -267,6 +273,97 @@ export const helpModal = `
                                 </div>
                             </div>
                         </section>
+
+                        <section id="section-openrouter">
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;"><i
+                                    class="fas fa-cloud mr-2"></i>OpenRouter Setup</h3>
+                            <p style="color: var(--text-primary); margin-bottom: 1rem;">OpenRouter is a cloud AI
+                                service that lets you access hundreds of hosted models using your own API key. When
+                                OpenRouter is enabled, LMSA bypasses the local server entirely and sends requests
+                                directly to OpenRouter's cloud API.</p>
+
+                            <div class="mt-2 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
+                                        class="fas fa-rocket mr-2"></i>Quick Start:</p>
+                                <ol class="list-decimal pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li>Create a free account at <strong>openrouter.ai</strong> and generate an API
+                                        key from your dashboard</li>
+                                    <li>Open <strong>Settings</strong> in LMSA and scroll to the <strong>Use
+                                            OpenRouter (Cloud AI)</strong> toggle — switch it on</li>
+                                    <li>Paste your API key into the <strong>OpenRouter API Key</strong> field that
+                                        appears</li>
+                                    <li>Open the <i class="fas fa-robot text-blue-400"></i> <strong>Models</strong>
+                                        menu from the sidebar's Options to browse and select any available cloud
+                                        model</li>
+                                    <li>Start chatting — no local server required!</li>
+                                </ol>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                        class="fas fa-robot mr-2"></i>Selecting a Model:</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">OpenRouter provides
+                                    access to hundreds of models from providers like OpenAI, Anthropic, Meta,
+                                    Mistral, and more.</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li>Open the sidebar, tap <strong>Options</strong>, then the <i
+                                            class="fas fa-robot text-blue-400"></i> <strong>Models</strong> button
+                                    </li>
+                                    <li>The full OpenRouter model catalog will load automatically</li>
+                                    <li>Tap <strong>Load</strong> next to any model to select it</li>
+                                    <li>Your selection is saved and will be remembered next session</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                        class="fas fa-info-circle mr-2"></i>Key Differences from Local Mode:</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li><strong>No local server needed</strong> — LM Studio and Ollama are not used
+                                        when OpenRouter is active</li>
+                                    <li><strong>Internet required</strong> — all requests are sent to OpenRouter's
+                                        cloud servers</li>
+                                    <li><strong>Usage costs</strong> — most models charge per token; check
+                                        OpenRouter's pricing page for details. Some free-tier models are available
+                                    </li>
+                                    <li><strong>Reasoning models</strong> — models with built-in reasoning (e.g.
+                                        DeepSeek R1) are fully supported and will display their thinking process
+                                    </li>
+                                    <li><strong>Model loading/ejecting</strong> — cloud models activate instantly;
+                                        there is no download or hardware constraint</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg border"
+                                style="background: var(--settings-label-bg); border-color: #ef4444;">
+                                <p class="font-medium flex items-center" style="color: #ef4444;"><i
+                                        class="fas fa-shield-alt mr-2"></i>Privacy Notice:</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">When OpenRouter is
+                                    enabled, your messages are sent to OpenRouter's servers and then forwarded to
+                                    the chosen model provider. <strong>Do not share sensitive personal information,
+                                        passwords, or private data</strong> in your conversations. Review
+                                    OpenRouter's privacy policy for details on how your data is handled.</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">Your API key is stored
+                                    <strong>locally on your device only</strong> and is never sent to LMSA's
+                                    servers.</p>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
+                                        class="fas fa-exclamation-circle mr-2"></i>Troubleshooting OpenRouter:</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li><strong>No models loading</strong> — verify your API key is correct and
+                                        has not expired. Re-enter it in Settings if needed</li>
+                                    <li><strong>"Server not running" error</strong> — make sure the OpenRouter
+                                        toggle is on and a valid API key is entered</li>
+                                    <li><strong>Responses failing mid-stream</strong> — check your internet
+                                        connection and ensure your OpenRouter account has sufficient credits</li>
+                                    <li><strong>Switching back to local</strong> — simply turn the OpenRouter
+                                        toggle off in Settings to return to LM Studio or Ollama mode</li>
+                                </ul>
+                            </div>
+                        </section>
+
                         <section id="section-templates">
                             <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #a78bfa;"><i
                                     class="fas fa-th-large mr-2"></i>Using Templates</h3>

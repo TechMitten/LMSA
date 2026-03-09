@@ -38,7 +38,10 @@ export function resetApp() {
             'whatsNewSeen',
             'whatsNewSeenVersion',
             'whatsNewDismissedVersion',
-            'reasoningTimeout'
+            'reasoningTimeout',
+            'useOpenRouter',
+            'openRouterApiKey',
+            'openRouterSelectedModel'
         ];
 
         console.log('RESET APP: Clearing localStorage items...');

@@ -50,6 +50,28 @@ export const whatsNewModal = `
                             </div>
                         </div>
                     </div>
+                    <div class="feature-item">
+                        <div class="relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-green-500/10 to-teal-700/5 rounded-full blur-xl">
+                            </div>
+                            <div class="flex items-start relative z-10">
+                                <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-green-500/20 w-10 h-10 shadow-sm">
+                                    <i class="fas fa-cloud text-green-400"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <h3 class="feature-title">OpenRouter (Cloud AI)</h3>
+                                        <span class="ml-2 px-1.5 py-0.5 bg-green-500/20 text-green-300 text-xs rounded-full font-medium">NEW</span>
+                                    </div>
+                                    <div class="feature-description">
+                                        <p class="mb-3">You can now connect to cloud models via OpenRouter using your own API key. This disables the local server connection and lets you use cloud-hosted models.</p>
+                                        <p class="mb-3">To configure, click "Configure OpenRouter" and enter your API key in Settings. Your key is stored locally on your device only.</p>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
