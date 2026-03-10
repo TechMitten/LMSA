@@ -231,8 +231,9 @@ body.dark #terms-modal .bg-gray-900\/50 {
 
 /* Tablet optimizations */
 @media (min-width: 641px) and (max-width: 1024px) {
-    #terms-modal .max-w-2xl {
-        max-width: 90%;
+    #terms-modal > div {
+        max-width: 480px !important;
+        width: calc(100% - 2rem);
     }
 
     #terms-content {

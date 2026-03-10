@@ -16,7 +16,7 @@ import { initializeModelManager } from './model-manager.js';
 import { initializeWhatsNew } from './whats-new.js';
 import { initializeSettingsModal } from './settings-modal-manager.js';
 import { initializeIpPortConfirmationModal } from './ip-port-confirmation-modal.js';
-import { initPremiumModal } from './components/modals/premium-modal.js';
+import { initPremiumModal, openPremiumModal } from './components/modals/premium-modal.js';
 import { initSmartReplyWarningModal } from './components/modals/smart-reply-warning-modal.js';
 import { initOpenRouterWarningModal } from './components/modals/openrouter-warning-modal.js';
 import { initializeTemplateIndicator } from './template-indicator.js';
@@ -148,6 +148,7 @@ export async function initializeApp() {
     initializeSettingsModal();
     initializeIpPortConfirmationModal();
     initPremiumModal();
+    document.addEventListener('completionLimitReached', openPremiumModal);
     initSmartReplyWarningModal();
     initOpenRouterWarningModal();
     initializeTemplateIndicator();

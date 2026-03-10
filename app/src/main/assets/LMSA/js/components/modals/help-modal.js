@@ -73,6 +73,12 @@ export const helpModal = `
                                 <i class="fas fa-key mr-2 text-sm"></i>
                                 <span>Legacy Access</span>
                             </a>
+                            <a href="#section-limits"
+                                class="toc-link flex items-center p-2 rounded transition-colors"
+                                style="color: #8b5cf6;">
+                                <i class="fas fa-chart-line mr-2 text-sm"></i>
+                                <span>Usage Limits</span>
+                            </a>
                             <a href="#section-troubleshooting"
                                 class="toc-link flex items-center p-2 rounded transition-colors"
                                 style="color: #ef4444;">
@@ -553,6 +559,49 @@ export const helpModal = `
                                 <p style="color: var(--text-primary);"><a href="#" id="help-locate-order-number-link"
                                         class="text-blue-400 hover:text-blue-300 underline">Locate order number</a>
                                 </p>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="section-limits">
+                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #8b5cf6;"><i
+                                class="fas fa-chart-line mr-2"></i>Usage Limits</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #22c55e;"><i
+                                        class="fas fa-user-circle mr-2"></i>Free Users</p>
+                                <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
+                                    Free users have the following limits and features:</p>
+                                <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
+                                    <li><strong>Chat Completion Limit: 20 per day</strong> — After reaching this limit, you'll enter a cooldown period</li>
+                                    <li><strong>Automatic Reset: Midnight (Local Time)</strong> — Your chat completion count resets at midnight in your timezone, allowing you to chat freely again</li>
+                                    <li><strong>Advertisements:</strong> Free users see advertisements throughout the app</li>
+                                    <li><strong>Full Feature Access:</strong> All other features remain fully functional during cooldown periods</li>
+                                </ul>
+                            </div>
+
+                            <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                        class="fas fa-crown mr-2"></i>Premium Users</p>
+                                <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
+                                    Premium users enjoy unlimited access with the following benefits:</p>
+                                <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
+                                    <li><strong>Unlimited Chat Completions</strong> — No daily limits or cooldown periods</li>
+                                    <li><strong>Ad-Free Experience</strong> — No advertisements throughout the app</li>
+                                    <li><strong>One-Time Purchase:</strong> Upgrade with a single lifetime purchase</li>
+                                    <li><strong>Full Creative Freedom:</strong> Chat as much as you want, whenever you want</li>
+                                </ul>
+                            </div>
+
+                            <div class="p-3 rounded-lg mt-4" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                        class="fas fa-lightbulb mr-2"></i>How to Upgrade</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">To unlock Premium benefits and remove the chat completion limit:</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li>Tap the <strong>Remove Ads</strong> button on the main page</li>
+                                    <li>Complete a one-time lifetime purchase</li>
+                                    <li>Enjoy unlimited chats with no ads forever</li>
+                                </ul>
                             </div>
                         </div>
                     </section>

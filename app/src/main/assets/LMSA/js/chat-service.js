@@ -6,6 +6,7 @@ import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } 
 import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getOpenRouterApiKey } from './settings-manager.js';
 import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
+import { canSendCompletion, recordCompletion } from './usage-limiter.js';
 
 
 let currentChatId = Date.now();
@@ -117,6 +118,11 @@ async function generateAIResponseWithRetry(userMessage, fileContents = [], retry
  * @param {Array} fileContents - Optional array of file contents
  */
 export async function generateAIResponse(userMessage, fileContents = []) {
+    if (!canSendCompletion()) {
+        document.dispatchEvent(new CustomEvent('completionLimitReached'));
+        return;
+    }
+    recordCompletion();
     return await generateAIResponseWithRetry(userMessage, fileContents);
 }
 

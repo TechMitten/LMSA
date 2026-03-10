@@ -16,7 +16,7 @@ export const premiumModal = `
                 <div style="padding: 2.5rem 1rem 1.25rem 1rem; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto;">
                     <!-- Premium icon with subtle animation -->
                     <div style="margin-bottom: 0.75rem; position: relative; display: inline-block; align-self: center; flex-shrink: 0;">
-                        <div style="width: 3.75rem; height: 3.75rem; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%); border-radius: 1.25rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3); animation: premiumIconPulse 2.5s ease-in-out infinite;">
+                        <div style="width: 3.75rem; height: 3.75rem; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%); border-radius: 1.25rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3);">
                             <i class="fas fa-crown" style="font-size: 1.75rem; color: white;"></i>
                         </div>
                     </div>
@@ -74,6 +74,19 @@ export const premiumModal = `
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Benefit item 4 -->
+                        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%); padding: 0.75rem; border-radius: 0.875rem; border: 1px solid rgba(16, 185, 129, 0.2); transition: all 0.3s ease;">
+                            <div style="display: flex; align-items: center; gap: 0.625rem;">
+                                <div style="width: 2rem; height: 2rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 0.65rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <i class="fas fa-infinity" style="color: white; font-size: 0.9rem;"></i>
+                                </div>
+                                <div style="text-align: left; min-width: 0;">
+                                    <p style="color: var(--text-primary); font-weight: 600; font-size: 0.85rem; margin: 0;">Unlimited Usage</p>
+                                    <p style="color: var(--text-secondary); font-size: 0.75rem; margin: 0.15rem 0 0 0; word-break: break-word;">No daily limits, chat as much as you want</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- CTA Buttons -->
@@ -92,7 +105,7 @@ export const premiumModal = `
 
                     <!-- Trust indicator -->
                     <p style="color: var(--text-secondary); font-size: 0.75rem; margin: 0.75rem 0 0 0; opacity: 0.8; flex-shrink: 0;">
-                        Secure payment • Thousands trust us
+                        Secure payment • 10k+ Installs
                     </p>
                 </div>
             </div>
@@ -151,6 +164,16 @@ export const premiumModal = `
     </style>
 `;
 
+export function openPremiumModal() {
+    const modal = document.getElementById('premium-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    requestAnimationFrame(() => {
+        modal.style.opacity = '1';
+    });
+}
+
 export function initPremiumModal() {
     const modal = document.getElementById('premium-modal');
     const openButton = document.getElementById('remove-ads-banner-button');
@@ -167,12 +190,7 @@ export function initPremiumModal() {
     // Open modal
     if (openButton) {
         openButton.addEventListener('click', () => {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            // Trigger animation by ensuring the content is rendered
-            requestAnimationFrame(() => {
-                modal.style.opacity = '1';
-            });
+            openPremiumModal();
         });
     }
 

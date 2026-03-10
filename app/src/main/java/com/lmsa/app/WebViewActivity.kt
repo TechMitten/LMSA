@@ -32,6 +32,8 @@ import android.media.AudioManager
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import java.util.Locale
+import java.text.SimpleDateFormat
+import java.util.Date
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.OnBackPressedCallback
@@ -353,6 +355,7 @@ class WebViewActivity : AppCompatActivity() {
         // Add JavaScript interface for TTS
         webView.addJavascriptInterface(TTSInterface(), "AndroidTTS")
         webView.addJavascriptInterface(BillingInterface(), "AndroidBilling")
+        webView.addJavascriptInterface(UsageLimiterInterface(), "AndroidUsageLimiter")
 
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
@@ -990,6 +993,41 @@ class WebViewActivity : AppCompatActivity() {
             runOnUiThread {
                 loadInterstitialAd()
             }
+        }
+    }
+
+    inner class UsageLimiterInterface {
+        private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        private fun today(): String = dateFormat.format(Date())
+
+        @JavascriptInterface
+        fun canSendCompletion(): Boolean {
+            if (isPremium && !isDebugMode) return true
+            val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
+            val storedDate = prefs.getString("lmsa_completion_date", "") ?: ""
+            val count = prefs.getInt("lmsa_completion_count", 0)
+            val todayStr = today()
+            if (storedDate.isEmpty() || storedDate != todayStr) {
+                prefs.edit()
+                    .putString("lmsa_completion_date", todayStr)
+                    .putInt("lmsa_completion_count", 0)
+                    .apply()
+                return true
+            }
+            return count < 20
+        }
+
+        @JavascriptInterface
+        fun recordCompletion() {
+            val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
+            val todayStr = today()
+            val storedDate = prefs.getString("lmsa_completion_date", "") ?: ""
+            val count = prefs.getInt("lmsa_completion_count", 0)
+            val editor = prefs.edit()
+            if (storedDate.isEmpty()) {
+                editor.putString("lmsa_completion_date", todayStr)
+            }
+            editor.putInt("lmsa_completion_count", count + 1).apply()
         }
     }
 
