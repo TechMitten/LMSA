@@ -962,30 +962,48 @@ function showActionError(modelId, errorMsg) {
  */
 function displayCurrentModel(modelName) {
     if (currentModelDisplay) {
-        // Store the full model name for the modal
-        currentModelFullName = modelName;
-
-        currentModelDisplay.innerHTML = `
-            <div class="flex items-center">
-                <div class="model-icon bg-green-500/20 text-green-400 loaded mr-3" id="current-model-icon" title="Click to see full model name">
-                    <i class="fas fa-robot"></i>
+        // Handle dummy model display
+        if (modelName === 'dummy/no-model-selected') {
+            currentModelFullName = 'No Model Selected';
+            currentModelDisplay.innerHTML = `
+                <div class="flex items-center">
+                    <div class="model-icon bg-yellow-500/20 text-yellow-400 loaded mr-3" id="current-model-icon" title="Please select a model">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="model-name font-medium" style="color: #facc15;">Please select a model to continue</div>
+                    </div>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <div class="model-name font-medium">${modelName}</div>
+            `;
+        } else {
+            // Regular model display
+            currentModelFullName = modelName;
+            currentModelDisplay.innerHTML = `
+                <div class="flex items-center">
+                    <div class="model-icon bg-green-500/20 text-green-400 loaded mr-3" id="current-model-icon" title="Click to see full model name">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="model-name font-medium">${modelName}</div>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
 
-        // Add click event to the model icon
+        // Add click event to the model icon only if not the dummy model
         const currentModelIcon = document.getElementById('current-model-icon');
         if (currentModelIcon) {
-            console.log('Setting up click handler for current model icon');
-            currentModelIcon.onclick = function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Current model icon clicked');
-                showFullModelNameModal();
-            };
+            if (modelName !== 'dummy/no-model-selected') {
+                console.log('Setting up click handler for current model icon');
+                currentModelIcon.onclick = function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Current model icon clicked');
+                    showFullModelNameModal();
+                };
+            } else {
+                currentModelIcon.onclick = null;
+            }
         }
 
 
@@ -1136,6 +1154,12 @@ function displayAvailableModels(models, loadedModelId) {
             const end = Math.min(renderIndex + CHUNK_SIZE, models.length);
             for (; renderIndex < end; renderIndex++) {
                 const model = models[renderIndex];
+                
+                // Skip the dummy model - it's only for internal state tracking
+                if (model.id === 'dummy/no-model-selected') {
+                    continue;
+                }
+                
                 const modelElement = document.createElement('div');
                 modelElement.id = `model-${model.id}`;
 
@@ -1144,12 +1168,15 @@ function displayAvailableModels(models, loadedModelId) {
                 const isDefaultModel = defaultModelId && model.id === defaultModelId;
 
                 modelElement.className = isCurrentModel ? 'model-item loaded' : 'model-item';
+                const displayModelName = model.id === 'dummy/no-model-selected' 
+                    ? '⚠️ No Model Selected'
+                    : model.id;
                 modelElement.innerHTML = `
                 <div class="model-icon ${isCurrentModel ? 'bg-green-500/20 text-green-400 loaded' : 'bg-blue-500/20 text-blue-400'}" data-model-id="${model.id}" title="Click to see full model name">
                     <i class="fas fa-robot"></i>
                 </div>
                 <div class="model-content">
-                    <div class="model-name">${model.id}</div>
+                    <div class="model-name">${displayModelName}</div>
                 </div>
                 <div class="model-actions">
                     <button class="set-default-btn ${isDefaultModel ? 'default-active' : ''}" data-model-id="${model.id}" title="${isDefaultModel ? 'Remove as default' : 'Set as default'}">
@@ -1283,6 +1310,12 @@ function displayPotentialModels(models) {
             const end = Math.min(renderIndex + CHUNK_SIZE, models.length);
             for (; renderIndex < end; renderIndex++) {
                 const model = models[renderIndex];
+                
+                // Skip the dummy model - it's only for internal state tracking
+                if (model.id === 'dummy/no-model-selected') {
+                    continue;
+                }
+                
                 const modelElement = document.createElement('div');
                 modelElement.id = `model-${model.id}`;
 

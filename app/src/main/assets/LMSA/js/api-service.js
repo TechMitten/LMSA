@@ -151,19 +151,32 @@ export async function fetchAvailableModels() {
                 const modelObjects = data.data.map(m => ({ id: m.id }));
                 console.log('OpenRouter models loaded:', allModelIds.length);
 
-                // Restore the previously selected model from localStorage
+                // Dummy model to show "No model selected" state - not an actual API model
+                const DUMMY_NO_MODEL = 'dummy/no-model-selected';
+
+                // Check if user has a saved selection from previous manual choice
                 const savedSelection = localStorage.getItem('openRouterSelectedModel');
-                if (savedSelection && allModelIds.includes(savedSelection)) {
-                    window.currentLoadedModel = savedSelection;
-                    availableModels = [savedSelection];
-                    console.log('Restored OpenRouter selected model:', savedSelection);
+                const activeModel = (savedSelection && allModelIds.includes(savedSelection))
+                    ? savedSelection
+                    : DUMMY_NO_MODEL;
+
+                // Always include the dummy model in the list if we're using it
+                if (activeModel === DUMMY_NO_MODEL) {
+                    modelObjects.unshift({ id: DUMMY_NO_MODEL });
+                    window.currentLoadedModel = null; // null indicates no model loaded
+                    availableModels = [];
                 } else {
-                    availableModels = allModelIds; // internal string list for getAvailableModels()
-                    // Clear stale saved selection if model no longer exists
-                    if (savedSelection) {
-                        localStorage.removeItem('openRouterSelectedModel');
-                    }
+                    // User has a saved selection - use it
+                    window.currentLoadedModel = activeModel;
+                    availableModels = [activeModel];
                 }
+
+                // Clean up stale saved selection if it no longer exists
+                if (savedSelection && !allModelIds.includes(savedSelection)) {
+                    localStorage.removeItem('openRouterSelectedModel');
+                }
+
+                console.log('OpenRouter models loaded - active model:', activeModel);
                 return modelObjects;
             } catch (err) {
                 console.error('Error fetching OpenRouter models:', err);
@@ -745,6 +758,7 @@ export async function loadModel(modelId) {
         // OpenRouter: no model loading needed — models are cloud-resident
         if (getUseOpenRouter()) {
             window.currentLoadedModel = modelId;
+            availableModels = [modelId]; // keep getAvailableModels() in sync with selection
             localStorage.setItem('openRouterSelectedModel', modelId);
             updateLoadedModelDisplay(modelId);
             try {

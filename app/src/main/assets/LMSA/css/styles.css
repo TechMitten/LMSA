@@ -891,7 +891,7 @@ body.light-theme #loaded-model {
     box-shadow: 5px 0 15px rgba(0, 0, 0, 0.4);
     background-image: var(--sidebar-bg);
     border-right: 1px solid var(--border-color);
-    overflow-y: auto;
+    overflow: hidden;
     overflow-x: hidden;
     position: fixed;
     top: 0;
@@ -8934,21 +8934,19 @@ body.modal-open {
 }
 
 #terms-service-btn {
-    transition: all 0.2s ease;
+    transition: opacity 0.2s ease;
 }
 
 #terms-service-btn:hover {
     opacity: 1 !important;
-    background: var(--sidebar-item-hover);
 }
 
 #privacy-policy-btn {
-    transition: all 0.2s ease;
+    transition: opacity 0.2s ease;
 }
 
 #privacy-policy-btn:hover {
     opacity: 1 !important;
-    background: var(--sidebar-item-hover);
 }
 
 /* Template Indicator Banner Styles */

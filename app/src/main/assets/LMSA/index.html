@@ -132,7 +132,11 @@
             style="will-change: opacity; transform: none !important;"></div>
 
         <!-- Sidebar - now positioned fixed outside the flex container -->
-        <div id="sidebar" class="w-[280px] z-20 hidden shadow-xl overflow-y-auto" style="color: var(--sidebar-text);">
+        <div id="sidebar" class="w-[280px] z-20 hidden shadow-xl" style="color: var(--sidebar-text); overflow: hidden;">
+
+            <!-- Scrollable content wrapper -->
+            <div style="flex: 1 1 0; min-height: 0; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column;">
+
             <div class="relative flex items-center justify-end p-6 border-b sidebar-header"
                 style="border-color: var(--sidebar-border);">
                 <button id="close-sidebar" class="p-2 rounded-full focus:outline-none close-sidebar-btn"
@@ -237,10 +241,6 @@
                         <i class="fas fa-wand-magic-sparkles"></i>
                         What's New
                     </button>
-                    <button id="about-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-info-circle"></i>
-                        About
-                    </button>
 
                     <!-- Remove Ads -->
                     <button id="remove-ads-button" class="menu-item w-full text-left" onclick="removeAds()">
@@ -261,18 +261,6 @@
                         Legacy Access
                     </button>
 
-                    <!-- Terms of Service -->
-                    <button id="terms-service-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-file-contract"></i>
-                        Terms of Service
-                    </button>
-
-                    <!-- Privacy Policy -->
-                    <button id="privacy-policy-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-shield-alt"></i>
-                        Privacy Policy
-                    </button>
-
                 </div>
             </div>
 
@@ -285,8 +273,21 @@
                     <i class="fas fa-comments w-6 mr-3 chat-history-icon"></i>
                     <span class="chat-history-title">CHAT HISTORY</span>
                 </div>
-                <div id="chat-history" class="overflow-y-auto max-h-[calc(100vh-200px)] px-2">
+                <div id="chat-history" class="px-2">
                     <!-- Chat history items will be dynamically added here -->
+                </div>
+            </div>
+
+            </div><!-- end scrollable content wrapper -->
+
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer mt-auto pt-3 pb-4 px-4 border-t" style="border-color: var(--sidebar-border);">
+                <div class="flex items-center justify-center gap-4">
+                    <button id="terms-service-btn" class="text-xs" style="background: none !important; border: none; padding: 0; cursor: pointer; color: var(--text-muted); opacity: 0.7;">Terms</button>
+                    <span style="color: var(--text-muted); opacity: 0.4; font-size: 0.6rem;">•</span>
+                    <button id="privacy-policy-btn" class="text-xs" style="background: none !important; border: none; padding: 0; cursor: pointer; color: var(--text-muted); opacity: 0.7;">Privacy</button>
+                    <span style="color: var(--text-muted); opacity: 0.4; font-size: 0.6rem;">•</span>
+                    <button id="about-btn" class="text-xs" style="background: none; border: none; padding: 0; cursor: pointer; color: var(--text-muted); opacity: 0.7;">About</button>
                 </div>
             </div>
         </div>

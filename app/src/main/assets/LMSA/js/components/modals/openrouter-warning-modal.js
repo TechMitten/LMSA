@@ -17,10 +17,10 @@ export const openRouterWarningModal = `
                 <h2 id="openrouter-warning-title" class="text-xl font-bold flex items-center">
                     <div
                         class="mr-3 flex items-center justify-center rounded-full w-10 h-10"
-                        style="background: rgba(239,68,68,0.2); color: #f87171;">
+                        style="background: rgba(59,130,246,0.12); color: #60a5fa;">
                         <i class="fas fa-shield-alt"></i>
                     </div>
-                    <span style="color: #f87171;">Third-Party Cloud Service</span>
+                    <span style="color: #cbd5e1;">Third-Party Cloud Service</span>
                 </h2>
                 <button id="close-openrouter-warning-modal"
                     class="openrouter-warning-close-btn rounded-full w-8 h-8 flex items-center justify-center"
@@ -32,22 +32,22 @@ export const openRouterWarningModal = `
             <div class="mb-6">
                 <div
                     class="p-4 rounded-lg mb-4"
-                    style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);">
+                    style="background: rgba(51,65,85,0.3); border: 1px solid rgba(59,130,246,0.2);">
                     <p class="text-gray-300 mb-3">
-                        <strong style="color: #fca5a5;">OpenRouter</strong> is a <strong style="color: #fca5a5;">third-party cloud AI provider</strong> and is not affiliated with this app.
+                        <strong style="color: #e2e8f0;">OpenRouter</strong> is a <strong style="color: #e2e8f0;">third-party cloud AI provider</strong> and is not affiliated with this app.
                     </p>
-                    <p class="text-sm font-semibold mb-2" style="color: #fca5a5;">Before continuing, please be aware:</p>
-                    <ul class="text-sm ml-1" style="color: #fecaca; list-style: none; padding: 0;">
+                    <p class="text-sm font-semibold mb-2" style="color: #cbd5e1;">Please be aware:</p>
+                    <ul class="text-sm ml-1" style="color: #d1d5db; list-style: none; padding: 0;">
                         <li class="flex items-start mb-3">
-                            <i class="fas fa-cloud-upload-alt mr-3" style="margin-top: 3px; color: #f87171; flex-shrink: 0;"></i>
+                            <i class="fas fa-cloud-upload-alt mr-3" style="margin-top: 3px; color: #60a5fa; flex-shrink: 0;"></i>
                             <span>Your chat messages will be <strong>sent to OpenRouter's servers</strong> and are subject to their data handling practices, not the privacy rules that apply to local AI models.</span>
                         </li>
                         <li class="flex items-start mb-3">
-                            <i class="fas fa-user-shield mr-3" style="margin-top: 3px; color: #f87171; flex-shrink: 0;"></i>
+                            <i class="fas fa-user-shield mr-3" style="margin-top: 3px; color: #60a5fa; flex-shrink: 0;"></i>
                             <span>Local AI models keep all conversations <strong>on your device</strong>. OpenRouter does not provide the same privacy guarantees.</span>
                         </li>
                         <li class="flex items-start">
-                            <i class="fas fa-file-contract mr-3" style="margin-top: 3px; color: #f87171; flex-shrink: 0;"></i>
+                            <i class="fas fa-file-contract mr-3" style="margin-top: 3px; color: #60a5fa; flex-shrink: 0;"></i>
                             <span>By enabling this option, you agree to comply with <strong>OpenRouter's Terms of Service</strong> and acknowledge that your chats may be processed by their systems.</span>
                         </li>
                     </ul>
@@ -58,12 +58,16 @@ export const openRouterWarningModal = `
             <div class="flex gap-3">
                 <button id="cancel-openrouter-warning"
                     class="flex-1 px-4 rounded-lg font-semibold"
-                    style="background: rgba(75,85,99,0.4); border: 1px solid rgba(107,114,128,0.5); color: #d1d5db; padding-top: 10px; padding-bottom: 10px; cursor: pointer;">
+                    style="background: rgba(75,85,99,0.4); border: 1px solid rgba(107,114,128,0.5); color: #d1d5db; padding-top: 10px; padding-bottom: 10px; cursor: pointer; transition: all 0.2s ease;"
+                    onmouseover="this.style.background='rgba(75,85,99,0.6)'; this.style.borderColor='rgba(107,114,128,0.7)';"
+                    onmouseout="this.style.background='rgba(75,85,99,0.4)'; this.style.borderColor='rgba(107,114,128,0.5)';">
                     <i class="fas fa-times mr-2"></i>Cancel
                 </button>
                 <button id="confirm-openrouter-warning"
                     class="flex-1 px-4 rounded-lg text-white shadow-lg font-semibold"
-                    style="background: linear-gradient(to right, #b91c1c, #ef4444); border: none; padding-top: 10px; padding-bottom: 10px; cursor: pointer;">
+                    style="background: linear-gradient(to right, #3b82f6, #1e40af); border: none; padding-top: 10px; padding-bottom: 10px; cursor: pointer; transition: all 0.2s ease;"
+                    onmouseover="this.style.boxShadow='0 8px 16px rgba(59, 130, 246, 0.3); this.style.transform='translateY(-2px)';"
+                    onmouseout="this.style.boxShadow=''; this.style.transform='';">
                     <i class="fas fa-check mr-2"></i>I Understand &amp; Accept
                 </button>
             </div>

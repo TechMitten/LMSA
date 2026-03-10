@@ -73,6 +73,50 @@ function getMaxTokens() {
 
 
 /**
+ * Normalises a leading <tool_call>…<tool_call> block into <think>…</think>
+ * so all existing thinking-tag logic handles it identically.
+ * The block starts when the response begins with <tool_call> (ignoring any
+ * leading whitespace) and ends at the next occurrence of the same token.
+ */
+function normalizeToolCallTags(text) {
+    if (!text) return text;
+
+    // Case 1: Raw opening <tool_call> is still present at the start of the response.
+    const firstIdx = text.indexOf('<tool_call>');
+    if (firstIdx !== -1 && text.substring(0, firstIdx).trim() === '') {
+        const secondIdx = text.indexOf('<tool_call>', firstIdx + 11);
+        if (secondIdx !== -1) {
+            // Both opening and closing present in accumulated text — convert both.
+            return text.substring(0, firstIdx) + '<think>' +
+                   text.substring(firstIdx + 11, secondIdx) +
+                   '</think>' +
+                   text.substring(secondIdx + 11);
+        }
+        // Only opening present — thinking content is still streaming.
+        return text.substring(0, firstIdx) + '<think>' + text.substring(firstIdx + 11);
+    }
+
+    // Case 2: The opening <tool_call> was already converted to <think> by a previous
+    // call (streaming chunk boundary), but the closing <tool_call> has not been
+    // processed yet.  When the closing token finally arrives the text looks like:
+    //   "<think>...thinking content...<tool_call>...actual response..."
+    // We need to replace that lone <tool_call> with </think>.
+    const thinkOpenIdx = text.indexOf('<think>');
+    if (thinkOpenIdx !== -1 && text.substring(0, thinkOpenIdx).trim() === '') {
+        // Only act when the <think> block is still open (no </think> written yet).
+        if (!text.includes('</think>')) {
+            const closingIdx = text.indexOf('<tool_call>', thinkOpenIdx + 7);
+            if (closingIdx !== -1) {
+                return text.substring(0, closingIdx) + '</think>' +
+                       text.substring(closingIdx + 11);
+            }
+        }
+    }
+
+    return text;
+}
+
+/**
  * Checks if the server supports file uploads
  * @returns {boolean} - True if file uploads are supported
  */
@@ -627,6 +671,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                     }
 
                                     aiMessage += chunkContent;
+                                    aiMessage = normalizeToolCallTags(aiMessage);
 
                                     // Track thinking process for progress indication
                                     const hasThinkTags = aiMessage.includes('<think>') || aiMessage.includes('</think>');
@@ -789,6 +834,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             if (incompleteChunk.length > 0) {
                 const finalChunk = decoder.decode(incompleteChunk);
                 aiMessage += finalChunk;
+                aiMessage = normalizeToolCallTags(aiMessage);
             }
         } catch (e) {
             debugLog('Final UTF-8 decoding error:', e);
@@ -2865,6 +2911,7 @@ export async function regenerateLastResponse(isRetry = false) {
                                         }
 
                                         aiMessage += delta.content;
+                                        aiMessage = normalizeToolCallTags(aiMessage);
 
                                         // Track thinking process for progress indication (same as initial generation)
                                         const hasThinkTagsNow = aiMessage.includes('<think>') || aiMessage.includes('</think>');
@@ -3024,6 +3071,7 @@ export async function regenerateLastResponse(isRetry = false) {
             if (incompleteChunk.length > 0) {
                 const finalChunk = decoder.decode(incompleteChunk);
                 aiMessage += finalChunk;
+                aiMessage = normalizeToolCallTags(aiMessage);
             }
 
             // Immediately terminate the connection to ensure proper cleanup
