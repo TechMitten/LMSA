@@ -12,6 +12,28 @@
     <link rel="stylesheet" href="css/local-fonts.css">
 
     <link rel="stylesheet" href="css/templates.css">
+    <style>
+        /* Prevent browser autofill and password manager detection */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px #1e293b inset !important;
+            box-shadow: 0 0 0 30px #1e293b inset !important;
+        }
+        input:-webkit-autofill {
+            -webkit-text-fill-color: #f1f5f9 !important;
+        }
+        textarea:-webkit-autofill,
+        textarea:-webkit-autofill:hover,
+        textarea:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 30px #1e293b inset !important;
+            box-shadow: 0 0 0 30px #1e293b inset !important;
+        }
+        textarea:-webkit-autofill {
+            -webkit-text-fill-color: #f1f5f9 !important;
+        }
+    </style>
 </head>
 
 <body
@@ -36,7 +58,7 @@
         class="template-main-container w-full relative flex flex-col bg-slate-900/50 overflow-hidden sm:rounded-[30px] sm:border sm:border-white/10 sm:shadow-2xl ring-1 ring-white/5 backdrop-blur-sm">
         <header class="flex items-center justify-between px-4 py-4 glass-header sticky top-0 z-30">
             <div class="flex items-center space-x-3">
-                <button class="p-2 -ml-2 rounded-full hover:bg-white/10 transition text-slate-200"
+                <button type="button" class="p-2 -ml-2 rounded-full hover:bg-white/10 transition text-slate-200"
                     onclick="window.location.href='index.html'">
                     <span class="material-symbols-outlined text-2xl">arrow_back</span>
                 </button>
@@ -58,7 +80,7 @@
             </div>
             <div id="templates-grid" class="responsive-template-grid">
                 <!-- Create New Template Button -->
-                <button onclick="openCreateModal()"
+                <button type="button" onclick="openCreateModal()"
                     class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50 border-dashed border-2 border-slate-600/40 hover:border-blue-500/50 transition-all custom-create-btn">
                     <div
                         class="w-16 h-16 mb-3 rounded-full bg-slate-700/30 flex items-center justify-center group-hover:bg-blue-500/20 group-hover:text-blue-400 transition-colors border border-slate-600/30">
@@ -212,7 +234,7 @@
         </main>
         <div
             class="template-footer absolute bottom-0 left-0 w-full px-6 pt-12 pb-10 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent z-20">
-            <button id="start-chatting-btn"
+            <button type="button" id="start-chatting-btn"
                 class="w-full bg-primary hover:bg-blue-400 text-white font-semibold py-4 rounded-2xl shadow-lg shadow-blue-500/20 transition-all transform active:scale-[0.98] flex items-center justify-center space-x-2 opacity-50 cursor-not-allowed">
                 <span>Start Chatting</span>
                 <span class="material-symbols-outlined text-lg">arrow_forward</span>
@@ -220,7 +242,7 @@
         </div>
     </div>
     <div class="absolute top-4 right-4 z-50 hidden">
-        <button class="bg-white/10 backdrop-blur-md p-2 rounded-full border border-white/10 text-white"
+        <button type="button" class="bg-white/10 backdrop-blur-md p-2 rounded-full border border-white/10 text-white"
             onclick="document.documentElement.classList.toggle('dark')">
             <span class="material-symbols-outlined">light_mode</span>
         </button>
@@ -230,7 +252,7 @@
     <div id="create-modal"
         class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300 responsive-modal-padding">
         <div class="glass-panel responsive-modal-content transform scale-95 transition-transform duration-300"
-            id="create-modal-content">
+            id="create-modal-content" autocomplete="off">
             <div
                 class="flex items-center justify-between mb-4 sticky top-0 z-10 bg-slate-900/95 backdrop-blur-md p-4 md:mb-6 md:px-6">
                 <!-- Back arrow placeholder for mobile, kept for balance if needed, but simplified -->
@@ -255,6 +277,7 @@
                     <div>
                         <label class="block text-sm text-slate-400 mb-1">Template Name</label>
                         <input type="text" id="new-template-name"
+                            autocomplete="off" data-form-type="other"
                             class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors"
                             placeholder="e.g., Python Expert">
                     </div>
@@ -262,6 +285,7 @@
                     <div>
                         <label class="block text-sm text-slate-400 mb-1">Description</label>
                         <input type="text" id="new-template-desc"
+                            autocomplete="off" data-form-type="other"
                             class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors"
                             placeholder="Short description...">
                     </div>
@@ -276,6 +300,7 @@
                             </button>
                         </div>
                         <textarea id="new-template-prompt" rows="8"
+                            autocomplete="off" data-form-type="other"
                             class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
                             placeholder="You are an expert..."></textarea>
                     </div>
@@ -296,16 +321,16 @@
 
                 </div>
                 <div class="flex gap-3 justify-center pt-8 pb-4 md:hidden">
-                    <button onclick="closeCreateModal()"
+                    <button type="button" onclick="closeCreateModal()"
                         class="flex-1 max-w-[140px] px-4 py-3 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors border border-slate-700">Cancel</button>
-                    <button onclick="saveNewTemplate()"
+                    <button type="button" onclick="saveNewTemplate()"
                         class="flex-1 max-w-[140px] px-4 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition-all">Save</button>
                 </div>
             </div>
             <div class="hidden md:flex justify-end gap-3 mt-6">
-                <button onclick="closeCreateModal()"
+                <button type="button" onclick="closeCreateModal()"
                     class="px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
-                <button onclick="saveNewTemplate()"
+                <button type="button" onclick="saveNewTemplate()"
                     class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition-all">Create
                     Template</button>
             </div>
@@ -316,7 +341,7 @@
     <div id="delete-modal"
         class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-slate-800 w-full max-w-sm p-6 rounded-2xl transform scale-95 transition-transform duration-300 border border-slate-600 shadow-2xl relative"
-            id="delete-modal-content">
+            id="delete-modal-content" autocomplete="off">
             <div class="flex flex-col items-center text-center">
                 <div id="delete-modal-avatar-container" class="mb-4">
                     <!-- Default Trash Icon (replaced by JS if template found) -->
@@ -331,11 +356,11 @@
                         class="text-slate-200 font-medium">this template</span>"? This action cannot be undone.
                 </p>
                 <div class="flex gap-3 w-full">
-                    <button onclick="closeDeleteModal()"
+                    <button type="button" onclick="closeDeleteModal()"
                         class="flex-1 px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors border border-transparent hover:border-slate-600">
                         Cancel
                     </button>
-                    <button onclick="confirmDelete()"
+                    <button type="button" onclick="confirmDelete()"
                         class="flex-1 px-4 py-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all shadow-lg shadow-rose-500/10">
                         Delete
                     </button>
@@ -348,7 +373,7 @@
     <div id="error-modal"
         class="fixed inset-0 z-[70] hidden items-center justify-center bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-slate-800 w-full max-w-sm p-6 rounded-2xl transform scale-95 transition-transform duration-300 border border-rose-500/30 shadow-2xl relative"
-            id="error-modal-content">
+            id="error-modal-content" autocomplete="off">
             <div class="flex flex-col items-center text-center">
                 <div class="mb-4">
                     <div
@@ -360,7 +385,7 @@
                 <p id="error-modal-message" class="text-slate-400 text-sm mb-6">
                     An error occurred.
                 </p>
-                <button onclick="hideErrorModal()"
+                <button type="button" onclick="hideErrorModal()"
                     class="w-full px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:text-white hover:bg-slate-600 transition-colors border border-slate-600">
                     OK
                 </button>
@@ -372,7 +397,7 @@
     <div id="template-loaded-modal"
         class="fixed inset-0 z-[80] hidden items-center justify-center bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-slate-800 w-full max-w-sm p-6 rounded-2xl transform scale-95 transition-transform duration-300 border border-blue-500/30 shadow-2xl relative"
-            id="template-loaded-modal-content">
+            id="template-loaded-modal-content" autocomplete="off">
             <div class="flex flex-col items-center text-center">
                 <div class="mb-4">
                     <div
@@ -385,7 +410,7 @@
                     The template has been loaded. To disable it later, tap the <span
                         class="text-white font-bold">X</span> on the activated template in the side menu.
                 </p>
-                <button id="template-loaded-confirm-btn"
+                <button type="button" id="template-loaded-confirm-btn"
                     class="w-full px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition-colors shadow-lg shadow-blue-500/20">
                     Continue to Chat
                 </button>

@@ -1330,6 +1330,10 @@ body.light-theme #loaded-model {
     opacity: 0.9;
 }
 
+#templates-btn i {
+    color: red;
+}
+
 /* Sidebar Sections */
 #sidebar .sidebar-section {
     padding: 1rem 0;
@@ -1504,6 +1508,8 @@ button[type="submit"] {
     /* Include padding in height calculation */
     margin-bottom: 0;
     /* Remove space to eliminate gap at bottom */
+    border-radius: 0.5rem;
+    /* Rounded corners for unified appearance */
 }
 
 /* Updated styles for send and stop buttons */
@@ -1530,11 +1536,11 @@ button[type="submit"] {
     border-radius: 0 0.5rem 0.5rem 0;
     /* Ensure rounded corners only on right side */
     margin-left: -1px;
-    /* Overlap input by 1px to blend seam */
+    /* Overlap input border to blend seamlessly */
     border: 1px solid var(--input-border);
-    /* Match input border */
+    /* Add border matching input for seamless blend */
     border-left: none;
-    /* Remove left border to blend with input */
+    /* Remove left border to eliminate double border line */
     transition: min-width 0.2s ease, padding 0.2s ease;
 }
 
@@ -1563,6 +1569,8 @@ button[type="submit"] {
     /* Align items to bottom */
     flex: 1;
     /* Take up remaining space */
+    margin-right: -1px;
+    /* Negative margin to eliminate gap */
 }
 
 /* Style the actual input field */
@@ -1580,7 +1588,7 @@ button[type="submit"] {
     line-height: 24px;
     /* Line height for text */
     border-right: none;
-    /* Remove right border on input */
+    /* Remove right border to blend with button */
     border: 1px solid var(--input-border);
     /* Ensure consistent border */
     position: relative;
@@ -1629,6 +1637,8 @@ button[type="submit"] {
         /* Allow height to grow with textarea */
         min-height: 40px;
         /* Minimum height */
+        border: none;
+        /* Seamless blend on mobile */
     }
 
     #send-button i,
@@ -1642,8 +1652,6 @@ button[type="submit"] {
         /* Keep minimum height consistent */
         font-size: 0.95rem;
         /* Slightly smaller font for better fit */
-        border-right: none;
-        /* Ensure no border on mobile too */
     }
 
     #chat-form {
@@ -1654,6 +1662,8 @@ button[type="submit"] {
         /* Remove bottom spacing */
         gap: 0;
         /* Ensure no gap on mobile */
+        border-radius: 0.5rem;
+        /* Maintain rounded corners on mobile */
     }
 }
 

@@ -155,11 +155,93 @@
                     <i class="fas fa-plus-circle w-6 mr-3"></i>
                     New Chat
                 </button>
-                <button id="templates-btn" class="menu-item w-full text-left"
-                    onclick="window.location.href='templates.html'">
-                    <i class="fas fa-th-large w-6 mr-3"></i>
-                    Templates
-                </button>
+
+                <!-- Options Section (moved here, where Templates was) -->
+                <div class="sidebar-section collapsible">
+                    <button class="section-header w-full text-left flex items-center justify-between py-2 px-3">
+                        <div class="flex items-center">
+                            <i class="fas fa-cog w-6 mr-3"></i>
+                            <span>Options</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="collapsible-content">
+                        <!-- Templates Button (moved here, first in Options) -->
+                        <button id="templates-btn" class="menu-item w-full text-left"
+                            onclick="window.location.href='templates.html'">
+                            <i class="fas fa-th-large"></i>
+                            Templates
+                        </button>
+
+                        <!-- Settings -->
+                        <button id="settings-btn" class="menu-item w-full text-left">
+                            <i class="fas fa-cog"></i>
+                            Settings
+                        </button>
+
+                        <!-- Import/Export -->
+                        <button id="import-export-group-btn"
+                            class="menu-item w-full text-left flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-exchange-alt"></i>
+                                Import/Export
+                            </div>
+                            <i class="fas fa-caret-down"></i>
+                        </button>
+                        <div id="import-export-container" class="hidden">
+                            <button id="import-chats-btn" class="menu-item w-full text-left">
+                                <i class="fas fa-file-import"></i>
+                                Import Chats
+                            </button>
+                            <button id="export-chats-btn" class="menu-item w-full text-left">
+                                <i class="fas fa-file-export"></i>
+                                Export Chats
+                            </button>
+                        </div>
+
+                        <!-- Model Settings -->
+                        <button id="model-btn" class="menu-item w-full text-left">
+                            <i class="fas fa-robot"></i>
+                            Models
+                        </button>
+
+                        <!-- Saved System Prompts -->
+                        <button id="saved-prompts-btn" class="menu-item w-full text-left">
+                            <i class="fas fa-save"></i>
+                            Saved Prompts
+                        </button>
+
+                        <!-- Help & About -->
+                        <button id="help-btn" class="menu-item w-full text-left">
+                            <i class="fas fa-question-circle"></i>
+                            Help
+                        </button>
+                        <button id="whats-new-btn" class="menu-item w-full text-left">
+                            <i class="fas fa-wand-magic-sparkles"></i>
+                            What's New
+                        </button>
+
+                        <!-- Remove Ads -->
+                        <button id="remove-ads-button" class="menu-item w-full text-left" onclick="removeAds()">
+                            <i class="fas fa-ban"></i>
+                            Remove Ads
+                        </button>
+
+                        <!-- Restore Purchase -->
+                        <button id="restore-purchases-button" class="menu-item w-full text-left"
+                            onclick="restorePurchases()">
+                            <i class="fas fa-undo"></i>
+                            Restore Purchase
+                        </button>
+
+                        <!-- Legacy Access -->
+                        <button id="legacy-access-btn" class="menu-item w-full text-left">
+                            <i class="fas fa-key"></i>
+                            Legacy Access
+                        </button>
+
+                    </div>
+                </div>
 
                 <!-- Active Template Indicator -->
                 <div id="template-indicator" class="hidden"
@@ -181,86 +263,6 @@
                             <i class="fas fa-times" style="font-size: 1rem;"></i>
                         </button>
                     </div>
-                </div>
-            </div>
-
-            <!-- Options Section -->
-            <div class="sidebar-section collapsible">
-                <button class="section-header w-full text-left flex items-center justify-between py-2 px-3">
-                    <div class="flex items-center">
-                        <i class="fas fa-cog w-6 mr-3"></i>
-                        <span>Options</span>
-                    </div>
-                    <i class="fas fa-chevron-down"></i>
-                </button>
-                <div class="collapsible-content">
-                    <!-- Settings -->
-                    <button id="settings-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-cog"></i>
-                        Settings
-                    </button>
-
-                    <!-- Import/Export -->
-                    <button id="import-export-group-btn"
-                        class="menu-item w-full text-left flex items-center justify-between">
-                        <div class="flex items-center">
-                            <i class="fas fa-exchange-alt"></i>
-                            Import/Export
-                        </div>
-                        <i class="fas fa-caret-down"></i>
-                    </button>
-                    <div id="import-export-container" class="hidden">
-                        <button id="import-chats-btn" class="menu-item w-full text-left">
-                            <i class="fas fa-file-import"></i>
-                            Import Chats
-                        </button>
-                        <button id="export-chats-btn" class="menu-item w-full text-left">
-                            <i class="fas fa-file-export"></i>
-                            Export Chats
-                        </button>
-                    </div>
-
-                    <!-- Model Settings -->
-                    <button id="model-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-robot"></i>
-                        Models
-                    </button>
-
-                    <!-- Saved System Prompts -->
-                    <button id="saved-prompts-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-save"></i>
-                        Saved Prompts
-                    </button>
-
-                    <!-- Help & About -->
-                    <button id="help-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-question-circle"></i>
-                        Help
-                    </button>
-                    <button id="whats-new-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-wand-magic-sparkles"></i>
-                        What's New
-                    </button>
-
-                    <!-- Remove Ads -->
-                    <button id="remove-ads-button" class="menu-item w-full text-left" onclick="removeAds()">
-                        <i class="fas fa-ban"></i>
-                        Remove Ads
-                    </button>
-
-                    <!-- Restore Purchase -->
-                    <button id="restore-purchases-button" class="menu-item w-full text-left"
-                        onclick="restorePurchases()">
-                        <i class="fas fa-undo"></i>
-                        Restore Purchase
-                    </button>
-
-                    <!-- Legacy Access -->
-                    <button id="legacy-access-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-key"></i>
-                        Legacy Access
-                    </button>
-
                 </div>
             </div>
 
