@@ -648,21 +648,14 @@ async function generateSystemPrompt() {
     const promptTextarea = document.getElementById('new-template-prompt');
     const generateBtn = document.getElementById('generate-prompt-btn');
 
-    // Get server settings from localStorage
-    const serverIp = localStorage.getItem('serverIp');
-    const serverPort = localStorage.getItem('serverPort');
-
-    // Validation: Check if server is configured
-    if (!serverIp || !serverPort) {
-        alert('Please configure your server settings first (IP and Port in Settings).');
-        return;
-    }
-
     // Validation: Check if name and description are provided
     if (!name || !desc) {
         alert('Please enter both a Template Name and Description before generating.');
         return;
     }
+
+    // Detect connection mode from localStorage
+    const useOpenRouter = localStorage.getItem('useOpenRouter') === 'true';
 
     // Set loading state immediately
     const originalBtnContent = generateBtn.innerHTML;
@@ -675,99 +668,135 @@ async function generateSystemPrompt() {
     // Defer heavy work to next tick to allow UI to update
     await new Promise(resolve => setTimeout(resolve, 0));
 
-    // Fetch available models and detect loaded model
     let loadedModel = null;
+    let apiUrl = '';
+    let requestHeaders = { 'Content-Type': 'application/json' };
 
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-        const modelsResponse = await fetch(`http://${serverIp}:${serverPort}/v1/models`, {
-            signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!modelsResponse.ok) {
-            throw new Error('Failed to fetch models from server');
-        }
-
-        const data = await modelsResponse.json();
-
-        if (!data || !data.data || !Array.isArray(data.data)) {
-            throw new Error('Invalid response from server');
-        }
-
-        const modelsList = data.data;
-
-        // Try to find the loaded model
-        let loadedModelInfo = modelsList.find(model =>
-            model.ready === true ||
-            model.loaded === true ||
-            model.active === true ||
-            model.current === true ||
-            model.status === 'loaded' ||
-            model.status === 'ready' ||
-            model.state === 'loaded' ||
-            model.state === 'ready' ||
-            model.status === 'active' ||
-            model.state === 'active'
-        );
-
-        // If no model is marked as loaded, try to check via info endpoint
-        if (!loadedModelInfo) {
-            try {
-                const endpoints = ['/v1/internal/model/info', '/v1/model/info'];
-
-                for (const endpoint of endpoints) {
-                    try {
-                        const infoController = new AbortController();
-                        const infoTimeout = setTimeout(() => infoController.abort(), 2000);
-
-                        const modelInfoResponse = await fetch(`http://${serverIp}:${serverPort}${endpoint}`, {
-                            method: 'GET',
-                            signal: infoController.signal
-                        }).catch(() => ({ ok: false }));
-
-                        clearTimeout(infoTimeout);
-
-                        if (modelInfoResponse.ok) {
-                            const modelInfo = await modelInfoResponse.json();
-
-                            if (modelInfo && modelInfo.id) {
-                                loadedModelInfo = modelsList.find(model => model.id === modelInfo.id);
-                                if (loadedModelInfo) break;
-                            }
-                        }
-                    } catch (endpointError) {
-                        // Silently continue
-                    }
-                }
-            } catch (infoError) {
-                // Silently continue
-            }
-        }
-
-        // If still no model found, try to use the first available model and make a test request
-        if (!loadedModelInfo && modelsList.length > 0) {
-            loadedModelInfo = modelsList[0];
-        }
-
-        if (!loadedModelInfo) {
-            showErrorModal('No models found. Please load a model in LM Studio first.');
+    if (useOpenRouter) {
+        // --- OpenRouter path ---
+        const apiKey = localStorage.getItem('openRouterApiKey') || '';
+        if (!apiKey) {
+            showErrorModal('OpenRouter API key is not set. Please add your API key in Settings.');
             generateBtn.disabled = false;
             generateBtn.innerHTML = originalBtnContent;
             return;
         }
 
-        loadedModel = loadedModelInfo.id;
+        loadedModel = localStorage.getItem('openRouterSelectedModel') || '';
+        if (!loadedModel) {
+            showErrorModal('No OpenRouter model selected. Please choose a model in the chat screen first.');
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = originalBtnContent;
+            return;
+        }
 
-    } catch (error) {
-        console.error('Error fetching models:', error);
-        showErrorModal('Failed to connect to LM Studio. Please check that LM Studio is running and the server is started.');
-        generateBtn.disabled = false;
-        generateBtn.innerHTML = originalBtnContent;
-        return;
+        apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+        requestHeaders['Authorization'] = `Bearer ${apiKey}`;
+    } else {
+        // --- Local server (LM Studio / Ollama) path ---
+        const serverIp = localStorage.getItem('serverIp');
+        const serverPort = localStorage.getItem('serverPort');
+
+        if (!serverIp || !serverPort) {
+            alert('Please configure your server settings first (IP and Port in Settings).');
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = originalBtnContent;
+            return;
+        }
+
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            const modelsResponse = await fetch(`http://${serverIp}:${serverPort}/v1/models`, {
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!modelsResponse.ok) {
+                throw new Error('Failed to fetch models from server');
+            }
+
+            const data = await modelsResponse.json();
+
+            if (!data || !data.data || !Array.isArray(data.data)) {
+                throw new Error('Invalid response from server');
+            }
+
+            const modelsList = data.data;
+
+            // Try to find the loaded model
+            let loadedModelInfo = modelsList.find(model =>
+                model.ready === true ||
+                model.loaded === true ||
+                model.active === true ||
+                model.current === true ||
+                model.status === 'loaded' ||
+                model.status === 'ready' ||
+                model.state === 'loaded' ||
+                model.state === 'ready' ||
+                model.status === 'active' ||
+                model.state === 'active'
+            );
+
+            // If no model is marked as loaded, try to check via info endpoint
+            if (!loadedModelInfo) {
+                try {
+                    const endpoints = ['/v1/internal/model/info', '/v1/model/info'];
+
+                    for (const endpoint of endpoints) {
+                        try {
+                            const infoController = new AbortController();
+                            const infoTimeout = setTimeout(() => infoController.abort(), 2000);
+
+                            const modelInfoResponse = await fetch(`http://${serverIp}:${serverPort}${endpoint}`, {
+                                method: 'GET',
+                                signal: infoController.signal
+                            }).catch(() => ({ ok: false }));
+
+                            clearTimeout(infoTimeout);
+
+                            if (modelInfoResponse.ok) {
+                                const modelInfo = await modelInfoResponse.json();
+
+                                if (modelInfo && modelInfo.id) {
+                                    loadedModelInfo = modelsList.find(model => model.id === modelInfo.id);
+                                    if (loadedModelInfo) break;
+                                }
+                            }
+                        } catch (endpointError) {
+                            // Silently continue
+                        }
+                    }
+                } catch (infoError) {
+                    // Silently continue
+                }
+            }
+
+            // If still no model found, fall back to the first available model
+            if (!loadedModelInfo && modelsList.length > 0) {
+                loadedModelInfo = modelsList[0];
+            }
+
+            if (!loadedModelInfo) {
+                showErrorModal('No models found. Please load a model in LM Studio first.');
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = originalBtnContent;
+                return;
+            }
+
+            loadedModel = loadedModelInfo.id;
+
+        } catch (error) {
+            console.error('Error fetching models:', error);
+            showErrorModal('Failed to connect to LM Studio. Please check that LM Studio is running and the server is started.');
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = originalBtnContent;
+            return;
+        }
+
+        apiUrl = `http://${serverIp}:${serverPort}/v1/chat/completions`;
     }
 
     // Update loading state for generation
@@ -775,8 +804,6 @@ async function generateSystemPrompt() {
         <span class="material-symbols-outlined text-sm animate-spin">autorenew</span>
         <span>Generating...</span>
     `;
-
-    const apiUrl = `http://${serverIp}:${serverPort}/v1/chat/completions`;
 
     // Create the prompt for the LLM
     const generationPrompt = `Create a detailed system prompt for an AI assistant. The template name is "${name}" and the description is: "${desc}".
@@ -806,9 +833,7 @@ Return ONLY the system prompt text itself, without any introduction, explanation
 
         const response = await fetch(apiUrl, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: requestHeaders,
             body: JSON.stringify(requestBody),
             signal: controller.signal
         });

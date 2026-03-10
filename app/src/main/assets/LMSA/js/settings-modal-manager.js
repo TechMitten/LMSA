@@ -6,6 +6,7 @@ import { debugLog } from './utils.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { getApiUrl, getAvailableModels, isServerRunning, validateIpPort, saveServerSettings } from './api-service.js';
 import { showOpenRouterKeyRequiredModal, initOpenRouterKeyRequiredModal } from './components/modals/openrouter-key-required-modal.js';
+import { getUseOpenRouter, getOpenRouterApiKey } from './settings-manager.js';
 import { interceptIpPortChanges } from './ip-port-confirmation-modal.js';
 
 // Holds a reference to the internal showStep function once the modal is initialised
@@ -987,11 +988,17 @@ function initializeSystemPromptOverlay() {
 
                 debugLog('Improving system prompt with model:', modelToUse);
 
+                const requestHeaders = {
+                    'Content-Type': 'application/json'
+                };
+                if (getUseOpenRouter()) {
+                    const apiKey = getOpenRouterApiKey();
+                    if (apiKey) requestHeaders['Authorization'] = `Bearer ${apiKey}`;
+                }
+
                 const response = await fetch(apiUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: requestHeaders,
                     body: JSON.stringify({
                         model: modelToUse,
                         messages: [
