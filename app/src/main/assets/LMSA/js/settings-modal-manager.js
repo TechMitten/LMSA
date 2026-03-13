@@ -394,7 +394,10 @@ export function initializeSettingsModalNavigation() {
 
         // Function to handle navigation
         const navigateToStep = (e) => {
-            e.preventDefault();
+            // Only prevent default if the event is cancelable
+            if (e.cancelable) {
+                e.preventDefault();
+            }
             e.stopPropagation();
 
             // Blur any active element to prevent keyboard from showing
@@ -597,8 +600,10 @@ function initializeManualInputFocus() {
             // Handle both touchstart and mousedown events to capture all interactions
             ['touchstart', 'mousedown', 'focus'].forEach(eventType => {
                 systemPromptTextarea.addEventListener(eventType, function(e) {
-                    // Prevent default behavior for all events
-                    e.preventDefault();
+                    // Only prevent default if the event is cancelable
+                    if (e.cancelable) {
+                        e.preventDefault();
+                    }
                     e.stopPropagation();
                     e.stopImmediatePropagation();
 
