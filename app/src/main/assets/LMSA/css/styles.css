@@ -1672,15 +1672,18 @@ button[type="submit"] {
 
 @media (max-width: 480px) {
 
+    #chat-form {
+        align-items: center;
+    }
+
     #send-button,
     #stop-button {
         min-width: 70px;
         padding: 0 10px;
         /* Reduced padding for mobile */
-        height: auto;
-        /* Allow height to grow with textarea */
-        min-height: 40px;
-        /* Minimum height */
+        height: 48px;
+        min-height: 48px;
+        align-self: center;
         border: none;
         /* Seamless blend on mobile */
     }
@@ -1692,10 +1695,11 @@ button[type="submit"] {
     }
 
     #user-input {
-        min-height: 40px;
-        /* Keep minimum height consistent */
+        height: 48px;
+        min-height: 48px;
         font-size: 0.95rem;
         /* Slightly smaller font for better fit */
+        line-height: 1.4;
     }
 
     #chat-form {
@@ -1708,6 +1712,21 @@ button[type="submit"] {
         /* Ensure no gap on mobile */
         border-radius: 0.5rem;
         /* Maintain rounded corners on mobile */
+    }
+
+    #chat-form .absolute {
+        top: 50% !important;
+        right: 0.75rem !important;
+        transform: translateY(-50%) !important;
+    }
+
+    #paperclip-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        padding: 0;
     }
 }
 
