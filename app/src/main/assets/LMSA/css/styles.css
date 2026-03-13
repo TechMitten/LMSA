@@ -4992,9 +4992,57 @@ body.light-theme .regenerate-btn:hover {
     }
 }
 
-/* Edit textarea - invisible styling to match regular text */
+/* Edit textarea - visible styling for better UX */
 .edit-textarea {
     display: block;
+    /* Prominent border to make the editing area clearly visible */
+    border: 2px solid rgba(255, 255, 255, 0.6) !important;
+    /* Clear background to indicate editable area */
+    background: rgba(255, 255, 255, 0.15) !important;
+    /* Generous padding for better visual separation */
+    padding: 0.75rem !important;
+    /* Border radius for polished look */
+    border-radius: 6px;
+    /* Ensure box-sizing includes padding */
+    box-sizing: border-box;
+    /* Add subtle shadow to make it pop */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    /* Focus state for better visibility when typing */
+}
+
+.edit-textarea:focus {
+    /* More visible border when focused */
+    border-color: rgba(255, 255, 255, 0.8) !important;
+    /* Brighter background when focused */
+    background: rgba(255, 255, 255, 0.2) !important;
+    /* Enhanced shadow on focus */
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Dark theme adjustments for edit textarea */
+body.dark-theme .edit-textarea {
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.dark-theme .edit-textarea:focus {
+    border-color: rgba(255, 255, 255, 0.7) !important;
+    background: rgba(255, 255, 255, 0.18) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Light theme adjustments */
+body:not(.dark-theme) .edit-textarea {
+    border-color: rgba(0, 0, 0, 0.4) !important;
+    background: rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+body:not(.dark-theme) .edit-textarea:focus {
+    border-color: rgba(0, 0, 0, 0.6) !important;
+    background: rgba(0, 0, 0, 0.12) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Edit buttons container */
@@ -5003,20 +5051,33 @@ body.light-theme .regenerate-btn:hover {
     margin-top: 0.75rem;
 }
 
-/* Compact button styling */
+/* Compact button styling - mobile-first and touch-friendly */
 .edit-cancel-btn,
 .edit-resend-btn {
-    font-size: 0.75rem;
-    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    padding: 0.625rem 1rem;
     cursor: pointer;
+    /* Ensure minimum touch target size (44px) */
+    min-height: 44px;
+    /* Add subtle transition for better UX */
+    transition: all 0.2s ease;
+    /* Make buttons more prominent */
+    font-weight: 500;
+    /* Better touch feedback */
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.2);
 }
 
-.edit-cancel-btn:hover {
-    opacity: 0.9;
-}
-
+.edit-cancel-btn:hover,
 .edit-resend-btn:hover {
     opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* Active state for touch feedback */
+.edit-cancel-btn:active,
+.edit-resend-btn:active {
+    transform: translateY(0);
+    opacity: 1;
 }
 
 /* Scroll to bottom button */
@@ -5225,8 +5286,9 @@ body.light-theme .regenerate-btn:hover {
         font-size: 0.9rem !important;
     }
 
-    #welcome-message i {
-        font-size: 2.5rem !important;
+    #welcome-message .professional-button i {
+        font-size: 0.9rem !important;
+        line-height: 1 !important;
     }
 
     /* Ensure modals don't overflow and are centered */
@@ -5354,6 +5416,16 @@ body.light-theme .regenerate-btn:hover {
     pointer-events: auto;
     background: rgba(0, 0, 0, 0.95) !important;
     z-index: 99999 !important;
+    animation: fadeIn 0.35s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 #whats-new-modal.fade-out {
@@ -5362,6 +5434,16 @@ body.light-theme .regenerate-btn:hover {
     pointer-events: none;
     background: rgba(0, 0, 0, 0.95) !important;
     z-index: 99999 !important;
+    animation: fadeOut 0.3s ease-in forwards;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
 }
 
 #whats-new-modal.hidden {
@@ -5377,6 +5459,16 @@ body.light-theme #whats-new-modal {
 body.light-theme #whats-new-modal.fade-in {
     background: rgba(255, 255, 255, 0.95) !important;
     z-index: 99999 !important;
+    animation: fadeInLight 0.35s ease-out forwards;
+}
+
+@keyframes fadeInLight {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 body.light-theme #whats-new-modal.fade-out {

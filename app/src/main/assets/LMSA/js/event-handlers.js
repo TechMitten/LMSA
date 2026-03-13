@@ -2656,21 +2656,17 @@ function handleEditButtonClick(e) {
     textarea.value = originalContent;
     textarea.style.cssText = `
         width: 100%;
-        background: transparent;
         color: inherit;
-        border: none;
         outline: none;
         resize: none;
         font-family: inherit;
         font-size: inherit;
         line-height: inherit;
-        padding: 0;
         margin: 0;
         overflow: hidden;
         word-wrap: break-word;
         white-space: pre-wrap;
         overflow-wrap: break-word;
-        box-sizing: border-box;
     `;
 
     // Auto-resize textarea to match content
@@ -2686,12 +2682,12 @@ function handleEditButtonClick(e) {
 
     // Create cancel button
     const cancelButton = document.createElement('button');
-    cancelButton.classList.add('edit-cancel-btn', 'bg-gray-600', 'text-white', 'rounded-md', 'px-3', 'py-1.5', 'text-xs', 'hover:bg-gray-700', 'transition-colors');
+    cancelButton.classList.add('edit-cancel-btn', 'bg-gray-600', 'text-white', 'rounded-md', 'px-5', 'py-3', 'text-sm', 'hover:bg-gray-700', 'transition-colors');
     cancelButton.textContent = 'Cancel';
 
     // Create save button
     const saveButton = document.createElement('button');
-    saveButton.classList.add('edit-resend-btn', 'bg-red-600', 'text-white', 'rounded-md', 'px-3', 'py-1.5', 'text-xs', 'transition-colors');
+    saveButton.classList.add('edit-resend-btn', 'bg-red-600', 'text-white', 'rounded-md', 'px-5', 'py-3', 'text-sm', 'transition-colors');
     saveButton.textContent = 'Resend';
     saveButton.addEventListener('mouseenter', () => {
         saveButton.style.backgroundColor = '#c0392b';
