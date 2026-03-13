@@ -116,3 +116,67 @@
 #template-indicator #disable-template-btn:active {
     transform: scale(0.95);
 }
+
+/* Keep chat bubble text readable even when compact mobile rules apply. */
+#messages > div,
+#messages > div.user,
+#messages > div.ai {
+    font-size: max(var(--chat-font-size, 1rem), 1rem) !important;
+}
+
+/* Android WebView often renders slightly smaller; enforce a safer minimum. */
+.android-webview #messages > div,
+.android-webview #messages > div.user,
+.android-webview #messages > div.ai {
+    font-size: max(var(--chat-font-size, 1rem), 1.05rem) !important;
+    line-height: 1.55;
+}
+
+/* Keep plain message text stable when keyboard shrinks viewport height. */
+body.keyboard-visible #messages > div,
+body.keyboard-visible #messages > div.user,
+body.keyboard-visible #messages > div.ai,
+.android-webview.keyboard-visible #messages > div,
+.android-webview.keyboard-visible #messages > div.user,
+.android-webview.keyboard-visible #messages > div.ai {
+    font-size: max(var(--chat-font-size, 1rem), 1rem) !important;
+}
+
+body.keyboard-visible #messages > div .message-content,
+body.keyboard-visible #messages > div .message-content p,
+body.keyboard-visible #messages > div .message-content li,
+body.keyboard-visible #messages > div .message-content span,
+.android-webview.keyboard-visible #messages > div .message-content,
+.android-webview.keyboard-visible #messages > div .message-content p,
+.android-webview.keyboard-visible #messages > div .message-content li,
+.android-webview.keyboard-visible #messages > div .message-content span {
+    font-size: inherit !important;
+    line-height: 1.55 !important;
+}
+
+/* Guard against compact low-height rules shrinking normal AI/user text while typing. */
+@media (max-height: 760px) {
+    #messages > div.ai .message-content,
+    #messages > div.user .message-content,
+    #messages > div.ai .message-content p,
+    #messages > div.user .message-content p,
+    #messages > div.ai .message-content li,
+    #messages > div.user .message-content li,
+    #messages > div.ai .message-content span,
+    #messages > div.user .message-content span {
+        font-size: clamp(1rem, var(--chat-font-size, 1rem), 1.25rem) !important;
+        line-height: 1.55 !important;
+    }
+
+    .android-webview #messages > div.ai .message-content,
+    .android-webview #messages > div.user .message-content,
+    .android-webview #messages > div.ai .message-content p,
+    .android-webview #messages > div.user .message-content p,
+    .android-webview #messages > div.ai .message-content li,
+    .android-webview #messages > div.user .message-content li,
+    .android-webview #messages > div.ai .message-content span,
+    .android-webview #messages > div.user .message-content span {
+        font-size: clamp(1.05rem, var(--chat-font-size, 1rem), 1.3rem) !important;
+    }
+}
+

@@ -22,6 +22,7 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.webkit.RenderProcessGoneDetail
+import kotlin.math.roundToInt
 import java.io.IOException
 import android.util.Base64
 import android.speech.tts.TextToSpeech
@@ -330,8 +331,13 @@ class WebViewActivity : AppCompatActivity() {
         webSettings.allowContentAccess = true
         @Suppress("DEPRECATION")
         webSettings.allowFileAccessFromFileURLs = true
-        webSettings.useWideViewPort = true
-        webSettings.loadWithOverviewMode = true
+        // This app uses a responsive layout with a viewport meta tag, so avoid
+        // overview scaling that can shrink text on some Android devices.
+        webSettings.useWideViewPort = false
+        webSettings.loadWithOverviewMode = false
+        // Respect Android accessibility font scale in WebView text rendering.
+        val systemFontScale = resources.configuration.fontScale
+        webSettings.textZoom = (systemFontScale * 100f).roundToInt().coerceIn(50, 300)
         webSettings.setSupportZoom(false)
         webSettings.builtInZoomControls = false
         webSettings.displayZoomControls = false

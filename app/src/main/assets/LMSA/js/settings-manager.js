@@ -40,6 +40,8 @@ let showChatScrollbar = false; // Show scrollbar in chat message area
 let chatFontFamily = 'system-ui, sans-serif'; // Font family for chat message bubbles
 let chatFontSize = '1rem'; // Font size for chat message bubbles
 
+const ALLOWED_CHAT_FONT_SIZES = ['0.8rem', '0.9rem', '1rem', '1.125rem', '1.25rem'];
+
 /**
  * Initializes temperature settings
  */
@@ -1338,8 +1340,12 @@ export function loadChatFontSettings() {
   if (savedFontFamily) {
     chatFontFamily = savedFontFamily;
   }
-  if (savedFontSize) {
+  if (savedFontSize && ALLOWED_CHAT_FONT_SIZES.includes(savedFontSize)) {
     chatFontSize = savedFontSize;
+  } else if (savedFontSize) {
+    // Reset unsupported legacy values so message bubbles remain readable.
+    chatFontSize = '1rem';
+    localStorage.setItem('chatFontSize', chatFontSize);
   }
 
   applyFontSettings();
