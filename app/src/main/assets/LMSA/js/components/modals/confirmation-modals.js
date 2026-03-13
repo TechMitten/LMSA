@@ -32,11 +32,15 @@ export const confirmationModals = `
                 <i class="fas fa-key mr-2 text-blue-500"></i>Legacy Access
             </h2>
             <p class="mb-4 leading-relaxed">
-                If you purchased an old version of LMSA, you can receive a free code that will grant you lifetime access
-                to LMSA Premium, removing advertising.
+                Background: Early releases of LMSA were distributed as a paid-only app (no free tier). We later
+                introduced a free tier alongside paid options. Because of that transition, users who purchased the
+                original ("legacy") paid version will need a special legacy promo code to restore premium access in
+                the newer app.
             </p>
             <p class="mb-4 leading-relaxed">
-                Please email support@lmsa.app with your order number to receive your free code.
+                To request your legacy promo code, please email <strong>support@lmsa.app</strong> and include your
+                order number and any purchase details you have. We'll verify your purchase and reply with a one-time
+                promo code and instructions for applying it in the app.
             </p>
             <p class="mb-4 leading-relaxed text-sm">
                 <a href="#" id="locate-order-number-link" class="text-blue-400 hover:text-blue-300 underline">Locate

@@ -31,57 +31,78 @@ export const helpModal = `
                         <h3 class="text-lg font-semibold mb-3 flex items-center" style="color: var(--text-primary);"><i
                                 class="fas fa-list mr-2" style="color: #3b82f6;"></i>Table of Contents</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            <a href="#section-quick-start"
-                                class="toc-link flex items-center p-2 rounded transition-colors"
-                                style="color: var(--success-color);">
-                                <i class="fas fa-rocket mr-2 text-sm"></i>
-                                <span>LM Studio Setup</span>
-                            </a>
-                            <a href="#section-ollama-setup"
-                                class="toc-link flex items-center p-2 rounded transition-colors"
-                                style="color: #ec4899;">
-                                <i class="fas fa-terminal mr-2 text-sm"></i>
-                                <span>Ollama Setup</span>
-                            </a>
-                            <a href="#section-openrouter"
-                                class="toc-link flex items-center p-2 rounded transition-colors"
-                                style="color: #facc15;">
-                                <i class="fas fa-cloud mr-2 text-sm"></i>
-                                <span>OpenRouter Setup</span>
-                            </a>
+                            <details class="md:col-span-2 p-2 rounded"
+                                style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);">
+                                <summary class="flex items-center font-semibold cursor-pointer"
+                                    style="color: var(--text-primary); list-style: none;">
+                                    <i class="fas fa-folder-tree mr-2 text-sm"></i>
+                                    <span>Setup</span>
+                                </summary>
+                                <div class="mt-2 pl-2 space-y-1"
+                                    style="border-left: 1px solid rgba(255, 255, 255, 0.12);">
+                                    <a href="#section-quick-start"
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
+                                        style="color: var(--success-color);">
+                                        <i class="fas fa-rocket mr-2 text-sm"></i>
+                                        <span>LM Studio Setup</span>
+                                    </a>
+                                    <a href="#section-ollama-setup"
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
+                                        style="color: #ec4899;">
+                                        <i class="fas fa-terminal mr-2 text-sm"></i>
+                                        <span>Ollama Setup</span>
+                                    </a>
+                                    <a href="#section-openrouter"
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
+                                        style="color: #facc15;">
+                                        <i class="fas fa-cloud mr-2 text-sm"></i>
+                                        <span>OpenRouter Setup</span>
+                                    </a>
+                                </div>
+                            </details>
                             <a href="#section-templates"
-                                class="toc-link flex items-center p-2 rounded transition-colors"
+                                class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
                                 style="color: #a78bfa;">
                                 <i class="fas fa-th-large mr-2 text-sm"></i>
                                 <span>Using Templates</span>
                             </a>
-                            <a href="#section-security-privacy"
-                                class="toc-link flex items-center p-2 rounded transition-colors"
-                                style="color: #06b6d4;">
-                                <i class="fas fa-lock mr-2 text-sm"></i>
-                                <span>Security & Privacy</span>
+                            <a href="#section-font-customization"
+                                class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
+                                style="color: #c084fc;">
+                                <i class="fas fa-font mr-2 text-sm"></i>
+                                <span>Font & Text Size</span>
                             </a>
-                            <a href="#section-ads-privacy"
-                                class="toc-link flex items-center p-2 rounded transition-colors"
-                                style="color: var(--warning-color);">
-                                <i class="fas fa-ad mr-2 text-sm"></i>
-                                <span>Ads & Privacy</span>
-                            </a>
+                            <details class="md:col-span-2 p-2 rounded" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);">
+                                <summary class="flex items-center font-semibold cursor-pointer" style="color: var(--text-primary); list-style: none;">
+                                    <i class="fas fa-shield-alt mr-2 text-sm"></i>
+                                    <span>Privacy</span>
+                                </summary>
+                                <div class="mt-2 pl-2 space-y-1" style="border-left: 1px solid rgba(255, 255, 255, 0.12);">
+                                    <a href="#section-security-privacy" class="toc-link flex items-center p-2 rounded transition-colors font-semibold" style="color: var(--info-color);">
+                                        <i class="fas fa-lock mr-2 text-sm"></i>
+                                        <span>Security & Privacy</span>
+                                    </a>
+                                    <a href="#section-ads-privacy" class="toc-link flex items-center p-2 rounded transition-colors font-semibold" style="color: var(--warning-color);">
+                                        <i class="fas fa-ad mr-2 text-sm"></i>
+                                        <span>Ads & Privacy</span>
+                                    </a>
+                                </div>
+                            </details>
                             <a href="#section-legacy-access"
-                                class="toc-link flex items-center p-2 rounded transition-colors"
+                                class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
                                 style="color: #3b82f6;">
                                 <i class="fas fa-key mr-2 text-sm"></i>
                                 <span>Legacy Access</span>
                             </a>
                             <a href="#section-limits"
-                                class="toc-link flex items-center p-2 rounded transition-colors"
+                                class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
                                 style="color: #8b5cf6;">
                                 <i class="fas fa-chart-line mr-2 text-sm"></i>
                                 <span>Usage Limits</span>
                             </a>
                             <a href="#section-troubleshooting"
-                                class="toc-link flex items-center p-2 rounded transition-colors"
-                                style="color: #ef4444;">
+                                class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
+                                style="color: #f59e0b;">
                                 <i class="fas fa-tools mr-2 text-sm"></i>
                                 <span>Troubleshooting</span>
                             </a>
@@ -439,6 +460,36 @@ export const helpModal = `
 
 
                         </section>
+                        <section id="section-font-customization">
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #c084fc;"><i
+                                    class="fas fa-font mr-2"></i>Font & Text Size</h3>
+                            <p style="color: var(--text-primary); margin-bottom: 1rem;">
+                                You can personalize how text looks in your conversations by changing the chat bubble
+                                font style and size in Settings.
+                            </p>
+
+                            <div class="mt-2 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #c084fc;"><i
+                                        class="fas fa-sliders-h mr-2"></i>How to change the font:</p>
+                                <ol class="list-decimal pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li>Open the sidebar and tap <strong>Settings</strong></li>
+                                    <li>Go to the <strong>Font</strong> step</li>
+                                    <li>Use <strong>Chat Bubble Font</strong> to choose your preferred font style</li>
+                                    <li>Use <strong>Chat Bubble Font Size</strong> to choose your preferred text size</li>
+                                </ol>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg border"
+                                style="background: var(--settings-label-bg); border-color: #c084fc;">
+                                <p class="font-medium flex items-center" style="color: #c084fc;"><i
+                                        class="fas fa-info-circle mr-2"></i>Important:</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                    Changing <strong>Chat Bubble Font Size</strong> only affects text inside chat
+                                    bubbles (your messages and AI replies). It does <strong>not</strong> change text size
+                                    in menus, settings screens, or other parts of the app UI.
+                                </p>
+                            </div>
+                        </section>
                         <section id="section-security-privacy">
                             <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: var(--info-color);">
                                 <i class="fas fa-lock mr-2"></i>Security & Privacy
@@ -549,16 +600,32 @@ export const helpModal = `
                                 style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #3b82f6;"><i
                                         class="fas fa-key mr-2"></i>Legacy Users</p>
-                                <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.5rem;">If
-                                    you purchased an old version of LMSA, you can receive a free code that will
-                                    grant you lifetime access to LMSA Premium, removing advertising.</p>
-                                <p style="color: var(--text-primary); margin-bottom: 0.5rem;">Please email
-                                    <strong>support@lmsa.app</strong> with your order number to receive your free
+                                <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                                    Background: Early releases of LMSA were distributed as a paid-only app (no free
+                                    tier). We later added a free tier alongside paid options. Because of that
+                                    transition, users who purchased the original ("legacy") paid version need to
+                                    reactivate their premium access in the newer app using a special legacy promo
                                     code.
                                 </p>
-                                <p style="color: var(--text-primary);"><a href="#" id="help-locate-order-number-link"
-                                        class="text-blue-400 hover:text-blue-300 underline">Locate order number</a>
-                                </p>
+
+                                <div class="mt-2 p-2 rounded" style="background: rgba(59,130,246,0.03); border: 1px solid rgba(59,130,246,0.06);">
+                                    <p style="color: var(--text-primary); margin-bottom: 0.5rem;"><strong>How to get your legacy promo
+                                            code:</strong></p>
+                                    <ol class="list-decimal pl-5 mt-2" style="color: var(--text-primary);">
+                                        <li>Email <strong>support@lmsa.app</strong> and include your order number (and any
+                                            purchase date or receipt details you still have).</li>
+                                        <li>We will verify your legacy purchase and reply with a one-time promo code and
+                                            instructions to apply it in the app to restore your premium (ad-free)
+                                            access.</li>
+                                    </ol>
+                                    <p style="color: var(--text-primary); margin-top: 0.5rem;">If you need help locating your
+                                        order number, use the link below to find guidance.</p>
+                                    <p style="color: var(--text-primary);"><a href="#" id="help-locate-order-number-link"
+                                            class="text-blue-400 hover:text-blue-300 underline">Locate order number</a></p>
+                                    <p style="color: var(--text-primary); margin-top: 0.5rem;">If you don't receive the
+                                        instructions for redeeming the code, reply to our support message and we'll
+                                        assist you directly.</p>
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -707,20 +774,7 @@ export const helpModal = `
                                 </ul>
                             </div>
 
-                            <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #60a5fa;"><i
-                                        class="fas fa-terminal mr-2"></i>Ignorable Log Errors</p>
-                                <p style="color: var(--text-primary); margin-top: 0.5rem;">If you see this error in
-                                    LM Studio logs, it can be safely ignored:</p>
-                                <div
-                                    class="mt-2 p-2 rounded bg-gray-900 text-gray-300 font-mono text-xs overflow-x-auto border border-gray-700">
-                                    [ERROR] Unexpected endpoint or method. (GET /v1/model/info). Returning 200
-                                    anyway
-                                </div>
-                                <p style="color: var(--text-primary); margin-top: 0.5rem; font-size: 0.9em;">This
-                                    endpoint acts as a dummy check to prevent models from loading automatically
-                                    without your permission.</p>
-                            </div>
+                            <!-- Ignorable Log Errors section removed per request -->
 
                             <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #f59e0b;"><i

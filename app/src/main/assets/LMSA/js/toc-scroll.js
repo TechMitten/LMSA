@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Add visual feedback for the clicked link
                 this.style.transition = 'all 0.1s ease';
-                this.style.backgroundColor = 'rgba(59, 130, 246, 0.3)';
+                this.style.backgroundColor = 'rgba(148, 163, 184, 0.28)';
 
                 setTimeout(() => {
                     this.style.backgroundColor = '';
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Add touch feedback for better mobile experience
         link.addEventListener('touchstart', function () {
-            this.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
+            this.style.backgroundColor = 'rgba(148, 163, 184, 0.2)';
         }, { passive: true });
 
         link.addEventListener('touchend', function () {
