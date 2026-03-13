@@ -30,6 +30,15 @@ let lastFetchPromise = null;
  * @returns {boolean} - True if valid, false if invalid
  */
 export function validateIpPort() {
+    const serverIpInput = document.getElementById('server-ip');
+    const serverPortInput = document.getElementById('server-port');
+
+    // Return false if elements are not found
+    if (!serverIpInput || !serverPortInput) {
+        console.error('Server IP or Port input element not found');
+        return false;
+    }
+
     const ip = serverIpInput.value.trim();
     const port = serverPortInput.value.trim();
 
@@ -48,6 +57,14 @@ export function validateIpPort() {
  * Saves the server settings and fetches models
  */
 export function saveServerSettings() {
+    const serverIpInput = document.getElementById('server-ip');
+    const serverPortInput = document.getElementById('server-port');
+
+    if (!serverIpInput || !serverPortInput) {
+        console.error('Server IP or Port input element not found');
+        return;
+    }
+
     const ip = serverIpInput.value.trim();
     const port = serverPortInput.value.trim();
 
@@ -75,6 +92,14 @@ export function updateServerUrl() {
  * Shows validation error for IP/Port fields
  */
 function showValidationError() {
+    const serverIpInput = document.getElementById('server-ip');
+    const serverPortInput = document.getElementById('server-port');
+
+    if (!serverIpInput || !serverPortInput) {
+        console.error('Server IP or Port input element not found');
+        return;
+    }
+
     const ip = serverIpInput.value.trim();
     const port = serverPortInput.value.trim();
 
@@ -100,9 +125,15 @@ function showValidationError() {
  * Clears validation errors for IP/Port fields
  */
 function clearValidationErrors() {
-    // Remove error styling
-    serverIpInput.style.borderColor = '';
-    serverPortInput.style.borderColor = '';
+    const serverIpInput = document.getElementById('server-ip');
+    const serverPortInput = document.getElementById('server-port');
+
+    if (serverIpInput) {
+        serverIpInput.style.borderColor = '';
+    }
+    if (serverPortInput) {
+        serverPortInput.style.borderColor = '';
+    }
 
     // Ensure the error modal is hidden
     hideIpPortErrorModal();
