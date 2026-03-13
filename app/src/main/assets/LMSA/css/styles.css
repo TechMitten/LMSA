@@ -8924,11 +8924,22 @@ body.modal-open {
         -webkit-tap-highlight-color: rgba(59, 130, 246, 0.1);
     }
 
-    #help-modal .toc-link:focus,
-    #help-modal a:focus,
-    #help-modal button:focus {
+    /* Show focus outline only for keyboard users (focus-visible).
+       Suppress visible borders/shadows when focus is from mouse/touch. */
+    #help-modal .toc-link:focus-visible,
+    #help-modal a:focus-visible,
+    #help-modal button:focus-visible {
         outline: 2px solid #3b82f6;
         outline-offset: 2px;
+    }
+
+    /* Remove visible focus styling when element is focused by mouse/touch */
+    #help-modal .toc-link:focus:not(:focus-visible),
+    #help-modal a:focus:not(:focus-visible),
+    #help-modal button:focus:not(:focus-visible) {
+        outline: none;
+        box-shadow: none;
+        border-color: transparent;
     }
 
     /* Improve scrolling */
