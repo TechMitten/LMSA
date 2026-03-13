@@ -84,12 +84,16 @@ body.preview-mode {
 }
 
 #messages::-webkit-scrollbar {
-    display: none;
-    /* Hide scrollbar in Chrome/Safari/WebView */
+    width: 0;
+    height: 0;
+    background: transparent;
+    /* Hide scrollbar in Chrome/Safari/WebView without using display:none so Android WebView can re-enable it */
 }
 
 #smart-replies-container::-webkit-scrollbar {
-    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
 }
 #smart-replies-container {
     scrollbar-width: none;
@@ -104,8 +108,8 @@ body.preview-mode {
 }
 
 #messages.show-scrollbar::-webkit-scrollbar {
-    display: block;
     width: 6px;
+    height: 6px;
 }
 
 #messages.show-scrollbar::-webkit-scrollbar-thumb {
@@ -115,6 +119,46 @@ body.preview-mode {
 
 #messages.show-scrollbar::-webkit-scrollbar-track {
     background: transparent;
+}
+
+.chat-scrollbar {
+    position: absolute;
+    right: 4px;
+    width: 10px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.18);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 3;
+}
+
+.chat-scrollbar.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.chat-scrollbar-thumb {
+    width: 100%;
+    min-height: 36px;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgba(96, 165, 250, 0.92), rgba(59, 130, 246, 0.7));
+    box-shadow: 0 2px 10px rgba(37, 99, 235, 0.25);
+    transform: translateY(0);
+    will-change: transform, height;
+    touch-action: none;
+}
+
+.chat-scrollbar.dragging .chat-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(125, 211, 252, 0.98), rgba(59, 130, 246, 0.82));
+}
+
+body.light-theme .chat-scrollbar {
+    background: rgba(148, 163, 184, 0.22);
+}
+
+body.light-theme .chat-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0.72));
 }
 
 /* Add a container for messages to ensure they appear at the bottom when content is short */

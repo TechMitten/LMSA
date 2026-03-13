@@ -12,6 +12,7 @@ import {
 } from "./dom-elements.js";
 
 import { applyThinkingVisibility, refreshAllMessages, applyModelLabelVisibility } from "./ui-manager.js";
+import { refreshChatScrollbar } from "./chat-scrollbar.js";
 import { debugLog } from "./utils.js";
 import { showSmartReplyWarningModal } from "./components/modals/smart-reply-warning-modal.js";
 import { showOpenRouterWarningModal } from "./components/modals/openrouter-warning-modal.js";
@@ -625,6 +626,7 @@ export function applyScrollbarVisibility() {
     } else {
       messages.classList.remove('show-scrollbar');
     }
+    refreshChatScrollbar();
   }
 }
 

@@ -16,6 +16,7 @@ import { initializeModelManager } from './model-manager.js';
 import { initializeWhatsNew } from './whats-new.js';
 import { initializeSettingsModal } from './settings-modal-manager.js';
 import { initializeIpPortConfirmationModal } from './ip-port-confirmation-modal.js';
+import { initializeChatScrollbar, refreshChatScrollbar } from './chat-scrollbar.js';
 import { initPremiumModal, openPremiumModal } from './components/modals/premium-modal.js';
 import { initSmartReplyWarningModal } from './components/modals/smart-reply-warning-modal.js';
 import { initOpenRouterWarningModal } from './components/modals/openrouter-warning-modal.js';
@@ -123,6 +124,7 @@ export async function initializeApp() {
 
     hideLoadingIndicatorOnLoad();
     ensureWelcomeMessagePosition();
+    initializeChatScrollbar();
 
     // Initialize critical components first
     initializeEventHandlers();
@@ -200,11 +202,13 @@ export async function initializeApp() {
         // Optimized: Immediate scroll for better performance
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
         handleScroll(messagesContainer);
+        refreshChatScrollbar();
 
         // Optimized: Use requestAnimationFrame for better performance
         requestAnimationFrame(() => {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
             handleScroll(messagesContainer);
+            refreshChatScrollbar();
         });
     }
 
