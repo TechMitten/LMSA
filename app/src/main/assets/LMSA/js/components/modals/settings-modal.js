@@ -283,11 +283,11 @@ export const settingsModal = `
                             <i class="fas fa-text-height mr-2 text-blue-400"></i>Chat Bubble Font Size</label>
                         <select id="chat-font-size-select"
                             class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500">
-                            <option value="0.8rem">Extra Small</option>
-                            <option value="0.9rem">Small</option>
-                            <option value="1rem" selected>Medium (Default)</option>
-                            <option value="1.125rem">Large</option>
-                            <option value="1.25rem">Extra Large</option>
+                            <option value="12px">Extra Small</option>
+                            <option value="14px">Small</option>
+                            <option value="16px" selected>Medium (Default)</option>
+                            <option value="20px">Large</option>
+                            <option value="24px">Extra Large</option>
                         </select>
                         <p class="text-xs text-gray-400 mt-1">Select the text size used in chat message bubbles</p>
                     </div>

@@ -121,14 +121,14 @@
 #messages > div,
 #messages > div.user,
 #messages > div.ai {
-    font-size: max(var(--chat-font-size, 1rem), 1rem) !important;
+    font-size: var(--chat-font-size, 16px) !important;
 }
 
 /* Android WebView often renders slightly smaller; enforce a safer minimum. */
 .android-webview #messages > div,
 .android-webview #messages > div.user,
 .android-webview #messages > div.ai {
-    font-size: max(var(--chat-font-size, 1rem), 1.05rem) !important;
+    font-size: var(--chat-font-size, 16px) !important;
     line-height: 1.55;
 }
 
@@ -139,7 +139,7 @@ body.keyboard-visible #messages > div.ai,
 .android-webview.keyboard-visible #messages > div,
 .android-webview.keyboard-visible #messages > div.user,
 .android-webview.keyboard-visible #messages > div.ai {
-    font-size: max(var(--chat-font-size, 1rem), 1rem) !important;
+    font-size: var(--chat-font-size, 16px) !important;
 }
 
 body.keyboard-visible #messages > div .message-content,
@@ -164,7 +164,7 @@ body.keyboard-visible #messages > div .message-content span,
     #messages > div.user .message-content li,
     #messages > div.ai .message-content span,
     #messages > div.user .message-content span {
-        font-size: clamp(1rem, var(--chat-font-size, 1rem), 1.25rem) !important;
+        font-size: var(--chat-font-size, 16px) !important;
         line-height: 1.55 !important;
     }
 
@@ -176,7 +176,7 @@ body.keyboard-visible #messages > div .message-content span,
     .android-webview #messages > div.user .message-content li,
     .android-webview #messages > div.ai .message-content span,
     .android-webview #messages > div.user .message-content span {
-        font-size: clamp(1.05rem, var(--chat-font-size, 1rem), 1.3rem) !important;
+        font-size: var(--chat-font-size, 16px) !important;
     }
 }
 

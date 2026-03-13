@@ -335,9 +335,8 @@ class WebViewActivity : AppCompatActivity() {
         // overview scaling that can shrink text on some Android devices.
         webSettings.useWideViewPort = false
         webSettings.loadWithOverviewMode = false
-        // Respect Android accessibility font scale in WebView text rendering.
-        val systemFontScale = resources.configuration.fontScale
-        webSettings.textZoom = (systemFontScale * 100f).roundToInt().coerceIn(50, 300)
+        // Do not override font settings by Android accessibility font scale, rely on app's internal settings
+        webSettings.textZoom = 100
         webSettings.setSupportZoom(false)
         webSettings.builtInZoomControls = false
         webSettings.displayZoomControls = false

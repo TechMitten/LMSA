@@ -176,7 +176,7 @@ body.light-theme .chat-scrollbar-thumb {
     border-radius: 0.75rem;
     line-height: 1.5;
     font-family: var(--chat-font-family, system-ui, sans-serif);
-    font-size: var(--chat-font-size, 1rem);
+    font-size: var(--chat-font-size, 16px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
     /* Prevent message bubbles from being compressed */
@@ -189,7 +189,7 @@ body.light-theme .chat-scrollbar-thumb {
         /* Slightly wider on mobile */
         padding: 0.625rem 0.875rem;
         /* Slightly smaller padding */
-        font-size: var(--chat-font-size, 0.95rem);
+        font-size: var(--chat-font-size, 16px);
         /* Font size controlled by user setting */
     }
 }

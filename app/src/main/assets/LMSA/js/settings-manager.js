@@ -38,9 +38,9 @@ let openRouterApiKey = ''; // OpenRouter API key
 let showModelLabel = true; // Show model name on AI message bubbles
 let showChatScrollbar = false; // Show scrollbar in chat message area
 let chatFontFamily = 'system-ui, sans-serif'; // Font family for chat message bubbles
-let chatFontSize = '1rem'; // Font size for chat message bubbles
+let chatFontSize = '16px'; // Font size for chat message bubbles
 
-const ALLOWED_CHAT_FONT_SIZES = ['0.8rem', '0.9rem', '1rem', '1.125rem', '1.25rem'];
+const ALLOWED_CHAT_FONT_SIZES = ['12px', '14px', '16px', '20px', '24px'];
 
 /**
  * Initializes temperature settings
@@ -1344,7 +1344,7 @@ export function loadChatFontSettings() {
     chatFontSize = savedFontSize;
   } else if (savedFontSize) {
     // Reset unsupported legacy values so message bubbles remain readable.
-    chatFontSize = '1rem';
+    chatFontSize = '16px';
     localStorage.setItem('chatFontSize', chatFontSize);
   }
 
