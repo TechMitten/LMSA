@@ -3582,13 +3582,14 @@ body.light-theme #send-context-menu .menu-header {
 
 /* Fix for settings-step-prompt to ensure system prompt is properly displayed */
 #settings-modal #settings-step-prompt.active {
-    max-height: 40vh;
-    /* Lower height to ensure everything is visible */
     padding-bottom: 0.5rem;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
     overflow-x: hidden !important;
+    overflow-y: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
 
     transform-style: preserve-3d !important;
     contain: layout !important;
@@ -3604,6 +3605,13 @@ body.light-theme #send-context-menu .menu-header {
     position: static !important;
     margin: 0 !important;
     padding: 0 !important;
+}
+
+/* System prompt preview - constrain height and allow scrolling */
+#system-prompt-preview {
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
 }
 
 .system-prompt-textarea {
