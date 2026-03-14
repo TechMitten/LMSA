@@ -1366,22 +1366,41 @@ export function handleScroll(messagesContainer) {
         // Use a smaller threshold (100px) to make the button more responsive
         window.userHasScrolledUp = distanceFromBottom >= 100;
 
+        const longChatThresholdPx = Math.max(1800, messagesContainer.clientHeight * 3);
+        const farFromBottomThresholdPx = Math.max(700, messagesContainer.clientHeight * 1.2);
+        const nearTopThresholdPercent = 25;
+        const minimumMessageCount = 8;
+        const isSubstantiallyLong = totalScrollableHeight >= longChatThresholdPx;
+        const isFarTowardTop = scrollPercentage <= nearTopThresholdPercent;
+        const hasEnoughMessages = messages.length >= minimumMessageCount;
+
         // Control scroll-to-bottom button visibility
         const scrollButton = document.getElementById('scroll-to-bottom');
         if (scrollButton) {
-            const wasVisible = scrollButton.classList.contains('visible');
-
             // Check if the button is force-hidden by user settings
             const isForceHidden = scrollButton.classList.contains('force-hidden');
 
-            if (window.userHasScrolledUp && !isForceHidden) {
+            // Show only when chat is long enough and user is far toward the top.
+            const shouldShowButton =
+                window.userHasScrolledUp &&
+                isSubstantiallyLong &&
+                hasEnoughMessages &&
+                isFarTowardTop &&
+                distanceFromBottom >= farFromBottomThresholdPx &&
+                !isForceHidden;
+
+            if (shouldShowButton) {
                 // Show button when user has scrolled up (unless force-hidden)
                 scrollButton.classList.remove('hidden');
                 scrollButton.classList.add('visible', 'show');
+                scrollButton.style.visibility = 'visible';
+                scrollButton.style.pointerEvents = 'auto';
             } else {
                 // Hide button when user is at or near bottom or if force-hidden
                 scrollButton.classList.remove('visible', 'show');
                 scrollButton.classList.add('hidden');
+                scrollButton.style.visibility = 'hidden';
+                scrollButton.style.pointerEvents = 'none';
             }
         } else {
             console.warn('Scroll-to-bottom button element not found');
@@ -1396,6 +1415,9 @@ export function handleScroll(messagesContainer) {
                 totalScrollableHeight: totalScrollableHeight,
                 scrollPercentage: scrollPercentage.toFixed(2) + '%',
                 userHasScrolledUp: window.userHasScrolledUp,
+                isSubstantiallyLong: isSubstantiallyLong,
+                hasEnoughMessages: hasEnoughMessages,
+                isFarTowardTop: isFarTowardTop,
                 buttonVisible: scrollButton ? !scrollButton.classList.contains('hidden') : false
             });
         }
@@ -1843,5 +1865,7 @@ export function hideScrollToBottomButton() {
     if (scrollButton) {
         scrollButton.classList.remove('visible', 'show');
         scrollButton.classList.add('hidden');
+        scrollButton.style.visibility = 'hidden';
+        scrollButton.style.pointerEvents = 'none';
     }
 }

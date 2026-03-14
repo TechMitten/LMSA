@@ -2878,8 +2878,6 @@ pre:hover {
   opacity: 0;
   /* Remove conflicting positioning properties */
   right: auto !important;
-  pointer-events: auto !important;
-  /* Ensure the button is always clickable */
 }
 
 #scroll-to-bottom.show {
