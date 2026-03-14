@@ -513,6 +513,227 @@
     }
 }
 
+/* Enhanced Create Modal Styling */
+#create-modal-content {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    box-shadow:
+        0 25px 50px -12px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(59, 130, 246, 0.1) inset,
+        0 0 30px rgba(59, 130, 246, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    position: relative;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Add subtle gradient overlay */
+#create-modal-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(59, 130, 246, 0.5) 50%,
+        transparent 100%);
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* Add corner accents for modern look */
+#create-modal-content::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(135deg,
+        rgba(59, 130, 246, 0.4) 0%,
+        rgba(147, 51, 234, 0.2) 50%,
+        rgba(59, 130, 246, 0.4) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.6;
+    z-index: 1;
+}
+
+/* Enhanced modal header styling */
+#create-modal-content .sticky.top-0 {
+    background: linear-gradient(180deg,
+        rgba(30, 41, 59, 0.95) 0%,
+        rgba(30, 41, 59, 0.85) 100%);
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 10;
+    touch-action: pan-y;
+}
+
+/* Ensure all modal content is above decorative elements */
+#create-modal-content > * {
+    position: relative;
+    z-index: 5;
+}
+
+/* Enhanced form inputs styling */
+#create-modal-content input[type="text"],
+#create-modal-content textarea {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    transition: all 0.3s ease;
+}
+
+#create-modal-content input[type="text"]:focus,
+#create-modal-content textarea:focus {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Enhanced avatar section */
+#create-modal-content .avatar-section {
+    background: rgba(59, 130, 246, 0.05);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    border-radius: 12px;
+    padding: 1rem;
+    touch-action: pan-y;
+}
+
+/* Ensure the main content area is scrollable */
+#create-modal-content > div:nth-child(2) {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+}
+
+/* Mobile specific scrolling fixes */
+@media (max-width: 640px) {
+    #create-modal-content {
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+    }
+
+    #create-modal-content > div:nth-child(2) {
+        overflow-y: visible;
+        -webkit-overflow-scrolling: auto;
+    }
+}
+
+/* Enhanced button styling */
+#create-modal-content button[type="button"] {
+    transition: all 0.2s ease;
+}
+
+#create-modal-content button[type="button"]:hover {
+    transform: translateY(-1px);
+}
+
+/* Cancel button styling */
+#create-modal-content button[onclick="closeCreateModal()"] {
+    background: rgba(71, 85, 105, 0.5);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+#create-modal-content button[onclick="closeCreateModal()"]:hover {
+    background: rgba(71, 85, 105, 0.7);
+    border-color: rgba(100, 116, 139, 0.5);
+}
+
+/* Save button styling */
+#create-modal-content button[onclick="saveNewTemplate()"] {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border: 1px solid rgba(59, 130, 246, 0.5);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+#create-modal-content button[onclick="saveNewTemplate()"]:hover {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+/* Avatar preview enhancement */
+#create-modal-content #avatar-preview {
+    background: rgba(59, 130, 246, 0.1);
+    border: 2px dashed rgba(59, 130, 246, 0.3);
+}
+
+/* Avatar option buttons */
+#create-modal-content .avatar-option {
+    transition: all 0.2s ease;
+    border: 2px solid rgba(71, 85, 105, 0.5);
+}
+
+#create-modal-content .avatar-option:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    transform: scale(1.05);
+}
+
+#create-modal-content .avatar-option.ring-2 {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Generate button enhancement */
+#create-modal-content #generate-prompt-btn {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+}
+
+#create-modal-content #generate-prompt-btn:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* Label styling */
+#create-modal-content label {
+    color: #93c5fd;
+    font-weight: 500;
+}
+
+/* Modal title enhancement */
+#create-modal-content #modal-title {
+    background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Enhanced modal background overlay */
+#create-modal {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* Mobile-specific enhancements */
+@media (max-width: 640px) {
+    #create-modal-content {
+        border: 1px solid rgba(59, 130, 246, 0.4);
+        box-shadow:
+            0 10px 40px rgba(0, 0, 0, 0.6),
+            0 0 0 1px rgba(59, 130, 246, 0.2) inset;
+    }
+
+    #create-modal-content .avatar-section {
+        padding: 0.75rem;
+    }
+}
+
 .glass-card {
     background: rgba(30, 41, 59, 0.4);
     backdrop-filter: blur(8px);
@@ -952,8 +1173,17 @@ body {
 .template-main-container {
     width: 100%;
     max-width: 100%;
-    min-height: 100vh;
+    min-height: auto;
     height: auto;
+}
+
+/* Mobile only - ensure full viewport height */
+@media (max-width: 640px) {
+    .template-main-container {
+        min-height: 100vh;
+        height: 100vh;
+        max-height: 100vh;
+    }
 }
 
 /* Extra small phones (320px-375px) */
@@ -1109,11 +1339,18 @@ body {
         max-width: 900px;
         border-radius: 30px;
         margin: 2rem auto;
-        height: min(850px, 90vh);
+        height: auto;
+        max-height: 90vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
 
     main {
         padding-bottom: 7rem;
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
     }
 
     #templates-grid {
@@ -1126,11 +1363,18 @@ body {
     .template-main-container {
         max-width: 1000px;
         margin: 2rem auto;
-        height: min(850px, 90vh);
+        height: auto;
+        max-height: 90vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
 
     main {
         padding-bottom: 7rem;
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
     }
 
     #templates-grid {
@@ -1142,7 +1386,22 @@ body {
 @media (min-width: 1536px) {
     .template-main-container {
         max-width: 1200px;
-        height: min(900px, 90vh);
+        height: auto;
+        max-height: 90vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    main {
+        padding-bottom: 7rem;
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+    }
+
+    #templates-grid {
+        gap: 1.5rem;
     }
 }
 
@@ -1350,12 +1609,29 @@ body {
         margin: auto;
         padding: 2rem;
     }
+
+    /* Specific enhancement for create modal on desktop */
+    #create-modal-content {
+        max-width: 750px;
+        padding: 2.5rem;
+        margin: 1rem;
+    }
+
+    #create-modal-content .sticky.top-0 {
+        padding: 1.5rem 2.5rem;
+        margin: -2.5rem -2.5rem 1.5rem -2.5rem;
+        border-radius: 24px 24px 0 0;
+    }
 }
 
 /* Large desktop (1280px+) */
 @media (min-width: 1280px) {
     .responsive-modal-content {
         max-width: 750px;
+    }
+
+    #create-modal-content {
+        max-width: 800px;
     }
 }
 
@@ -1367,7 +1643,37 @@ body {
         max-width: 450px;
         border-radius: 20px;
         margin: auto;
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+        border: 2px solid rgba(239, 68, 68, 0.3);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     }
+}
+
+/* Delete modal specific styling */
+#delete-modal-content {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+    border: 2px solid rgba(239, 68, 68, 0.3);
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(239, 68, 68, 0.1) inset;
+}
+
+/* Error modal specific styling */
+#error-modal-content {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+    border: 2px solid rgba(239, 68, 68, 0.3);
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(239, 68, 68, 0.1) inset;
+}
+
+/* Template loaded modal styling */
+#template-loaded-modal-content {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(59, 130, 246, 0.1) inset;
 }
 
 /* ============================================

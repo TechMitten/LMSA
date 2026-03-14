@@ -27,9 +27,47 @@ let templateToEdit = null;
 const deleteModal = document.getElementById('delete-modal');
 const deleteModalContent = document.getElementById('delete-modal-content');
 
+/**
+ * Migrate avatar URLs to local paths for better compatibility
+ * Converts old dicebear API URLs to locally stored avatar files
+ */
+async function migrateAvatarUrls(customTemplates) {
+    let needsUpdate = false;
+    
+    for (const template of customTemplates) {
+        // Check if avatar URL is old dicebear API URL
+        if (template.avatarUrl && template.avatarUrl.includes('api.dicebear.com')) {
+            try {
+                // Extract seed from old URL
+                const seedMatch = template.avatarUrl.match(/seed=(\d+)/);
+                if (seedMatch && seedMatch[1]) {
+                    const seed = seedMatch[1];
+                    template.avatarUrl = `avatars/avatar_${seed}.svg`;
+                    needsUpdate = true;
+                    console.log(`Migrated avatar URL for template: ${template.name} (seed: ${seed})`);
+                }
+            } catch (error) {
+                console.warn(`Failed to migrate avatar for template ${template.name}:`, error);
+            }
+        }
+        // Data URLs will continue to work, no migration needed
+    }
+    
+    // Save migrated templates back to localStorage
+    if (needsUpdate) {
+        localStorage.setItem('customTemplates', JSON.stringify(customTemplates));
+        console.log('Avatar URL migration complete');
+    }
+    
+    return customTemplates;
+}
+
 // Load Custom Templates on Init
-function loadCustomTemplates() {
-    const customTemplates = JSON.parse(localStorage.getItem('customTemplates')) || [];
+async function loadCustomTemplates() {
+    let customTemplates = JSON.parse(localStorage.getItem('customTemplates')) || [];
+    
+    // Migrate any external URLs to data URLs
+    customTemplates = await migrateAvatarUrls(customTemplates);
 
     // Add to templates object
     customTemplates.forEach(t => {
@@ -170,18 +208,15 @@ const modal = document.getElementById('create-modal');
 const modalContent = document.getElementById('create-modal-content');
 
 // Avatar Picker Logic
-// Using "micah" with forced happy expressions, natural hair colors, and more options for diversity
-// Seeds are abstract strings to ensure random distribution across race/gender
+// Using locally stored SVGs - no internet dependency
+// All avatars are pre-downloaded and stored in /avatars/ folder
 const avatarSeeds = [
     '100', '101', '102', '103', '104', '105',
     '106', '107', '108', '109', '110', '111',
     '112', '113', '114', '115', '116', '117'
 ];
 
-// Micah hair colors: Black, Dark Brown, Medium Brown, Blonde, Grey, Red-ish (hex without #)
-const naturalHair = '000000,362c47,4a312c,eacf11,e2e2e2,ac6651';
-
-const avatars = avatarSeeds.map(seed => `https://api.dicebear.com/9.x/micah/svg?seed=${seed}&backgroundColor=transparent&mouth=smile,laughing&hairColor=${naturalHair}`);
+const avatars = avatarSeeds.map(seed => `avatars/avatar_${seed}.svg`);
 
 let selectedAvatarUrl = null;
 
@@ -200,7 +235,9 @@ function renderAvatarPicker() {
 }
 
 function selectAvatar(url, btnElement) {
+    // Store local avatar path directly - no internet dependency
     selectedAvatarUrl = url;
+    
     // Update UI
     document.querySelectorAll('.avatar-option').forEach(b => {
         b.classList.remove('ring-2', 'ring-blue-500', 'border-blue-500');
@@ -555,10 +592,11 @@ if (errorModal) {
     });
 }
 
-// Close modal on outside click
-modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeCreateModal();
-});
+// Create modal now requires explicit action (Cancel or Save buttons) to close
+// Removed outside-click functionality to prevent accidental closure
+// modal.addEventListener('click', (e) => {
+//     if (e.target === modal) closeCreateModal();
+// });
 
 
 // Template Loaded Modal Elements

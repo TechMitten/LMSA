@@ -233,15 +233,47 @@ body.dark #terms-modal .bg-gray-900\/50 {
 /* Tablet optimizations */
 @media (min-width: 641px) and (max-width: 1024px) {
     #terms-modal > div {
-        max-width: 500px;
+        max-width: 550px;
         width: calc(100% - 2rem);
+    }
+
+    /* Ensure accept button has proper width on tablets */
+    #accept-terms-btn {
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 0.95rem;
+        padding: 0.875rem 1.25rem;
     }
 }
 
 /* Desktop optimizations */
 @media (min-width: 1025px) {
     #terms-modal > div {
-        max-width: 550px;
+        max-width: 650px;
+    }
+
+    /* Ensure footer allows full width button */
+    #terms-acceptance-footer {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    /* Ensure accept button has proper width and text styling on desktop */
+    #accept-terms-btn {
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0.875rem 1.5rem;
+        font-size: 1rem;
+        box-sizing: border-box;
+    }
+
+    /* Allow text wrapping for very long text if needed */
+    #accept-terms-btn br {
+        display: none;
     }
 }
 

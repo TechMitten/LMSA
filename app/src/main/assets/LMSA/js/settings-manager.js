@@ -37,6 +37,7 @@ let useOpenRouter = false; // Use OpenRouter cloud API
 let openRouterApiKey = ''; // OpenRouter API key
 let showModelLabel = true; // Show model name on AI message bubbles
 let showChatScrollbar = false; // Show scrollbar in chat message area
+let showScrollToBottom = true; // Show scroll to bottom button in chat
 let chatFontFamily = 'system-ui, sans-serif'; // Font family for chat message bubbles
 let chatFontSize = '16px'; // Font size for chat message bubbles
 
@@ -659,6 +660,46 @@ export function saveShowChatScrollbarSetting() {
 
 export function getShowChatScrollbar() {
   return showChatScrollbar;
+}
+
+export function applyScrollToBottomVisibility() {
+  const scrollButton = document.getElementById('scroll-to-bottom');
+  if (scrollButton) {
+    if (showScrollToBottom) {
+      scrollButton.classList.remove('force-hidden');
+    } else {
+      scrollButton.classList.add('force-hidden');
+    }
+  }
+}
+
+export function loadShowScrollToBottomSetting() {
+  const checkbox = document.getElementById('show-scroll-to-bottom');
+  if (checkbox) {
+    const saved = localStorage.getItem('showScrollToBottom');
+    if (saved === null || saved === 'true') {
+      checkbox.checked = true;
+      showScrollToBottom = true;
+    } else {
+      checkbox.checked = false;
+      showScrollToBottom = false;
+    }
+    applyScrollToBottomVisibility();
+    checkbox.addEventListener('change', saveShowScrollToBottomSetting);
+  }
+}
+
+export function saveShowScrollToBottomSetting() {
+  const checkbox = document.getElementById('show-scroll-to-bottom');
+  if (checkbox) {
+    showScrollToBottom = checkbox.checked;
+    localStorage.setItem('showScrollToBottom', showScrollToBottom);
+    applyScrollToBottomVisibility();
+  }
+}
+
+export function getShowScrollToBottom() {
+  return showScrollToBottom;
 }
 
 export function loadShowModelLabelSetting() {
@@ -1414,6 +1455,7 @@ export function loadSettings() {
   loadOpenRouterSettings();
   loadShowModelLabelSetting();
   loadShowChatScrollbarSetting();
+  loadShowScrollToBottomSetting();
   loadChatFontSettings();
   // TTS voice selection will be initialized separately when settings modal opens
 }

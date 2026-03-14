@@ -5170,6 +5170,13 @@ body:not(.dark-theme) .edit-textarea:focus {
     /* Ensure icon is white */
 }
 
+/* Hide scroll-to-bottom button when Android keyboard is visible */
+body.keyboard-visible #scroll-to-bottom {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
 
 /* Modal animations */
 
@@ -5633,6 +5640,32 @@ body.light-theme #whats-new-modal .modal-content {
 
     #whats-new-modal .features-container {
         max-height: calc(100vh - 16rem);
+    }
+}
+
+/* Large desktop adjustments (1281px and above) */
+@media (min-width: 1281px) {
+    #whats-new-modal {
+        padding: 2rem;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    #whats-new-modal .modal-content {
+        width: auto;
+        max-width: 700px;
+        max-height: 85vh;
+        min-height: auto;
+        border-radius: 1.25rem;
+        /* Proper border radius for large desktop */
+        margin: auto;
+        /* Center the modal */
+    }
+
+    #whats-new-modal .features-container {
+        max-height: calc(85vh - 14rem);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 }
 

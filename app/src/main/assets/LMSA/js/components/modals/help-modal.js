@@ -27,16 +27,17 @@ export const helpModal = `
                 <div class="space-y-6">
                     <!-- Table of Contents -->
                     <div class="p-4 rounded-lg"
-                        style="background: var(--settings-label-bg); border: 1px solid var(--border-color);">
-                        <h3 class="text-lg font-semibold mb-3 flex items-center" style="color: var(--text-primary);"><i
+                        style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%); border: 1px solid rgba(59, 130, 246, 0.25); box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);">
+                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: var(--text-primary);"><i
                                 class="fas fa-list mr-2" style="color: #3b82f6;"></i>Table of Contents</h3>
+                        <p class="text-xs mb-3" style="color: var(--text-muted);">Click categories to expand</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                             <details class="md:col-span-2 p-2 rounded"
                                 style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);">
                                 <summary class="flex items-center font-semibold cursor-pointer"
                                     style="color: var(--text-primary); list-style: none;">
-                                    <i class="fas fa-folder-tree mr-2 text-sm"></i>
-                                    <span>Setup</span>
+                                    <i class="fas fa-folder-tree mr-2 text-sm" style="pointer-events: none;"></i>
+                                    <span style="pointer-events: none;">Setup</span>
                                 </summary>
                                 <div class="mt-2 pl-2 space-y-1"
                                     style="border-left: 1px solid rgba(255, 255, 255, 0.12);">
@@ -58,24 +59,24 @@ export const helpModal = `
                                         <i class="fas fa-cloud mr-2 text-sm"></i>
                                         <span>OpenRouter Setup</span>
                                     </a>
+                                    <a href="#section-templates"
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
+                                        style="color: #a78bfa;">
+                                        <i class="fas fa-th-large mr-2 text-sm"></i>
+                                        <span>Using Templates</span>
+                                    </a>
+                                    <a href="#section-font-customization"
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
+                                        style="color: #c084fc;">
+                                        <i class="fas fa-font mr-2 text-sm"></i>
+                                        <span>Font & Text Size</span>
+                                    </a>
                                 </div>
                             </details>
-                            <a href="#section-templates"
-                                class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
-                                style="color: #a78bfa;">
-                                <i class="fas fa-th-large mr-2 text-sm"></i>
-                                <span>Using Templates</span>
-                            </a>
-                            <a href="#section-font-customization"
-                                class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
-                                style="color: #c084fc;">
-                                <i class="fas fa-font mr-2 text-sm"></i>
-                                <span>Font & Text Size</span>
-                            </a>
                             <details class="md:col-span-2 p-2 rounded" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);">
                                 <summary class="flex items-center font-semibold cursor-pointer" style="color: var(--text-primary); list-style: none;">
-                                    <i class="fas fa-shield-alt mr-2 text-sm"></i>
-                                    <span>Privacy</span>
+                                    <i class="fas fa-shield-alt mr-2 text-sm" style="pointer-events: none;"></i>
+                                    <span style="pointer-events: none;">Privacy</span>
                                 </summary>
                                 <div class="mt-2 pl-2 space-y-1" style="border-left: 1px solid rgba(255, 255, 255, 0.12);">
                                     <a href="#section-security-privacy" class="toc-link flex items-center p-2 rounded transition-colors font-semibold" style="color: var(--info-color);">
@@ -88,24 +89,35 @@ export const helpModal = `
                                     </a>
                                 </div>
                             </details>
-                            <a href="#section-legacy-access"
-                                class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
-                                style="color: #3b82f6;">
-                                <i class="fas fa-key mr-2 text-sm"></i>
-                                <span>Legacy Access</span>
-                            </a>
-                            <a href="#section-limits"
-                                class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
-                                style="color: #8b5cf6;">
-                                <i class="fas fa-chart-line mr-2 text-sm"></i>
-                                <span>Usage Limits</span>
-                            </a>
-                            <a href="#section-troubleshooting"
-                                class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
-                                style="color: #f59e0b;">
-                                <i class="fas fa-tools mr-2 text-sm"></i>
-                                <span>Troubleshooting</span>
-                            </a>
+                            <details class="md:col-span-2 p-2 rounded"
+                                style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);">
+                                <summary class="flex items-center font-semibold cursor-pointer"
+                                    style="color: var(--text-primary); list-style: none;">
+                                    <i class="fas fa-tasks mr-2 text-sm" style="pointer-events: none;"></i>
+                                    <span style="pointer-events: none;">Management</span>
+                                </summary>
+                                <div class="mt-2 pl-2 space-y-1"
+                                    style="border-left: 1px solid rgba(255, 255, 255, 0.12);">
+                                    <a href="#section-legacy-access"
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
+                                        style="color: #3b82f6;">
+                                        <i class="fas fa-key mr-2 text-sm"></i>
+                                        <span>Legacy Access</span>
+                                    </a>
+                                    <a href="#section-limits"
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
+                                        style="color: #8b5cf6;">
+                                        <i class="fas fa-chart-line mr-2 text-sm"></i>
+                                        <span>Usage Limits</span>
+                                    </a>
+                                    <a href="#section-troubleshooting"
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
+                                        style="color: #f59e0b;">
+                                        <i class="fas fa-tools mr-2 text-sm"></i>
+                                        <span>Troubleshooting</span>
+                                    </a>
+                                </div>
+                            </details>
                         </div>
                     </div>
 

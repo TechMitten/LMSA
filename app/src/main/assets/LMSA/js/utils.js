@@ -1370,13 +1370,16 @@ export function handleScroll(messagesContainer) {
         const scrollButton = document.getElementById('scroll-to-bottom');
         if (scrollButton) {
             const wasVisible = scrollButton.classList.contains('visible');
-            
-            if (window.userHasScrolledUp) {
-                // Show button when user has scrolled up
+
+            // Check if the button is force-hidden by user settings
+            const isForceHidden = scrollButton.classList.contains('force-hidden');
+
+            if (window.userHasScrolledUp && !isForceHidden) {
+                // Show button when user has scrolled up (unless force-hidden)
                 scrollButton.classList.remove('hidden');
                 scrollButton.classList.add('visible', 'show');
             } else {
-                // Hide button when user is at or near bottom
+                // Hide button when user is at or near bottom or if force-hidden
                 scrollButton.classList.remove('visible', 'show');
                 scrollButton.classList.add('hidden');
             }

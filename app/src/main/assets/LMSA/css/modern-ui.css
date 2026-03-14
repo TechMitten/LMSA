@@ -2898,6 +2898,13 @@ pre:hover {
   transform: translateX(-50%) scale(0.95);
 }
 
+/* Hide scroll-to-bottom button when Android keyboard is visible */
+body.keyboard-visible #scroll-to-bottom {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 /* Scrollbar Enhancement */
 ::-webkit-scrollbar {
   width: 10px;
