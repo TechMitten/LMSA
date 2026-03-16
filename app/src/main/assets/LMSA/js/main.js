@@ -199,12 +199,7 @@ export async function initializeApp() {
     }
 
     if (messagesContainer) {
-        // Optimized: Immediate scroll for better performance
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        handleScroll(messagesContainer);
-        refreshChatScrollbar();
-
-        // Optimized: Use requestAnimationFrame for better performance
+        // Use requestAnimationFrame to avoid redundant synchronous layout work on startup.
         requestAnimationFrame(() => {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
             handleScroll(messagesContainer);

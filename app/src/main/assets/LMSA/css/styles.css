@@ -4667,37 +4667,60 @@ body.light-theme .regenerate-btn:hover {
     /* Remove tap highlight on iOS */
 }
 
-/* Fix stop button sizing in mobile view */
-#stop-button,
-#send-button {
-    min-width: 80px;
-    /* Ensure consistent width */
-    width: auto;
-    padding: 0 12px;
-    /* Reduced padding for mobile */
+/* Modern rounded action buttons for chat input */
+#chat-form .flex-grow {
+    margin-right: 0 !important;
 }
 
-#stop-button i,
-#send-button i {
-    margin-right: 4px;
-    /* Less space between icon and text */
+#chat-form #user-input {
+    border-radius: 0.95rem !important;
+    border-right: 1px solid var(--input-border) !important;
 }
 
-/* Ensure send and stop buttons have consistent width */
-#stop-button,
-#send-button {
-    min-width: 65px;
+#chat-form button#send-button,
+#chat-form button#stop-button {
+    min-width: 52px;
+    width: 52px;
+    height: 52px;
+    min-height: 52px;
+    padding: 0 !important;
+    margin-left: 8px;
+    border-radius: 999px !important;
+    border: 1px solid var(--input-border);
     display: flex;
     align-items: center;
     justify-content: center;
+    align-self: center;
+    line-height: 1;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
     user-select: none;
-    /* Prevent text selection */
     -webkit-user-select: none;
-    /* Safari */
     -moz-user-select: none;
-    /* Firefox */
     -ms-user-select: none;
-    /* IE/Edge */
+}
+
+#send-button i,
+#stop-button i {
+    margin-right: 0;
+    font-size: 0.95rem;
+}
+
+#send-button span,
+#stop-button span {
+    display: none !important;
+}
+
+#chat-form button#send-button:hover,
+#chat-form button#stop-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    filter: brightness(1.05);
+}
+
+#chat-form button#send-button:active,
+#chat-form button#stop-button:active {
+    transform: scale(0.96);
 }
 
 /* Responsive button styles for different screen sizes */
@@ -4705,14 +4728,17 @@ body.light-theme .regenerate-btn:hover {
 
     #stop-button,
     #send-button {
-        min-width: 60px;
-        padding: 0 8px;
+        min-width: 46px;
+        width: 46px;
+        height: 46px;
+        min-height: 46px;
+        padding: 0;
         font-size: 0.9rem;
     }
 
     #stop-button i,
     #send-button i {
-        margin-right: 4px;
+        margin-right: 0;
         font-size: 0.9rem;
     }
 }
@@ -4721,8 +4747,11 @@ body.light-theme .regenerate-btn:hover {
 
     #stop-button,
     #send-button {
-        min-width: 50px;
-        padding: 0 8px;
+        min-width: 42px;
+        width: 42px;
+        height: 42px;
+        min-height: 42px;
+        padding: 0;
     }
 
     #stop-button span,
@@ -4734,7 +4763,7 @@ body.light-theme .regenerate-btn:hover {
     #stop-button i,
     #send-button i {
         margin-right: 0;
-        font-size: 1rem;
+        font-size: 0.85rem;
     }
 
     /* Adjust chat form for very small screens */
@@ -4745,7 +4774,7 @@ body.light-theme .regenerate-btn:hover {
     }
 
     #send-button {
-        padding: 8px 10px !important;
+        padding: 0 !important;
     }
 
     /* Smaller input field padding */
@@ -4755,42 +4784,6 @@ body.light-theme .regenerate-btn:hover {
         font-size: 0.9rem;
     }
 }
-
-/* Send button long-press effect - optimized for touchscreens */
-#send-button.long-press-active {
-    background-color: #1e40af;
-    /* Darker blue */
-    transform: scale(0.95);
-    user-select: none;
-    /* Prevent text selection */
-    -webkit-user-select: none;
-    /* Safari */
-    -moz-user-select: none;
-    /* Firefox */
-    -ms-user-select: none;
-    /* IE/Edge */
-    position: relative;
-    overflow: hidden;
-    /* Contain the animation within the button */
-    /* Faster transition for more immediate feedback */
-}
-
-/* Use a pseudo-element for the animation instead of box-shadow */
-#send-button.long-press-active::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: inherit;
-    /* Match the button's border radius */
-    box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.7);
-    /* Inner shadow instead of outer */
-    pointer-events: none;
-    /* Make sure it doesn't interfere with clicks */
-}
-
 
 /* Message content container */
 .message-content {

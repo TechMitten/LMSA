@@ -2,9 +2,6 @@
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { getUploadedFiles } from './file-upload.js';
 
-// Global variable to track if a long-press is in progress on the send button
-window.isSendButtonLongPressInProgress = false;
-
 document.addEventListener('DOMContentLoaded', () => {
     const emptyMessageModal = document.getElementById('empty-message-modal');
     const closeModalButton = emptyMessageModal.querySelector('.close-modal');
@@ -47,16 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendButton = document.getElementById('send-button');
     if (sendButton) {
         sendButton.addEventListener('click', (e) => {
-            // Check if the context menu is visible
-            const sendContextMenu = document.getElementById('send-context-menu');
-            const isContextMenuVisible = sendContextMenu &&
-                sendContextMenu.style.display === 'block';
-
-            // Skip empty message check if a long-press is in progress or context menu is visible
-            if (window.isSendButtonLongPressInProgress || isContextMenuVisible) {
-                return;
-            }
-
             const messageContent = userInput.value.trim();
             // Check for uploaded files - if files are present, allow submission even with empty message
             const uploadedFiles = getUploadedFiles();

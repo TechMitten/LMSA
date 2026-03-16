@@ -32,6 +32,7 @@ import android.os.Looper
 import android.media.AudioManager
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
+import java.io.File
 import java.util.Locale
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -320,7 +321,7 @@ class WebViewActivity : AppCompatActivity() {
                 isImageFile = false
             }
 
-        WebView.setWebContentsDebuggingEnabled(true)
+        WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
 
         val webView: WebView = findViewById(R.id.webView)
         val webSettings: WebSettings = webView.settings
@@ -340,7 +341,8 @@ class WebViewActivity : AppCompatActivity() {
         webSettings.setSupportZoom(false)
         webSettings.builtInZoomControls = false
         webSettings.displayZoomControls = false
-        webSettings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+        // Use normal cache policy so WebView can reuse cached assets without forcing stale content.
+        webSettings.cacheMode = WebSettings.LOAD_DEFAULT
         @Suppress("DEPRECATION")
         webSettings.databaseEnabled = false
         // Allow mixed content for ads (HTTP content in HTTPS pages)
@@ -350,8 +352,17 @@ class WebViewActivity : AppCompatActivity() {
         }
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
 
-        webView.clearCache(true)
-        webView.clearHistory()
+        // Ensure a dedicated cache directory exists and preserve cache across launches.
+        val webViewCacheDir = File(cacheDir, "webview_cache")
+        if (!webViewCacheDir.exists()) {
+            webViewCacheDir.mkdirs()
+        }
+
+        if (BuildConfig.DEBUG) {
+            // Keep debug runs deterministic, but avoid clearing cache in release for faster startups.
+            webView.clearCache(true)
+            webView.clearHistory()
+        }
 
         // Add JavaScript interface for file operations
         webView.addJavascriptInterface(FileOperationInterface(), "AndroidFileOps")

@@ -314,7 +314,12 @@ export function initializeSystemPrompt() {
 export function loadHideThinkingSetting() {
   if (hideThinkingCheckbox) {
     const savedHideThinking = localStorage.getItem("hideThinking");
-    if (savedHideThinking === "true") {
+    if (savedHideThinking === null) {
+      // Default for first-time users: keep thinking text hidden.
+      hideThinkingCheckbox.checked = true;
+      hideThinking = true;
+      localStorage.setItem("hideThinking", "true");
+    } else if (savedHideThinking === "true") {
       hideThinkingCheckbox.checked = true;
       hideThinking = true;
     } else {

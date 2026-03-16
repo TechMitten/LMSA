@@ -2,7 +2,9 @@
 class DOMElementCache {
     constructor() {
         this.cache = new Map();
-        this.observers = new Map();
+        this.observer = null;
+        this.isObserving = false;
+        this.setupObserver();
         this.setupCleanup();
     }
 
@@ -15,7 +17,6 @@ class DOMElementCache {
             } else {
                 // Element was removed, clean up cache
                 this.cache.delete(id);
-                this.observers.delete(id);
             }
         }
 
@@ -23,56 +24,59 @@ class DOMElementCache {
         const element = document.getElementById(id);
         if (element) {
             this.cache.set(id, element);
-            this.observeElement(id, element);
         }
         return element;
     }
 
-    observeElement(id, element) {
-        if (!window.MutationObserver || this.observers.has(id)) return;
+    setupObserver() {
+        if (!window.MutationObserver) return;
 
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
+        this.observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
                 if (mutation.type === 'childList') {
-                    mutation.removedNodes.forEach((node) => {
-                        if (node === element) {
-                            this.cache.delete(id);
-                            this.observers.delete(id);
-                            observer.disconnect();
-                        }
-                    });
+                    this.pruneDetachedElements();
+                    break;
                 }
-            });
+            }
         });
 
-        observer.observe(document.body, { childList: true, subtree: true });
-        this.observers.set(id, observer);
+        const startObserving = () => {
+            if (!document.body || this.isObserving) return;
+            this.observer.observe(document.body, { childList: true, subtree: true });
+            this.isObserving = true;
+        };
+
+        startObserving();
+        if (!this.isObserving) {
+            document.addEventListener('DOMContentLoaded', startObserving, { once: true });
+        }
+    }
+
+    pruneDetachedElements() {
+        const keysToDelete = [];
+        for (const [id, element] of this.cache) {
+            if (!element || !document.contains(element)) {
+                keysToDelete.push(id);
+            }
+        }
+        keysToDelete.forEach((id) => {
+            this.cache.delete(id);
+        });
     }
 
     setupCleanup() {
         // Clean up cache periodically
         setInterval(() => {
-            const keysToDelete = [];
-            for (const [id, element] of this.cache) {
-                if (!element || !document.contains(element)) {
-                    keysToDelete.push(id);
-                }
-            }
-            keysToDelete.forEach(id => {
-                this.cache.delete(id);
-                const observer = this.observers.get(id);
-                if (observer) {
-                    observer.disconnect();
-                    this.observers.delete(id);
-                }
-            });
+            this.pruneDetachedElements();
         }, 60000); // Clean up every minute
     }
 
     clear() {
         this.cache.clear();
-        this.observers.forEach(observer => observer.disconnect());
-        this.observers.clear();
+        if (this.observer) {
+            this.observer.disconnect();
+            this.isObserving = false;
+        }
     }
 }
 

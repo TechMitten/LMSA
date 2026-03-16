@@ -1163,8 +1163,6 @@ export function initializeEventHandlers() {
                 });
             }, 150); // Match with CSS animation duration
 
-            // Reset the long-press flag
-            window.isSendButtonLongPressInProgress = false;
         }
     };
 
@@ -1285,277 +1283,28 @@ export function initializeEventHandlers() {
         }, { passive: true });
     }
 
-    // Send button long-press handling
+    // Send button click handling (long-press behavior removed)
     if (sendButton) {
-        let sendButtonLongPressTimer;
-        let longPressTriggered = false; // Flag to track if long-press was triggered
-
-        // Function to show the send context menu
-        const showSendContextMenu = (e) => {
-            if (sendContextMenu) {
-                // Set the flags to indicate long-press was triggered
-                longPressTriggered = true;
-                window.isSendButtonLongPressInProgress = true;
-
-                // Log for debugging
-                debugLog('Send context menu triggered by long press');
-
-                // Position the menu above the send button
-                const rect = sendButton.getBoundingClientRect();
-                const menuWidth = 180; // Match the width in CSS
-
-                // Calculate position to center the menu above the button
-                const left = rect.left + (rect.width / 2) - (menuWidth / 2);
-                const top = rect.top - 10; // Add a small gap
-
-                // Ensure the menu stays within the viewport
-                const adjustedLeft = Math.max(10, Math.min(left, window.innerWidth - menuWidth - 10));
-
-                sendContextMenu.style.display = 'block';
-                sendContextMenu.style.left = `${adjustedLeft}px`;
-                sendContextMenu.style.top = `${top - sendContextMenu.offsetHeight}px`;
-
-                // Prevent default and stop propagation to avoid any conflicts
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        };
-
-        // Helper function to check if an element is the send button or one of its children
-        // Enhanced for touchscreen use with more robust checking
-        const isSendButtonOrChild = (element) => {
-            if (!element) return false;
-
-            // Direct match
-            if (element === sendButton) return true;
-
-            // Check if it's a child or grandchild
-            if (element.parentElement === sendButton) return true;
-            if (element.parentElement?.parentElement === sendButton) return true;
-
-            // For touchscreens, also check by ID and classes
-            if (element.id === 'send-button') return true;
-
-            // Check if it's the icon or text inside the button
-            if (element.tagName === 'I' && element.closest('#send-button')) return true;
-            if (element.tagName === 'SPAN' && element.closest('#send-button')) return true;
-
-            return false;
-        };
-
-        // Function to add visual feedback during long-press
-        const addLongPressEffect = () => {
-            // Remove any existing animation first to ensure it starts fresh
-            sendButton.classList.remove('long-press-active');
-
-            // Force a reflow to restart the animation
-            void sendButton.offsetWidth;
-
-            // Add the class to start the animation
-            sendButton.classList.add('long-press-active');
-
-            // Ensure the button's overflow is set to hidden to contain the animation
-            sendButton.style.overflow = 'hidden';
-
-            // Log for debugging
-            debugLog('Added long-press visual effect');
-        };
-
-        // Function to remove visual feedback
-        const removeLongPressEffect = () => {
-            sendButton.classList.remove('long-press-active');
-            // Reset the overflow property
-            sendButton.style.overflow = '';
-            debugLog('Removed long-press visual effect');
-        };
-
-        // Handle right-click to show context menu as an alternative to long-press
-        document.addEventListener('contextmenu', (e) => {
-            // Check if the target is the send button or one of its children
-            if (isSendButtonOrChild(e.target)) {
-                // If long-press already triggered the menu, just prevent default
-                if (longPressTriggered) {
-                    e.preventDefault();
-                    // Reset the flag
-                    longPressTriggered = false;
-                    return;
-                }
-
-                // Otherwise, show the context menu on right-click as well
-                e.preventDefault();
-                showSendContextMenu(e);
-
-                // Log for debugging
-                debugLog('Send context menu triggered by right-click on ' + e.target.tagName);
-            }
-        });
-
-        // Touch events optimized for touchscreen devices
-        document.addEventListener('touchstart', (e) => {
-            // Check if the target is the send button or one of its children
-            if (isSendButtonOrChild(e.target)) {
-                // Prevent any default behavior that might interfere
-                e.preventDefault();
-
-                // Start visual feedback immediately with enhanced effect for touchscreens
-                addLongPressEffect();
-
-                // Set the flag to indicate a potential long-press is starting
-                window.isSendButtonLongPressInProgress = true;
-
-                // Remove auto-scroll during long press
-
-                // Log for debugging
-                debugLog('Send button touchstart - long press detection started on ' + e.target.tagName);
-
-                // Use a longer timer for touchscreens to avoid accidental triggers
-                // Increased to 1.3 seconds as requested by the user
-                sendButtonLongPressTimer = setTimeout(() => {
-                    showSendContextMenu(e);
-                    // Add haptic feedback if available (vibration API)
-                    if (navigator.vibrate) {
-                        navigator.vibrate(50); // Short vibration for feedback
-                    }
-                }, 1300); // 1.3 seconds (1 additional second from the original 300ms)
-            }
-        }, { passive: false }); // passive: false is important to allow preventDefault
-
-        document.addEventListener('touchend', (e) => {
-            // Check if the context menu is visible and the touch is outside of both the menu and the send button
-            if (sendContextMenu && sendContextMenu.style.display === 'block') {
-                const touch = e.changedTouches[0];
-                const elementAtTouch = document.elementFromPoint(touch.clientX, touch.clientY);
-
-                // Only hide the menu if the touch ended outside both the menu AND the send button
-                if (!sendContextMenu.contains(elementAtTouch) && !isSendButtonOrChild(elementAtTouch)) {
-                    hideSendContextMenu();
-                    debugLog('Send context menu hidden by outside touch');
-                    e.preventDefault(); // Prevent any default behavior
-                    return;
-                }
-            }
-
-            // Only handle if the target is the send button or one of its children
-            if (isSendButtonOrChild(e.target)) {
-                // Get the element at the touch position to ensure we're handling the right element
-                const touch = e.changedTouches[0];
-                const elementAtTouch = document.elementFromPoint(touch.clientX, touch.clientY);
-
-                // Remove visual feedback
-                removeLongPressEffect();
-
-                // Log for debugging
-                debugLog('Send button touchend - checking if long press completed');
-
-                // If the menu is already visible, keep it visible and just prevent default
-                if (sendContextMenu && sendContextMenu.style.display === 'block') {
-                    debugLog('Context menu is visible, keeping it open after send button release');
-                    e.preventDefault(); // Prevent default to avoid any conflicts
-                    e.stopPropagation(); // Stop propagation to prevent other handlers
-                } else {
-                    // If this was a short tap (not a long press), submit the form
-                    if (isSendButtonOrChild(elementAtTouch) && !longPressTriggered) {
-                        debugLog('Send button tapped - submitting form');
-                        // Don't prevent default - allow the click event to fire
-                        // This will allow the form to be submitted
-
-                        // Check if there's a message or files attached
-                        const messageContent = userInput.value.trim();
-                        const hasUploadedFiles = getUploadedFiles && getUploadedFiles().length > 0;
-
-                        // Submit the form if there's a message OR files are attached
-                        if (messageContent !== '' || hasUploadedFiles) {
-                            debugLog(`Submitting form with ${messageContent ? 'message' : 'no message'} and ${hasUploadedFiles ? 'files' : 'no files'}`);
-                            // Remove focus from the input field
-                            userInput.blur();
-                            // Small delay to ensure the click event has time to fire
-                            setTimeout(() => {
-                                // Create a proper submit event that bubbles and is cancelable
-                                const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
-                                chatForm.dispatchEvent(submitEvent);
-                            }, 10);
-                        }
-                    }
-
-                    // Only clear the long-press flag if the menu is not visible
-                    setTimeout(() => {
-                        // Only reset flags if menu is not visible
-                        if (!sendContextMenu || sendContextMenu.style.display !== 'block') {
-                            window.isSendButtonLongPressInProgress = false;
-                            longPressTriggered = false;
-                            debugLog('Long press flag cleared after touchend');
-                        }
-                    }, 50);
-                }
-
-                // Always clear the timer to prevent the menu from appearing after release
-                if (sendButtonLongPressTimer) {
-                    clearTimeout(sendButtonLongPressTimer);
-                    sendButtonLongPressTimer = null;
-                }
-            }
-        }, { passive: false });
-
-        document.addEventListener('touchmove', (e) => {
-            // Only handle if the target is the send button or one of its children
-            if (isSendButtonOrChild(e.target)) {
-                // Get the element at the current touch position
-                const touch = e.changedTouches[0];
-                const elementAtTouch = document.elementFromPoint(touch.clientX, touch.clientY);
-
-                // If we've moved away from the send button, cancel the long press
-                if (!isSendButtonOrChild(elementAtTouch)) {
-                    // Remove visual feedback
-                    removeLongPressEffect();
-
-                    if (sendButtonLongPressTimer) {
-                        clearTimeout(sendButtonLongPressTimer);
-                        sendButtonLongPressTimer = null;
-                        debugLog('Long press timer cleared due to touchmove outside button');
-                    }
-
-                    // Clear the long-press flag
-                    window.isSendButtonLongPressInProgress = false;
-                }
-            }
-        }, { passive: true });
-
-        // Add a direct click handler for the Send button
-        // This ensures the button works even if touch events have issues
         sendButton.addEventListener('click', (e) => {
-            // If the context menu is visible, prevent the click from submitting the form
-            if (sendContextMenu && sendContextMenu.style.display === 'block') {
-                debugLog('Send button clicked while context menu is open - preventing form submission');
+            debugLog('Send button clicked - normal click detected');
+
+            // Check if there's a message or files attached
+            const messageContent = userInput.value.trim();
+            const hasUploadedFiles = getUploadedFiles && getUploadedFiles().length > 0;
+
+            // Only prevent default if we don't want to submit (no message or files)
+            if (!messageContent && !hasUploadedFiles) {
+                debugLog('No message or files - not submitting form');
                 e.preventDefault();
                 e.stopPropagation();
                 return;
             }
 
-            // Only handle the click if it's not part of a long press
-            if (!window.isSendButtonLongPressInProgress) {
-                debugLog('Send button clicked - normal click detected');
+            debugLog(`Click submitting form with ${messageContent ? 'message' : 'no message'} and ${hasUploadedFiles ? 'files' : 'no files'}`);
 
-                // Check if there's a message or files attached
-                const messageContent = userInput.value.trim();
-                const hasUploadedFiles = getUploadedFiles && getUploadedFiles().length > 0;
-
-                // Only prevent default if we don't want to submit (no message or files)
-                if (!messageContent && !hasUploadedFiles) {
-                    debugLog('No message or files - not submitting form');
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return;
-                }
-
-                debugLog(`Click submitting form with ${messageContent ? 'message' : 'no message'} and ${hasUploadedFiles ? 'files' : 'no files'}`);
-
-                // Remove focus from the input field
-                userInput.blur();
-
-                // Remove auto-scroll when clicking send button
-
-                // Let the form submit naturally by not preventing default
-            }
+            // Remove focus from the input field before submit
+            userInput.blur();
+            // Let the form submit naturally by not preventing default
         });
     }
 
