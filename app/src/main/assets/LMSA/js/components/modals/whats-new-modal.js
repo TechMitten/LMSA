@@ -26,6 +26,25 @@ export const whatsNewModal = `
                 <div class="space-y-3">
                     <div class="feature-item">
                         <div class="relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-amber-500/10 to-orange-700/5 rounded-full blur-xl">
+                            </div>
+                            <div class="flex items-start relative z-10">
+                                <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-amber-500/20 w-10 h-10 shadow-sm">
+                                    <i class="fas fa-pen-to-square text-amber-300"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <h3 class="feature-title">Rename Saved Chat Titles</h3>
+                                    </div>
+                                    <div class="feature-description">
+                                        <p class="mb-3">You can now rename the title of any saved chat in Chat History. Just tap the icon to the right of the title, enter a new name, and save it.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-purple-500/10 to-pink-700/5 rounded-full blur-xl">
                             </div>
                             <div class="flex items-start relative z-10">
@@ -35,7 +54,6 @@ export const whatsNewModal = `
                                 <div class="flex-1">
                                     <div class="flex items-center">
                                         <h3 class="feature-title">Font Customization</h3>
-                                        <span class="ml-2 px-1.5 py-0.5 bg-purple-500/20 text-purple-300 text-xs rounded-full font-medium">NEW</span>
                                     </div>
                                     <div class="feature-description">
                                         <p class="mb-3">You can now change the font and font size used in the chat bubbles via the message history. Customize your chatting experience to match your preferences for better readability and comfort.</p>
@@ -55,7 +73,6 @@ export const whatsNewModal = `
                                 <div class="flex-1">
                                     <div class="flex items-center">
                                         <h3 class="feature-title">OpenRouter (Cloud AI)</h3>
-                                        <span class="ml-2 px-1.5 py-0.5 bg-green-500/20 text-green-300 text-xs rounded-full font-medium">NEW</span>
                                     </div>
                                     <div class="feature-description">
                                         <p class="mb-3">You can now connect to cloud models via OpenRouter using your own API key. This disables the local server connection and lets you use cloud-hosted models.</p>
@@ -79,8 +96,6 @@ export const whatsNewModal = `
                                 <div class="flex-1">
                                     <div class="flex items-center">
                                         <h3 class="feature-title">Smart Reply</h3>
-                                        <span
-                                            class="ml-2 px-1.5 py-0.5 bg-blue-500/20 text-blue-300 text-xs rounded-full font-medium">NEW</span>
                                     </div>
                                     <div class="feature-description">
                                         <p class="mb-3">Experience faster conversations with AI-powered smart replies. After each AI response, you'll see 3 contextually relevant suggestions that you can click to instantly continue the conversation.</p>
@@ -103,7 +118,6 @@ export const whatsNewModal = `
                                 <div class="flex-1">
                                     <div class="flex items-center">
                                         <h3 class="feature-title">Model Name in AI Responses</h3>
-                                        <span class="ml-2 px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 text-xs rounded-full font-medium">NEW</span>
                                     </div>
                                     <div class="feature-description">
                                         <p class="mb-3">You can now add the name of the LLM model to the bottom of AI chat response bubbles. This will be enabled by default but can be disabled at any time in the settings menu.</p>

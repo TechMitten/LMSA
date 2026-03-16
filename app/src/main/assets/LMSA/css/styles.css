@@ -6668,38 +6668,14 @@ body.light-theme #whats-new-modal .flex.justify-between.items-center.pt-3.pb-2.m
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     touch-action: pan-y;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 /* Scrollbar styles for What's New modal */
 #whats-new-modal .features-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-#whats-new-modal .features-container::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 3px;
-}
-
-#whats-new-modal .features-container::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
-}
-
-#whats-new-modal .features-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-/* Light theme scrollbar styles for What's New modal */
-body.light-theme #whats-new-modal .features-container::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-body.light-theme #whats-new-modal .features-container::-webkit-scrollbar-thumb {
-    background: rgba(100, 116, 139, 0.2);
-}
-
-body.light-theme #whats-new-modal .features-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(100, 116, 139, 0.4);
+    width: 0;
+    height: 0;
 }
 
 /* Scroll indicator styles */
