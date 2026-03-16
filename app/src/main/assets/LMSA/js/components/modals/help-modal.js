@@ -509,8 +509,13 @@ export const helpModal = `
                             <div class="p-3 rounded-lg border"
                                 style="background: var(--settings-label-bg); border-color: var(--border-color);">
                                 <p style="color: var(--text-primary);">For your privacy and security, all chat messages
-                                    are stored locally on your device. We do not store any of your conversations on
-                                    external servers. Please note that:</p>
+                                    are stored locally on your device. LMSA does not store your conversations on LMSA
+                                    servers. However, if you enable OpenRouter, your prompts and model responses are
+                                    sent over the internet and handled by OpenRouter on their servers. When using a
+                                    local LM Studio or Ollama server instead, traffic stays on your local network.
+                                    OpenRouter traffic is encrypted in transit (HTTPS/TLS), but your prompts and
+                                    responses are still processed on OpenRouter's infrastructure.
+                                    Please note that:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>Uninstalling the app will permanently delete all saved chats</li>
                                     <li>Clearing app storage in device settings will erase all chat history</li>

@@ -5,6 +5,7 @@ import { showIpPortErrorModal, hideIpPortErrorModal } from './ui-manager.js';
 
 let API_URL = '';
 let availableModels = [];
+const LOCAL_SELECTED_MODEL_KEY = 'localSelectedModel';
 
 // Add global model tracking declaration to make TypeScript/linting happy
 // window.currentLoadedModel tracks the currently loaded model name
@@ -21,6 +22,19 @@ let modelInfoCache = {
 // Debounce timer for fetchAvailableModels
 let fetchModelsDebounceTimer = null;
 let lastFetchPromise = null;
+
+function getPersistedLocalSelectedModel() {
+    const savedModel = localStorage.getItem(LOCAL_SELECTED_MODEL_KEY);
+    return savedModel && savedModel.trim() !== '' ? savedModel : null;
+}
+
+function setPersistedLocalSelectedModel(modelId) {
+    if (modelId && modelId.trim() !== '') {
+        localStorage.setItem(LOCAL_SELECTED_MODEL_KEY, modelId);
+    } else {
+        localStorage.removeItem(LOCAL_SELECTED_MODEL_KEY);
+    }
+}
 
 /**
  * Updates the server URL based on IP and port inputs
@@ -393,11 +407,15 @@ export async function fetchAvailableModels(options = {}) {
                     }
                 }
 
-                // Method 4: Use the previously stored model if it's in the list
-                if (!loadedModelInfo && window.currentLoadedModel) {
-                    const matchingModel = modelsList.find(model => model.id === window.currentLoadedModel);
+                // Method 4: Use a previously selected model if it's still in the list.
+                // This preserves user selection when runtime loaded-model detection is flaky.
+                if (!loadedModelInfo) {
+                    const fallbackModelId = window.currentLoadedModel || getPersistedLocalSelectedModel();
+                    const matchingModel = fallbackModelId
+                        ? modelsList.find(model => model.id === fallbackModelId)
+                        : null;
                     if (matchingModel) {
-                        console.log('Using previously stored loaded model:', window.currentLoadedModel);
+                        console.log('Using previously stored loaded model:', fallbackModelId);
                         loadedModelInfo = matchingModel;
                     }
                 }
@@ -408,6 +426,7 @@ export async function fetchAvailableModels(options = {}) {
 
                     // Store the loaded model name in a global variable for easy access
                     window.currentLoadedModel = loadedModelInfo.id;
+                    setPersistedLocalSelectedModel(loadedModelInfo.id);
 
                     // Update file upload capabilities now that we have a model
                     try {
@@ -443,6 +462,12 @@ export async function fetchAvailableModels(options = {}) {
                     availableModels = []; // No model is truly loaded
                     window.currentLoadedModel = null; // Clear the global variable
                     console.log('Cleared global currentLoadedModel');
+
+                    // Clean up stale persisted model if it no longer exists in the server list.
+                    const persistedModel = getPersistedLocalSelectedModel();
+                    if (persistedModel && !modelsList.some(model => model.id === persistedModel)) {
+                        setPersistedLocalSelectedModel(null);
+                    }
 
                     // Check if the banner was manually shown by the user
                     const manuallyShown = loadedModelDisplay &&
@@ -523,6 +548,9 @@ export function updateLoadedModelDisplay(modelName, forceShow = false) {
     if (loadedModelDisplay) {
         // Always update global variable with current model name
         window.currentLoadedModel = modelName;
+        if (!getUseOpenRouter()) {
+            setPersistedLocalSelectedModel(modelName);
+        }
 
         // Update the text content (even though it's hidden)
         loadedModelDisplay.textContent = `Loaded Model: ${modelName}`;
@@ -822,6 +850,7 @@ export async function loadModel(modelId) {
             console.log(`Ollama mode enabled: Skipping explicit load for ${modelId}`);
             // Update the UI to show this model as loaded
             window.currentLoadedModel = modelId;
+            setPersistedLocalSelectedModel(modelId);
             updateLoadedModelDisplay(modelId);
             
             // Allow file uploads if model is selected
@@ -856,6 +885,7 @@ export async function loadModel(modelId) {
 
             if (verified) {
                 console.log(`Successfully verified ${modelId} is loaded via endpoint method`);
+                setPersistedLocalSelectedModel(modelId);
                 await fetchAvailableModels();
                 return true;
             } else {
@@ -869,6 +899,7 @@ export async function loadModel(modelId) {
 
         if (forceSuccess) {
             console.log(`Successfully loaded ${modelId} via force load method`);
+            setPersistedLocalSelectedModel(modelId);
             await fetchAvailableModels();
             return true;
         }
@@ -983,6 +1014,7 @@ export async function ejectModel() {
             availableModels = [];
             // This is where we SHOULD clear the global variable as the model is actually being ejected
             window.currentLoadedModel = null;
+            setPersistedLocalSelectedModel(null);
 
             // Since we're actually ejecting the model, we need to update the UI
             // Call hideLoadedModelDisplay but prevent it from clearing currentLoadedModel again

@@ -55,6 +55,10 @@ function getSelectedModel() {
     if (window.currentLoadedModel) {
         return window.currentLoadedModel;
     }
+    const persistedLocalModel = localStorage.getItem('localSelectedModel');
+    if (persistedLocalModel) {
+        return persistedLocalModel;
+    }
     const availableModels = getAvailableModels();
     // Return the first available model or a default value if none available
     return availableModels.length > 0 ? availableModels[0] : 'unknown_model';
