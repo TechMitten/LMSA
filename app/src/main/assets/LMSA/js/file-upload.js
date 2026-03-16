@@ -1,6 +1,7 @@
 // File Upload functionality
 import { fileUploadInput as importedFileUploadInput } from './dom-elements.js';
 import { appendMessage } from './ui-manager.js';
+import { getUseOpenRouter, getUseOllama } from './settings-manager.js';
 // Optimization modules removed
 
 let uploadedFiles = [];
@@ -38,6 +39,13 @@ export async function isVisionModel() {
             (now - visionModelCache.timestamp) < visionModelCache.ttl) {
             console.log('Returning cached vision capability:', visionModelCache.isVision);
             return visionModelCache.isVision;
+        }
+
+        // If using OpenRouter, models are cloud-based so local API checks will fail.
+        if (typeof getUseOpenRouter === 'function' && getUseOpenRouter()) {
+            const result = fallbackNameBasedDetection();
+            updateVisionCache(modelId, result);
+            return result;
         }
 
         // Get server connection details

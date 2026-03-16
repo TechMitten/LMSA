@@ -66,7 +66,7 @@ export const openRouterWarningModal = `
                 <button id="confirm-openrouter-warning"
                     class="flex-1 px-4 rounded-lg text-white shadow-lg font-semibold"
                     style="background: linear-gradient(to right, #3b82f6, #1e40af); border: none; padding-top: 10px; padding-bottom: 10px; cursor: pointer; transition: all 0.2s ease;"
-                    onmouseover="this.style.boxShadow='0 8px 16px rgba(59, 130, 246, 0.3); this.style.transform='translateY(-2px)';"
+                    onmouseover="this.style.boxShadow='0 8px 16px rgba(59, 130, 246, 0.3)'; this.style.transform='translateY(-2px)';"
                     onmouseout="this.style.boxShadow=''; this.style.transform='';">
                     <i class="fas fa-check mr-2"></i>I Understand &amp; Accept
                 </button>

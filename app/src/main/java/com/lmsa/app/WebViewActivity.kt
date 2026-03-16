@@ -1257,55 +1257,59 @@ class WebViewActivity : AppCompatActivity() {
                     }
 
                     override fun onDone(utteranceId: String?) {
-                        Log.d(TAG, "TTS done callback for: $utteranceId, current index: $currentChunkIndex, total chunks: ${currentChunks.size}")
-                        if (utteranceId?.startsWith("chunk_") == true && isSpeakingChunks) {
-                            val completedIndex = utteranceId.substringAfter("chunk_").toIntOrNull()
-                            Log.d(TAG, "Completed chunk index: $completedIndex")
+                        runOnUiThread {
+                            Log.d(TAG, "TTS done callback for: $utteranceId, current index: $currentChunkIndex, total chunks: ${currentChunks.size}")
+                            if (utteranceId?.startsWith("chunk_") == true && isSpeakingChunks) {
+                                val completedIndex = utteranceId.substringAfter("chunk_").toIntOrNull()
+                                Log.d(TAG, "Completed chunk index: $completedIndex")
 
-                            // Check if this is the last utterance in the queue
-                            if (completedIndex != null) {
-                                // Move to the next chunk
-                                val nextIndex = completedIndex + 1
-                                if (nextIndex < currentChunks.size) {
-                                    Log.d(TAG, "Preparing next chunk: $nextIndex")
-                                    // Continue with next chunk immediately
-                                    Handler(Looper.getMainLooper()).postDelayed({
-                                        if (isSpeakingChunks) {
-                                            currentChunkIndex = nextIndex
-                                            speakNextChunk()
-                                        }
-                                    }, 50) // Minimal delay for smooth transitions
-                                } else {
-                                    // All chunks completed
-                                    Log.d(TAG, "All chunks completed")
-                                    isSpeakingChunks = false
-                                    currentChunkIndex = 0
-                                    currentChunks = emptyList()
-                                    abandonAudioFocus()
+                                // Check if this is the last utterance in the queue
+                                if (completedIndex != null) {
+                                    // Move to the next chunk
+                                    val nextIndex = completedIndex + 1
+                                    if (nextIndex < currentChunks.size) {
+                                        Log.d(TAG, "Preparing next chunk: $nextIndex")
+                                        // Continue with next chunk immediately
+                                        Handler(Looper.getMainLooper()).postDelayed({
+                                            if (isSpeakingChunks) {
+                                                currentChunkIndex = nextIndex
+                                                speakNextChunk()
+                                            }
+                                        }, 50) // Minimal delay for smooth transitions
+                                    } else {
+                                        // All chunks completed
+                                        Log.d(TAG, "All chunks completed")
+                                        isSpeakingChunks = false
+                                        currentChunkIndex = 0
+                                        currentChunks = emptyList()
+                                        abandonAudioFocus()
+                                    }
                                 }
                             }
                         }
                     }
 
                     override fun onError(utteranceId: String?) {
-                        Log.e(TAG, "TTS error for chunk: $utteranceId")
-                        if (utteranceId?.startsWith("chunk_") == true && isSpeakingChunks) {
-                            val errorIndex = utteranceId.substringAfter("chunk_").toIntOrNull()
-                            if (errorIndex != null) {
-                                val nextIndex = errorIndex + 1
-                                if (nextIndex < currentChunks.size) {
-                                    // Try to continue with next chunk
-                                    Handler(Looper.getMainLooper()).postDelayed({
-                                        if (isSpeakingChunks) {
-                                            currentChunkIndex = nextIndex
-                                            speakNextChunk()
-                                        }
-                                    }, 100)
-                                } else {
-                                    isSpeakingChunks = false
-                                    currentChunkIndex = 0
-                                    currentChunks = emptyList()
-                                    abandonAudioFocus()
+                        runOnUiThread {
+                            Log.e(TAG, "TTS error for chunk: $utteranceId")
+                            if (utteranceId?.startsWith("chunk_") == true && isSpeakingChunks) {
+                                val errorIndex = utteranceId.substringAfter("chunk_").toIntOrNull()
+                                if (errorIndex != null) {
+                                    val nextIndex = errorIndex + 1
+                                    if (nextIndex < currentChunks.size) {
+                                        // Try to continue with next chunk
+                                        Handler(Looper.getMainLooper()).postDelayed({
+                                            if (isSpeakingChunks) {
+                                                currentChunkIndex = nextIndex
+                                                speakNextChunk()
+                                            }
+                                        }, 100)
+                                    } else {
+                                        isSpeakingChunks = false
+                                        currentChunkIndex = 0
+                                        currentChunks = emptyList()
+                                        abandonAudioFocus()
+                                    }
                                 }
                             }
                         }

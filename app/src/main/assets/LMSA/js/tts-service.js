@@ -119,11 +119,11 @@ class TTSService {
         }
 
         // Ensure TTS is initialized
-        if (!this.isInitialized) {
+        if (!this.isInitialized()) {
             await this.initialize();
         }
 
-        if (!this.isInitialized) {
+        if (!this.isInitialized()) {
             console.error('TTS not available');
             return Promise.resolve(false);
         }
