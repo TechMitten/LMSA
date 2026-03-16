@@ -673,12 +673,16 @@ export function initializeEventHandlers() {
         // Add touch event handlers to prevent highlight on mobile
         sidebarToggle.addEventListener('touchstart', (e) => {
             // Prevent default touch highlight
-            e.preventDefault();
+            if (e.cancelable) {
+                e.preventDefault();
+            }
         }, { passive: false });
 
         sidebarToggle.addEventListener('touchend', (e) => {
             // Prevent default behavior that might cause highlight
-            e.preventDefault();
+            if (e.cancelable) {
+                e.preventDefault();
+            }
             // Call toggle function
             toggleSidebar();
             // Remove focus

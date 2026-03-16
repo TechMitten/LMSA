@@ -4,7 +4,7 @@ import {
     loadingIndicator, sendButton, stopButton, loadedModelDisplay,
     smartRepliesContainer, userInput
 } from './dom-elements.js';
-import { basicSanitizeInput, sanitizeInput, initializeCodeMirror, scrollToBottom, copyToClipboard, debugLog, debugError, processCodeBlocks, decodeHtmlEntities, htmlToFormattedText } from './utils.js';
+import { basicSanitizeInput, sanitizeInput, initializeCodeMirror, scrollToBottom, copyToClipboard, debugLog, debugError, processCodeBlocks, decodeHtmlEntities, htmlToFormattedText, getReasoningStreamState, normalizeReasoningTags, stripReasoningSections } from './utils.js';
 import { getHideThinking, getShowModelLabel } from './settings-manager.js';
 import { domBatcher, rafThrottle } from './optimized-utils.js';
 
@@ -628,28 +628,16 @@ export function appendMessage(sender, message, files = null, isStreaming = false
             const lastMessage = existingMessages[existingMessages.length - 1];
             const contentContainer = lastMessage.querySelector('.message-content');
             if (contentContainer) {
-                // Check for thinking tags in various formats
-                const hasThinkTags = message.includes('<think>') ||
-                    message.includes('</think>') ||
-                    message.includes('&lt;think&gt;') ||
-                    message.includes('&lt;/think&gt;');
+                const reasoningState = getReasoningStreamState(message);
+                const hasThinkTags = reasoningState.hasThinking;
 
                 // Store the original message content for reprocessing if needed
                 lastMessage.originalContent = message;
 
                 const hideThinking = getHideThinking();
 
-                // Check if we're in a thinking section (between <think> and </think>)
-                const inThinkingSection = hasThinkTags && message.lastIndexOf('</think>') < message.lastIndexOf('<think>');
-
-                // Check if content after </think> exists
-                let contentAfterThink = "";
-                if (hasThinkTags && message.includes('</think>')) {
-                    const afterThinkMatch = message.match(/<\/think>([\s\S]*)$/);
-                    if (afterThinkMatch && afterThinkMatch[1]) {
-                        contentAfterThink = afterThinkMatch[1].trim();
-                    }
-                }
+                const inThinkingSection = reasoningState.inThinkingSection;
+                const contentAfterThink = reasoningState.contentAfterThink;
 
                 // Apply the appropriate sanitization based on message type and hide thinking setting
                 if (hasThinkTags) {
@@ -680,19 +668,19 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                         } else {
                             // Hide thinking is enabled but we're not in thinking section and no content after think
                             // This means thinking tags are complete but no content after them yet
-                            const processedContent = message.replace(/<think>[\s\S]*?<\/think>/g, '');
+                            const processedContent = stripReasoningSections(reasoningState.normalizedText);
                             contentContainer.innerHTML = basicSanitizeInput(processedContent);
                         }
                     } else {
                         // If hide thinking is disabled, just show everything normally
-                        contentContainer.innerHTML = sanitizeInput(message);
+                        contentContainer.innerHTML = sanitizeInput(reasoningState.normalizedText);
                     }
 
                     // Mark this message as a reasoning model response
                     lastMessage.dataset.hasThinking = 'true';
                 } else {
                     // For non-reasoning models, apply basic sanitization
-                    contentContainer.innerHTML = basicSanitizeInput(message);
+                    contentContainer.innerHTML = basicSanitizeInput(reasoningState.normalizedText);
                     // Mark this message as a non-reasoning model response
                     lastMessage.dataset.hasThinking = 'false';
                 }
@@ -715,21 +703,18 @@ export function appendMessage(sender, message, files = null, isStreaming = false
         const contentContainer = document.createElement('div');
         contentContainer.classList.add('message-content');
 
-        // Check for thinking tags in various formats
-        const hasThinkTags = message.includes('<think>') ||
-            message.includes('</think>') ||
-            message.includes('&lt;think&gt;') ||
-            message.includes('&lt;/think&gt;');
+        const normalizedMessage = normalizeReasoningTags(message);
+        const hasThinkTags = getReasoningStreamState(normalizedMessage).hasThinking;
 
         // Apply the appropriate sanitization based on message type
         if (hasThinkTags) {
             // For reasoning models, apply full sanitization
-            contentContainer.innerHTML = sanitizeInput(message);
+            contentContainer.innerHTML = sanitizeInput(normalizedMessage);
             // Mark this message as a reasoning model response
             messageElement.dataset.hasThinking = 'true';
         } else {
             // For non-reasoning models, apply basic sanitization
-            contentContainer.innerHTML = basicSanitizeInput(message);
+            contentContainer.innerHTML = basicSanitizeInput(normalizedMessage);
             // Mark this message as a non-reasoning model response
             messageElement.dataset.hasThinking = 'false';
         }
@@ -1206,14 +1191,6 @@ export function applyThinkingVisibility() {
 
                     initializeCodeMirror(messageEl);
 
-                    // Ensure the reasoning content is visible
-                    const thinkContainers = messageEl.querySelectorAll('.think');
-                    thinkContainers.forEach(container => {
-                        const reasoningContent = container.querySelector('.reasoning-content');
-                        if (reasoningContent) {
-                            reasoningContent.style.display = 'block';
-                        }
-                    });
                 }
             });
         }
@@ -1234,7 +1211,7 @@ export function refreshAllMessages() {
             const originalContent = messageEl.originalContent;
 
             // Check if message is from a reasoning model (has thinking tags)
-            const hasThinkTags = originalContent.includes('<think>') || originalContent.includes('</think>');
+            const hasThinkTags = getReasoningStreamState(originalContent).hasThinking;
 
             // Update the dataset attribute to consistently mark reasoning vs non-reasoning messages
             messageEl.dataset.hasThinking = hasThinkTags ? 'true' : 'false';

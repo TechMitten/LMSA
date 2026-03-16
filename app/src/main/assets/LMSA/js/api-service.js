@@ -149,7 +149,7 @@ function clearValidationErrors() {
  * Fetches available models from the server
  * @returns {Promise<Array>} - Array of available model objects
  */
-export async function fetchAvailableModels() {
+export async function fetchAvailableModels(options = {}) {
     try {
         // OpenRouter branch: fetch cloud models using API key
         if (getUseOpenRouter()) {
@@ -342,11 +342,15 @@ export async function fetchAvailableModels() {
                     }
                 }
 
-                // Method 3: If we still couldn't detect a loaded model through Methods 1 & 2,
-                // try making a simple completion request
-                // IMPORTANT: Skip this method if we already found a model to reduce API calls
-                // This will help detect if a model is actually loaded even if the API doesn't report it
-                if (!loadedModelInfo && modelsList.length > 0 && !window.currentLoadedModel) {
+                // Method 3 (legacy fallback): If we still couldn't detect a loaded model,
+                // optionally try a tiny completion request.
+                // Disabled by default because some servers return expected 400 responses,
+                // which creates noisy red errors in browser devtools.
+                const enableLegacyCompletionProbe =
+                    options.enableCompletionProbe === true ||
+                    localStorage.getItem('enableLegacyCompletionProbe') === 'true';
+
+                if (enableLegacyCompletionProbe && !loadedModelInfo && modelsList.length > 0 && !window.currentLoadedModel) {
                     try {
                         const controller = new AbortController();
                         const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -383,11 +387,9 @@ export async function fetchAvailableModels() {
                                     loadedModelInfo = modelsList[0];
                                 }
                             }
-                        } else {
-                            console.log('Completion API not available or no model loaded');
                         }
                     } catch (completionError) {
-                        console.log('Error checking completion API:', completionError);
+                        // Suppress fallback probe errors to keep console clean.
                     }
                 }
 

@@ -4,7 +4,7 @@ import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendSt
 import { openHelpModal } from './help.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
 import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getOpenRouterApiKey } from './settings-manager.js';
-import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton } from './utils.js';
+import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
 import { canSendCompletion, recordCompletion } from './usage-limiter.js';
 
@@ -520,6 +520,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         let lastChunkTime = Date.now();
         let isInThinkingProcess = false;
         let thinkingStartTime = null;
+        let lastThinkingUiUpdateTime = 0;
         let isHandlingOpenRouterReasoning = false;
 
         // Streaming progress tracking for reasoning models
@@ -673,9 +674,9 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                     aiMessage += chunkContent;
                                     aiMessage = normalizeToolCallTags(aiMessage);
 
-                                    // Track thinking process for progress indication
-                                    const hasThinkTags = aiMessage.includes('<think>') || aiMessage.includes('</think>');
-                                    const currentlyInThinking = hasThinkTags && aiMessage.lastIndexOf('</think>') < aiMessage.lastIndexOf('<think>');
+                                    const reasoningState = getReasoningStreamState(aiMessage);
+                                    const hasThinkTags = reasoningState.hasThinking;
+                                    const currentlyInThinking = reasoningState.inThinkingSection;
 
                                     // Detect start of thinking process
                                     if (!isInThinkingProcess && currentlyInThinking) {
@@ -725,17 +726,9 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
 
                                     // Check if we're in a thinking section (between <think> and </think>)
                                     // No smart_replies stripping needed during streaming since we no longer embed them.
-                                    let visibleStreamingMessage = aiMessage.trim();
-                                    const inThinkingSection = hasThinkTags && visibleStreamingMessage.lastIndexOf('</think>') < visibleStreamingMessage.lastIndexOf('<think>');
-
-                                    // Check if content after </think> exists
-                                    let contentAfterThink = "";
-                                    if (hasThinkTags && visibleStreamingMessage.includes('</think>')) {
-                                        const afterThinkMatch = visibleStreamingMessage.match(/<\/think>([\s\S]*)$/);
-                                        if (afterThinkMatch && afterThinkMatch[1]) {
-                                            contentAfterThink = afterThinkMatch[1].trim();
-                                        }
-                                    }
+                                    const visibleStreamingMessage = reasoningState.normalizedText.trim();
+                                    const inThinkingSection = reasoningState.inThinkingSection;
+                                    const contentAfterThink = reasoningState.contentAfterThink;
 
                                     // Apply the appropriate sanitization based on message type and hide thinking setting (only if container exists)
                                     if (hasThinkTags && contentContainer) {
@@ -743,7 +736,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                             // When hide thinking is enabled, always hide thinking tags and content
                                             if (contentAfterThink !== "") {
                                                 // We have content after </think>, show ONLY that content (streaming)
-                                                const processedContent = visibleStreamingMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
+                                                const processedContent = stripReasoningSections(visibleStreamingMessage);
                                                 contentContainer.innerHTML = basicSanitizeInput(processedContent);
 
                                                 // Remove any thinking indicator that might exist
@@ -773,8 +766,8 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                                 } else {
                                                     // Update existing indicator with duration (throttled to avoid too frequent updates)
                                                     const now = Date.now();
-                                                    if (!window._lastThinkingUpdateTime || now - window._lastThinkingUpdateTime > 100) {
-                                                        window._lastThinkingUpdateTime = now;
+                                                    if (!lastThinkingUiUpdateTime || now - lastThinkingUiUpdateTime > 100) {
+                                                        lastThinkingUiUpdateTime = now;
                                                         const thinkingDuration = thinkingStartTime ? Date.now() - thinkingStartTime : 0;
                                                         const durationText = thinkingDuration > 1000 ? ` (${Math.round(thinkingDuration / 1000)}s)` : '';
                                                         thinkingIndicator.innerHTML = `<i class="fas fa-brain"></i>${durationText}`;
@@ -782,14 +775,13 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                                 }
 
                                                 // Update the data attribute with current thinking content
-                                                const thinkingContent = aiMessage.match(/<think>([\s\S]*?)(?:<\/think>|$)/);
-                                                if (thinkingContent && thinkingContent[1]) {
-                                                    thinkingIndicator.setAttribute('data-thinking-content', thinkingContent[1]);
+                                                if (reasoningState.activeThinkingContent) {
+                                                    thinkingIndicator.setAttribute('data-thinking-content', reasoningState.activeThinkingContent);
                                                 }
                                             } else {
                                                 // Hide thinking is enabled but we're not in thinking section and no content after think
                                                 // This means thinking tags are complete but no content after them yet
-                                                const processedContent = visibleStreamingMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
+                                                const processedContent = stripReasoningSections(visibleStreamingMessage);
                                                 contentContainer.innerHTML = basicSanitizeInput(processedContent);
                                             }
                                         } else {
@@ -855,23 +847,16 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         // No extraction from the main aiMessage is needed.
 
         // Apply final content processing based on thinking tags and settings
+        aiMessage = normalizeReasoningTags(aiMessage);
         const hideThinking = getHideThinking();
-        const hasThinkTags = aiMessage.includes('<think>') || aiMessage.includes('</think>');
+        const finalReasoningState = getReasoningStreamState(aiMessage);
+        const hasThinkTags = finalReasoningState.hasThinking;
 
         if (hasThinkTags) {
-            // Check if content after </think> exists
-            let contentAfterThink = "";
-            if (aiMessage.includes('</think>')) {
-                const afterThinkMatch = aiMessage.match(/<\/think>([\s\S]*)$/);
-                if (afterThinkMatch && afterThinkMatch[1]) {
-                    contentAfterThink = afterThinkMatch[1].trim();
-                }
-            }
-
             if (contentContainer) {
                 if (hideThinking) {
                     // Hide thinking tags when hide thinking is enabled
-                    const processedContent = aiMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
+                    const processedContent = stripReasoningSections(aiMessage);
                     contentContainer.innerHTML = basicSanitizeInput(processedContent);
                 } else {
                     // Show everything including thinking tags when hide thinking is disabled
@@ -2839,6 +2824,7 @@ export async function regenerateLastResponse(isRetry = false) {
             let lastChunkTime = Date.now();
             let isInThinkingProcess = false;
             let thinkingStartTime = null;
+            let lastThinkingUiUpdateTime = 0;
 
             // Process the streaming response
             while (true) {
@@ -2914,8 +2900,9 @@ export async function regenerateLastResponse(isRetry = false) {
                                         aiMessage = normalizeToolCallTags(aiMessage);
 
                                         // Track thinking process for progress indication (same as initial generation)
-                                        const hasThinkTagsNow = aiMessage.includes('<think>') || aiMessage.includes('</think>');
-                                        const currentlyInThinking = hasThinkTagsNow && aiMessage.lastIndexOf('</think>') < aiMessage.lastIndexOf('<think>');
+                                        const reasoningState = getReasoningStreamState(aiMessage);
+                                        const hasThinkTagsNow = reasoningState.hasThinking;
+                                        const currentlyInThinking = reasoningState.inThinkingSection;
 
                                         // Detect start of thinking process
                                         if (!isInThinkingProcess && currentlyInThinking) {
@@ -2932,7 +2919,7 @@ export async function regenerateLastResponse(isRetry = false) {
                                         }
 
                                         // Track thinking tags (recalculate each time like in regular function)
-                                        const hasThinkTags = aiMessage.includes('<think>') || aiMessage.includes('</think>');
+                                        const hasThinkTags = reasoningState.hasThinking;
 
                                         // Check if this is a code block outside of think tags
                                         if (!hasCodeBlock &&
@@ -2964,23 +2951,15 @@ export async function regenerateLastResponse(isRetry = false) {
 
                                         // Apply appropriate sanitization - check if we have content after </think> tags first
                                         const hideThinking = getHideThinking();
-                                        const inThinkingSection = hasThinkTags && aiMessage.lastIndexOf('</think>') < aiMessage.lastIndexOf('<think>');
-
-                                        // Check if content after </think> exists
-                                        let contentAfterThink = "";
-                                        if (hasThinkTags && aiMessage.includes('</think>')) {
-                                            const afterThinkMatch = aiMessage.match(/<\/think>([\s\S]*)$/);
-                                            if (afterThinkMatch && afterThinkMatch[1]) {
-                                                contentAfterThink = afterThinkMatch[1].trim();
-                                            }
-                                        }
+                                        const inThinkingSection = reasoningState.inThinkingSection;
+                                        const contentAfterThink = reasoningState.contentAfterThink;
 
                                         if (hasThinkTags && contentContainer) {
                                             if (hideThinking) {
                                                 // When hide thinking is enabled, always hide thinking tags and content
                                                 if (contentAfterThink !== "") {
                                                     // We have content after </think>, show ONLY that content (streaming)
-                                                    const processedContent = aiMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
+                                                    const processedContent = stripReasoningSections(reasoningState.normalizedText);
                                                     contentContainer.innerHTML = basicSanitizeInput(processedContent);
 
                                                     // Remove any thinking indicator that might exist
@@ -3010,8 +2989,8 @@ export async function regenerateLastResponse(isRetry = false) {
                                                     } else {
                                                         // Update existing indicator with duration (throttled to avoid too frequent updates)
                                                         const now = Date.now();
-                                                        if (!window._lastThinkingUpdateTime || now - window._lastThinkingUpdateTime > 100) {
-                                                            window._lastThinkingUpdateTime = now;
+                                                        if (!lastThinkingUiUpdateTime || now - lastThinkingUiUpdateTime > 100) {
+                                                            lastThinkingUiUpdateTime = now;
                                                             const thinkingDuration = thinkingStartTime ? Date.now() - thinkingStartTime : 0;
                                                             const durationText = thinkingDuration > 1000 ? ` (${Math.round(thinkingDuration / 1000)}s)` : '';
                                                             thinkingIndicator.innerHTML = `<i class="fas fa-brain"></i>${durationText}`;
@@ -3019,26 +2998,25 @@ export async function regenerateLastResponse(isRetry = false) {
                                                     }
 
                                                     // Update the data attribute with current thinking content
-                                                    const thinkingContent = aiMessage.match(/<think>([\s\S]*?)(?:<\/think>|$)/);
-                                                    if (thinkingContent && thinkingContent[1]) {
-                                                        thinkingIndicator.setAttribute('data-thinking-content', thinkingContent[1]);
+                                                    if (reasoningState.activeThinkingContent) {
+                                                        thinkingIndicator.setAttribute('data-thinking-content', reasoningState.activeThinkingContent);
                                                     }
                                                 } else {
                                                     // Hide thinking is enabled but we're not in thinking section and no content after think
                                                     // This means thinking tags are complete but no content after them yet
-                                                    const processedContent = aiMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
+                                                    const processedContent = stripReasoningSections(reasoningState.normalizedText);
                                                     contentContainer.innerHTML = basicSanitizeInput(processedContent);
                                                 }
                                             } else {
                                                 // Hide thinking is disabled, show everything including thinking tags (streaming)
-                                                contentContainer.innerHTML = sanitizeInput(aiMessage);
+                                                contentContainer.innerHTML = sanitizeInput(reasoningState.normalizedText);
                                             }
 
                                             // Mark this message as having thinking
                                             aiMessageElement.dataset.hasThinking = 'true';
                                         } else if (contentContainer) {
                                             // For non-reasoning models, apply basic sanitization
-                                            contentContainer.innerHTML = basicSanitizeInput(aiMessage);
+                                            contentContainer.innerHTML = basicSanitizeInput(reasoningState.normalizedText);
                                             // Mark this message as a non-reasoning model response
                                             aiMessageElement.dataset.hasThinking = 'false';
                                         }
@@ -3089,23 +3067,16 @@ export async function regenerateLastResponse(isRetry = false) {
             // No extraction from the main aiMessage is needed.
 
             // Apply final content processing based on thinking tags and settings
+            aiMessage = normalizeReasoningTags(aiMessage);
             const hideThinking = getHideThinking();
-            const hasThinkTags = aiMessage.includes('<think>') || aiMessage.includes('</think>');
+            const finalReasoningState = getReasoningStreamState(aiMessage);
+            const hasThinkTags = finalReasoningState.hasThinking;
 
             if (hasThinkTags) {
-                // Check if content after </think> exists
-                let contentAfterThink = "";
-                if (aiMessage.includes('</think>')) {
-                    const afterThinkMatch = aiMessage.match(/<\/think>([\s\S]*)$/);
-                    if (afterThinkMatch && afterThinkMatch[1]) {
-                        contentAfterThink = afterThinkMatch[1].trim();
-                    }
-                }
-
                 if (contentContainer) {
                     if (hideThinking) {
                         // Hide thinking tags when hide thinking is enabled
-                        const processedContent = aiMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
+                        const processedContent = stripReasoningSections(aiMessage);
                         contentContainer.innerHTML = basicSanitizeInput(processedContent);
                     } else {
                         // Show everything including thinking tags when hide thinking is disabled

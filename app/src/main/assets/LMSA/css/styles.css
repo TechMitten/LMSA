@@ -259,16 +259,15 @@ body.light-theme .chat-scrollbar-thumb {
 /* Reasoning styles for think sections */
 .think {
     background-color: var(--settings-label-bg);
-    border-radius: 12px;
-    padding: 1rem 1.25rem 0.75rem 1.25rem;
-    margin: 1rem 0;
-    border: 2px solid var(--ai-message-border);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 0.65rem 0.8rem;
+    margin: 0.85rem 0;
+    border: 1px solid var(--ai-message-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     position: relative;
     overflow: hidden;
-    color: var(--text-muted);
-    font-style: italic;
-    line-height: 1.8;
+    color: var(--text-secondary);
+    line-height: 1.5;
 }
 
 /* Topic boundary marker */
@@ -305,59 +304,70 @@ body.light-theme .chat-scrollbar-thumb {
 }
 
 .reasoning-intro {
-    color: #7cb7ff;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    font-size: 1.1em;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid #2a3f5f;
-    padding-bottom: 0.5rem;
-    text-transform: uppercase;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0;
+    color: var(--text-primary);
+}
+
+.reasoning-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.84rem;
+    letter-spacing: 0.02em;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #7cb7ff;
 }
 
 .reasoning-toggle {
-    font-size: 0.85em;
-    margin-left: 10px;
-    cursor: pointer;
+    border: 1px solid rgba(124, 183, 255, 0.6);
+    background: rgba(124, 183, 255, 0.12);
     color: #7cb7ff;
-    padding: 2px 6px;
-    border-radius: 4px;
+    font-size: 0.77rem;
+    font-weight: 600;
+    line-height: 1;
+    padding: 0.38rem 0.58rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color 120ms ease, transform 120ms ease;
 }
 
 .reasoning-toggle:hover {
-    background-color: rgba(124, 183, 255, 0.2);
-    text-decoration: none;
-    transform: translateY(-1px);
+    background: rgba(124, 183, 255, 0.2);
 }
 
 .reasoning-toggle:active {
     transform: translateY(1px);
 }
 
+.reasoning-toggle:focus-visible {
+    outline: 2px solid #7cb7ff;
+    outline-offset: 2px;
+}
+
 .reasoning-content {
-    margin-top: 0.25rem;
-    padding: 0;
+    margin-top: 0.65rem;
+    padding: 0.15rem 0 0.1rem;
 }
 
 .reasoning-step {
-    margin: 0.5rem 0;
-    padding: 0.75rem 1rem;
-    border-left: 3px solid #7cb7ff;
-    background-color: var(--settings-label-bg);
-    border-radius: 0 8px 8px 0;
+    margin: 0.45rem 0;
+    padding: 0.55rem 0.7rem;
+    border-left: 2px solid rgba(124, 183, 255, 0.8);
+    background-color: rgba(124, 183, 255, 0.08);
+    border-radius: 0 6px 6px 0;
     position: relative;
-    font-size: 1em;
-    line-height: 1.6;
+    font-size: 0.95em;
+    line-height: 1.55;
     color: var(--text-secondary);
 }
 
 .reasoning-step:hover {
     background-color: var(--chat-item-hover-bg);
-    transform: translateX(4px);
-    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Ensure content after thinking tags is visible */
@@ -9292,4 +9302,29 @@ body.light-theme #template-indicator #disable-template-btn:hover {
 
 .math-inline[data-math-rendered] {
     font-family: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .thinking-indicator::before {
+        animation: none;
+    }
+
+    .reasoning-toggle {
+        transition: none;
+    }
+}
+
+@media (forced-colors: active) {
+    .thinking-indicator,
+    .think {
+        border-color: CanvasText;
+        background-color: Canvas;
+        color: CanvasText;
+    }
+
+    .reasoning-toggle {
+        border-color: CanvasText;
+        color: CanvasText;
+        background: Canvas;
+    }
 }

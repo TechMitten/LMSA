@@ -1,5 +1,6 @@
 // Debug logging utility
 let isDebugEnabled = false; // Debug mode disabled by default
+let reasoningPanelIdCounter = 0;
 
 // Utility functions
 
@@ -29,6 +30,87 @@ export function filterToEnglishCharacters(text) {
     // Simply return the original text without any filtering
     // This preserves all characters from all languages (Chinese, Japanese, Arabic, Cyrillic, etc.)
     return text;
+}
+
+/**
+ * Normalizes reasoning tag aliases to <think>...</think> for a single render path.
+ * @param {string} text - The text to normalize
+ * @returns {string} - Text with normalized reasoning tags
+ */
+export function normalizeReasoningTags(text) {
+    if (!text) return '';
+
+    let normalized = String(text);
+    normalized = normalized.replace(/<thinking>/gi, '<think>');
+    normalized = normalized.replace(/<\/thinking>/gi, '</think>');
+    normalized = normalized.replace(/<reason>/gi, '<think>');
+    normalized = normalized.replace(/<\/reason>/gi, '</think>');
+    normalized = normalized.replace(/<reasoning>/gi, '<think>');
+    normalized = normalized.replace(/<\/reasoning>/gi, '</think>');
+
+    return normalized;
+}
+
+/**
+ * Removes normalized reasoning sections from text while preserving non-reasoning output.
+ * @param {string} text - The text to process
+ * @returns {string} - Text without reasoning sections
+ */
+export function stripReasoningSections(text) {
+    const normalized = normalizeReasoningTags(text);
+    return normalized
+        .replace(/<think>[\s\S]*?<\/think>/gi, '')
+        .replace(/<\/?think>/gi, '');
+}
+
+/**
+ * Derives robust reasoning stream state from accumulated text.
+ * @param {string} text - The current accumulated response
+ * @returns {{normalizedText: string, hasThinking: boolean, inThinkingSection: boolean, contentAfterThink: string, activeThinkingContent: string}}
+ */
+export function getReasoningStreamState(text) {
+    const normalizedText = normalizeReasoningTags(text);
+    const openCount = (normalizedText.match(/<think>/gi) || []).length;
+    const closeCount = (normalizedText.match(/<\/think>/gi) || []).length;
+    const hasThinking = openCount > 0 || closeCount > 0;
+    const inThinkingSection = openCount > closeCount;
+
+    let contentAfterThink = '';
+    const afterThinkMatch = normalizedText.match(/<\/think>([\s\S]*)$/i);
+    if (afterThinkMatch && afterThinkMatch[1]) {
+        contentAfterThink = afterThinkMatch[1].trim();
+    }
+
+    let activeThinkingContent = '';
+    if (inThinkingSection) {
+        const lower = normalizedText.toLowerCase();
+        const openIdx = lower.lastIndexOf('<think>');
+        if (openIdx !== -1) {
+            activeThinkingContent = normalizedText.substring(openIdx + 7).replace(/<\/?think>/gi, '').trim();
+        }
+    }
+
+    return {
+        normalizedText,
+        hasThinking,
+        inThinkingSection,
+        contentAfterThink,
+        activeThinkingContent
+    };
+}
+
+function buildReasoningPanelHtml(reasoningText) {
+    const panelId = `reasoning-panel-${++reasoningPanelIdCounter}`;
+    const steps = String(reasoningText || '')
+        .split(/\n\s*\n+/)
+        .map(paragraph => paragraph.trim())
+        .filter(Boolean)
+        .map(paragraph => `<div class="reasoning-step">${escapeHtml(paragraph)}</div>`)
+        .join('');
+
+    if (!steps) return '';
+
+    return `<section class="think" data-reasoning-panel="compact"><div class="reasoning-intro"><span class="reasoning-title"><i class="fas fa-brain"></i><span>Reasoning</span></span><button type="button" class="reasoning-toggle" onclick="toggleReasoningVisibility(this)" aria-expanded="false" aria-controls="${panelId}" title="Toggle reasoning details">Show details</button></div><div id="${panelId}" class="reasoning-content" hidden>${steps}</div></section>`;
 }
 
 /**
@@ -245,6 +327,42 @@ function restoreMathPlaceholders(sanitized, displayPlaceholders, inlinePlacehold
     return sanitized;
 }
 
+function isBlockLevelHtmlLine(line) {
+    return /^<(h[1-6]|div|ul|ol|li|pre|blockquote|table|thead|tbody|tr|td|th|hr|section)\b/i.test(line);
+}
+
+function mergeSoftLineBreaks(text) {
+    if (!text) return text;
+
+    const lines = String(text).split('\n');
+    const merged = [];
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+
+        // Preserve explicit paragraph breaks.
+        if (!trimmed) {
+            merged.push('');
+            continue;
+        }
+
+        const currentIsBlock = isBlockLevelHtmlLine(trimmed);
+        const previous = merged.length > 0 ? merged[merged.length - 1] : null;
+        const previousTrimmed = previous ? previous.trim() : '';
+        const previousIsBlock = previousTrimmed ? isBlockLevelHtmlLine(previousTrimmed) : false;
+
+        // Merge soft-wrapped lines into the previous line when both are plain text.
+        if (previous && previousTrimmed && !previousIsBlock && !currentIsBlock) {
+            merged[merged.length - 1] = previous.replace(/\s+$/, '') + ' ' + trimmed;
+            continue;
+        }
+
+        merged.push(line);
+    }
+
+    return merged.join('\n');
+}
+
 /**
  * Sanitizes input for non-reasoning models
  * @param {string} input - The input text to sanitize
@@ -252,7 +370,7 @@ function restoreMathPlaceholders(sanitized, displayPlaceholders, inlinePlacehold
  */
 export function basicSanitizeInput(input) {
     // First, remove any <think> tags that might be present
-    let processedInput = input.replace(/<think>[\s\S]*?<\/think>/g, '');
+    let processedInput = stripReasoningSections(input);
 
     // Extract math expressions before HTML escaping to prevent paragraph fragmentation
     const mathDisplayPlaceholders = [];
@@ -369,9 +487,11 @@ export function basicSanitizeInput(input) {
         }
     );
 
-    // Handle paragraphs - treat all newlines as paragraph breaks
-    // First, split the text by newlines and wrap each paragraph in <p> tags
-    const paragraphs = sanitized.split(/\n/);
+    // Merge soft line wraps to avoid unintended one-line paragraphs.
+    const normalizedParagraphText = mergeSoftLineBreaks(sanitized);
+
+    // Handle paragraphs - explicit blank lines still create separate paragraphs.
+    const paragraphs = normalizedParagraphText.split(/\n/);
     sanitized = paragraphs.map(p => {
         const trimmed = p.trim();
         if (!trimmed) return '';
@@ -405,7 +525,7 @@ export function basicSanitizeInput(input) {
  */
 export function sanitizeInput(input) {
     // First extract all <think> tag contents before any HTML escaping
-    let processedInput = input;
+    let processedInput = normalizeReasoningTags(input);
 
     // Extract math expressions before anything else to prevent fragmentation
     const mathDisplayPlaceholders = [];
@@ -438,7 +558,7 @@ export function sanitizeInput(input) {
     let hasThinkTag = false;
 
     // Find all <think> sections and store them
-    const thinkRegex = /<think>([\s\S]*?)<\/think>/g;
+    const thinkRegex = /<think>([\s\S]*?)<\/think>/gi;
     let match;
     while ((match = thinkRegex.exec(processedInput)) !== null) {
         // Only consider think tags with meaningful content (not just whitespace)
@@ -452,6 +572,13 @@ export function sanitizeInput(input) {
         }
     }
 
+    // Some providers stream multiple <think>...</think> segments in one response.
+    // Merge them so the UI renders a single reasoning panel per assistant message.
+    const combinedThinkContent = thinkMatches
+        .map(entry => String(entry.content || '').trim())
+        .filter(Boolean)
+        .join('\n\n');
+
     // Remove think tags to check if remaining content is HTML
     const contentWithoutThink = processedInput.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
     
@@ -461,13 +588,8 @@ export function sanitizeInput(input) {
         let result = '';
         
         // Add think sections first if they exist
-        if (hasThinkTag) {
-            thinkMatches.forEach(match => {
-                result += `<div class="think"><div class="reasoning-intro"><i class="fas fa-brain"></i> Reasoning Process<span class="reasoning-toggle" onclick="toggleReasoningVisibility(this)" title="Toggle visibility">[<span class="toggle-text">Hide</span>]</span></div><div class="reasoning-content">${match.content.split('\n\n').map(paragraph => {
-                    if (!paragraph.trim()) return '';
-                    return `<div class="reasoning-step">${paragraph.trim()}</div>`;
-                }).join('')}</div></div>`;
-            });
+        if (hasThinkTag && combinedThinkContent) {
+            result += buildReasoningPanelHtml(combinedThinkContent);
         }
         
         // Add the HTML content formatted as code
@@ -482,13 +604,22 @@ export function sanitizeInput(input) {
     let sanitized = div.innerHTML;
 
     // Replace the escaped <think> tags with properly formatted HTML
-    thinkMatches.forEach(match => {
-        const escapedMatch = match.fullMatch.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        sanitized = sanitized.replace(escapedMatch, `<div class="think"><div class="reasoning-intro"><i class="fas fa-brain"></i> Reasoning Process<span class="reasoning-toggle" onclick="toggleReasoningVisibility(this)" title="Toggle visibility">[<span class="toggle-text">Hide</span>]</span></div><div class="reasoning-content">${match.content.split('\n\n').map(paragraph => {
-                    if (!paragraph.trim()) return '';
-                    return `<div class="reasoning-step">${paragraph.trim()}</div>`;
-                }).join('')}</div></div>`);
-    });
+    if (thinkMatches.length > 0) {
+        const escapedMatches = thinkMatches.map(entry =>
+            entry.fullMatch.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        );
+
+        const firstEscapedMatch = escapedMatches[0];
+        const mergedPanelHtml = combinedThinkContent
+            ? buildReasoningPanelHtml(combinedThinkContent)
+            : '';
+
+        sanitized = sanitized.replace(firstEscapedMatch, mergedPanelHtml);
+
+        for (let i = 1; i < escapedMatches.length; i++) {
+            sanitized = sanitized.replace(escapedMatches[i], '');
+        }
+    }
 
     // If we didn't replace any think tags but they exist in the text,
     // mark the output with a special class for CSS targeting
@@ -505,7 +636,7 @@ export function sanitizeInput(input) {
         // Only create reasoning header if content is not empty or just whitespace
         const trimmedContent = content.trim();
         if (trimmedContent.length > 0) {
-            return `<div class="think"><div class="reasoning-intro"><i class="fas fa-brain"></i> Reasoning Process<span class="reasoning-toggle" onclick="toggleReasoningVisibility(this)" title="Toggle visibility">[<span class="toggle-text">Hide</span>]</span></div><div class="reasoning-content"><div class="reasoning-step">${trimmedContent}</div></div></div>`;
+            return buildReasoningPanelHtml(trimmedContent);
         } else {
             // For empty think tags, return empty string (remove them completely)
             return '';
@@ -523,7 +654,7 @@ export function sanitizeInput(input) {
             let afterContent = afterThinkMatch[1];
 
             // Apply paragraph styling to content after think tags
-            const afterParagraphs = afterContent.split(/\n/);
+            const afterParagraphs = mergeSoftLineBreaks(afterContent).split(/\n/);
             afterContent = afterParagraphs.map(p => p.trim() ? `<p>${p}</p>` : '').join('\n');
             afterContent = afterContent.replace(/<\/p>\s*<p>/g, '</p><p style="margin-top: 1.5em;">');
 
@@ -612,9 +743,11 @@ export function sanitizeInput(input) {
         }
     );
 
-    // Handle paragraphs - treat all newlines as paragraph breaks
-    // First, split the text by newlines and wrap each paragraph in <p> tags
-    const paragraphs = sanitized.split(/\n/);
+    // Merge soft line wraps to avoid unintended one-line paragraphs.
+    const normalizedParagraphText = mergeSoftLineBreaks(sanitized);
+
+    // Handle paragraphs - explicit blank lines still create separate paragraphs.
+    const paragraphs = normalizedParagraphText.split(/\n/);
     sanitized = paragraphs.map(p => {
         const trimmed = p.trim();
         if (!trimmed) return '';
@@ -1689,16 +1822,20 @@ if (typeof window !== 'undefined') {
     // Make initializeCodeMirror available in the global scope
     window.initializeCodeMirror = initializeCodeMirror;
     window.toggleReasoningVisibility = function(toggleElement) {
-        const toggleText = toggleElement.querySelector('.toggle-text');
         const thinkContainer = toggleElement.closest('.think');
+        if (!thinkContainer) return;
         const reasoningContent = thinkContainer.querySelector('.reasoning-content');
+        if (!reasoningContent) return;
 
-        if (reasoningContent.style.display === 'none') {
-            reasoningContent.style.display = 'block';
-            toggleText.textContent = 'Hide';
+        const isHidden = reasoningContent.hasAttribute('hidden');
+        if (isHidden) {
+            reasoningContent.removeAttribute('hidden');
+            toggleElement.textContent = 'Hide details';
+            toggleElement.setAttribute('aria-expanded', 'true');
         } else {
-            reasoningContent.style.display = 'none';
-            toggleText.textContent = 'Show';
+            reasoningContent.setAttribute('hidden', '');
+            toggleElement.textContent = 'Show details';
+            toggleElement.setAttribute('aria-expanded', 'false');
         }
     };
 
