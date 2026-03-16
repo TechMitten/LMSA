@@ -20,7 +20,6 @@ let isNewTopic = false;
 let isGeneratingTitle = false;
 let chatToRename = null;
 let renameModalEscapeHandler = null;
-const MAX_RENAME_TITLE_LENGTH = 14;
 let suppressChatHistoryClickUntil = 0;
 
 // Export state variables only
@@ -1608,9 +1607,8 @@ function ensureRenameChatModal() {
     if (modal) {
         const existingInput = modal.querySelector('#chat-rename-input');
         if (existingInput) {
-            existingInput.maxLength = MAX_RENAME_TITLE_LENGTH;
-            existingInput.setAttribute('maxlength', String(MAX_RENAME_TITLE_LENGTH));
-            existingInput.placeholder = `Enter a new title (max ${MAX_RENAME_TITLE_LENGTH} chars)`;
+            existingInput.removeAttribute('maxlength');
+            existingInput.placeholder = 'Enter a new title';
         }
         return modal;
     }
@@ -1636,9 +1634,9 @@ function ensureRenameChatModal() {
             </div>
             <div class="mb-4">
                 <label for="chat-rename-input" class="block text-sm font-medium text-gray-300 dark:text-gray-300 light:text-gray-700 mb-2">Chat Title</label>
-                <input id="chat-rename-input" type="text" maxlength="${MAX_RENAME_TITLE_LENGTH}"
+                <input id="chat-rename-input" type="text"
                     class="w-full px-3 py-2 rounded-lg border border-blue-800/40 dark:border-blue-800/40 light:border-blue-300 bg-[#0b1a30] dark:bg-[#0b1a30] light:bg-white text-gray-200 dark:text-gray-200 light:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
-                    placeholder="Enter a new title (max ${MAX_RENAME_TITLE_LENGTH} chars)" />
+                    placeholder="Enter a new title" />
                 <p id="chat-rename-error" class="hidden text-sm text-red-400 dark:text-red-400 light:text-red-600 mt-2">Title cannot be blank.</p>
             </div>
             <div class="flex justify-end space-x-3">
@@ -1690,15 +1688,6 @@ function confirmRenameChatModal() {
         return;
     }
 
-    if (cleanTitle.length > MAX_RENAME_TITLE_LENGTH) {
-        if (errorText) {
-            errorText.textContent = `Title must be ${MAX_RENAME_TITLE_LENGTH} characters or less.`;
-            errorText.classList.remove('hidden');
-        }
-        input.focus();
-        return;
-    }
-
     if (errorText) {
         errorText.classList.add('hidden');
     }
@@ -1728,9 +1717,8 @@ function openRenameChatModal(id, currentTitle) {
     }
 
     chatToRename = id;
-    input.maxLength = MAX_RENAME_TITLE_LENGTH;
-    input.setAttribute('maxlength', String(MAX_RENAME_TITLE_LENGTH));
-    input.value = currentTitle.slice(0, MAX_RENAME_TITLE_LENGTH);
+    input.removeAttribute('maxlength');
+    input.value = currentTitle;
     errorText.classList.add('hidden');
 
     modal.classList.remove('hidden');
@@ -1770,11 +1758,8 @@ function openRenameChatModal(id, currentTitle) {
         });
 
         input.addEventListener('input', () => {
-            if (input.value.length > MAX_RENAME_TITLE_LENGTH) {
-                input.value = input.value.slice(0, MAX_RENAME_TITLE_LENGTH);
-            }
             const cleanTitle = removeThinkTags(input.value).replace(/\s+/g, ' ').trim();
-            if (cleanTitle && cleanTitle.length <= MAX_RENAME_TITLE_LENGTH) {
+            if (cleanTitle) {
                 errorText.classList.add('hidden');
             }
         });

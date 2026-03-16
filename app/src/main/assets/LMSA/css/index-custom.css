@@ -108,6 +108,19 @@
     transition: all 0.2s ease;
 }
 
+/* Keep sidebar content scrollable but never show a visual scrollbar in WebView. */
+#sidebar-scroll-content {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+#sidebar-scroll-content::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+    background: transparent;
+}
+
 #template-indicator #disable-template-btn:hover {
     background: rgba(96, 165, 250, 0.2) !important;
     transform: scale(1.1);
