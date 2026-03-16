@@ -18,6 +18,10 @@ let smartReplyAbortController = null;
 let isGenerating = false;
 let isNewTopic = false;
 let isGeneratingTitle = false;
+let chatToRename = null;
+let renameModalEscapeHandler = null;
+const MAX_RENAME_TITLE_LENGTH = 14;
+let suppressChatHistoryClickUntil = 0;
 
 // Export state variables only
 export {
@@ -1370,6 +1374,88 @@ export function updateChatHistoryUI() {
                 const actionWrapper = document.createElement('div');
                 actionWrapper.classList.add('action-wrapper', 'flex-shrink-0');
 
+                // Create rename icon button and place it before delete
+                const renameContainer = document.createElement('button');
+                renameContainer.classList.add('rename-icon-container');
+                renameContainer.setAttribute('aria-label', 'Rename chat');
+                renameContainer.setAttribute('title', 'Rename this chat');
+                renameContainer.style.cssText = `
+                    background: transparent;
+                    border: none;
+                    padding: 8px;
+                    margin: 0 4px 0 0;
+                    cursor: pointer;
+                    border-radius: 6px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 44px;
+                    min-height: 44px;
+                    transition: all 0.2s ease;
+                    -webkit-tap-highlight-color: transparent;
+                    touch-action: manipulation;
+                `;
+
+                const renameIcon = document.createElement('i');
+                renameIcon.classList.add('fas', 'fa-edit');
+
+                const getRenameIconColor = () => {
+                    return document.body.classList.contains('light-theme') ? '#1d4ed8' : '#60a5fa';
+                };
+
+                renameIcon.style.cssText = `
+                    color: ${getRenameIconColor()};
+                    font-size: 14px;
+                    transition: all 0.2s ease;
+                    pointer-events: none;
+                `;
+
+                renameContainer.addEventListener('mouseenter', () => {
+                    renameContainer.style.backgroundColor = 'rgba(59, 130, 246, 0.12)';
+                    renameIcon.style.color = 'var(--button-primary-bg)';
+                    renameIcon.style.transform = 'scale(1.1)';
+                });
+
+                renameContainer.addEventListener('mouseleave', () => {
+                    renameContainer.style.backgroundColor = 'transparent';
+                    renameIcon.style.color = getRenameIconColor();
+                    renameIcon.style.transform = 'scale(1)';
+                });
+
+                renameContainer.addEventListener('focus', () => {
+                    renameContainer.style.backgroundColor = 'rgba(59, 130, 246, 0.12)';
+                    renameContainer.style.outline = '2px solid rgba(59, 130, 246, 0.45)';
+                    renameContainer.style.outlineOffset = '2px';
+                });
+
+                renameContainer.addEventListener('blur', () => {
+                    renameContainer.style.backgroundColor = 'transparent';
+                    renameContainer.style.outline = 'none';
+                    renameContainer.style.outlineOffset = '0';
+                });
+
+                renameContainer.addEventListener('touchstart', (e) => {
+                    e.stopPropagation();
+                    renameContainer.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
+                    renameIcon.style.transform = 'scale(0.95)';
+                }, { passive: true });
+
+                renameContainer.addEventListener('touchend', () => {
+                    setTimeout(() => {
+                        renameContainer.style.backgroundColor = 'transparent';
+                        renameIcon.style.transform = 'scale(1)';
+                    }, 150);
+                }, { passive: true });
+
+                renameContainer.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    renameChatTitle(id);
+                });
+
+                renameContainer.appendChild(renameIcon);
+                actionWrapper.appendChild(renameContainer);
+
                 // Create trash icon container for better touch target
                 const trashContainer = document.createElement('button');
                 trashContainer.classList.add('trash-icon-container');
@@ -1460,7 +1546,12 @@ export function updateChatHistoryUI() {
                 actionWrapper.appendChild(trashContainer);
                 button.appendChild(actionWrapper);
 
-                button.addEventListener('click', () => loadChat(id));
+                button.addEventListener('click', () => {
+                    if (Date.now() < suppressChatHistoryClickUntil) {
+                        return;
+                    }
+                    loadChat(id);
+                });
                 chatHistory.appendChild(button);
             } catch (chatError) {
                 debugError(`Error processing chat ${id}:`, chatError);
@@ -1510,6 +1601,214 @@ export function showDeleteConfirmation(id) {
     chatToDelete = id;
     setActionToPerform('deleteChat');
     showConfirmationModal('Are you sure you want to delete this chat? This action cannot be undone.');
+}
+
+function ensureRenameChatModal() {
+    let modal = document.getElementById('chat-rename-modal');
+    if (modal) {
+        const existingInput = modal.querySelector('#chat-rename-input');
+        if (existingInput) {
+            existingInput.maxLength = MAX_RENAME_TITLE_LENGTH;
+            existingInput.setAttribute('maxlength', String(MAX_RENAME_TITLE_LENGTH));
+            existingInput.placeholder = `Enter a new title (max ${MAX_RENAME_TITLE_LENGTH} chars)`;
+        }
+        return modal;
+    }
+
+    modal = document.createElement('div');
+    modal.id = 'chat-rename-modal';
+    modal.className = 'fixed inset-0 bg-black/70 dark:bg-black/70 light:bg-gray-900/50 backdrop-blur-sm items-center justify-center hidden z-[2100]';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'chat-rename-title');
+
+    modal.innerHTML = `
+        <div class="bg-gradient-to-b from-[#0a192f] to-[#0d1f3d] dark:from-[#0a192f] dark:to-[#0d1f3d] light:from-[#f8fafc] light:to-[#f1f5f9] p-6 rounded-xl w-[420px] max-w-[90%] shadow-2xl modal-content border border-blue-900/30 dark:border-blue-900/30 light:border-blue-200 overflow-hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="chat-rename-title" class="text-xl font-bold flex items-center text-blue-400 dark:text-blue-400 light:text-blue-700">
+                    <i class="fas fa-edit mr-3"></i>Rename Chat
+                </h3>
+                <button id="close-chat-rename-modal"
+                    class="text-gray-400 hover:text-white dark:text-gray-400 dark:hover:text-white light:text-gray-600 light:hover:text-gray-800 focus:outline-none rounded-full w-8 h-8 flex items-center justify-center hover:bg-blue-900/20 dark:hover:bg-blue-900/20 light:hover:bg-blue-200/50"
+                    aria-label="Close rename modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="mb-4">
+                <label for="chat-rename-input" class="block text-sm font-medium text-gray-300 dark:text-gray-300 light:text-gray-700 mb-2">Chat Title</label>
+                <input id="chat-rename-input" type="text" maxlength="${MAX_RENAME_TITLE_LENGTH}"
+                    class="w-full px-3 py-2 rounded-lg border border-blue-800/40 dark:border-blue-800/40 light:border-blue-300 bg-[#0b1a30] dark:bg-[#0b1a30] light:bg-white text-gray-200 dark:text-gray-200 light:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+                    placeholder="Enter a new title (max ${MAX_RENAME_TITLE_LENGTH} chars)" />
+                <p id="chat-rename-error" class="hidden text-sm text-red-400 dark:text-red-400 light:text-red-600 mt-2">Title cannot be blank.</p>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button id="cancel-chat-rename" class="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white">Cancel</button>
+                <button id="confirm-chat-rename" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white">Save</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    return modal;
+}
+
+function closeRenameChatModal() {
+    const modal = document.getElementById('chat-rename-modal');
+    if (!modal) return;
+
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    chatToRename = null;
+
+    if (renameModalEscapeHandler) {
+        document.removeEventListener('keydown', renameModalEscapeHandler);
+        renameModalEscapeHandler = null;
+    }
+}
+
+function confirmRenameChatModal() {
+    if (!chatToRename || !chatHistoryData[chatToRename]) {
+        closeRenameChatModal();
+        return;
+    }
+
+    const modal = document.getElementById('chat-rename-modal');
+    const input = modal ? modal.querySelector('#chat-rename-input') : null;
+    const errorText = modal ? modal.querySelector('#chat-rename-error') : null;
+    if (!input) {
+        closeRenameChatModal();
+        return;
+    }
+
+    const cleanTitle = removeThinkTags(input.value).replace(/\s+/g, ' ').trim();
+    if (!cleanTitle) {
+        if (errorText) {
+            errorText.textContent = 'Title cannot be blank.';
+            errorText.classList.remove('hidden');
+        }
+        input.focus();
+        return;
+    }
+
+    if (cleanTitle.length > MAX_RENAME_TITLE_LENGTH) {
+        if (errorText) {
+            errorText.textContent = `Title must be ${MAX_RENAME_TITLE_LENGTH} characters or less.`;
+            errorText.classList.remove('hidden');
+        }
+        input.focus();
+        return;
+    }
+
+    if (errorText) {
+        errorText.classList.add('hidden');
+    }
+
+    const chatData = chatHistoryData[chatToRename];
+    chatData.title = cleanTitle;
+
+    // Prevent synthetic/click-through events from triggering chat selection
+    // (which would close the sidebar on mobile via loadChat).
+    suppressChatHistoryClickUntil = Date.now() + 500;
+
+    saveChatHistory();
+    updateChatHistoryUI();
+    closeRenameChatModal();
+}
+
+function openRenameChatModal(id, currentTitle) {
+    const modal = ensureRenameChatModal();
+    const input = modal.querySelector('#chat-rename-input');
+    const errorText = modal.querySelector('#chat-rename-error');
+    const saveButton = modal.querySelector('#confirm-chat-rename');
+    const cancelButton = modal.querySelector('#cancel-chat-rename');
+    const closeButton = modal.querySelector('#close-chat-rename-modal');
+
+    if (!input || !saveButton || !cancelButton || !closeButton || !errorText) {
+        return;
+    }
+
+    chatToRename = id;
+    input.maxLength = MAX_RENAME_TITLE_LENGTH;
+    input.setAttribute('maxlength', String(MAX_RENAME_TITLE_LENGTH));
+    input.value = currentTitle.slice(0, MAX_RENAME_TITLE_LENGTH);
+    errorText.classList.add('hidden');
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    if (!modal.dataset.handlersAttached) {
+        saveButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            confirmRenameChatModal();
+        });
+        cancelButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeRenameChatModal();
+        });
+        closeButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeRenameChatModal();
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeRenameChatModal();
+            }
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                confirmRenameChatModal();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeRenameChatModal();
+            }
+        });
+
+        input.addEventListener('input', () => {
+            if (input.value.length > MAX_RENAME_TITLE_LENGTH) {
+                input.value = input.value.slice(0, MAX_RENAME_TITLE_LENGTH);
+            }
+            const cleanTitle = removeThinkTags(input.value).replace(/\s+/g, ' ').trim();
+            if (cleanTitle && cleanTitle.length <= MAX_RENAME_TITLE_LENGTH) {
+                errorText.classList.add('hidden');
+            }
+        });
+
+        modal.dataset.handlersAttached = 'true';
+    }
+
+    renameModalEscapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            closeRenameChatModal();
+        }
+    };
+    document.addEventListener('keydown', renameModalEscapeHandler);
+
+    requestAnimationFrame(() => {
+        input.focus();
+        input.select();
+    });
+}
+
+/**
+ * Renames a chat title from the chat history list
+ * @param {string} id - The ID of the chat to rename
+ */
+export function renameChatTitle(id) {
+    if (!chatHistoryData[id]) {
+        return;
+    }
+
+    const chatData = chatHistoryData[id];
+    const messages = Array.isArray(chatData) ? chatData : chatData.messages;
+    const currentTitle = removeThinkTags((chatData && chatData.title) || (messages && messages[0] && messages[0].content) || 'New Chat');
+
+    openRenameChatModal(id, currentTitle);
 }
 
 /**

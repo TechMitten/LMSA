@@ -53,6 +53,16 @@ export const openRouterWarningModal = `
                     </ul>
                     <p class="text-gray-400 text-xs mt-3 italic">You can disable OpenRouter at any time in settings to return to local AI.</p>
                 </div>
+
+                <div class="flex items-center mt-3" style="color: #cbd5e1;">
+                    <input id="openrouter-warning-never-show-again"
+                        type="checkbox"
+                        class="mr-2 cursor-pointer"
+                        style="accent-color: #3b82f6; width: 16px; height: 16px;">
+                    <label for="openrouter-warning-never-show-again" class="text-sm cursor-pointer select-none">
+                        Never show this again
+                    </label>
+                </div>
             </div>
 
             <div class="flex gap-3">
@@ -79,6 +89,8 @@ export const openRouterWarningModal = `
 let confirmationCallback = null;
 // Callback invoked when the user cancels / dismisses
 let cancellationCallback = null;
+// localStorage key for skipping this warning in future
+const OPENROUTER_WARNING_SKIP_KEY = 'openrouterWarningNeverShowAgain';
 
 /**
  * Initializes the OpenRouter Warning Modal event listeners.
@@ -94,12 +106,21 @@ export function initOpenRouterWarningModal() {
         const closeButton   = document.getElementById('close-openrouter-warning-modal');
         const cancelButton  = document.getElementById('cancel-openrouter-warning');
         const confirmButton = document.getElementById('confirm-openrouter-warning');
+        const neverShowAgainCheckbox = document.getElementById('openrouter-warning-never-show-again');
 
         console.log('Initializing OpenRouter Warning Modal...');
 
         const closeModal = (confirmed) => {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+
+            if (confirmed && neverShowAgainCheckbox) {
+                localStorage.setItem(
+                    OPENROUTER_WARNING_SKIP_KEY,
+                    neverShowAgainCheckbox.checked ? 'true' : 'false'
+                );
+            }
+
             if (confirmed && confirmationCallback) {
                 confirmationCallback();
             } else if (!confirmed && cancellationCallback) {
@@ -151,10 +172,22 @@ export function initOpenRouterWarningModal() {
  * @param {Function} onCancel   - Called when the user dismisses or cancels
  */
 export function showOpenRouterWarningModal(onConfirm, onCancel) {
+    if (localStorage.getItem(OPENROUTER_WARNING_SKIP_KEY) === 'true') {
+        if (typeof onConfirm === 'function') {
+            onConfirm();
+        }
+        return;
+    }
+
     const modal = document.getElementById('openrouter-warning-modal');
     if (!modal) {
         console.error('OpenRouter Warning Modal not found in DOM when trying to show');
         return;
+    }
+
+    const neverShowAgainCheckbox = document.getElementById('openrouter-warning-never-show-again');
+    if (neverShowAgainCheckbox) {
+        neverShowAgainCheckbox.checked = false;
     }
 
     confirmationCallback = onConfirm || null;
