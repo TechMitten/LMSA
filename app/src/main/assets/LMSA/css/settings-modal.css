@@ -375,6 +375,19 @@
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
+/* Keep the System Prompt heading static and non-pressable */
+#settings-modal #settings-step-prompt label.system-prompt-heading {
+  pointer-events: none;
+  cursor: default;
+}
+
+#settings-modal #settings-step-prompt label.system-prompt-heading:hover,
+#settings-modal #settings-step-prompt label.system-prompt-heading:active {
+  transform: none;
+  box-shadow: 0 4px 20px var(--modal-overlay),
+    0 0 0 1px var(--border-color) inset, 0 0 15px rgba(59, 130, 246, 0.2);
+}
+
 /* Premium input fields with immersive styling */
 #settings-modal input[type="text"],
 #settings-modal input[type="number"],

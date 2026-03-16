@@ -129,7 +129,6 @@ export function initializeSidebarTouchHandler() {
     chatHistory.addEventListener('touchmove', function(e) {
         // Keep no-highlight during scrolling
         setScrollingState(true);
-        e.stopPropagation();
     }, { passive: true });
 
     chatHistory.addEventListener('touchend', function(e) {

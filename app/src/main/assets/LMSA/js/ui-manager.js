@@ -85,18 +85,12 @@ export function updateChatHistoryScroll() {
     const chatHistory = document.getElementById('chat-history');
     if (!chatHistory) return;
 
-    // With the new layout, we always keep overflow-y: auto
-    // as chat history is now in its own scrollable container
-    chatHistory.style.overflowY = 'auto';
+    // Single-container sidebar scrolling: chat history should not be an inner scroller.
+    chatHistory.style.overflow = 'visible';
 
     // Ensure touch events work properly on chat history
     if (!chatHistory.hasAttribute('data-touch-handlers-added')) {
         chatHistory.setAttribute('data-touch-handlers-added', 'true');
-
-        // Add touch event handlers for better scrolling
-        chatHistory.addEventListener('touchmove', function (e) {
-            e.stopPropagation();
-        }, { passive: true });
     }
 
     // Log for debugging
@@ -206,6 +200,33 @@ export function toggleSidebar() {
             optionsContainer.classList.remove('animate-fade-in');
         }
 
+        // Reset expandable groups so they do not persist across sidebar reopen.
+        const importExportContainer = document.getElementById('import-export-container');
+        if (importExportContainer) {
+            importExportContainer.classList.add('hidden');
+            importExportContainer.classList.remove('animate-fade-in');
+
+            const importExportGroupButton = document.getElementById('import-export-group-btn');
+            const importExportCaret = importExportGroupButton?.querySelector('.fa-caret-up');
+            if (importExportCaret) {
+                importExportCaret.classList.remove('fa-caret-up');
+                importExportCaret.classList.add('fa-caret-down');
+            }
+        }
+
+        const premiumContainer = document.getElementById('premium-container');
+        if (premiumContainer) {
+            premiumContainer.classList.add('hidden');
+            premiumContainer.classList.remove('animate-fade-in');
+
+            const premiumGroupButton = document.getElementById('premium-group-btn');
+            const premiumCaret = premiumGroupButton?.querySelector('.fa-caret-up');
+            if (premiumCaret) {
+                premiumCaret.classList.remove('fa-caret-up');
+                premiumCaret.classList.add('fa-caret-down');
+            }
+        }
+
         // Collapse all sections when sidebar is closed
         const sectionHeaders = document.querySelectorAll('.section-header');
         const chatHistorySection = document.querySelector('.sidebar-section:last-child');
@@ -296,6 +317,32 @@ export function closeSidebar() {
     if (optionsContainer && window.innerWidth <= 1024) {
         optionsContainer.classList.add('hidden');
         optionsContainer.classList.remove('animate-fade-in');
+    }
+
+    const importExportContainer = document.getElementById('import-export-container');
+    if (importExportContainer) {
+        importExportContainer.classList.add('hidden');
+        importExportContainer.classList.remove('animate-fade-in');
+
+        const importExportGroupButton = document.getElementById('import-export-group-btn');
+        const importExportCaret = importExportGroupButton?.querySelector('.fa-caret-up');
+        if (importExportCaret) {
+            importExportCaret.classList.remove('fa-caret-up');
+            importExportCaret.classList.add('fa-caret-down');
+        }
+    }
+
+    const premiumContainer = document.getElementById('premium-container');
+    if (premiumContainer) {
+        premiumContainer.classList.add('hidden');
+        premiumContainer.classList.remove('animate-fade-in');
+
+        const premiumGroupButton = document.getElementById('premium-group-btn');
+        const premiumCaret = premiumGroupButton?.querySelector('.fa-caret-up');
+        if (premiumCaret) {
+            premiumCaret.classList.remove('fa-caret-up');
+            premiumCaret.classList.add('fa-caret-down');
+        }
     }
 
     // Collapse all sections when sidebar is closed

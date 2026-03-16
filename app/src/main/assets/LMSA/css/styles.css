@@ -856,30 +856,21 @@ body.light-theme #loaded-model {
 }
 
 #chat-history {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: visible;
     padding-right: 0.5rem;
-    padding-bottom: 2rem;
+    padding-bottom: 0.5rem;
     margin-right: -0.5rem;
     /* Compensate for padding to align with other sidebar elements */
     scrollbar-width: none;
     /* For Firefox */
     -ms-overflow-style: none;
     /* For Internet Explorer and Edge */
-    padding-bottom: 2.5rem;
-    /* Moderate padding at the bottom for mobile */
-    max-height: calc(100vh - 180px);
-    /* Leave space for header and other elements */
     scroll-behavior: auto;
     /* Disable smooth scrolling to prevent twitching */
-    /* Improved touch handling for more natural scrolling */
-    -ms-scroll-chaining: none;
-    overscroll-behavior-y: none;
+    -ms-scroll-chaining: chained;
+    overscroll-behavior-y: auto;
     min-height: 50px;
     /* Ensure minimum height even on very small screens */
-    height: 100%;
-    /* Take up all available space */
 }
 
 #chat-history::-webkit-scrollbar {
@@ -966,7 +957,7 @@ body.light-theme #loaded-model {
     -ms-scroll-chaining: none;
     overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;
-    padding-bottom: 2rem;
+    padding-bottom: 0;
 }
 
 /* Ensure dark mode sidebar has the correct background */
@@ -1215,8 +1206,7 @@ body.light-theme #loaded-model {
 
 /* Fix for chat history on Android */
 .android-webview #chat-history {
-    max-height: calc(100vh - 300px);
-    -webkit-overflow-scrolling: touch;
+    max-height: none;
 }
 
 /* Additional Android-specific touch handling */
@@ -1402,10 +1392,8 @@ body.light-theme #loaded-model {
 
 #sidebar .sidebar-section:last-child {
     border-bottom: none;
-    flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 100px;
     touch-action: auto;
     overflow: hidden;
 }
@@ -1416,7 +1404,11 @@ body.light-theme #loaded-model {
     transform: translateY(-10px);
     max-height: 0;
     min-height: 0;
+    flex: 0 0 auto !important;
     padding: 0;
+    margin: 0;
+    border-bottom: 0;
+    overflow: hidden;
     pointer-events: none;
 }
 
@@ -1509,15 +1501,12 @@ body.light-theme #loaded-model {
         padding: 0 1.75rem;
     }
 
-    /* Ensure chat history is scrollable on small screens */
+    /* Use single-container scrolling: sidebar wrapper scrolls, chat history expands naturally. */
     #chat-history {
-        max-height: calc(100vh - 180px);
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
+        max-height: none;
+        overflow: visible;
         touch-action: pan-y;
-        overscroll-behavior: contain;
-        -ms-scroll-chaining: none;
-        overscroll-behavior-y: none;
+        overscroll-behavior: auto;
     }
 
     /* Fix for the bottom input area on mobile */
@@ -6942,7 +6931,8 @@ body.light-theme #whats-new-modal .features-container::-webkit-scrollbar-thumb:h
 }
 
 /* Import/Export container styles */
-#import-export-container {
+#import-export-container,
+#premium-container {
     max-height: 0;
     overflow: hidden;
     opacity: 0;
@@ -6957,7 +6947,8 @@ body.light-theme #whats-new-modal .features-container::-webkit-scrollbar-thumb:h
         transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-#import-export-container.animate-fade-in {
+#import-export-container.animate-fade-in,
+#premium-container.animate-fade-in {
     max-height: 200px;
     opacity: 1;
     transform: translateY(0);
@@ -6965,13 +6956,23 @@ body.light-theme #whats-new-modal .features-container::-webkit-scrollbar-thumb:h
 }
 
 #import-export-group-btn .fa-caret-down,
-#import-export-group-btn .fa-caret-up {
+#import-export-group-btn .fa-caret-up,
+#premium-group-btn .fa-caret-down,
+#premium-group-btn .fa-caret-up {
     margin-left: auto;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-#import-export-group-btn.active .fa-caret-down {
+#import-export-group-btn.active .fa-caret-down,
+#premium-group-btn.active .fa-caret-down {
     transform: rotate(180deg);
+}
+
+/* Keep Premium group crown icon gold in the sidebar mobile menu. */
+#premium-group-btn .fa-crown,
+#premium-group-btn:hover .fa-crown,
+#premium-group-btn.active .fa-crown {
+    color: #d4af37 !important;
 }
 
 /* Sidebar animation keyframes */

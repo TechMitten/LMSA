@@ -912,7 +912,9 @@ export function initializeEventHandlers() {
         // Add touch event handlers to prevent highlight on mobile
         newChatHeaderButton.addEventListener('touchstart', (e) => {
             // Prevent default touch highlight
-            e.preventDefault();
+            if (e.cancelable) {
+                e.preventDefault();
+            }
         }, { passive: false });
 
         newChatHeaderButton.addEventListener('touchend', (e) => {
@@ -1087,7 +1089,9 @@ export function initializeEventHandlers() {
         // Add touch event handlers to prevent highlight on mobile
         refreshButton.addEventListener('touchstart', (e) => {
             // Prevent default touch highlight
-            e.preventDefault();
+            if (e.cancelable) {
+                e.preventDefault();
+            }
         }, { passive: false });
 
         refreshButton.addEventListener('touchend', (e) => {
@@ -1107,7 +1111,9 @@ export function initializeEventHandlers() {
         // Add touch event handlers to prevent highlight on mobile
         modelToggleButton.addEventListener('touchstart', (e) => {
             // Prevent default touch highlight
-            e.preventDefault();
+            if (e.cancelable) {
+                e.preventDefault();
+            }
         }, { passive: false });
 
         modelToggleButton.addEventListener('touchend', (e) => {
@@ -1153,7 +1159,9 @@ export function initializeEventHandlers() {
         // Add touch event handlers to prevent highlight on mobile
         settingsIconButton.addEventListener('touchstart', (e) => {
             // Prevent default touch highlight
-            e.preventDefault();
+            if (e.cancelable) {
+                e.preventDefault();
+            }
         }, { passive: false });
 
         settingsIconButton.addEventListener('touchend', (e) => {
@@ -1361,31 +1369,15 @@ export function initializeEventHandlers() {
 
     // Import/Export group button
     if (importExportGroupButton && importExportContainer) {
-        // Make sure it starts collapsed
-        importExportContainer.classList.add('hidden');
-        importExportContainer.classList.remove('animate-fade-in');
+        resetSidebarGroup('import-export-group-btn', 'import-export-container');
+        rebindSidebarGroupButton('import-export-group-btn', toggleImportExportContainer);
+    }
 
-        // Add or update the caret icon if it doesn't exist
-        let caretIcon = importExportGroupButton.querySelector('.fa-caret-up');
-        if (caretIcon) {
-            caretIcon.classList.remove('fa-caret-up');
-            caretIcon.classList.add('fa-caret-down');
-        } else {
-            caretIcon = importExportGroupButton.querySelector('.fa-caret-down');
-            if (!caretIcon) {
-                // If no caret icon exists, add one
-                const iconSpan = document.createElement('span');
-                iconSpan.innerHTML = '<i class="fas fa-caret-down"></i>';
-                importExportGroupButton.appendChild(iconSpan);
-            }
-        }
-
-        // Remove any existing event listeners to prevent duplicates
-        const newImportExportGroupButton = importExportGroupButton.cloneNode(true);
-        importExportGroupButton.parentNode.replaceChild(newImportExportGroupButton, importExportGroupButton);
-
-        // Add click event listener to the new button
-        document.getElementById('import-export-group-btn').addEventListener('click', toggleImportExportContainer);
+    const premiumGroupButton = document.getElementById('premium-group-btn');
+    const premiumContainer = document.getElementById('premium-container');
+    if (premiumGroupButton && premiumContainer) {
+        resetSidebarGroup('premium-group-btn', 'premium-container');
+        rebindSidebarGroupButton('premium-group-btn', togglePremiumContainer);
     }
 
     // Export Chats button
@@ -1862,13 +1854,18 @@ function handleOptionsButtonClick() {
             const importExportContainer = document.getElementById('import-export-container');
 
             if (importExportGroupButton && importExportContainer) {
-                // Remove any existing event listeners to prevent duplicates
-                const newImportExportGroupButton = importExportGroupButton.cloneNode(true);
-                importExportGroupButton.parentNode.replaceChild(newImportExportGroupButton, importExportGroupButton);
-
-                // Add the event listener to the new button
-                newImportExportGroupButton.addEventListener('click', toggleImportExportContainer);
+                resetSidebarGroup('import-export-group-btn', 'import-export-container');
+                rebindSidebarGroupButton('import-export-group-btn', toggleImportExportContainer);
                 debugLog('Import/Export group button event handler reattached');
+            }
+
+            const premiumGroupButton = document.getElementById('premium-group-btn');
+            const premiumContainer = document.getElementById('premium-container');
+
+            if (premiumGroupButton && premiumContainer) {
+                resetSidebarGroup('premium-group-btn', 'premium-container');
+                rebindSidebarGroupButton('premium-group-btn', togglePremiumContainer);
+                debugLog('Premium group button event handler reattached');
             }
 
             // 2. Export Chats button
@@ -2739,39 +2736,81 @@ function deleteMessage(messageElement, messageElements, messageIndex) {
  * Toggles the visibility of the import/export container
  */
 function toggleImportExportContainer() {
-    if (importExportContainer) {
-        // Toggle visibility with smooth animation
-        if (importExportContainer.classList.contains('hidden')) {
-            // Show the container with smooth animation
-            importExportContainer.classList.remove('hidden');
-            // Use a small delay to ensure the transition works properly
-            setTimeout(() => {
-                importExportContainer.classList.add('animate-fade-in');
-            }, 10);
+    toggleSidebarGroupContainer('import-export-group-btn', 'import-export-container');
+}
 
-            // Change the caret icon to up with animation
-            const caretIcon = importExportGroupButton.querySelector('.fa-caret-down');
-            if (caretIcon) {
-                caretIcon.classList.add('fa-caret-up');
-                caretIcon.classList.remove('fa-caret-down');
-            }
-        } else {
-            // Hide the container with smooth animation
-            importExportContainer.classList.remove('animate-fade-in');
+function togglePremiumContainer() {
+    toggleSidebarGroupContainer('premium-group-btn', 'premium-container');
+}
 
-            // Wait for animation to complete before hiding
-            setTimeout(() => {
-                importExportContainer.classList.add('hidden');
-            }, 300);
+function toggleSidebarGroupContainer(groupButtonId, containerId) {
+    const groupButton = document.getElementById(groupButtonId);
+    const groupContainer = document.getElementById(containerId);
 
-            // Change the caret icon back to down with animation
-            const caretIcon = importExportGroupButton.querySelector('.fa-caret-up');
-            if (caretIcon) {
-                caretIcon.classList.remove('fa-caret-up');
-                caretIcon.classList.add('fa-caret-down');
-            }
+    if (!groupButton || !groupContainer) {
+        return;
+    }
+
+    if (groupContainer.classList.contains('hidden')) {
+        groupContainer.classList.remove('hidden');
+        setTimeout(() => {
+            groupContainer.classList.add('animate-fade-in');
+        }, 10);
+
+        const caretIcon = groupButton.querySelector('.fa-caret-down');
+        if (caretIcon) {
+            caretIcon.classList.add('fa-caret-up');
+            caretIcon.classList.remove('fa-caret-down');
+        }
+    } else {
+        groupContainer.classList.remove('animate-fade-in');
+
+        setTimeout(() => {
+            groupContainer.classList.add('hidden');
+        }, 300);
+
+        const caretIcon = groupButton.querySelector('.fa-caret-up');
+        if (caretIcon) {
+            caretIcon.classList.remove('fa-caret-up');
+            caretIcon.classList.add('fa-caret-down');
         }
     }
+}
+
+function resetSidebarGroup(groupButtonId, containerId) {
+    const groupButton = document.getElementById(groupButtonId);
+    const groupContainer = document.getElementById(containerId);
+
+    if (!groupButton || !groupContainer) {
+        return;
+    }
+
+    groupContainer.classList.add('hidden');
+    groupContainer.classList.remove('animate-fade-in');
+
+    let caretIcon = groupButton.querySelector('.fa-caret-up');
+    if (caretIcon) {
+        caretIcon.classList.remove('fa-caret-up');
+        caretIcon.classList.add('fa-caret-down');
+    } else {
+        caretIcon = groupButton.querySelector('.fa-caret-down');
+        if (!caretIcon) {
+            const iconSpan = document.createElement('span');
+            iconSpan.innerHTML = '<i class="fas fa-caret-down"></i>';
+            groupButton.appendChild(iconSpan);
+        }
+    }
+}
+
+function rebindSidebarGroupButton(groupButtonId, clickHandler) {
+    const groupButton = document.getElementById(groupButtonId);
+    if (!groupButton || !groupButton.parentNode) {
+        return;
+    }
+
+    const reboundGroupButton = groupButton.cloneNode(true);
+    groupButton.parentNode.replaceChild(reboundGroupButton, groupButton);
+    reboundGroupButton.addEventListener('click', clickHandler);
 }
 
 /**

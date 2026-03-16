@@ -719,6 +719,19 @@ function closeSidebar() {
             optionsContainer.classList.remove('animate-fade-in');
         }
 
+        const importExportContainer = document.getElementById('import-export-container');
+        if (importExportContainer) {
+            importExportContainer.classList.add('hidden');
+            importExportContainer.classList.remove('animate-fade-in');
+
+            const importExportGroupButton = document.getElementById('import-export-group-btn');
+            const importExportCaret = importExportGroupButton?.querySelector('.fa-caret-up');
+            if (importExportCaret) {
+                importExportCaret.classList.remove('fa-caret-up');
+                importExportCaret.classList.add('fa-caret-down');
+            }
+        }
+
         // Remove the sidebar overlay
         const sidebarOverlay = document.getElementById('sidebar-overlay');
         if (sidebarOverlay) {
@@ -807,6 +820,28 @@ function showSidebar() {
                     const caret = document.createElement('i');
                     caret.className = 'fas fa-caret-down transition-transform duration-200';
                     importExportGroupButton.appendChild(caret);
+                }
+            }
+        }
+
+        const premiumContainer = document.getElementById('premium-container');
+        if (premiumContainer) {
+            premiumContainer.classList.add('hidden');
+            premiumContainer.classList.remove('animate-fade-in');
+
+            const premiumGroupButton = document.getElementById('premium-group-btn');
+            if (premiumGroupButton) {
+                const premiumCaretUp = premiumGroupButton.querySelector('.fa-caret-up');
+                if (premiumCaretUp) {
+                    premiumCaretUp.classList.remove('fa-caret-up');
+                    premiumCaretUp.classList.add('fa-caret-down');
+                }
+
+                const premiumCaretDown = premiumGroupButton.querySelector('.fa-caret-down');
+                if (!premiumCaretDown) {
+                    const caret = document.createElement('i');
+                    caret.className = 'fas fa-caret-down transition-transform duration-200';
+                    premiumGroupButton.appendChild(caret);
                 }
             }
         }
@@ -1051,6 +1086,32 @@ export function closeSidebarExport() {
         if (optionsContainer) {
             optionsContainer.classList.add('hidden');
             optionsContainer.classList.remove('animate-fade-in');
+        }
+
+        const importExportContainer = document.getElementById('import-export-container');
+        if (importExportContainer) {
+            importExportContainer.classList.add('hidden');
+            importExportContainer.classList.remove('animate-fade-in');
+
+            const importExportGroupButton = document.getElementById('import-export-group-btn');
+            const importExportCaret = importExportGroupButton?.querySelector('.fa-caret-up');
+            if (importExportCaret) {
+                importExportCaret.classList.remove('fa-caret-up');
+                importExportCaret.classList.add('fa-caret-down');
+            }
+        }
+
+        const premiumContainer = document.getElementById('premium-container');
+        if (premiumContainer) {
+            premiumContainer.classList.add('hidden');
+            premiumContainer.classList.remove('animate-fade-in');
+
+            const premiumGroupButton = document.getElementById('premium-group-btn');
+            const premiumCaret = premiumGroupButton?.querySelector('.fa-caret-up');
+            if (premiumCaret) {
+                premiumCaret.classList.remove('fa-caret-up');
+                premiumCaret.classList.add('fa-caret-down');
+            }
         }
 
         // Remove the sidebar overlay

@@ -83,7 +83,7 @@ export const settingsModal = `
                 <!-- Step 2: System Prompt -->
                 <div id="settings-step-prompt" class="settings-step hidden" data-step-name="Prompt">
                     <div class="mb-4">
-                        <label class="block text-sm font-medium mb-1">
+                        <label class="block text-sm font-medium mb-1 system-prompt-heading" role="presentation" aria-hidden="true">
                             <i class="fas fa-comment-dots mr-2 text-blue-400"></i>System Prompt (Optional):</label>
 
                         <!-- Hidden real textarea that holds the actual value -->
