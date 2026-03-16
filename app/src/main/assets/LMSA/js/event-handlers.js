@@ -53,6 +53,7 @@ import { closeApplication, copyToClipboard, sanitizeInput, scrollToBottom, scrol
 
 let abortController = null;
 let sidebar = document.getElementById('sidebar');
+const WELCOME_SETTINGS_TAPPED_KEY = 'welcomeSettingsTapped';
 
 /**
  * Initializes all event handlers
@@ -63,9 +64,25 @@ export function initializeEventHandlers() {
     // Settings button in welcome message
     const getStartedBtn = document.getElementById('get-started-btn');
     if (getStartedBtn) {
+        const getStartedBtnLabel = getStartedBtn.querySelector('span');
+        const hasTappedWelcomeSettings = localStorage.getItem(WELCOME_SETTINGS_TAPPED_KEY) === 'true';
+
+        if (getStartedBtnLabel) {
+            getStartedBtnLabel.textContent = hasTappedWelcomeSettings ? 'Settings' : 'Start Here';
+        }
+
         // Function to open settings modal
         const openSettingsModal = () => {
             debugLog('Settings button clicked, opening settings modal');
+
+            if (localStorage.getItem(WELCOME_SETTINGS_TAPPED_KEY) !== 'true') {
+                localStorage.setItem(WELCOME_SETTINGS_TAPPED_KEY, 'true');
+                const currentGetStartedBtn = document.getElementById('get-started-btn');
+                const currentGetStartedBtnLabel = currentGetStartedBtn?.querySelector('span');
+                if (currentGetStartedBtnLabel) {
+                    currentGetStartedBtnLabel.textContent = 'Settings';
+                }
+            }
 
             // Remove sidebar click handler while modal is open
             document.body.removeEventListener('click', handleSidebarOutsideClick);

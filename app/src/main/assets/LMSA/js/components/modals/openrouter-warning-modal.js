@@ -68,7 +68,7 @@ export const openRouterWarningModal = `
                     style="background: linear-gradient(to right, #3b82f6, #1e40af); border: none; padding-top: 10px; padding-bottom: 10px; cursor: pointer; transition: all 0.2s ease;"
                     onmouseover="this.style.boxShadow='0 8px 16px rgba(59, 130, 246, 0.3)'; this.style.transform='translateY(-2px)';"
                     onmouseout="this.style.boxShadow=''; this.style.transform='';">
-                    <i class="fas fa-check mr-2"></i>I Understand &amp; Accept
+                    <i class="fas fa-check mr-2"></i>I Understand
                 </button>
             </div>
         </div>
@@ -147,7 +147,7 @@ export function initOpenRouterWarningModal() {
 
 /**
  * Shows the OpenRouter Warning Modal.
- * @param {Function} onConfirm  - Called when the user clicks "I Understand & Accept"
+ * @param {Function} onConfirm  - Called when the user clicks "I Understand"
  * @param {Function} onCancel   - Called when the user dismisses or cancels
  */
 export function showOpenRouterWarningModal(onConfirm, onCancel) {

@@ -120,11 +120,21 @@ if (openHelpLink && helpModal) {
 
 // Debug Mode Trigger logic
 const versionBadge = document.querySelector('.version-badge');
+const WELCOME_SETTINGS_TAPPED_KEY = 'welcomeSettingsTapped';
 let debugClickCount = 0;
 let debugClickTimer = null;
 // Initialize global debug state if not exists
 if (typeof window.isDebugMode === 'undefined') {
     window.isDebugMode = false;
+}
+
+function resetWelcomeSettingsFirstTapState() {
+    localStorage.removeItem(WELCOME_SETTINGS_TAPPED_KEY);
+    const getStartedBtn = document.getElementById('get-started-btn');
+    const getStartedLabel = getStartedBtn ? getStartedBtn.querySelector('span') : null;
+    if (getStartedLabel) {
+        getStartedLabel.textContent = 'Start Here';
+    }
 }
 
 if (versionBadge) {
@@ -150,6 +160,9 @@ if (versionBadge) {
             if (window.AndroidBilling && typeof window.AndroidBilling.toggleDebugMode === 'function') {
                 window.isDebugMode = !window.isDebugMode;
                 window.AndroidBilling.toggleDebugMode(window.isDebugMode);
+                if (window.isDebugMode) {
+                    resetWelcomeSettingsFirstTapState();
+                }
                 console.log(`Debug Mode toggled: ${window.isDebugMode}`);
             } else {
                 console.warn('AndroidBilling interface not found or toggleDebugMode not supported');
@@ -157,6 +170,9 @@ if (versionBadge) {
                 console.log('Debug mode trigger activated (mock)');
                 if (typeof window.updateUiForPremium === 'function') {
                     window.isDebugMode = !window.isDebugMode;
+                    if (window.isDebugMode) {
+                        resetWelcomeSettingsFirstTapState();
+                    }
                     // Mock the effect
                     window.updateUiForPremium(!window.isDebugMode); // Assuming premium is true, so !debug is false (free)
                     alert(`Debug Mode: ${window.isDebugMode ? 'Enabled' : 'Disabled'}`);
