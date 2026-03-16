@@ -33,7 +33,7 @@ export const modelModals = `
                     </div>
                 </div>
 
-                <div
+                <div id="active-model-section"
                     class="mb-6 p-5 bg-darkTertiary-30 rounded-xl border border-blue-500/30 dark:border-blue-500/30 light:border-blue-400/30 shadow-md">
                     <h3
                         class="text-lg font-semibold mb-2 text-blue-400 dark:text-blue-400 light:text-blue-600 flex items-center">

@@ -11,6 +11,8 @@ import { interceptIpPortChanges } from './ip-port-confirmation-modal.js';
 
 // Holds a reference to the internal showStep function once the modal is initialised
 let _navigateToStep = null;
+let _openModelInfoAfterSettingsClose = false;
+let _openRouterKeyBeforeEditing = '';
 
 
 
@@ -197,6 +199,17 @@ function proceedWithHideSettingsModal() {
 
         // Check if welcome message should be shown
         checkAndShowWelcomeMessage();
+
+        if (_openModelInfoAfterSettingsClose) {
+            _openModelInfoAfterSettingsClose = false;
+            import('./model-manager.js').then(module => {
+                if (typeof module.showModelModal === 'function') {
+                    module.showModelModal();
+                }
+            }).catch(error => {
+                console.error('Failed to open Model Information modal after OpenRouter key update:', error);
+            });
+        }
     }, 400);
 }
 
@@ -1434,7 +1447,10 @@ function initializeConnectionInputModals() {
 
     const configOrKeyBtn = document.getElementById('configure-openrouter-key-btn');
     if (configOrKeyBtn) {
-        configOrKeyBtn.addEventListener('click', () => showInputModal(orKeyModal));
+        configOrKeyBtn.addEventListener('click', () => {
+            _openRouterKeyBeforeEditing = (localStorage.getItem('openRouterApiKey') || '').trim();
+            showInputModal(orKeyModal);
+        });
     }
 
     const closeOrKeyBtnX = document.getElementById('close-openrouter-key-input-modal');
@@ -1461,11 +1477,14 @@ function initializeConnectionInputModals() {
         saveOrKeyBtn.addEventListener('click', () => {
             const keyInput = document.getElementById('openrouter-api-key');
             const key = keyInput ? keyInput.value.trim() : '';
+            const isNewKeyApplied = key.length > 0 && key !== _openRouterKeyBeforeEditing;
             localStorage.setItem('openRouterApiKey', key);
             // Fire input event so settings-manager.js picks up the new value
             if (keyInput) keyInput.dispatchEvent(new Event('input', { bubbles: true }));
             updateConnectionStatusDisplays();
             hideInputModal(orKeyModal);
+            _openModelInfoAfterSettingsClose = isNewKeyApplied;
+            _openRouterKeyBeforeEditing = key;
         });
     }
 

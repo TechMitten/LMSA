@@ -1183,7 +1183,7 @@ function displayAvailableModels(models, loadedModelId) {
                         <i class="fas fa-star"></i>
                     </button>
                     ${isCurrentModel ?
-                        '<span class="model-loaded"><i class="fas fa-check-circle"></i>' + (getUseOpenRouter() ? 'Active' : 'Loaded') + '</span>' :
+                        '<button class="load-model-btn model-loaded" type="button" disabled aria-disabled="true"><i class="fas fa-check-circle"></i>' + (getUseOpenRouter() ? 'Active' : 'Loaded') + '</button>' :
                         '<button class="load-model-btn"><i class="fas fa-' + (getUseOpenRouter() ? 'check' : 'plug') + '"></i>' + (getUseOpenRouter() ? 'Select' : 'Load') + '</button>'
                     }
                 </div>
