@@ -744,7 +744,7 @@ body.light-theme #active-character-display {
 #user-input {
   border-radius: 0.75rem 0 0 0.75rem;
   /* Smaller left radius to utilize more space */
-  padding: 0.875rem 3rem 0.875rem 0.75rem;
+  padding: 0.875rem 3.5rem 0.875rem 0.75rem;
   border: 2px solid rgba(255, 255, 255, 0.1);
   border-right: none;
   /* Remove right border for seamless blend */
@@ -1216,7 +1216,7 @@ body.light-theme .close-btn:hover {
   }
 
   #user-input {
-    padding: 0.6rem 2.5rem 0.6rem 0.6rem !important;
+    padding: 0.6rem 3.25rem 0.6rem 0.6rem !important;
     font-size: 0.9rem !important;
     border-radius: 0.75rem 0 0 0.75rem !important;
     height: 38px !important;
@@ -2315,7 +2315,7 @@ body.light-theme #welcome-message {
   }
 
   #user-input {
-    padding: 0.75rem 2.5rem 0.75rem 1rem !important;
+    padding: 0.75rem 3.25rem 0.75rem 1rem !important;
     font-size: 0.95rem !important;
   }
 

@@ -763,6 +763,49 @@ class WebViewActivity : AppCompatActivity() {
 
     inner class FileOperationInterface {
         @JavascriptInterface
+        fun saveData(key: String, data: String): Boolean {
+            return try {
+                val file = java.io.File(filesDir, "$key.json")
+                file.writeText(data)
+                Log.d(TAG, "Successfully saved data to internal storage: $key")
+                true
+            } catch (e: Exception) {
+                Log.e(TAG, "Error saving data to internal storage: $key", e)
+                false
+            }
+        }
+
+        @JavascriptInterface
+        fun loadData(key: String): String {
+            return try {
+                val file = java.io.File(filesDir, "$key.json")
+                if (file.exists()) {
+                    file.readText()
+                } else {
+                    ""
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading data from internal storage: $key", e)
+                ""
+            }
+        }
+
+        @JavascriptInterface
+        fun deleteData(key: String): Boolean {
+            return try {
+                val file = java.io.File(filesDir, "$key.json")
+                if (file.exists()) {
+                    file.delete()
+                } else {
+                    true
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error deleting data from internal storage: $key", e)
+                false
+            }
+        }
+
+        @JavascriptInterface
         fun saveFile(content: String, filename: String) {
             Log.d(TAG, "JavaScript requested to save file: $filename")
 

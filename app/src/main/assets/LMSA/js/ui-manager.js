@@ -7,6 +7,7 @@ import {
 import { basicSanitizeInput, sanitizeInput, initializeCodeMirror, scrollToBottom, copyToClipboard, debugLog, debugError, processCodeBlocks, decodeHtmlEntities, htmlToFormattedText, getReasoningStreamState, normalizeReasoningTags, stripReasoningSections } from './utils.js';
 import { getHideThinking, getShowModelLabel } from './settings-manager.js';
 import { domBatcher, rafThrottle } from './optimized-utils.js';
+import { openPremiumModal } from './components/modals/premium-modal.js';
 
 
 let selectedText = '';
@@ -951,6 +952,13 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                 speakerButton.innerHTML = '<i class="fas fa-volume-up"></i>';
                 speakerButton.title = 'Read this message aloud';
                 speakerButton.addEventListener('click', async () => {
+                    // Check for premium status - TTS is a premium feature
+                    const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
+                    if (!isPremium) {
+                        openPremiumModal();
+                        return;
+                    }
+
                     // Get the message content for TTS
                     let textToSpeak = '';
 
@@ -1459,6 +1467,13 @@ export function refreshAllMessages() {
                     speakerButton.innerHTML = '<i class="fas fa-volume-up"></i>';
                     speakerButton.title = 'Read this message aloud';
                     speakerButton.addEventListener('click', async () => {
+                        // Check for premium status - TTS is a premium feature
+                        const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
+                        if (!isPremium) {
+                            openPremiumModal();
+                            return;
+                        }
+
                         // Get the message content for TTS
                         let textToSpeak = '';
 
@@ -2335,6 +2350,13 @@ export function addSpeakerButtonsToExistingMessages() {
             speakerButton.innerHTML = '<i class="fas fa-volume-up"></i>';
             speakerButton.title = 'Read this message aloud';
             speakerButton.addEventListener('click', async () => {
+                // Check for premium status - TTS is a premium feature
+                const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
+                if (!isPremium) {
+                    openPremiumModal();
+                    return;
+                }
+
                 // Get the message content for TTS
                 let textToSpeak = '';
 

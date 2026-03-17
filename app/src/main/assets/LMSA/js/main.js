@@ -150,6 +150,7 @@ export async function initializeApp() {
     initializeSettingsModal();
     initializeIpPortConfirmationModal();
     initPremiumModal();
+    window.openPremiumModal = openPremiumModal;
     document.addEventListener('completionLimitReached', openPremiumModal);
     initSmartReplyWarningModal();
     initOpenRouterWarningModal();

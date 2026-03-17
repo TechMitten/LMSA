@@ -2140,8 +2140,12 @@ export function clearAllChats() {
         deleteAllConfirmationModal.style.visibility = 'hidden';
     }
 
-    // Clear local storage
+    // Clear local storage and native storage
     localStorage.removeItem('chatHistory');
+    if (window.AndroidFileOps && typeof window.AndroidFileOps.deleteData === 'function') {
+        window.AndroidFileOps.deleteData('chatHistory');
+        debugLog('Cleared chat history from Android internal storage');
+    }
 
     // Reset current chat ID
     currentChatId = Date.now();
@@ -2381,11 +2385,31 @@ export function saveChatHistory() {
         // Log the size of the JSON string
         debugLog(`Chat history JSON size: ${chatHistoryJSON.length} characters`);
 
-        // Save to localStorage
-        localStorage.setItem('chatHistory', chatHistoryJSON);
+        // Save using Android native interface if available, fallback to localStorage
+        if (window.AndroidFileOps && typeof window.AndroidFileOps.saveData === 'function') {
+            const success = window.AndroidFileOps.saveData('chatHistory', chatHistoryJSON);
+            if (success) {
+                debugLog('Successfully saved chat history to Android internal storage');
+            } else {
+                debugError('Failed to save chat history to Android internal storage, falling back to localStorage');
+                localStorage.setItem('chatHistory', chatHistoryJSON);
+            }
+        } else {
+            // Fallback for non-Android environments
+            localStorage.setItem('chatHistory', chatHistoryJSON);
+        }
 
         // Verify the data was saved correctly by reading it back
-        const savedData = localStorage.getItem('chatHistory');
+        let savedData;
+        if (window.AndroidFileOps && typeof window.AndroidFileOps.loadData === 'function') {
+            savedData = window.AndroidFileOps.loadData('chatHistory');
+            if (!savedData) {
+                savedData = localStorage.getItem('chatHistory');
+            }
+        } else {
+            savedData = localStorage.getItem('chatHistory');
+        }
+
         if (savedData) {
             debugLog(`Verified chat history was saved successfully (${savedData.length} characters)`);
 
@@ -2398,7 +2422,7 @@ export function saveChatHistory() {
                 debugError('Error parsing saved chat history:', parseError);
             }
         } else {
-            debugError('Failed to verify chat history was saved - localStorage.getItem returned null or empty');
+            debugError('Failed to verify chat history was saved - storage returned null or empty');
         }
     } catch (error) {
         debugError('Error saving chat history:', error);
@@ -2406,11 +2430,45 @@ export function saveChatHistory() {
 }
 
 /**
- * Loads the chat history from localStorage
+ * Loads the chat history from localStorage or Android internal storage
  */
 export function loadChatHistory() {
-    const savedHistory = localStorage.getItem('chatHistory');
-    if (savedHistory) {
+    let savedHistory = null;
+    let usingNativeStorage = false;
+
+    // Check for native storage first
+    if (window.AndroidFileOps && typeof window.AndroidFileOps.loadData === 'function') {
+        savedHistory = window.AndroidFileOps.loadData('chatHistory');
+        
+        // If native storage has data, we're good
+        if (savedHistory && savedHistory.trim() !== "") {
+            usingNativeStorage = true;
+            debugLog('Loaded chat history from Android internal storage');
+        }
+    }
+
+    // Migration / Fallback logic
+    const localStorageHistory = localStorage.getItem('chatHistory');
+    
+    if (!usingNativeStorage && localStorageHistory) {
+        // If we didn't find data in native storage but found it in localStorage
+        savedHistory = localStorageHistory;
+        debugLog('Loaded chat history from localStorage');
+
+        // Migrate to native storage if available
+        if (window.AndroidFileOps && typeof window.AndroidFileOps.saveData === 'function') {
+            debugLog('Migrating chat history from localStorage to Android internal storage...');
+            const success = window.AndroidFileOps.saveData('chatHistory', localStorageHistory);
+            if (success) {
+                debugLog('Migration successful, clearing localStorage');
+                localStorage.removeItem('chatHistory');
+            } else {
+                debugError('Migration failed, keeping data in localStorage');
+            }
+        }
+    }
+
+    if (savedHistory && savedHistory.trim() !== "") {
         try {
             // Debug: Log the raw saved history
             debugLog('Raw saved history:', savedHistory);

@@ -61,6 +61,12 @@ export function resetApp() {
                 localStorage.removeItem(key);
                 console.log(`RESET APP: Removed chat data: ${key}`);
             });
+
+            // Clear native storage
+            if (window.AndroidFileOps && typeof window.AndroidFileOps.deleteData === 'function') {
+                window.AndroidFileOps.deleteData('chatHistory');
+                console.log('RESET APP: Cleared chat history from Android internal storage');
+            }
         } catch (error) {
             console.error('RESET APP: Error clearing chat data:', error);
         }

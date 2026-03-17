@@ -1626,8 +1626,8 @@ button[type="submit"] {
     /* Maximum height before scrolling */
     border-radius: 0.5rem 0 0 0.5rem;
     /* Ensure rounded corners only on left side */
-    padding: 10px 3rem 10px 0.75rem;
-    /* Increased right padding to prevent text under paperclip */
+    padding: 10px 3.5rem 10px 0.75rem;
+    /* Increased right padding further to prevent text under paperclip */
     line-height: 24px;
     /* Line height for text */
     border-right: none;
@@ -4779,7 +4779,7 @@ body.light-theme .regenerate-btn:hover {
 
     /* Smaller input field padding */
     #user-input {
-        padding: 8px 2.5rem 8px 8px;
+        padding: 8px 3.25rem 8px 8px;
         /* Add right padding for paperclip */
         font-size: 0.9rem;
     }
@@ -5401,7 +5401,7 @@ body.keyboard-visible #scroll-to-bottom {
     }
 
     #user-input {
-        padding: 0.7rem 2.5rem 0.7rem 1rem !important;
+        padding: 0.7rem 3.25rem 0.7rem 1rem !important;
         font-size: 0.95rem !important;
     }
 
