@@ -1190,6 +1190,58 @@ body.light-theme #loaded-model {
     padding-bottom: 0 !important;
 }
 
+/* Ensure chat-form maintains consistent layout when keyboard is visible */
+.keyboard-visible #chat-form,
+.android-webview.keyboard-visible #chat-form {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0.5rem !important;
+}
+
+/* Ensure the flex-grow container maintains consistent width */
+.keyboard-visible #chat-form .flex-grow,
+.android-webview.keyboard-visible #chat-form .flex-grow {
+    flex: 1 !important;
+    min-width: 0 !important;
+    position: relative !important;
+}
+
+/* Fix for paperclip button positioning - consistent in both states */
+#paperclip-button,
+.keyboard-visible #paperclip-button,
+.android-webview #paperclip-button,
+.android-webview.keyboard-visible #paperclip-button {
+    position: absolute !important;
+    right: 0.75rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 10 !important;
+    pointer-events: auto !important;
+}
+
+/* Ensure input text doesn't overlap paperclip - consistent padding in both states */
+#user-input,
+.keyboard-visible #user-input,
+.android-webview #user-input,
+.android-webview.keyboard-visible #user-input {
+    padding-right: 3.5rem !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+}
+
+/* Ensure the paperclip container is properly positioned - consistent in both states */
+#chat-form .absolute,
+.keyboard-visible #chat-form .absolute,
+.android-webview #chat-form .absolute,
+.android-webview.keyboard-visible #chat-form .absolute {
+    position: absolute !important;
+    top: 50% !important;
+    right: 0.75rem !important;
+    transform: translateY(-50%) !important;
+    z-index: 10 !important;
+}
+
 /* Special handling for the main layout in Android WebView */
 .android-webview #layout-container {
     height: 100vh;

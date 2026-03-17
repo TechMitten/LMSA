@@ -1797,6 +1797,45 @@ body.light-theme #welcome-message {
   .android-webview.keyboard-visible #chat-form {
     bottom: 0 !important;
     transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0.5rem !important;
+  }
+
+  /* Ensure the flex-grow container maintains consistent width */
+  .android-webview.keyboard-visible #chat-form .flex-grow {
+    flex: 1 !important;
+    min-width: 0 !important;
+    position: relative !important;
+  }
+
+  /* Fix paperclip button positioning - consistent in both states */
+  .android-webview #paperclip-button,
+  .android-webview.keyboard-visible #paperclip-button {
+    position: absolute !important;
+    right: 0.75rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 10 !important;
+  }
+
+  /* Ensure input text doesn't overlap paperclip - consistent padding in both states */
+  .android-webview #user-input,
+  .android-webview.keyboard-visible #user-input {
+    padding-right: 3.5rem !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+  }
+
+  /* Ensure the paperclip container is properly positioned - consistent in both states */
+  .android-webview #chat-form .absolute,
+  .android-webview.keyboard-visible #chat-form .absolute {
+    position: absolute !important;
+    top: 50% !important;
+    right: 0.75rem !important;
+    transform: translateY(-50%) !important;
+    z-index: 10 !important;
   }
 
   /* Prevent white space when keyboard is active */

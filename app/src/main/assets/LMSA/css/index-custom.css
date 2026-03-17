@@ -193,3 +193,52 @@ body.keyboard-visible #messages > div .message-content span,
     }
 }
 
+/* Fix for paperclip button and input text overlap - consistent in both states */
+#paperclip-button,
+body.keyboard-visible #paperclip-button,
+.android-webview #paperclip-button,
+.android-webview.keyboard-visible #paperclip-button {
+    position: absolute !important;
+    right: 0.75rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 10 !important;
+}
+
+#user-input,
+body.keyboard-visible #user-input,
+.android-webview #user-input,
+.android-webview.keyboard-visible #user-input {
+    padding-right: 3.5rem !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+}
+
+#chat-form .absolute,
+body.keyboard-visible #chat-form .absolute,
+.android-webview #chat-form .absolute,
+.android-webview.keyboard-visible #chat-form .absolute {
+    position: absolute !important;
+    top: 50% !important;
+    right: 0.75rem !important;
+    transform: translateY(-50%) !important;
+    z-index: 10 !important;
+}
+
+/* Ensure chat-form maintains consistent layout */
+body.keyboard-visible #chat-form,
+.android-webview.keyboard-visible #chat-form {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0.5rem !important;
+}
+
+/* Ensure the flex-grow container maintains consistent width */
+body.keyboard-visible #chat-form .flex-grow,
+.android-webview.keyboard-visible #chat-form .flex-grow {
+    flex: 1 !important;
+    min-width: 0 !important;
+    position: relative !important;
+}
+
