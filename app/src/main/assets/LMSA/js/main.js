@@ -40,11 +40,17 @@ let androidKeyboardHeight = 0;
 // Import terms acceptance for checking
 import { hasAcceptedCurrentTerms } from './terms-acceptance.js';
 
+let isAppInitialized = false;
+
 
 /**
  * Initializes the application
  */
 export async function initializeApp() {
+    if (isAppInitialized) {
+        return;
+    }
+
     // Wait for terms acceptance check before proceeding
 
 
@@ -52,6 +58,8 @@ export async function initializeApp() {
         console.log('Terms not accepted, skipping app initialization');
         return;
     }
+
+    isAppInitialized = true;
 
     // Disable debug logging by default
     setDebugEnabled(false);

@@ -152,12 +152,21 @@ body.light-theme #sidebar * {
 }
 
 /* Ensure New Chat button text remains white in light mode */
-body.light-theme #sidebar #new-chat {
+body.light-theme #sidebar #new-chat,
+body.light-theme #sidebar #sidebar-models-btn,
+body.light-theme #sidebar #sidebar-settings-btn,
+body.light-theme #sidebar #sidebar-templates-btn {
   color: white !important;
 }
 
 body.light-theme #sidebar #new-chat span,
-body.light-theme #sidebar #new-chat i {
+body.light-theme #sidebar #new-chat i,
+body.light-theme #sidebar #sidebar-models-btn span,
+body.light-theme #sidebar #sidebar-models-btn i,
+body.light-theme #sidebar #sidebar-settings-btn span,
+body.light-theme #sidebar #sidebar-settings-btn i,
+body.light-theme #sidebar #sidebar-templates-btn span,
+body.light-theme #sidebar #sidebar-templates-btn i {
   color: white !important;
 }
 
@@ -273,6 +282,28 @@ body.light-theme .menu-item i {
 
 body.light-theme .menu-item:hover i {
   color: var(--modern-accent-primary);
+}
+
+/* Style collapsible content menu items (Options section and others) */
+#sidebar .collapsible-content .menu-item {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  margin: 0.375rem 0.5rem;
+}
+
+#sidebar .collapsible-content .menu-item:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+body.light-theme #sidebar .collapsible-content .menu-item {
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(203, 213, 225, 0.3);
+}
+
+body.light-theme #sidebar .collapsible-content .menu-item:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
 /* Chat History Section Styling */

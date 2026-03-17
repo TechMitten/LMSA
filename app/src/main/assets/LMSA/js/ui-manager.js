@@ -2112,6 +2112,12 @@ export function initializeCollapsibleSections() {
     }
 
     sectionHeaders.forEach(header => {
+        if (header.dataset.collapsibleBound === 'true') {
+            return;
+        }
+
+        header.dataset.collapsibleBound = 'true';
+
         header.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -2119,21 +2125,22 @@ export function initializeCollapsibleSections() {
             // Check if this is the options section header
             const isOptionsSection = header.closest('.sidebar-section.collapsible');
             const isCharactersSection = header.closest('.sidebar-section.characters-section');
-            const isCurrentlyActive = header.classList.contains('active');
-
-            // Toggle active class on header
-            header.classList.toggle('active');
-
             // Get the content div
             const content = header.nextElementSibling;
             if (!content || !content.classList.contains('collapsible-content')) return;
 
-            // Toggle show class
-            content.classList.toggle('show');
+            const shouldExpand = !content.classList.contains('show');
+
+            // Set explicit state instead of toggling to avoid race conditions.
+            header.classList.toggle('active', shouldExpand);
+            content.classList.toggle('show', shouldExpand);
+            if (shouldExpand) {
+                content.classList.remove('hidden');
+            }
 
             // Handle chat history visibility for options section only
             if (isOptionsSection && chatHistorySection) {
-                if (!isCurrentlyActive) {
+                if (shouldExpand) {
                     // Options section is being expanded - hide chat history
                     chatHistorySection.classList.add('chat-history-hidden');
                 } else {

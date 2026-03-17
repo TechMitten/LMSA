@@ -59,6 +59,36 @@ const WELCOME_SETTINGS_TAPPED_KEY = 'welcomeSettingsTapped';
  * Initializes all event handlers
  */
 export function initializeEventHandlers() {
+    const setPressedState = (element, isPressed) => {
+        if (!element) return;
+        element.classList.toggle('menu-press-in', isPressed);
+    };
+
+    const bindPressInFeedback = (element) => {
+        if (!element || element.dataset.pressInBound === 'true') return;
+        element.dataset.pressInBound = 'true';
+
+        const release = () => {
+            setTimeout(() => setPressedState(element, false), 80);
+        };
+
+        element.addEventListener('mousedown', () => setPressedState(element, true));
+        element.addEventListener('mouseup', release);
+        element.addEventListener('mouseleave', () => setPressedState(element, false));
+        element.addEventListener('touchstart', () => setPressedState(element, true), { passive: true });
+        element.addEventListener('touchend', release, { passive: true });
+        element.addEventListener('touchcancel', () => setPressedState(element, false), { passive: true });
+        element.addEventListener('blur', () => setPressedState(element, false));
+    };
+
+    const runAfterPressIn = (element, callback, delayMs = 95) => {
+        setPressedState(element, true);
+        setTimeout(() => {
+            callback();
+            setPressedState(element, false);
+        }, delayMs);
+    };
+
     // "Continue with Character" button has been removed
     // Event listeners for it are no longer needed
     // Settings button in welcome message
@@ -106,6 +136,7 @@ export function initializeEventHandlers() {
 
         // Update the reference
         const updatedGetStartedBtn = document.getElementById('get-started-btn');
+        bindPressInFeedback(updatedGetStartedBtn);
 
         // Add click event listener
         updatedGetStartedBtn.addEventListener('click', openSettingsModal);
@@ -114,19 +145,11 @@ export function initializeEventHandlers() {
         updatedGetStartedBtn.addEventListener('touchend', (e) => {
             e.preventDefault(); // Prevent default to avoid any conflicts
             e.stopPropagation(); // Prevent event bubbling
-            updatedGetStartedBtn.classList.remove('active');
-            openSettingsModal();
+            runAfterPressIn(updatedGetStartedBtn, () => {
+                openSettingsModal();
+                updatedGetStartedBtn.blur();
+            });
         }, { passive: false });
-
-        // Add visual feedback for touch devices
-        updatedGetStartedBtn.addEventListener('touchstart', () => {
-            updatedGetStartedBtn.classList.add('active');
-        }, { passive: true });
-
-        // Add touchcancel handler
-        updatedGetStartedBtn.addEventListener('touchcancel', () => {
-            updatedGetStartedBtn.classList.remove('active');
-        });
     }
 
 
@@ -154,6 +177,7 @@ export function initializeEventHandlers() {
 
         // Update the reference
         const updatedWelcomeModelsBtn = document.getElementById('welcome-models-btn');
+        bindPressInFeedback(updatedWelcomeModelsBtn);
 
         // Add click event listener
         updatedWelcomeModelsBtn.addEventListener('click', openModelsModal);
@@ -162,19 +186,47 @@ export function initializeEventHandlers() {
         updatedWelcomeModelsBtn.addEventListener('touchend', (e) => {
             e.preventDefault(); // Prevent default to avoid any conflicts
             e.stopPropagation(); // Prevent event bubbling
-            updatedWelcomeModelsBtn.classList.remove('active');
-            openModelsModal();
+            runAfterPressIn(updatedWelcomeModelsBtn, () => {
+                openModelsModal();
+                updatedWelcomeModelsBtn.blur();
+            });
         }, { passive: false });
+    }
 
-        // Add visual feedback for touch devices
-        updatedWelcomeModelsBtn.addEventListener('touchstart', () => {
-            updatedWelcomeModelsBtn.classList.add('active');
-        }, { passive: true });
+    // Welcome Templates button
+    const welcomeTemplatesBtn = document.getElementById('welcome-templates-btn');
+    if (welcomeTemplatesBtn) {
+        bindPressInFeedback(welcomeTemplatesBtn);
 
-        // Add touchcancel handler
-        updatedWelcomeModelsBtn.addEventListener('touchcancel', () => {
-            updatedWelcomeModelsBtn.classList.remove('active');
-        });
+        welcomeTemplatesBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            runAfterPressIn(welcomeTemplatesBtn, () => {
+                window.location.href = 'templates.html';
+            }, 110);
+        }, { passive: false });
+    }
+
+    // Welcome Remove Ads button
+    const removeAdsBannerButton = document.getElementById('remove-ads-banner-button');
+    if (removeAdsBannerButton) {
+        bindPressInFeedback(removeAdsBannerButton);
+
+        const triggerRemoveAds = () => {
+            if (typeof window.removeAds === 'function') {
+                window.removeAds();
+            }
+        };
+
+        removeAdsBannerButton.addEventListener('click', triggerRemoveAds);
+        removeAdsBannerButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            runAfterPressIn(removeAdsBannerButton, () => {
+                triggerRemoveAds();
+                removeAdsBannerButton.blur();
+            });
+        }, { passive: false });
     }
 
     // Welcome "Saved" button (previously used inline onclick)
@@ -194,6 +246,7 @@ export function initializeEventHandlers() {
 
         // Update the reference
         const updatedWelcomeNewChatBtn = document.getElementById('welcome-new-chat-btn');
+        bindPressInFeedback(updatedWelcomeNewChatBtn);
 
         // Add click event listener
         updatedWelcomeNewChatBtn.addEventListener('click', openSavedChats);
@@ -202,19 +255,11 @@ export function initializeEventHandlers() {
         updatedWelcomeNewChatBtn.addEventListener('touchend', (e) => {
             e.preventDefault(); // Prevent default to avoid any conflicts
             e.stopPropagation(); // Prevent event bubbling
-            updatedWelcomeNewChatBtn.classList.remove('active');
-            openSavedChats();
+            runAfterPressIn(updatedWelcomeNewChatBtn, () => {
+                openSavedChats();
+                updatedWelcomeNewChatBtn.blur();
+            });
         }, { passive: false });
-
-        // Add visual feedback for touch devices
-        updatedWelcomeNewChatBtn.addEventListener('touchstart', () => {
-            updatedWelcomeNewChatBtn.classList.add('active');
-        }, { passive: true });
-
-        // Add touchcancel handler
-        updatedWelcomeNewChatBtn.addEventListener('touchcancel', () => {
-            updatedWelcomeNewChatBtn.classList.remove('active');
-        });
     }
 
     // Welcome "Help" button (previously used inline onclick)
@@ -241,6 +286,7 @@ export function initializeEventHandlers() {
 
         // Update the reference
         const updatedWelcomeHelpBtn = document.getElementById('welcome-help-btn');
+        bindPressInFeedback(updatedWelcomeHelpBtn);
 
         // Add click event listener
         updatedWelcomeHelpBtn.addEventListener('click', openHelpScreen);
@@ -249,19 +295,11 @@ export function initializeEventHandlers() {
         updatedWelcomeHelpBtn.addEventListener('touchend', (e) => {
             e.preventDefault(); // Prevent default to avoid any conflicts
             e.stopPropagation(); // Prevent event bubbling
-            updatedWelcomeHelpBtn.classList.remove('active');
-            openHelpScreen();
+            runAfterPressIn(updatedWelcomeHelpBtn, () => {
+                openHelpScreen();
+                updatedWelcomeHelpBtn.blur();
+            });
         }, { passive: false });
-
-        // Add visual feedback for touch devices
-        updatedWelcomeHelpBtn.addEventListener('touchstart', () => {
-            updatedWelcomeHelpBtn.classList.add('active');
-        }, { passive: true });
-
-        // Add touchcancel handler
-        updatedWelcomeHelpBtn.addEventListener('touchcancel', () => {
-            updatedWelcomeHelpBtn.classList.remove('active');
-        });
     }
 
     // Chat form submission
@@ -486,9 +524,82 @@ export function initializeEventHandlers() {
 
     // New chat button
     if (newChatButton) {
+        bindPressInFeedback(newChatButton);
+
         newChatButton.addEventListener('click', () => {
             createNewChatWithAd();
         });
+
+        newChatButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            runAfterPressIn(newChatButton, () => {
+                createNewChatWithAd();
+                newChatButton.blur();
+            });
+        }, { passive: false });
+    }
+
+    // Sidebar top Models button (next to New Chat)
+    const sidebarModelsButton = document.getElementById('sidebar-models-btn');
+    if (sidebarModelsButton) {
+        bindPressInFeedback(sidebarModelsButton);
+
+        const openSidebarModelsModal = () => {
+            closeSidebar();
+            showModelModal();
+        };
+
+        sidebarModelsButton.addEventListener('click', openSidebarModelsModal);
+        sidebarModelsButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            runAfterPressIn(sidebarModelsButton, () => {
+                openSidebarModelsModal();
+                sidebarModelsButton.blur();
+            });
+        }, { passive: false });
+    }
+
+    const sidebarTemplatesButton = document.getElementById('sidebar-templates-btn');
+    if (sidebarTemplatesButton) {
+        bindPressInFeedback(sidebarTemplatesButton);
+
+        const openTemplatesPage = () => {
+            closeSidebar();
+            window.location.href = 'templates.html';
+        };
+
+        sidebarTemplatesButton.addEventListener('click', openTemplatesPage);
+        sidebarTemplatesButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            runAfterPressIn(sidebarTemplatesButton, () => {
+                openTemplatesPage();
+                sidebarTemplatesButton.blur();
+            });
+        }, { passive: false });
+    }
+
+    const sidebarSettingsButton = document.getElementById('sidebar-settings-btn');
+    if (sidebarSettingsButton) {
+        bindPressInFeedback(sidebarSettingsButton);
+
+        const openSidebarSettingsModal = () => {
+            closeSidebar();
+            showSettingsModal();
+        };
+
+        sidebarSettingsButton.addEventListener('click', openSidebarSettingsModal);
+        sidebarSettingsButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            runAfterPressIn(sidebarSettingsButton, () => {
+                openSidebarSettingsModal();
+                sidebarSettingsButton.blur();
+            });
+        }, { passive: false });
+    }
+
+    const optionsHeaderButton = document.querySelector('#sidebar .sidebar-section.collapsible .section-header');
+    if (optionsHeaderButton) {
+        bindPressInFeedback(optionsHeaderButton);
     }
 
     // Legacy Access button
