@@ -20,7 +20,13 @@ class TTSService {
      * Initialize TTS service
      */
     async initialize() {
-        if (this.isInitializing || this.initialized) return;
+        if (this.isInitializing) return;
+        // Allow re-initialization if previously initialized but engine is no longer available
+        if (this.initialized && this.isAvailable()) return;
+        if (this.initialized && !this.isAvailable()) {
+            // Engine has died since last init — reset so we can do a fresh init
+            this.initialized = false;
+        }
         
         this.isInitializing = true;
         
@@ -174,10 +180,17 @@ class TTSService {
                 // Speak the text
                 AndroidTTS.speak(text);
                 
-                // Poll for completion since Android TTS doesn't provide completion callbacks
+                // Poll for completion. Use a safety timeout so the loop never runs forever
+                // if the engine fails silently and isSpeaking() never returns false.
+                const POLL_TIMEOUT_MS = 300000; // 5-minute absolute max for any utterance
+                const pollStartTime = Date.now();
                 const checkCompletion = () => {
                     try {
                         if (!AndroidTTS.isSpeaking()) {
+                            resolve(true);
+                        } else if (Date.now() - pollStartTime > POLL_TIMEOUT_MS) {
+                            // Safety timeout — treat as done so the button resets
+                            console.warn('TTS polling safety timeout reached');
                             resolve(true);
                         } else {
                             setTimeout(checkCompletion, 100); // Check every 100ms

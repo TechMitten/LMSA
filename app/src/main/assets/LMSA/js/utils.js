@@ -1499,10 +1499,10 @@ export function handleScroll(messagesContainer) {
         // Use a smaller threshold (100px) to make the button more responsive
         window.userHasScrolledUp = distanceFromBottom >= 100;
 
-        const longChatThresholdPx = Math.max(1800, messagesContainer.clientHeight * 3);
-        const farFromBottomThresholdPx = Math.max(700, messagesContainer.clientHeight * 1.2);
-        const nearTopThresholdPercent = 25;
-        const minimumMessageCount = 8;
+        const longChatThresholdPx = Math.max(2800, messagesContainer.clientHeight * 4);
+        const farFromBottomThresholdPx = Math.max(1300, messagesContainer.clientHeight * 2);
+        const nearTopThresholdPercent = 20;
+        const minimumMessageCount = 12;
         const isSubstantiallyLong = totalScrollableHeight >= longChatThresholdPx;
         const isFarTowardTop = scrollPercentage <= nearTopThresholdPercent;
         const hasEnoughMessages = messages.length >= minimumMessageCount;

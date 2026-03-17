@@ -1484,7 +1484,44 @@
 }
 
 #settings-step-actions .settings-action-button {
-  margin: 4.5rem auto 1rem auto !important;
+  margin: 1.5rem auto 1rem auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.75rem !important;
+  height: 40px !important;
+  padding: 0 1.25rem !important;
+  border-radius: 0.65rem !important;
+  font-weight: 500 !important;
+  font-size: 0.8rem !important;
+  transition: all 0.2s ease !important;
+}
+
+#settings-step-actions #clear-chat.settings-action-button {
+  background: rgba(220, 38, 38, 0.1) !important;
+  border: 1px solid rgba(220, 38, 38, 0.4) !important;
+  color: #fca5a5 !important;
+}
+
+#settings-step-actions #reset-app.settings-action-button {
+  background: rgba(220, 38, 38, 0.1) !important;
+  border: 1px solid rgba(220, 38, 38, 0.4) !important;
+  color: #fca5a5 !important;
+}
+
+#settings-step-actions #clear-openrouter-key.settings-action-button {
+  background: rgba(217, 119, 6, 0.1) !important;
+  border: 1px solid rgba(217, 119, 6, 0.4) !important;
+  color: #fcd34d !important;
+}
+
+#settings-step-actions .settings-action-button:hover {
+  transform: translateY(-1px) !important;
+  filter: brightness(1.2) !important;
+}
+
+#settings-step-actions .settings-action-button:active {
+  transform: translateY(0) !important;
 }
 
 #settings-step-actions .professional-button {

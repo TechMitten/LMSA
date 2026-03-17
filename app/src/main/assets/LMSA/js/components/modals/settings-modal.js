@@ -311,7 +311,7 @@ export const settingsModal = `
 
                         <button id="clear-openrouter-key" class="settings-action-button">
                             <i class="fas fa-key text-sm"></i>
-                            <span>Clear OpenRouter API Key</span>
+                            <span>Clear OpenRouter Key</span>
                         </button>
                     </div>
                 </div>

@@ -962,48 +962,31 @@ function showActionError(modelId, errorMsg) {
  */
 function displayCurrentModel(modelName) {
     if (currentModelDisplay) {
-        // Handle dummy model display
         if (modelName === 'dummy/no-model-selected') {
             currentModelFullName = 'No Model Selected';
             currentModelDisplay.innerHTML = `
-                <div class="flex items-center">
-                    <div class="model-icon bg-yellow-500/20 text-yellow-400 loaded mr-3" id="current-model-icon" title="Please select a model">
-                        <i class="fas fa-exclamation-circle"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="model-name font-medium" style="color: #facc15;">Please select a model to continue</div>
-                    </div>
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-exclamation-circle text-yellow-400 text-sm flex-shrink-0"></i>
+                    <span class="truncate" style="color: #facc15;">Please select a model to continue</span>
                 </div>
             `;
         } else {
-            // Regular model display
             currentModelFullName = modelName;
             currentModelDisplay.innerHTML = `
-                <div class="flex items-center">
-                    <div class="model-icon bg-green-500/20 text-green-400 loaded mr-3" id="current-model-icon" title="Click to see full model name">
-                        <i class="fas fa-robot"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="model-name font-medium">${modelName}</div>
-                    </div>
+                <div class="flex items-center gap-3 cursor-pointer" id="current-model-clickable" title="Click to see full model name">
+                    <i class="fas fa-robot text-emerald-400 text-sm flex-shrink-0"></i>
+                    <span class="truncate">${modelName}</span>
                 </div>
             `;
         }
 
-        // Add click event to the model icon only if not the dummy model
-        const currentModelIcon = document.getElementById('current-model-icon');
-        if (currentModelIcon) {
-            if (modelName !== 'dummy/no-model-selected') {
-                console.log('Setting up click handler for current model icon');
-                currentModelIcon.onclick = function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Current model icon clicked');
-                    showFullModelNameModal();
-                };
-            } else {
-                currentModelIcon.onclick = null;
-            }
+        const clickable = document.getElementById('current-model-clickable');
+        if (clickable) {
+            clickable.onclick = function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                showFullModelNameModal();
+            };
         }
 
 
@@ -1167,25 +1150,28 @@ function displayAvailableModels(models, loadedModelId) {
                 const defaultModelId = getDefaultModelId();
                 const isDefaultModel = defaultModelId && model.id === defaultModelId;
 
-                modelElement.className = isCurrentModel ? 'model-item loaded' : 'model-item';
+                modelElement.className = isCurrentModel ? 'model-item model-card loaded' : 'model-item model-card';
                 const displayModelName = model.id === 'dummy/no-model-selected' 
                     ? '⚠️ No Model Selected'
                     : model.id;
+                const isCloud = model.id.includes('/');
+                const orDisplayName = isCloud ? model.id.split('/').pop() : model.id;
+                const orProviderName = isCloud ? model.id.split('/')[0] : 'local';
                 modelElement.innerHTML = `
-                <div class="model-icon ${isCurrentModel ? 'bg-green-500/20 text-green-400 loaded' : 'bg-blue-500/20 text-blue-400'}" data-model-id="${model.id}" title="Click to see full model name">
-                    <i class="fas fa-robot"></i>
-                </div>
-                <div class="model-content">
-                    <div class="model-name">${displayModelName}</div>
-                </div>
-                <div class="model-actions">
-                    <button class="set-default-btn ${isDefaultModel ? 'default-active' : ''}" data-model-id="${model.id}" title="${isDefaultModel ? 'Remove as default' : 'Set as default'}">
-                        <i class="fas fa-star"></i>
-                    </button>
-                    ${isCurrentModel ?
-                        '<button class="load-model-btn model-loaded" type="button" disabled aria-disabled="true"><i class="fas fa-check-circle"></i>' + (getUseOpenRouter() ? 'Active' : 'Loaded') + '</button>' :
-                        '<button class="load-model-btn"><i class="fas fa-' + (getUseOpenRouter() ? 'check' : 'plug') + '"></i>' + (getUseOpenRouter() ? 'Select' : 'Load') + '</button>'
-                    }
+                <div class="model-card-body">
+                    <div class="model-card-info" data-model-id="${model.id}" title="Click to see full model name">
+                        <span class="model-name">${orDisplayName}</span>
+                        <span class="model-provider">${orProviderName}</span>
+                    </div>
+                    <div class="model-card-actions">
+                        <button class="set-default-btn ${isDefaultModel ? 'default-active' : ''}" data-model-id="${model.id}" title="${isDefaultModel ? 'Remove as default' : 'Set as default'}">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        ${isCurrentModel ?
+                            '<button class="load-model-btn" type="button" disabled aria-disabled="true" style="opacity:0.5;cursor:default;">Active</button>' :
+                            '<button class="load-model-btn">Select</button>'
+                        }
+                    </div>
                 </div>
             `;
 
@@ -1219,10 +1205,10 @@ function displayAvailableModels(models, loadedModelId) {
                     }
                 }
 
-                // Add event listener to the model icon to show full model name
-                const modelIcon = modelElement.querySelector('.model-icon');
-                if (modelIcon) {
-                    modelIcon.onclick = function (e) {
+                // Add event listener to model info area to show full model name
+                const cardInfo = modelElement.querySelector('.model-card-info');
+                if (cardInfo) {
+                    cardInfo.onclick = function (e) {
                         e.preventDefault();
                         e.stopPropagation();
                         currentModelFullName = model.id;
@@ -1284,15 +1270,10 @@ function displayPotentialModels(models) {
 
         // Add a section title
         const titleElement = document.createElement('div');
-        titleElement.className = `mb-4 pb-2 border-b ${isLightTheme ? 'border-gray-200' : 'border-white/10'} flex items-center`;
+        titleElement.className = 'model-list-header flex items-center justify-between px-0.5 mb-2 pb-2';
         titleElement.innerHTML = `
-            <div class="icon-wrapper mr-3 flex items-center justify-center rounded-full bg-purple-500/20 w-8 h-8 text-purple-400 shadow-md">
-                <i class="fas fa-list-ul text-sm"></i>
-            </div>
-            <div>
-                <h3 class="text-lg font-semibold text-blue-400">Available Models</h3>
-                <p class="text-sm" style="color: ${isLightTheme ? '#6b7280' : '#9ca3af'} !important;">${getUseOpenRouter() ? 'Click &quot;Select&quot; to use a cloud model' : 'Select a model to load it'}</p>
-            </div>
+            <span class="text-[11px] font-medium text-gray-500 light:text-gray-400 uppercase tracking-wider">Available</span>
+            <span class="text-[11px] font-medium text-gray-600 light:text-gray-400">${models.length}</span>
         `;
         availableModelsList.appendChild(titleElement);
 
@@ -1321,19 +1302,26 @@ function displayPotentialModels(models) {
 
                 const isDefaultModel = model.id === getDefaultModelId();
 
-                modelElement.className = 'model-item';
+                const isCloud = model.id.includes('/');
+                const displayName = isCloud ? model.id.split('/').pop() : model.id;
+                const providerName = isCloud ? model.id.split('/')[0] : 'local';
+
+                modelElement.className = 'model-item model-card';
                 modelElement.innerHTML = `
-                <div class="model-icon bg-blue-500/20 text-blue-400" data-model-id="${model.id}" title="Click to see full model name">
-                    <i class="fas fa-robot"></i>
-                </div>
-                <div class="model-content">
-                    <div class="model-name">${model.id}</div>
-                </div>
-                <div class="model-actions">
-                    <button class="set-default-btn ${isDefaultModel ? 'default-active' : ''}" data-model-id="${model.id}" title="${isDefaultModel ? 'Remove as default' : 'Set as default'}">
-                        <i class="fas fa-star"></i>
-                    </button>
-                    <button class="load-model-btn"><i class="fas fa-${getUseOpenRouter() ? 'check' : 'plug'}"></i>${getUseOpenRouter() ? 'Select' : 'Load'}</button>
+                <div class="model-card-body">
+                    <div class="model-card-info" data-model-id="${model.id}" title="Click to see full model name">
+                        <span class="model-name">${displayName}</span>
+                        <span class="model-provider">${providerName}</span>
+                    </div>
+                    <div class="model-card-actions">
+                        <button class="set-default-btn ${isDefaultModel ? 'default-active' : ''}"
+                            data-model-id="${model.id}" title="${isDefaultModel ? 'Remove as default' : 'Set as default'}">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        <button class="load-model-btn">
+                            ${getUseOpenRouter() ? 'Select' : 'Load'}
+                        </button>
+                    </div>
                 </div>
             `;
 
@@ -1365,10 +1353,10 @@ function displayPotentialModels(models) {
                     }
                 }
 
-                // Add event listener to the model icon to show full model name
-                const modelIcon = modelElement.querySelector('.model-icon');
-                if (modelIcon) {
-                    modelIcon.onclick = function (e) {
+                // Add event listener to model info area to show full model name
+                const cardInfo = modelElement.querySelector('.model-card-info');
+                if (cardInfo) {
+                    cardInfo.onclick = function (e) {
                         e.preventDefault();
                         e.stopPropagation();
                         currentModelFullName = model.id;
