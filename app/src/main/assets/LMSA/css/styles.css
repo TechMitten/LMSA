@@ -1196,7 +1196,7 @@ body.light-theme #loaded-model {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    padding: 0.5rem !important;
+    padding: 0.5rem 0.5rem 0.75rem 0.5rem !important;
 }
 
 /* Ensure the flex-grow container maintains consistent width */
@@ -1585,7 +1585,7 @@ button[type="submit"] {
 }
 
 #chat-form {
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 0.75rem 0.75rem 0.75rem;
     background-color: transparent;
     border-top: none;
     position: relative;
@@ -1754,7 +1754,7 @@ button[type="submit"] {
     }
 
     #chat-form {
-        padding: 0.5rem;
+        padding: 0.5rem 0.5rem 0.75rem 0.5rem;
         min-height: calc(40px + 1rem);
         /* Minimum height for dynamic expansion */
         margin-bottom: 0;
@@ -3118,7 +3118,7 @@ body.light-theme #send-context-menu .menu-header {
 
     /* Ensure the form is always visible */
     #chat-form {
-        padding: 0.75rem;
+        padding: 0.75rem 0.75rem 1rem 0.75rem;
         background-color: var(--bg-secondary);
         /* Use theme variable */
         border-top: 1px solid var(--border-color);
@@ -4820,7 +4820,7 @@ body.light-theme .regenerate-btn:hover {
 
     /* Adjust chat form for very small screens */
     #chat-form {
-        padding: 8px;
+        padding: 8px 8px 12px 8px;
         min-height: calc(44px + 16px);
         /* Minimum height for dynamic expansion */
     }

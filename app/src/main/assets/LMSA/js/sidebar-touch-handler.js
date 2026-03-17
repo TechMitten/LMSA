@@ -1,5 +1,6 @@
 // Sidebar touch handler for improved touch scrolling on mobile devices
 import { debugError, debugLog } from './utils.js';
+import { closeSidebar } from './ui-manager.js';
 
 /**
  * Initializes touch handlers for the sidebar to improve scrolling on mobile devices
@@ -22,6 +23,15 @@ export function initializeSidebarTouchHandler() {
     let touchedElement = null;
     let scrollStartTime = 0;
     let scrollTimeout = null;
+    let swipeDeltaX = 0;
+    let swipeDeltaY = 0;
+
+    const SWIPE_CLOSE_MIN_DISTANCE = 48;
+    const SWIPE_CLOSE_MAX_VERTICAL_DRIFT = 72;
+
+    function isPhoneLayout() {
+        return window.matchMedia('(max-width: 767px)').matches;
+    }
 
     // Immediately apply the no-highlight class to all interactive elements
     function applyNoHighlightToAll() {
@@ -68,10 +78,12 @@ export function initializeSidebarTouchHandler() {
         scrollStartTime = Date.now();
         isDragging = false;
         touchedElement = e.target;
+        swipeDeltaX = 0;
+        swipeDeltaY = 0;
 
         // Immediately apply no-highlight to prevent the initial highlight
         applyNoHighlightToAll();
-    }, { passive: false });
+    }, { passive: false, capture: true });
 
     sidebar.addEventListener('touchmove', function(e) {
         // Calculate distance moved
@@ -79,6 +91,8 @@ export function initializeSidebarTouchHandler() {
         const touchX = e.touches[0].clientX;
         const deltaY = Math.abs(touchY - touchStartY);
         const deltaX = Math.abs(touchX - touchStartX);
+        swipeDeltaX = touchX - touchStartX;
+        swipeDeltaY = touchY - touchStartY;
 
         // If moved more than threshold, consider it a drag/scroll
         if (deltaY > DRAG_THRESHOLD || deltaX > DRAG_THRESHOLD) {
@@ -88,7 +102,7 @@ export function initializeSidebarTouchHandler() {
 
         // Stop propagation but don't prevent default scrolling
         e.stopPropagation();
-    }, { passive: true });
+    }, { passive: true, capture: true });
 
     sidebar.addEventListener('touchend', function(e) {
         // Calculate if this was a quick tap or a scroll/drag
@@ -113,7 +127,18 @@ export function initializeSidebarTouchHandler() {
 
         // Reset dragging state
         isDragging = false;
-    }, { passive: true });
+
+        // Swipe-left to close for phones when sidebar is open full-width.
+        if (
+            isPhoneLayout() &&
+            sidebar.classList.contains('active') &&
+            swipeDeltaX <= -SWIPE_CLOSE_MIN_DISTANCE &&
+            Math.abs(swipeDeltaY) <= SWIPE_CLOSE_MAX_VERTICAL_DRIFT &&
+            Math.abs(swipeDeltaX) > Math.abs(swipeDeltaY)
+        ) {
+            closeSidebar();
+        }
+    }, { passive: true, capture: true });
 
     // Handle scroll events to maintain the no-highlight state during scrolling
     sidebar.addEventListener('scroll', function() {

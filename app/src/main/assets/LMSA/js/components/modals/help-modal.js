@@ -646,9 +646,9 @@ export const helpModal = `
                             </div>
                         </div>
                     </section>
-                    <section id="section-limits">
+                        <section id="section-limits">
                         <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #8b5cf6;"><i
-                                class="fas fa-chart-line mr-2"></i>Usage Limits</h3>
+                            class="fas fa-chart-line mr-2"></i>Usage Limits</h3>
                         
                         <div class="space-y-4">
                             <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
@@ -660,7 +660,7 @@ export const helpModal = `
                                     <li><strong>Chat Completion Limit: 20 per day</strong> — After reaching this limit, you'll enter a cooldown period</li>
                                     <li><strong>Automatic Reset: Midnight (Local Time)</strong> — Your chat completion count resets at midnight in your timezone, allowing you to chat freely again</li>
                                     <li><strong>Advertisements:</strong> Free users see advertisements throughout the app</li>
-                                    <li><strong>Full Feature Access:</strong> All other features remain fully functional during cooldown periods</li>
+                                    <li><strong>Text-to-Speech (TTS) &amp; Custom Templates:</strong> Not available on the Free tier; upgrade to Premium to use these features</li>
                                 </ul>
                             </div>
 
@@ -669,11 +669,12 @@ export const helpModal = `
                                         class="fas fa-crown mr-2"></i>Premium Users</p>
                                 <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
                                     Premium users enjoy unlimited access with the following benefits:</p>
-                                <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
+                                    <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
                                     <li><strong>Unlimited Chat Completions</strong> — No daily limits or cooldown periods</li>
                                     <li><strong>Ad-Free Experience</strong> — No advertisements throughout the app</li>
+                                    <li><strong>Text-to-Speech (TTS):</strong> Access TTS playback and export features</li>
+                                    <li><strong>Custom Templates:</strong> Create, save, and reuse prompt templates</li>
                                     <li><strong>One-Time Purchase:</strong> Upgrade with a single lifetime purchase</li>
-                                    <li><strong>Full Creative Freedom:</strong> Chat as much as you want, whenever you want</li>
                                 </ul>
                             </div>
 

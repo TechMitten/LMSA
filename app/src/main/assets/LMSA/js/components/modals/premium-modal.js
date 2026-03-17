@@ -3,7 +3,7 @@ export const premiumModal = `
         style="padding: 0.5rem;" aria-labelledby="premium-title" role="dialog" aria-modal="true">
         <div class="modal-content relative overflow-hidden flex flex-col" style="max-width: 460px; width: 90%; max-height: 95vh; border-radius: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.2) inset;">
             <!-- Animated gradient background -->
-            <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(236, 72, 153, 0.1) 100%); pointer-events: none; z-index: 0;"></div>
+            <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(6, 182, 212, 0.1) 100%); pointer-events: none; z-index: 0;"></div>
             
             <!-- Main content - no scroll needed -->
             <div style="position: relative; z-index: 1; background: var(--modal-bg); display: flex; flex-direction: column; height: 100%;">
@@ -16,7 +16,7 @@ export const premiumModal = `
                 <div class="premium-modal-content" style="padding: 2rem 1.25rem 1.25rem 1.25rem; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: flex-start;">
                     <!-- Premium icon with subtle animation -->
                     <div style="margin-bottom: 0.5rem; position: relative; display: inline-block; align-self: center; flex-shrink: 0;">
-                        <div class="premium-icon" style="width: 3.25rem; height: 3.25rem; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%); border-radius: 1rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3);">
+                        <div class="premium-icon" style="width: 3.25rem; height: 3.25rem; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%); border-radius: 1rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3);">
                             <i class="fas fa-crown" style="font-size: 1.5rem; color: white;"></i>
                         </div>
                     </div>
@@ -26,12 +26,7 @@ export const premiumModal = `
                         Unlock Premium
                     </h2>
                     <p class="premium-modal-subtitle" style="color: var(--text-secondary); margin: 0 0 0.625rem 0; font-size: 0.8rem; letter-spacing: 0.3px; text-transform: uppercase; font-weight: 600; flex-shrink: 0;">
-                        <i class="fas fa-sparkles" style="color: #ec4899; margin-right: 0.3rem;"></i>Lifetime Access
-                    </p>
-
-                    <!-- Main value proposition -->
-                    <p class="premium-modal-description" style="color: var(--text-primary); margin: 0 0 0.875rem; line-height: 1.4; font-size: 0.875rem; flex-shrink: 0;">
-                        Get unlimited AI conversations without interruptions. Remove all ads and enjoy seamless experience forever.
+                        <i class="fas fa-sparkles" style="color: #06b6d4; margin-right: 0.3rem;"></i>Lifetime Access
                     </p>
 
                     <!-- Benefits cards -->
@@ -63,9 +58,9 @@ export const premiumModal = `
                         </div>
 
                         <!-- Benefit item 3 -->
-                        <div class="benefit-item" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(236, 72, 153, 0.05) 100%); padding: 0.625rem; border-radius: 0.75rem; border: 1px solid rgba(236, 72, 153, 0.2); transition: all 0.3s ease;">
+                        <div class="benefit-item" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(6, 182, 212, 0.05) 100%); padding: 0.625rem; border-radius: 0.75rem; border: 1px solid rgba(6, 182, 212, 0.2); transition: all 0.3s ease;">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div class="benefit-icon" style="width: 1.75rem; height: 1.75rem; background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); border-radius: 0.55rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <div class="benefit-icon" style="width: 1.75rem; height: 1.75rem; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); border-radius: 0.55rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                     <i class="fas fa-bolt" style="color: white; font-size: 0.8rem;"></i>
                                 </div>
                                 <div style="text-align: left; min-width: 0;">
@@ -87,13 +82,26 @@ export const premiumModal = `
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Benefit item 5 - More Features -->
+                        <div class="benefit-item" style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.05) 100%); padding: 0.625rem; border-radius: 0.75rem; border: 1px solid rgba(251, 191, 36, 0.2); transition: all 0.3s ease;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div class="benefit-icon" style="width: 1.75rem; height: 1.75rem; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 0.55rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <i class="fas fa-unlock" style="color: white; font-size: 0.8rem;"></i>
+                                </div>
+                                <div style="text-align: left; min-width: 0;">
+                                    <p class="benefit-title" style="color: var(--text-primary); font-weight: 600; font-size: 0.8rem; margin: 0;">More Features</p>
+                                    <p class="benefit-subtitle" style="color: var(--text-secondary); font-size: 0.7rem; margin: 0.1rem 0 0 0; word-break: break-word;">Premium access unlocks more features</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- CTA Buttons -->
                     <div style="display: flex; flex-direction: column; gap: 0.5rem; flex-shrink: 0;">
                         <!-- Primary button with gradient and animation -->
                         <button id="premium-upgrade-button" class="w-full font-semibold text-white transition-all duration-300 hover:shadow-lg active:scale-95"
-                            style="padding: 0.75rem; border-radius: 0.75rem; border: 0; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%); font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px; cursor: pointer; box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3); outline: none;">
+                            style="padding: 0.75rem; border-radius: 0.75rem; border: 0; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%); font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px; cursor: pointer; box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3); outline: none;">
                             <i class="fas fa-crown" style="margin-right: 0.4rem;"></i>Upgrade Now
                         </button>
                         <!-- Secondary button -->

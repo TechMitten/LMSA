@@ -253,6 +253,20 @@ function selectAvatar(url, btnElement) {
 }
 
 function openCreateModal(editMode = false) {
+    // Check premium status for creating new templates
+    // Paid users bypass this, free users get the premium modal
+    if (!editMode) {
+        const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
+        if (!isPremium) {
+            if (typeof window.openPremiumModal === 'function') {
+                window.openPremiumModal();
+            } else {
+                alert('This feature is reserved for premium users.');
+            }
+            return;
+        }
+    }
+
     document.body.style.overflow = 'hidden';
     modal.classList.remove('hidden');
     modal.classList.add('flex');

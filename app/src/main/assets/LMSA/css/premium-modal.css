@@ -189,9 +189,9 @@ body.light-theme #premium-modal [style*="rgba(139, 92, 246, 0.15)"] {
     border-color: rgba(139, 92, 246, 0.15) !important;
 }
 
-body.light-theme #premium-modal [style*="rgba(236, 72, 153, 0.15)"] {
-    background: linear-gradient(135deg, rgba(236, 72, 153, 0.08) 0%, rgba(236, 72, 153, 0.02) 100%) !important;
-    border-color: rgba(236, 72, 153, 0.15) !important;
+body.light-theme #premium-modal [style*="rgba(6, 182, 212, 0.15)"] {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.02) 100%) !important;
+    border-color: rgba(6, 182, 212, 0.15) !important;
 }
 
 /* Text color adjustments for light theme */
