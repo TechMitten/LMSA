@@ -718,7 +718,7 @@ body.light-theme #messages>div.ai {
 
 /* Input Area Enhancements */
 #chat-form {
-  padding: 1.25rem;
+  padding: 0.75rem 1.25rem;
   background-color: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -753,7 +753,7 @@ body.light-theme #active-character-display {
 #user-input {
   border-radius: 0.75rem 0 0 0.75rem;
   /* Smaller left radius to utilize more space */
-  padding: 0.875rem 3.5rem 0.875rem 0.75rem;
+  padding: 0.625rem 3.5rem 0.625rem 0.75rem;
   border: 2px solid rgba(255, 255, 255, 0.1);
   border-right: none;
   /* Remove right border for seamless blend */
@@ -791,13 +791,13 @@ body.light-theme #active-character-display {
   position: relative;
   z-index: 2;
   /* Ensure button is above input */
-  padding: 0.875rem 0.5rem !important;
-  /* Reduced horizontal padding for narrower button */
+  padding: 0.625rem 0.5rem !important;
+  /* Reduced vertical padding to match input */
   min-width: 50px !important;
   /* Reduced minimum width to allow smaller button */
   color: #e0f2fe;
   transition: min-width 0.2s ease, padding 0.2s ease;
-}
+}}
 
 #chat-form #send-button i,
 #chat-form #stop-button i {
@@ -824,6 +824,19 @@ body.light-theme #active-character-display {
   background: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
   box-shadow: var(--modern-shadow-md), 0 0 0 1px rgba(239, 68, 68, 0.6);
   filter: brightness(1.1);
+}
+
+/* AI Disclaimer Text Styling */
+#ai-disclaimer {
+  font-size: 0.625rem;
+  line-height: 1;
+  font-weight: normal;
+  text-align: center;
+  letter-spacing: 0.5px;
+  padding-top: 1mm;
+  padding-bottom: 1mm;
+  color: rgba(156, 163, 175, 0.7);
+  /* Grayer muted text */
 }
 
 @media (max-width: 768px) {
@@ -2929,13 +2942,13 @@ pre:hover {
 }
 
 #scroll-to-bottom.show {
-  opacity: 0.5;
-  /* Slightly less transparent */
+  opacity: 0.45;
+  /* Slightly more transparent */
   visibility: visible;
 }
 
 #scroll-to-bottom:hover {
-  opacity: 0.7;
+  opacity: 0.65;
   /* Still transparent on hover but more visible */
   transform: translateX(-50%) scale(1.05);
 }

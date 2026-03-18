@@ -276,77 +276,62 @@ function initializeAndroidKeyboardFix() {
         return;
     }
 
-    // Use VisualViewport API for better keyboard handling
-    if (window.visualViewport) {
-        const viewport = window.visualViewport;
+    // With adjustResize, both window.innerHeight and visualViewport.height shrink
+    // together when the keyboard opens, so the only reliable detection is comparing
+    // window.innerHeight against the original baseline captured before any keyboard input.
+    window.androidKeyboardVisible = false;
 
-        // Handle viewport resize events
-        const handleViewportChange = () => {
-            // Calculate the keyboard height
-            const currentViewportHeight = viewport.height * viewport.scale;
-            const keyboardHeight = window.innerHeight - currentViewportHeight;
-
-            // Get the chat form element
-            const chatForm = document.getElementById('chat-form');
-
-            if (keyboardHeight > 100) {
-                // Keyboard is visible - adjust layout
-                document.body.classList.add('keyboard-visible');
-
-                // Scroll to input field
-                const userInput = document.getElementById('user-input');
-                if (userInput) {
-                    setTimeout(() => {
-                        userInput.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'center'
-                        });
-                    }, 100);
-                }
-            } else {
-                // Keyboard is hidden - reset layout
-                document.body.classList.remove('keyboard-visible');
+    // Track orientation changes so we can reset the baseline after rotation
+    let baselineHeight = initialViewportHeight;
+    window.addEventListener('orientationchange', () => {
+        // After rotation settles, recapture the baseline
+        setTimeout(() => {
+            if (!window.androidKeyboardVisible) {
+                baselineHeight = window.innerHeight;
+                initialViewportHeight = baselineHeight;
             }
-        };
+        }, 500);
+    });
 
-        // Add event listener for viewport changes
-        viewport.addEventListener('resize', handleViewportChange);
+    function applyKeyboardState(keyboardOpen) {
+        window.androidKeyboardVisible = keyboardOpen;
+        if (keyboardOpen) {
+            document.body.classList.add('keyboard-visible');
 
-        // Also handle window resize for additional safety
-        window.addEventListener('resize', () => {
-            // Update initial height when window resizes
-        });
-    } else {
-        // Fallback for older Android WebViews without VisualViewport API
-        let initialHeight = window.innerHeight;
-
-        window.addEventListener('resize', function () {
-            const currentHeight = window.innerHeight;
-            const heightDifference = initialHeight - currentHeight;
-
-            // Keyboard is likely visible if height changed by more than 100px
-            if (Math.abs(heightDifference) > 100) {
-                if (heightDifference > 0) {
-                    // Keyboard likely visible
-                    document.body.classList.add('keyboard-visible');
-
-                    // Scroll to input if it exists
-                    const userInput = document.getElementById('user-input');
-                    if (userInput) {
-                        setTimeout(() => {
-                            userInput.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'center'
-                            });
-                        }, 100);
-                    }
-                } else {
-                    // Keyboard is hidden
-                    document.body.classList.remove('keyboard-visible');
-                }
+            // Hide scroll-to-bottom button immediately
+            const scrollBtn = document.getElementById('scroll-to-bottom');
+            if (scrollBtn) {
+                scrollBtn.classList.remove('visible', 'show');
+                scrollBtn.classList.add('hidden');
+                scrollBtn.style.visibility = 'hidden';
+                scrollBtn.style.pointerEvents = 'none';
             }
-        });
+
+            // Scroll to input field
+            const userInput = document.getElementById('user-input');
+            if (userInput) {
+                setTimeout(() => {
+                    userInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            }
+        } else {
+            document.body.classList.remove('keyboard-visible');
+        }
     }
+
+    // Use window resize — works correctly with adjustResize since innerHeight shrinks
+    window.addEventListener('resize', function () {
+        const currentHeight = window.innerHeight;
+        const keyboardHeight = baselineHeight - currentHeight;
+
+        if (keyboardHeight > 150) {
+            applyKeyboardState(true);
+        } else {
+            applyKeyboardState(false);
+            // Keep baseline updated when keyboard is not open (e.g. after rotation)
+            baselineHeight = Math.max(baselineHeight, currentHeight);
+        }
+    });
 }
 
 // Initialize the application when the DOM is loaded and terms are accepted

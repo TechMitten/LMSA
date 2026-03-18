@@ -1499,10 +1499,10 @@ export function handleScroll(messagesContainer) {
         // Use a smaller threshold (100px) to make the button more responsive
         window.userHasScrolledUp = distanceFromBottom >= 100;
 
-        const longChatThresholdPx = Math.max(2800, messagesContainer.clientHeight * 4);
-        const farFromBottomThresholdPx = Math.max(1300, messagesContainer.clientHeight * 2);
-        const nearTopThresholdPercent = 20;
-        const minimumMessageCount = 12;
+        const longChatThresholdPx = Math.max(600, messagesContainer.clientHeight * 1.2);
+        const farFromBottomThresholdPx = Math.max(250, messagesContainer.clientHeight * 0.4);
+        const nearTopThresholdPercent = 65;
+        const minimumMessageCount = 3;
         const isSubstantiallyLong = totalScrollableHeight >= longChatThresholdPx;
         const isFarTowardTop = scrollPercentage <= nearTopThresholdPercent;
         const hasEnoughMessages = messages.length >= minimumMessageCount;
@@ -1513,6 +1513,11 @@ export function handleScroll(messagesContainer) {
             // Check if the button is force-hidden by user settings
             const isForceHidden = scrollButton.classList.contains('force-hidden');
 
+            // Detect Android keyboard visibility via the global flag set by initializeAndroidKeyboardFix
+            // (visualViewport approach does NOT work with adjustResize since both heights shrink together)
+            const isKeyboardVisible = window.androidKeyboardVisible === true
+                || document.body.classList.contains('keyboard-visible');
+
             // Show only when chat is long enough and user is far toward the top.
             const shouldShowButton =
                 window.userHasScrolledUp &&
@@ -1520,7 +1525,8 @@ export function handleScroll(messagesContainer) {
                 hasEnoughMessages &&
                 isFarTowardTop &&
                 distanceFromBottom >= farFromBottomThresholdPx &&
-                !isForceHidden;
+                !isForceHidden &&
+                !isKeyboardVisible;
 
             if (shouldShowButton) {
                 // Show button when user has scrolled up (unless force-hidden)

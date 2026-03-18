@@ -1977,6 +1977,19 @@ button[type="submit"] {
     display: none !important;
 }
 
+/* AI Disclaimer Text Styling */
+#ai-disclaimer {
+    font-size: 0.625rem;
+    line-height: 1;
+    font-weight: normal;
+    text-align: center;
+    letter-spacing: 0.5px;
+    padding-top: 1mm;
+    padding-bottom: 1mm;
+    color: rgba(156, 163, 175, 0.7);
+    /* Grayer muted text */
+}
+
 @media (max-width: 480px) {
 
     #chat-form {
@@ -5438,8 +5451,8 @@ body:not(.dark-theme) .edit-textarea:focus {
 
 #scroll-to-bottom.visible,
 #scroll-to-bottom.show {
-    opacity: 0.7;
-    /* More visible when shown */
+    opacity: 0.45;
+    /* Slightly more transparent when shown */
     visibility: visible;
     pointer-events: auto;
     /* Enable pointer events when visible */
@@ -5454,7 +5467,7 @@ body:not(.dark-theme) .edit-textarea:focus {
 }
 
 #scroll-to-bottom:hover {
-    opacity: 0.9;
+    opacity: 0.65;
     /* More visible on hover */
     transform: translateX(-50%) scale(1.05);
     background-color: rgba(52, 152, 219, 0.7);

@@ -647,7 +647,7 @@
 }
 
 /* Hide scrollbar for the scroll box to keep it looking clean */
-.openrouter-key-scroll-box::-webkit-scrollbar {
+.-key-scroll-box::-webkit-scrollbar {
   display: none;
 }
 
@@ -2558,5 +2558,4 @@ body.light-theme .openrouter-key-reveal-btn:active {
     padding: 0.5rem;
     font-size: 0.95rem;
   }
-}
 }

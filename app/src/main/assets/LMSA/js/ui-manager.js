@@ -2509,6 +2509,7 @@ export function showSmartRepliesLoading() {
     ].join(';');
 
     smartRepliesContainer.appendChild(placeholder);
+    smartRepliesContainer.classList.add('flex');
     smartRepliesContainer.classList.remove('hidden');
     smartRepliesContainer.style.opacity = '1';
     smartRepliesContainer.scrollLeft = 0;
@@ -2569,6 +2570,7 @@ export function renderSmartReplies(replies) {
 
     // Show container
     if (smartRepliesContainer.children.length > 0) {
+        smartRepliesContainer.classList.add('flex');
         smartRepliesContainer.classList.remove('hidden');
         // Add minimal animation
         smartRepliesContainer.style.opacity = '0';
@@ -2598,6 +2600,7 @@ export function renderSmartReplies(replies) {
  */
 export function hideSmartReplies() {
     if (smartRepliesContainer) {
+        smartRepliesContainer.classList.remove('flex');
         smartRepliesContainer.classList.add('hidden');
         smartRepliesContainer.innerHTML = '';
 

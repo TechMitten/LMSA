@@ -11,15 +11,15 @@ export const smartReplyWarningModal = `
         aria-labelledby="smart-reply-warning-title" role="dialog" aria-modal="true">
         <div
             class="p-6 rounded-xl shadow-2xl modal-content overflow-hidden"
-            style="background: linear-gradient(to bottom, #2d1a0a, #3d2a0a); border: 1px solid rgba(120,53,15,0.4); width: 420px; max-width: 90%;">
+            style="background: linear-gradient(to bottom, #0f1a2e, #1a2a3e); border: 1px solid rgba(59,130,246,0.35); width: 420px; max-width: 90%;">
             <div class="flex justify-between items-center mb-4">
                 <h2 id="smart-reply-warning-title" class="text-xl font-bold flex items-center">
                     <div
                         class="mr-3 flex items-center justify-center rounded-full w-10 h-10"
-                        style="background: rgba(245,158,11,0.2); color: #fbbf24;">
+                        style="background: rgba(59,130,246,0.12); color: #60a5fa;">
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
-                    <span style="color: #fbbf24;">Enable Smart Reply</span>
+                    <span style="color: #cbd5e1;">Enable Smart Reply</span>
                 </h2>
                 <button id="close-smart-reply-warning-modal"
                     class="smart-reply-close-btn rounded-full w-8 h-8 flex items-center justify-center"
@@ -31,24 +31,24 @@ export const smartReplyWarningModal = `
             <div class="mb-6">
                 <div
                     class="p-4 rounded-lg mb-4"
-                    style="background: rgba(120,53,15,0.25); border: 1px solid rgba(146,64,14,0.35);">
+                    style="background: rgba(51,65,85,0.3); border: 1px solid rgba(59,130,246,0.2);">
                     <p class="text-gray-300 mb-3">Smart Reply provides AI-suggested responses based on conversation context.</p>
-                    <p class="text-sm font-semibold mb-2" style="color: #fcd34d;">Please note:</p>
-                    <ul class="text-sm ml-4" style="color: #fde68a; list-style: none; padding: 0;">
+                    <p class="text-sm font-semibold mb-2" style="color: #cbd5e1;">Please note:</p>
+                    <ul class="text-sm ml-4" style="color: #d1d5db; list-style: none; padding: 0;">
                         <li class="flex items-start mb-2">
-                            <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #fcd34d; flex-shrink: 0;"></i>
+                            <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #60a5fa; flex-shrink: 0;"></i>
                             <span>This feature may not work with all LLM models</span>
                         </li>
                         <li class="flex items-start mb-2">
-                            <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #fcd34d; flex-shrink: 0;"></i>
+                            <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #60a5fa; flex-shrink: 0;"></i>
                             <span>Quality and relevance of suggestions will vary</span>
                         </li>
                         <li class="flex items-start mb-2">
-                            <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #fcd34d; flex-shrink: 0;"></i>
+                            <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #60a5fa; flex-shrink: 0;"></i>
                             <span>Some models may not generate useful suggestions</span>
                         </li>
                         <li class="flex items-start">
-                            <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #fcd34d; flex-shrink: 0;"></i>
+                            <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #60a5fa; flex-shrink: 0;"></i>
                             <span>Not recommended for use with thinking/reasoning models</span>
                         </li>
                     </ul>
@@ -59,7 +59,7 @@ export const smartReplyWarningModal = `
             <div class="flex justify-center">
                 <button id="confirm-smart-reply-warning"
                     class="smart-reply-confirm-btn w-full px-4 rounded-lg text-white shadow-lg font-semibold"
-                    style="background: linear-gradient(to right, #b45309, #d97706); border: none; padding-top: 10px; padding-bottom: 10px; cursor: pointer;">
+                    style="background: linear-gradient(to right, #3b82f6, #2563eb); border: none; padding-top: 10px; padding-bottom: 10px; cursor: pointer;">
                     <i class="fas fa-check mr-2"></i>I Understand
                 </button>
             </div>
