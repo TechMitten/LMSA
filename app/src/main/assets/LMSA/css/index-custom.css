@@ -1425,6 +1425,30 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     }
 }
 
+@media (min-width: 768px) and (max-width: 1024px) {
+    .welcome-content > .grid.grid-cols-1 {
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+        gap: 0.95rem !important;
+    }
+
+    .welcome-content > .grid.grid-cols-1 > #get-started-btn,
+    .welcome-content > .grid.grid-cols-1 > #welcome-templates-btn,
+    .welcome-content > .grid.grid-cols-1 > #welcome-models-btn {
+        grid-column: span 2 / span 2;
+    }
+
+    .welcome-content > .grid.grid-cols-1 > #remove-ads-banner,
+    .welcome-content > .grid.grid-cols-1 > .grid.grid-cols-2 {
+        grid-column: span 6 / span 6;
+    }
+
+    .welcome-content > .grid.grid-cols-1 > .grid.grid-cols-2 {
+        width: min(360px, 100%);
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
 @media (min-width: 641px) and (max-width: 767px) {
     :root {
         --tablet-shell-width: min(100vw, calc(100vw - 16px));
@@ -1438,6 +1462,445 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     .welcome-content {
         width: min(680px, calc(100vw - 40px)) !important;
         max-width: min(680px, calc(100vw - 40px)) !important;
+    }
+
+    .welcome-content > .grid.grid-cols-1 > #welcome-models-btn {
+        grid-column: span 2 / span 2;
+    }
+}
+
+/* Dedicated tablet layout for the settings modal. */
+@media (min-width: 641px) and (max-width: 1024px) {
+    #settings-modal {
+        padding: 24px !important;
+        align-items: center !important;
+    }
+
+    #settings-modal .modal-content {
+        width: min(920px, calc(100vw - 48px)) !important;
+        max-width: min(920px, calc(100vw - 48px)) !important;
+        max-height: min(880px, calc(100vh - 40px)) !important;
+        padding: 0 !important;
+        border-radius: 1.6rem !important;
+        overflow: hidden !important;
+        background:
+            linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(15, 23, 42, 0.94) 100%) !important;
+        border: 1px solid rgba(148, 163, 184, 0.16) !important;
+        box-shadow:
+            0 34px 90px rgba(2, 6, 23, 0.5),
+            0 0 0 1px rgba(148, 163, 184, 0.08) inset !important;
+    }
+
+    body.light-theme #settings-modal .modal-content {
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(241, 245, 249, 0.96) 100%) !important;
+        border-color: rgba(148, 163, 184, 0.26) !important;
+        box-shadow:
+            0 30px 70px rgba(148, 163, 184, 0.24),
+            0 0 0 1px rgba(255, 255, 255, 0.8) inset !important;
+    }
+
+    #settings-modal .modal-content::before {
+        opacity: 0.72 !important;
+    }
+
+    #settings-modal > .modal-content > .flex.flex-col {
+        margin-bottom: 0 !important;
+        padding: 1.35rem 1.5rem 1.1rem !important;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+        background:
+            linear-gradient(180deg, rgba(15, 23, 42, 0.82) 0%, rgba(15, 23, 42, 0.58) 100%);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+    }
+
+    body.light-theme #settings-modal > .modal-content > .flex.flex-col {
+        border-bottom-color: rgba(148, 163, 184, 0.18);
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.76) 100%);
+    }
+
+    #settings-modal .flex.justify-between.items-center.mb-1 {
+        gap: 1rem;
+    }
+
+    #settings-modal #settings-title {
+        margin-bottom: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
+        font-size: clamp(1.45rem, 2.4vw, 1.85rem) !important;
+    }
+
+    #settings-modal #settings-step-subtitle {
+        margin-bottom: 0.8rem !important;
+        font-size: 0.96rem !important;
+        letter-spacing: 0.01em;
+    }
+
+    #settings-modal .flex.justify-center.space-x-3 {
+        gap: 0.55rem !important;
+        justify-content: flex-start !important;
+        padding-top: 0.2rem !important;
+    }
+
+    #settings-modal .flex.justify-center.space-x-3 div {
+        width: 2.4rem !important;
+        height: 0.34rem !important;
+        border-radius: 999px !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    #settings-modal #close-settings-x {
+        width: 2.6rem !important;
+        height: 2.6rem !important;
+        border-radius: 0.9rem !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(148, 163, 184, 0.14) !important;
+        opacity: 1 !important;
+    }
+
+    body.light-theme #settings-modal #close-settings-x {
+        background: rgba(255, 255, 255, 0.75) !important;
+        border-color: rgba(148, 163, 184, 0.18) !important;
+    }
+
+    #settings-content-wrapper {
+        max-height: none !important;
+        padding: 1.35rem 1.5rem 0.6rem !important;
+        scrollbar-width: thin;
+    }
+
+    #settings-modal .settings-step.active {
+        padding-bottom: 0 !important;
+    }
+
+    #settings-step-connection.active,
+    #settings-step-prompt.active,
+    #settings-step-options.active,
+    #settings-step-font.active,
+    #settings-step-actions.active {
+        display: grid !important;
+        gap: 1rem;
+    }
+
+    #settings-step-connection.active > .connection-type-selector,
+    #settings-step-connection.active > .connection-settings-panel,
+    #settings-step-prompt.active > .mb-4,
+    #settings-step-options.active > .mb-4,
+    #settings-step-options.active > .mb-5,
+    #settings-step-font.active > .mb-5,
+    #settings-step-actions.active > .mb-4 {
+        margin: 0 !important;
+        padding: 1rem 1.05rem !important;
+        border-radius: 1.1rem !important;
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        background:
+            linear-gradient(180deg, rgba(30, 41, 59, 0.62) 0%, rgba(15, 23, 42, 0.46) 100%);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.05),
+            0 14px 28px rgba(2, 6, 23, 0.16);
+    }
+
+    body.light-theme #settings-step-connection.active > .connection-type-selector,
+    body.light-theme #settings-step-connection.active > .connection-settings-panel,
+    body.light-theme #settings-step-prompt.active > .mb-4,
+    body.light-theme #settings-step-options.active > .mb-4,
+    body.light-theme #settings-step-options.active > .mb-5,
+    body.light-theme #settings-step-font.active > .mb-5,
+    body.light-theme #settings-step-actions.active > .mb-4 {
+        border-color: rgba(148, 163, 184, 0.2);
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(248, 250, 252, 0.72) 100%);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.8),
+            0 12px 24px rgba(148, 163, 184, 0.12);
+    }
+
+    #settings-step-connection.active {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .connection-type-selector {
+        gap: 0.9rem !important;
+    }
+
+    .connection-type-btn {
+        min-height: 88px !important;
+        border-radius: 1rem !important;
+        padding: 1rem 0.8rem !important;
+    }
+
+    .connection-type-icon {
+        width: 48px !important;
+        height: 48px !important;
+        border-radius: 0.95rem !important;
+    }
+
+    .connection-type-name {
+        font-size: 0.92rem !important;
+    }
+
+    .connection-settings-panel {
+        padding-top: 0 !important;
+    }
+
+    .connection-status-row {
+        gap: 1rem !important;
+        padding: 0.2rem 0 !important;
+    }
+
+    .connection-status-row + .connection-status-row {
+        margin-top: 0.85rem !important;
+        padding-top: 0.85rem !important;
+        border-top: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .connection-status-info {
+        gap: 0.75rem !important;
+    }
+
+    .connection-status-icon {
+        width: 2.25rem;
+        height: 2.25rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.8rem;
+        background: rgba(59, 130, 246, 0.12);
+        color: #93c5fd;
+    }
+
+    body.light-theme .connection-status-icon {
+        background: rgba(59, 130, 246, 0.12);
+        color: #2563eb;
+    }
+
+    .connection-status-text {
+        font-size: 0.95rem !important;
+    }
+
+    #settings-step-prompt.active .flex.gap-2 {
+        gap: 0.9rem !important;
+    }
+
+    #system-prompt-preview {
+        min-height: 130px !important;
+        border-radius: 1rem !important;
+        padding: 1rem !important;
+        background: rgba(15, 23, 42, 0.34) !important;
+    }
+
+    body.light-theme #system-prompt-preview {
+        background: rgba(255, 255, 255, 0.72) !important;
+    }
+
+    #settings-step-options.active > .mb-5,
+    #settings-step-options.active > .mb-4 {
+        padding-bottom: 0.95rem !important;
+    }
+
+    #settings-step-options.active .flex.justify-between.items-center.mb-2 {
+        align-items: flex-start !important;
+        gap: 1rem !important;
+        margin-bottom: 0.65rem !important;
+    }
+
+    #settings-step-options.active label.text-sm.font-medium,
+    #settings-step-options.active label.block.text-sm.font-medium {
+        font-size: 0.98rem !important;
+        line-height: 1.35 !important;
+        flex: 1;
+    }
+
+    #settings-step-options.active p.text-xs,
+    #settings-step-font.active p.text-xs,
+    #settings-step-connection.active p.text-xs {
+        font-size: 0.84rem !important;
+        line-height: 1.45 !important;
+    }
+
+    #settings-modal .toggle-container {
+        transform: none !important;
+        width: 64px !important;
+        height: 34px !important;
+        margin-bottom: 0 !important;
+        flex-shrink: 0;
+    }
+
+    #settings-modal .toggle-dot {
+        width: 24px !important;
+        height: 24px !important;
+        left: 5px !important;
+        bottom: 5px !important;
+    }
+
+    #settings-modal input[type="checkbox"]:checked ~ .toggle-switch + .toggle-dot {
+        transform: translateX(29px) !important;
+    }
+
+    #settings-modal input[type="text"],
+    #settings-modal input[type="number"],
+    #settings-modal input[type="password"],
+    #settings-modal textarea,
+    #settings-modal select {
+        min-height: 54px !important;
+        padding: 0.9rem 1rem !important;
+        font-size: 0.98rem !important;
+        border-radius: 1rem !important;
+    }
+
+    #settings-modal input[type="range"] {
+        margin-top: 0.25rem;
+    }
+
+    #temperature-lock {
+        width: 46px;
+        height: 46px;
+        border-radius: 0.9rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    body.light-theme #temperature-lock {
+        background: rgba(255, 255, 255, 0.74);
+        border-color: rgba(148, 163, 184, 0.2);
+    }
+
+    #settings-step-font.active {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #settings-step-actions .mb-4 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
+        padding-bottom: 1rem !important;
+    }
+
+    #settings-step-actions h3 {
+        grid-column: 1 / -1;
+        margin: 0 0 0.15rem 0 !important;
+    }
+
+    #settings-step-actions .settings-action-button,
+    #settings-step-actions .professional-button {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 54px !important;
+        margin: 0 !important;
+        border-radius: 1rem !important;
+        font-size: 0.95rem !important;
+    }
+
+    #settings-navigation-buttons,
+    #settings-navigation-buttons + .mt-2 {
+        margin: 0 !important;
+        padding: 1rem 1.5rem 1.25rem !important;
+        background:
+            linear-gradient(180deg, rgba(15, 23, 42, 0.22) 0%, rgba(2, 6, 23, 0.72) 30%, rgba(2, 6, 23, 0.92) 100%);
+        border-top: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    body.light-theme #settings-navigation-buttons,
+    body.light-theme #settings-navigation-buttons + .mt-2 {
+        background:
+            linear-gradient(180deg, rgba(248, 250, 252, 0.32) 0%, rgba(241, 245, 249, 0.92) 35%, rgba(241, 245, 249, 1) 100%);
+        border-top-color: rgba(148, 163, 184, 0.18);
+    }
+
+    #settings-navigation-buttons .navigation-buttons {
+        gap: 0.9rem !important;
+    }
+
+    #settings-modal button[id^="to-"],
+    #settings-modal button[id^="back-"] {
+        min-height: 54px !important;
+        padding: 0.9rem 1.1rem !important;
+        font-size: 0.96rem !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    #actions-step-buttons #back-to-font-btn {
+        width: 100% !important;
+    }
+
+    #close-settings {
+        min-height: 58px !important;
+        font-size: 1rem !important;
+        border-radius: 1rem !important;
+        box-shadow:
+            0 18px 30px rgba(5, 150, 105, 0.22),
+            0 0 0 1px rgba(16, 185, 129, 0.18) inset !important;
+    }
+
+    #settings-navigation-buttons + .mt-2 .flex.justify-center.mt-3 {
+        margin-top: 0.9rem !important;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 767px) {
+    #settings-modal {
+        padding: 16px !important;
+    }
+
+    #settings-modal .modal-content {
+        width: min(760px, calc(100vw - 24px)) !important;
+        max-width: min(760px, calc(100vw - 24px)) !important;
+    }
+
+    #settings-step-font.active,
+    #settings-step-actions .mb-4 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    #settings-step-connection .connection-status-row {
+        gap: 0.65rem !important;
+        padding: 0.15rem 0 !important;
+    }
+
+    #settings-step-connection .connection-status-info {
+        gap: 0.45rem !important;
+        min-width: 0;
+    }
+
+    #settings-step-connection .connection-status-text {
+        font-size: 0.82rem !important;
+        line-height: 1.3 !important;
+    }
+
+    #configure-local-server-btn,
+    #configure-lmstudio-token-btn,
+    #configure-openrouter-key-btn {
+        width: auto !important;
+        min-width: 104px !important;
+        max-width: 118px !important;
+        min-height: 40px !important;
+        height: 40px !important;
+        padding: 0.5rem 0.8rem !important;
+        gap: 0.4rem !important;
+        border-radius: 0.85rem !important;
+        font-size: 0.82rem !important;
+        line-height: 1 !important;
+        flex: 0 0 auto !important;
+        box-shadow:
+            0 6px 18px rgba(0, 0, 0, 0.12),
+            0 2px 8px rgba(0, 0, 0, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.08) !important;
+    }
+
+    #configure-local-server-btn i,
+    #configure-lmstudio-token-btn i,
+    #configure-openrouter-key-btn i {
+        font-size: 0.72rem !important;
+    }
+
+    #configure-local-server-btn span,
+    #configure-lmstudio-token-btn span,
+    #configure-openrouter-key-btn span {
+        font-size: inherit !important;
     }
 }
 
