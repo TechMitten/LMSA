@@ -26,25 +26,6 @@ export const whatsNewModal = `
                 <div class="space-y-3">
                     <div class="feature-item">
                         <div class="relative overflow-hidden">
-                            <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-red-500/10 to-pink-700/5 rounded-full blur-xl">
-                            </div>
-                            <div class="flex items-start relative z-10">
-                                <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-red-500/20 w-10 h-10 shadow-sm">
-                                    <i class="fas fa-bug text-red-400"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center">
-                                        <h3 class="feature-title">Major TTS Resume Bug Fix</h3>
-                                    </div>
-                                    <div class="feature-description">
-                                        <p class="mb-3">Fixed an issue where Text-to-Speech failed to resume for users who returned after a long period away from LMSA. TTS now restarts reliably after returning at a later date.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-blue-600/10 to-blue-800/5 rounded-full blur-xl">
                             </div>
                             <div class="flex items-start relative z-10">

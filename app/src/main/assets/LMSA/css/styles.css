@@ -8546,6 +8546,18 @@ body.modal-open {
         text-align: center;
     }
 
+    #help-modal .toc-group-setup .toc-link {
+        color: #f59e0b;
+    }
+
+    #help-modal .toc-group-privacy .toc-link {
+        color: #60a5fa;
+    }
+
+    #help-modal .toc-group-management .toc-link {
+        color: #22c55e;
+    }
+
     /* Mobile section improvements */
     #help-modal section {
         margin-bottom: 2rem;

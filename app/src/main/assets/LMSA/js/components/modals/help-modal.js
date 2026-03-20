@@ -32,7 +32,7 @@ export const helpModal = `
                                 class="fas fa-list mr-2" style="color: #3b82f6;"></i>Table of Contents</h3>
                         <p class="text-xs mb-3" style="color: var(--text-muted);">Click categories to expand</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            <details class="md:col-span-2 p-2 rounded"
+                            <details class="md:col-span-2 p-2 rounded toc-group-setup"
                                 style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);">
                                 <summary class="flex items-center font-semibold cursor-pointer"
                                     style="color: var(--text-primary); list-style: none;">
@@ -42,54 +42,49 @@ export const helpModal = `
                                 <div class="mt-2 pl-2 space-y-1"
                                     style="border-left: 1px solid rgba(255, 255, 255, 0.12);">
                                     <a href="#section-quick-start"
-                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
-                                        style="color: var(--success-color);">
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-rocket mr-2 text-sm"></i>
                                         <span>LM Studio Setup</span>
                                     </a>
                                     <a href="#section-ollama-setup"
-                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
-                                        style="color: #ec4899;">
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-terminal mr-2 text-sm"></i>
                                         <span>Ollama Setup</span>
                                     </a>
                                     <a href="#section-openrouter"
-                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
-                                        style="color: #facc15;">
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-cloud mr-2 text-sm"></i>
                                         <span>OpenRouter Setup</span>
                                     </a>
                                     <a href="#section-templates"
-                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
-                                        style="color: #a78bfa;">
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-th-large mr-2 text-sm"></i>
                                         <span>Using Templates</span>
                                     </a>
                                     <a href="#section-font-customization"
-                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
-                                        style="color: #c084fc;">
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-font mr-2 text-sm"></i>
                                         <span>Font & Text Size</span>
                                     </a>
                                 </div>
                             </details>
-                            <details class="md:col-span-2 p-2 rounded" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <details class="md:col-span-2 p-2 rounded toc-group-privacy" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);">
                                 <summary class="flex items-center font-semibold cursor-pointer" style="color: var(--text-primary); list-style: none;">
                                     <i class="fas fa-shield-alt mr-2 text-sm" style="pointer-events: none;"></i>
                                     <span style="pointer-events: none;">Privacy</span>
                                 </summary>
                                 <div class="mt-2 pl-2 space-y-1" style="border-left: 1px solid rgba(255, 255, 255, 0.12);">
-                                    <a href="#section-security-privacy" class="toc-link flex items-center p-2 rounded transition-colors font-semibold" style="color: var(--info-color);">
+                                    <a href="#section-security-privacy" class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-lock mr-2 text-sm"></i>
                                         <span>Security & Privacy</span>
                                     </a>
-                                    <a href="#section-ads-privacy" class="toc-link flex items-center p-2 rounded transition-colors font-semibold" style="color: var(--warning-color);">
+                                    <a href="#section-ads-privacy" class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-ad mr-2 text-sm"></i>
                                         <span>Ads & Privacy</span>
                                     </a>
                                 </div>
                             </details>
-                            <details class="md:col-span-2 p-2 rounded"
+                            <details class="md:col-span-2 p-2 rounded toc-group-management"
                                 style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);">
                                 <summary class="flex items-center font-semibold cursor-pointer"
                                     style="color: var(--text-primary); list-style: none;">
@@ -99,20 +94,17 @@ export const helpModal = `
                                 <div class="mt-2 pl-2 space-y-1"
                                     style="border-left: 1px solid rgba(255, 255, 255, 0.12);">
                                     <a href="#section-legacy-access"
-                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
-                                        style="color: #3b82f6;">
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-key mr-2 text-sm"></i>
                                         <span>Legacy Access</span>
                                     </a>
                                     <a href="#section-limits"
-                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
-                                        style="color: #8b5cf6;">
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-chart-line mr-2 text-sm"></i>
                                         <span>Usage Limits</span>
                                     </a>
                                     <a href="#section-troubleshooting"
-                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold"
-                                        style="color: #f59e0b;">
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-tools mr-2 text-sm"></i>
                                         <span>Troubleshooting</span>
                                     </a>
@@ -124,7 +116,7 @@ export const helpModal = `
                     <div class="space-y-4">
                         <section id="section-quick-start">
                             <h3 class="text-lg font-semibold mb-2 flex items-center"
-                                style="color: var(--success-color);"><i class="fas fa-rocket mr-2"></i>LM Studio Setup
+                                style="color: #f59e0b;"><i class="fas fa-rocket mr-2"></i>LM Studio Setup
                             </h3>
                             <ul class="list-disc pl-5 space-y-1" style="color: var(--text-primary);">
                                 <li><strong>Start the LM Studio server</strong> on your computer (do NOT load a model
@@ -184,7 +176,7 @@ export const helpModal = `
                         </section>
 
                         <section id="section-ollama-setup">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #ec4899;">
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #f59e0b;">
                                 <i class="fas fa-terminal mr-2"></i>Ollama Setup
                             </h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">
@@ -314,7 +306,7 @@ export const helpModal = `
                         </section>
 
                         <section id="section-openrouter">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;"><i
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #f59e0b;"><i
                                     class="fas fa-cloud mr-2"></i>OpenRouter Setup</h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">OpenRouter is a cloud AI
                                 service that lets you access hundreds of hosted models using your own API key. When
@@ -404,7 +396,7 @@ export const helpModal = `
                         </section>
 
                         <section id="section-templates">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #a78bfa;"><i
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #f59e0b;"><i
                                     class="fas fa-th-large mr-2"></i>Using Templates</h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">Templates provide pre-configured
                                 AI personas that specialize in different tasks. Instead of writing custom system
@@ -473,7 +465,7 @@ export const helpModal = `
 
                         </section>
                         <section id="section-font-customization">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #c084fc;"><i
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #f59e0b;"><i
                                     class="fas fa-font mr-2"></i>Font & Text Size</h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">
                                 You can personalize how text looks in your conversations by changing the chat bubble
@@ -503,7 +495,7 @@ export const helpModal = `
                             </div>
                         </section>
                         <section id="section-security-privacy">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: var(--info-color);">
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa;">
                                 <i class="fas fa-lock mr-2"></i>Security & Privacy
                             </h3>
                             <div class="p-3 rounded-lg border"
@@ -581,7 +573,7 @@ export const helpModal = `
                     </div>
                     </section>
                     <section id="section-ads-privacy">
-                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: var(--warning-color);"><i
+                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa;"><i
                                 class="fas fa-ad mr-2"></i>Ads & Privacy</h3>
                         <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
                             <p class="font-medium flex items-center" style="color: var(--success-color);"><i
@@ -615,7 +607,7 @@ export const helpModal = `
 
                             <div id="section-legacy-access" class="mt-4 p-2 rounded"
                                 style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                <p class="font-medium flex items-center" style="color: #22c55e;"><i
                                         class="fas fa-key mr-2"></i>Legacy Users</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.5rem;">
                                     Background: Early releases of LMSA were distributed as a paid-only app (no free
@@ -647,7 +639,7 @@ export const helpModal = `
                         </div>
                     </section>
                         <section id="section-limits">
-                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #8b5cf6;"><i
+                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #22c55e;"><i
                             class="fas fa-chart-line mr-2"></i>Usage Limits</h3>
                         
                         <div class="space-y-4">
@@ -660,7 +652,7 @@ export const helpModal = `
                                     <li><strong>Chat Completion Limit: 20 per day</strong> — After reaching this limit, you'll enter a cooldown period</li>
                                     <li><strong>Automatic Reset: Midnight (Local Time)</strong> — Your chat completion count resets at midnight in your timezone, allowing you to chat freely again</li>
                                     <li><strong>Advertisements:</strong> Free users see advertisements throughout the app</li>
-                                    <li><strong>Text-to-Speech (TTS) &amp; Custom Templates:</strong> Not available on the Free tier; upgrade to Premium to use these features</li>
+                                    <li><strong>Custom Templates:</strong> Not available on the Free tier; upgrade to Premium to use this feature</li>
                                 </ul>
                             </div>
 
@@ -672,7 +664,6 @@ export const helpModal = `
                                     <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
                                     <li><strong>Unlimited Chat Completions</strong> — No daily limits or cooldown periods</li>
                                     <li><strong>Ad-Free Experience</strong> — No advertisements throughout the app</li>
-                                    <li><strong>Text-to-Speech (TTS):</strong> Access TTS playback and export features</li>
                                     <li><strong>Custom Templates:</strong> Create, save, and reuse prompt templates</li>
                                     <li><strong>One-Time Purchase:</strong> Upgrade with a single lifetime purchase</li>
                                 </ul>
@@ -691,7 +682,7 @@ export const helpModal = `
                         </div>
                     </section>
                     <section id="section-troubleshooting">
-                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #f59e0b;"><i
+                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #22c55e;"><i
                                 class="fas fa-tools mr-2"></i>Troubleshooting</h3>
                         <p style="color: var(--text-primary); margin-bottom: 1rem;">If you're having trouble
                             connecting LMSA to your LM Studio server, follow these steps:</p>
