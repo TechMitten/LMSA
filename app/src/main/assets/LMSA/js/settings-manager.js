@@ -1359,23 +1359,33 @@ export async function initializeTTSVoiceSelection() {
         voiceSelect.value = savedVoice;
 
         // Apply the saved voice to the TTS service
-        await window.TTSService.setVoice(savedVoice);
+        const voiceApplied = await window.TTSService.setVoice(savedVoice);
+        if (!voiceApplied) {
+          selectedTTSVoice = null;
+          voiceSelect.value = "";
+          localStorage.removeItem("ttsVoice");
+          debugLog("Saved TTS voice was unavailable and has been cleared");
+        }
       }
 
-      // Add change event listener to save voice selection
-      voiceSelect.addEventListener("change", async (e) => {
-        const voiceName = e.target.value;
-        selectedTTSVoice = voiceName;
+      // Add the change listener only once even if the settings modal is reopened.
+      if (voiceSelect.dataset.ttsVoiceListenerAttached !== "true") {
+        voiceSelect.addEventListener("change", async (e) => {
+          const voiceName = e.target.value;
+          selectedTTSVoice = voiceName;
 
-        if (voiceName) {
-          localStorage.setItem("ttsVoice", voiceName);
-          await window.TTSService.setVoice(voiceName);
-          debugLog("TTS voice set to:", voiceName);
-        } else {
-          localStorage.removeItem("ttsVoice");
-          debugLog("TTS voice reset to default");
-        }
-      });
+          if (voiceName) {
+            localStorage.setItem("ttsVoice", voiceName);
+            await window.TTSService.setVoice(voiceName);
+            debugLog("TTS voice set to:", voiceName);
+          } else {
+            localStorage.removeItem("ttsVoice");
+            await window.TTSService.setVoice("");
+            debugLog("TTS voice reset to default");
+          }
+        });
+        voiceSelect.dataset.ttsVoiceListenerAttached = "true";
+      }
 
       debugLog("TTS voice selection initialized with", voices.length, "voices");
     } else {
@@ -1406,6 +1416,9 @@ export async function setSelectedTTSVoice(voiceName) {
     }
   } else {
     localStorage.removeItem("ttsVoice");
+    if (window.TTSService) {
+      await window.TTSService.setVoice("");
+    }
   }
 }
 

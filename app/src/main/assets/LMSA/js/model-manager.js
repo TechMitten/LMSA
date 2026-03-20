@@ -9,10 +9,6 @@ import {
     closeFullModelNameButton,
     fullModelNameDisplay,
     modelHeaderIcon,
-    modelLoadingModal,
-    modelLoadingTitle,
-    modelLoadingMessage,
-    modelLoadingName,
     confirmDefaultModelModal,
     confirmDefaultModelName,
     confirmDefaultModelBtn,
@@ -33,8 +29,6 @@ let currentServerIp = '';
 let currentServerPort = '';
 // Store current model full name
 let currentModelFullName = '';
-// Track loading modal display timing
-let loadingModalStartTime = null;
 // Flag to track if we're auto-loading default model on startup
 let isAutoLoadingDefaultModel = false;
 // Store the model ID pending confirmation for default
@@ -482,144 +476,6 @@ async function updateModelDisplay(modelId) {
 }
 
 /**
- * Shows the model loading modal with the specified model name
- * @param {string} modelId - ID of the model being loaded
- * @param {boolean} showSponsorMessage - If true, show sponsor message instead of regular loading text
- */
-function showModelLoadingModal(modelId, showSponsorMessage = false) {
-    if (modelLoadingModal && modelLoadingName) {
-        // Record when we start showing the modal
-        loadingModalStartTime = Date.now();
-
-        // Set the model name in the modal
-        modelLoadingName.textContent = modelId;
-
-        // Update the modal content based on whether we're showing a sponsor message
-        const titleElement = modelLoadingModal.querySelector('#model-loading-title');
-        const messageElement = modelLoadingModal.querySelector('#model-loading-message');
-        const spinnerWrapper = modelLoadingModal.querySelector('.loading-spinner-wrapper');
-        const infoSection = modelLoadingModal.querySelector('.mt-6.flex.items-center.justify-center');
-
-        if (showSponsorMessage) {
-            // Show sponsor message variant
-            if (titleElement) {
-                titleElement.innerHTML = '<i class="fas fa-bullhorn mr-3"></i>Loading Model';
-            }
-            if (messageElement) {
-                messageElement.textContent = 'Advertisement while your model is loading...';
-            }
-            // Hide the spinner since the ad will take over
-            if (spinnerWrapper) {
-                spinnerWrapper.style.display = 'none';
-            }
-            // Hide the info section
-            if (infoSection) {
-                infoSection.style.display = 'none';
-            }
-        } else {
-            // Standard loading message
-            if (titleElement) {
-                titleElement.innerHTML = '<i class="fas fa-robot mr-3"></i>Loading Model';
-            }
-            if (messageElement) {
-                messageElement.textContent = 'Please wait while the model is being loaded...';
-            }
-            // Show the spinner
-            if (spinnerWrapper) {
-                spinnerWrapper.style.display = '';
-            }
-            // Show the info section
-            if (infoSection) {
-                infoSection.style.display = '';
-            }
-        }
-
-        // Ensure modal is above all other content
-        modelLoadingModal.style.zIndex = '2200';
-        modelLoadingModal.style.display = 'flex';
-
-        // Show the modal with animation
-        modelLoadingModal.classList.remove('hidden');
-
-        // Add animation class to modal content
-        const modalContent = modelLoadingModal.querySelector('.modal-content');
-        if (modalContent) {
-            modalContent.classList.add('animate-modal-in');
-            setTimeout(() => {
-                modalContent.classList.remove('animate-modal-in');
-            }, 300);
-        }
-
-        console.log('Model loading modal shown for:', modelId, 'sponsor message:', showSponsorMessage, 'at time:', loadingModalStartTime);
-    } else {
-        console.error('Model loading modal elements not found');
-    }
-}
-
-/**
- * Hides the model loading modal
- */
-/**
- * Hides the model loading modal
- * @param {Function} [onBeforeHide] - Optional callback to run before the hide animation starts
- */
-function hideModelLoadingModal(onBeforeHide) {
-    if (modelLoadingModal) {
-        const currentTime = Date.now();
-        const elapsedTime = loadingModalStartTime ? currentTime - loadingModalStartTime : 0;
-        const minDisplayTime = 1500; // Minimum 1.5 seconds display time
-
-        console.log('Hiding modal - elapsed time:', elapsedTime, 'ms');
-
-        // Ensure the modal is visible for at least the minimum time
-        const delayTime = Math.max(0, minDisplayTime - elapsedTime);
-
-        setTimeout(() => {
-            // Run the callback if provided (e.g. to close underlying modals)
-            if (onBeforeHide && typeof onBeforeHide === 'function') {
-                onBeforeHide();
-            }
-
-            const modalContent = modelLoadingModal.querySelector('.modal-content');
-            if (modalContent) {
-                modalContent.classList.add('animate-modal-out');
-                setTimeout(() => {
-                    modalContent.classList.remove('animate-modal-out');
-                    modelLoadingModal.classList.add('hidden');
-                    modelLoadingModal.style.display = 'none';
-
-                    // Reset modal to default state for next use
-                    const titleElement = modelLoadingModal.querySelector('#model-loading-title');
-                    const messageElement = modelLoadingModal.querySelector('#model-loading-message');
-                    const spinnerWrapper = modelLoadingModal.querySelector('.loading-spinner-wrapper');
-                    const infoSection = modelLoadingModal.querySelector('.mt-6.flex.items-center.justify-center');
-                    if (titleElement) {
-                        titleElement.innerHTML = '<i class="fas fa-robot mr-3"></i>Loading Model';
-                    }
-                    if (messageElement) {
-                        messageElement.textContent = 'Please wait while the model is being loaded...';
-                    }
-                    if (spinnerWrapper) {
-                        spinnerWrapper.style.display = '';
-                    }
-                    if (infoSection) {
-                        infoSection.style.display = '';
-                    }
-                }, 300);
-            } else {
-                modelLoadingModal.classList.add('hidden');
-                modelLoadingModal.style.display = 'none';
-            }
-
-            console.log('Model loading modal hidden after total time:', Date.now() - loadingModalStartTime, 'ms');
-            loadingModalStartTime = null;
-        }, delayTime);
-    } else {
-        console.error('Model loading modal element not found');
-    }
-}
-
-/**
  * Loads a model in LM Studio
  * @param {string} modelId - ID of the model to load
  */
@@ -641,7 +497,6 @@ async function loadModel(modelId) {
             if (showAdDuringLoad) {
                 console.log('Showing interstitial ad during OpenRouter model load for:', modelId);
 
-                showModelLoadingModal(modelId, true);
                 disableLoadButtons();
 
                 // Show loading indicator
@@ -662,21 +517,12 @@ async function loadModel(modelId) {
                     `;
                 }
 
-                let adDismissed = false;
                 let modelResult = null;
 
                 const adPromise = new Promise((resolve) => {
                     setTimeout(() => {
-                        modelLoadingModal.classList.add('hidden');
-                        modelLoadingModal.style.display = 'none';
-
                         showInterstitialAd('modelLoad', () => {
                             console.log('Ad dismissed during OpenRouter model load');
-                            adDismissed = true;
-
-                            if (modelResult === null) {
-                                showModelLoadingModal(modelId, false);
-                            }
                             resolve();
                         });
                     }, 2500);
@@ -691,9 +537,7 @@ async function loadModel(modelId) {
 
                 await updateModelDisplay(modelId);
 
-                hideModelLoadingModal(() => {
-                    showOpenRouterModelSelectedModal(modelId);
-                });
+                showOpenRouterModelSelectedModal(modelId);
             } else {
                 await apiLoadModel(modelId);
                 await updateModelDisplay(modelId);
@@ -714,11 +558,10 @@ async function loadModel(modelId) {
         // Determine if we should show an ad during loading
         const showAdDuringLoad = !isAutoLoadingDefaultModel && shouldShowAds();
 
-        // Show the loading modal immediately ONLY if not auto-loading
-        if (!isAutoLoadingDefaultModel) {
-            showModelLoadingModal(modelId, showAdDuringLoad);
+        if (isAutoLoadingDefaultModel) {
+            console.log('Auto-loading default model without extra transition UI');
         } else {
-            console.log('Auto-loading default model, skipping loading modal');
+            console.log('Model switch in progress');
         }
 
         // Disable all load buttons in the modal
@@ -750,27 +593,14 @@ async function loadModel(modelId) {
             console.log('Showing interstitial ad during model load for:', modelId);
 
             // Track completion of both ad and model loading
-            let adDismissed = false;
             let modelResult = null; // null = pending, true = success, false = failure
 
             // Create a promise that resolves when the ad is dismissed
             const adPromise = new Promise((resolve) => {
-                // Delay to let the user read the sponsor message before ad covers the screen
+                // Delay before showing the interstitial while model loading continues in parallel
                 setTimeout(() => {
-                    // Hide the loading modal BEFORE launching the ad
-                    // so nothing shows behind the native full-screen ad
-                    modelLoadingModal.classList.add('hidden');
-                    modelLoadingModal.style.display = 'none';
-
                     showInterstitialAd('modelLoad', () => {
                         console.log('Ad dismissed during model load');
-                        adDismissed = true;
-
-                        if (modelResult === null) {
-                            // Model still loading — re-show loading modal with standard spinner
-                            console.log('Model still loading, showing spinner');
-                            showModelLoadingModal(modelId, false);
-                        }
 
                         resolve();
                     });
@@ -781,9 +611,6 @@ async function loadModel(modelId) {
             const modelPromise = apiLoadModel(modelId).then(success => {
                 modelResult = success;
                 console.log('Model load completed during ad, success:', success);
-
-                // If ad is already dismissed but model just finished, the loading modal
-                // is still showing (we switched to spinner view) — it will be handled below
                 return success;
             });
 
@@ -796,7 +623,6 @@ async function loadModel(modelId) {
             if (!success) {
                 console.log(`Failed to load model: ${modelId}`);
                 showActionError(modelId, 'Failed to load');
-                hideModelLoadingModal();
                 await updateModelDisplay(null);
                 isModelLoading = false;
                 enableLoadButtons();
@@ -808,16 +634,13 @@ async function loadModel(modelId) {
 
             console.log(`Successfully loaded model: ${modelId} (with ad)`);
 
-            // Hide loading modal — models modal stays open
-            hideModelLoadingModal(() => {
+            if (!isAutoLoadingDefaultModel) {
                 console.log('Model loaded successfully with ad');
-                if (!isAutoLoadingDefaultModel) {
-                    showLocalModelLoadedModal(modelId);
-                }
-                if (isAutoLoadingDefaultModel) {
-                    isAutoLoadingDefaultModel = false;
-                }
-            });
+                showLocalModelLoadedModal(modelId);
+            }
+            if (isAutoLoadingDefaultModel) {
+                isAutoLoadingDefaultModel = false;
+            }
         } else {
             // --- Standard flow (premium users or auto-load) ---
             const success = await apiLoadModel(modelId);
@@ -825,9 +648,6 @@ async function loadModel(modelId) {
             if (!success) {
                 console.log(`Failed to load model: ${modelId}`);
                 showActionError(modelId, 'Failed to load');
-                if (!isAutoLoadingDefaultModel) {
-                    hideModelLoadingModal();
-                }
                 await updateModelDisplay(null);
                 isModelLoading = false;
                 enableLoadButtons();
@@ -840,13 +660,8 @@ async function loadModel(modelId) {
             console.log(`Successfully loaded model: ${modelId}`);
 
             if (!isAutoLoadingDefaultModel) {
-                hideModelLoadingModal(() => {
-                    console.log('Model loaded successfully');
-                    showLocalModelLoadedModal(modelId);
-                    if (isAutoLoadingDefaultModel) {
-                        isAutoLoadingDefaultModel = false;
-                    }
-                });
+                console.log('Model loaded successfully');
+                showLocalModelLoadedModal(modelId);
             } else {
                 console.log('Auto-load complete without UI interruption');
                 isAutoLoadingDefaultModel = false;
@@ -873,11 +688,6 @@ async function loadModel(modelId) {
     } catch (error) {
         console.error('Error loading model:', error);
         showActionError(modelId, 'Failed to load');
-
-        // Hide the loading modal if it was shown
-        if (!isAutoLoadingDefaultModel) {
-            hideModelLoadingModal();
-        }
 
         // Restore the current model display
         await updateModelDisplay(null);

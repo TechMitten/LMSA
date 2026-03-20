@@ -1810,7 +1810,7 @@ export function deleteChatHistory(id) {
     if (id === currentChatId) {
         // Stop any ongoing TTS playback
         if (window.TTSService && typeof window.TTSService.stop === 'function') {
-            window.TTSService.stop();
+            window.TTSService.stop('delete-current-chat', true);
         }
 
         messagesContainer.innerHTML = '';
@@ -1876,7 +1876,7 @@ export function loadChat(id, isFirstMessageReload = false) {
 
     // Stop any ongoing TTS playback
     if (window.TTSService && typeof window.TTSService.stop === 'function') {
-        window.TTSService.stop();
+        window.TTSService.stop('load-chat', true);
     }
 
     const chatData = chatHistoryData[id];
@@ -2094,7 +2094,7 @@ export function lazyLoadMessages(messages, startIndex, chunkSize = 10) {
 export function clearAllChats() {
     // Stop any ongoing TTS playback
     if (window.TTSService && typeof window.TTSService.stop === 'function') {
-        window.TTSService.stop();
+        window.TTSService.stop('clear-all-chats', true);
     }
 
     messagesContainer.innerHTML = '';
@@ -2162,7 +2162,7 @@ export function createNewChat() {
 
     // Stop any ongoing TTS playback
     if (window.TTSService && typeof window.TTSService.stop === 'function') {
-        window.TTSService.stop();
+        window.TTSService.stop('create-new-chat', true);
     }
 
     // Generate a new chat ID
@@ -2264,7 +2264,7 @@ export function createNewChat() {
 export function createNewChatWithAd() {
     // Stop any ongoing TTS playback
     if (window.TTSService && typeof window.TTSService.stop === 'function') {
-        window.TTSService.stop();
+        window.TTSService.stop('create-new-chat-with-ad', true);
     }
 
     createNewChat();

@@ -62,6 +62,7 @@ class TTSService {
      */
     async initializeAndroidTTS() {
         return new Promise((resolve) => {
+            let settled = false;
             if (typeof AndroidTTS === 'undefined') {
                 console.warn('AndroidTTS interface not available');
                 this.initialized = false;
@@ -70,6 +71,11 @@ class TTSService {
             }
 
             window.onTTSInitialized = (success) => {
+                if (settled) {
+                    this.initialized = success;
+                    return;
+                }
+                settled = true;
                 console.log('TTS initialization callback received:', success);
                 this.initialized = success;
                 if (success) {
@@ -85,12 +91,14 @@ class TTSService {
                 AndroidTTS.initializeTTS();
 
                 setTimeout(() => {
-                    if (!this.initialized) {
-                        console.warn('TTS initialization timeout, assuming failure');
+                    if (!settled && !this.initialized) {
+                        settled = true;
+                        console.warn('TTS initialization timeout after 15000ms, assuming failure');
                         resolve(false);
                     }
-                }, 5000);
+                }, 15000);
             } catch (error) {
+                settled = true;
                 console.error('Error initializing Android TTS:', error);
                 this.initialized = false;
                 resolve(false);
@@ -144,7 +152,7 @@ class TTSService {
             return Promise.resolve(false);
         }
 
-        this.stop();
+        this.stop('pre-speak-reset', true);
 
         if (this.isAndroid) {
             return this.speakAndroid(text, options);
@@ -386,10 +394,37 @@ class TTSService {
     /**
      * Stop current speech
      */
-    stop() {
+    hasActivePlayback() {
+        if (this.isAndroid) {
+            if (this.currentAndroidPlayback) {
+                return true;
+            }
+
+            try {
+                return typeof AndroidTTS !== 'undefined' &&
+                    typeof AndroidTTS.isSpeaking === 'function' &&
+                    AndroidTTS.isSpeaking();
+            } catch (error) {
+                console.error('Error checking active Android TTS playback:', error);
+                return false;
+            }
+        }
+
+        return !!this.currentUtterance || !!(this.speechSynthesis && this.speechSynthesis.speaking);
+    }
+
+    stop(reason = 'manual-stop', onlyIfActive = false) {
+        if (onlyIfActive && !this.hasActivePlayback()) {
+            return false;
+        }
+
         if (this.isAndroid) {
             try {
-                AndroidTTS.stop();
+                if (typeof AndroidTTS.stopWithReason === 'function') {
+                    AndroidTTS.stopWithReason(reason);
+                } else {
+                    AndroidTTS.stop();
+                }
             } catch (error) {
                 console.error('Error stopping Android TTS:', error);
             }
@@ -398,6 +433,8 @@ class TTSService {
             this.speechSynthesis.cancel();
             this.currentUtterance = null;
         }
+
+        return true;
     }
 
     /**
@@ -537,6 +574,14 @@ class TTSService {
                     await this.initialize();
                 }
 
+                if (!voiceName) {
+                    if (typeof AndroidTTS !== 'undefined' && typeof AndroidTTS.resetVoice === 'function') {
+                        this.selectedVoice = null;
+                        return AndroidTTS.resetVoice();
+                    }
+                    return false;
+                }
+
                 if (typeof AndroidTTS !== 'undefined' && AndroidTTS.setVoice) {
                     return AndroidTTS.setVoice(voiceName);
                 }
@@ -549,6 +594,11 @@ class TTSService {
 
         if (!this.isInitialized()) {
             await this.initialize();
+        }
+
+        if (!voiceName) {
+            this.selectedVoice = null;
+            return true;
         }
 
         const voice = this.voices.find(v => v.name === voiceName);

@@ -29,6 +29,7 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.media.AudioManager
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
@@ -92,11 +93,17 @@ class WebViewActivity : AppCompatActivity() {
     private var pendingTTSText: String? = null
     private var pendingTTSRequestId: String? = null
     private var currentTTSRequestId: String? = null
+    private var preferredTTSVoiceName: String? = null
+    private var defaultTTSVoice: android.speech.tts.Voice? = null
     private var ttsRecoveryAttempts: Int = 0
     private var ttsAutoRecovering: Boolean = false
     private var hasNotifiedTTSStart: Boolean = false
     private var ttsRequestCounter: Long = 0L
     private val maxTTSRecoveryAttempts = 1
+    private var ttsInitInProgress: Boolean = false
+    private var ttsInitStartedAtMs: Long = 0L
+    private var ttsInitWatchdogRunnable: Runnable? = null
+    private val pendingTTSReadyCallbacks = mutableListOf<() -> Unit>()
 
     // Billing Client
     private lateinit var billingClient: BillingClient
@@ -209,12 +216,11 @@ class WebViewActivity : AppCompatActivity() {
         // Create AudioFocusRequest for API 26+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val audioAttributes = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
+                .setUsage(AudioAttributes.USAGE_MEDIA)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
                 .build()
             
-            audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+            audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
                 .setAudioAttributes(audioAttributes)
                 .setAcceptsDelayedFocusGain(true)
                 .setOnAudioFocusChangeListener(audioFocusChangeListener!!)
@@ -899,6 +905,9 @@ class WebViewActivity : AppCompatActivity() {
         currentTTSRequestId = null
 
         if (shutdownEngine) {
+            clearTTSInitWatchdog()
+            ttsInitInProgress = false
+            ttsInitStartedAtMs = 0L
             isTTSInitialized = false
             try {
                 textToSpeech?.shutdown()
@@ -918,6 +927,11 @@ class WebViewActivity : AppCompatActivity() {
         if (releaseAudioFocus) {
             abandonAudioFocus()
         }
+    }
+
+    private fun clearTTSInitWatchdog() {
+        ttsInitWatchdogRunnable?.let { ttsWatchdogHandler.removeCallbacks(it) }
+        ttsInitWatchdogRunnable = null
     }
 
     inner class FileOperationInterface {
@@ -1338,60 +1352,137 @@ class WebViewActivity : AppCompatActivity() {
      * Shared by TTSInterface.initializeTTS() and the proactive re-init in onResume().
      */
     private fun startTTSEngine(onReady: (() -> Unit)? = null) {
-        if (textToSpeech == null || !isTTSInitialized) {
-            // Shut down any stale broken instance before creating a fresh one
-            if (textToSpeech != null && !isTTSInitialized) {
+        onReady?.let { pendingTTSReadyCallbacks.add(it) }
+
+        if (textToSpeech != null && isTTSInitialized) {
+            if (pendingTTSReadyCallbacks.isNotEmpty()) {
+                val callbacks = pendingTTSReadyCallbacks.toList()
+                pendingTTSReadyCallbacks.clear()
+                callbacks.forEach { callback -> callback.invoke() }
+            }
+            return
+        }
+
+        if (ttsInitInProgress) {
+            val initAgeMs = SystemClock.elapsedRealtime() - ttsInitStartedAtMs
+            if (initAgeMs < 15000L && textToSpeech != null) {
+                Log.d(TAG, "TTS initialization already in progress for ${initAgeMs}ms; keeping current attempt")
+                return
+            }
+
+            Log.w(TAG, "TTS initialization appears stale after ${initAgeMs}ms; resetting and retrying")
+            resetTTSPlaybackState(
+                stopPlayback = false,
+                shutdownEngine = true,
+                clearPendingRequest = false,
+                releaseAudioFocus = false
+            )
+            notifyTTSInitialized(false)
+        }
+
+        if (textToSpeech != null && !isTTSInitialized) {
+            textToSpeech?.shutdown()
+            textToSpeech = null
+        }
+
+        ttsInitInProgress = true
+        ttsInitStartedAtMs = SystemClock.elapsedRealtime()
+        clearTTSInitWatchdog()
+        Log.d(TAG, "Creating TextToSpeech instance")
+
+        ttsInitWatchdogRunnable = Runnable {
+            if (!ttsInitInProgress || isTTSInitialized) {
+                return@Runnable
+            }
+
+            Log.e(TAG, "TTS initialization watchdog timed out after 15000ms")
+            pendingTTSReadyCallbacks.clear()
+            resetTTSPlaybackState(
+                stopPlayback = false,
+                shutdownEngine = true,
+                clearPendingRequest = false,
+                releaseAudioFocus = false
+            )
+            notifyTTSInitialized(false)
+
+            val failedRequestId = pendingTTSRequestId
+            if (failedRequestId != null) {
+                notifyTTSPlaybackError(failedRequestId, "Android TTS initialization timed out")
+                pendingTTSText = null
+                pendingTTSRequestId = null
+                currentTTSRequestId = null
+                ttsRecoveryAttempts = 0
+                ttsAutoRecovering = false
+            }
+        }
+        ttsWatchdogHandler.postDelayed(ttsInitWatchdogRunnable!!, 15000L)
+
+        textToSpeech = TextToSpeech(this) { status ->
+            clearTTSInitWatchdog()
+            ttsInitInProgress = false
+            ttsInitStartedAtMs = 0L
+
+            if (status == TextToSpeech.SUCCESS) {
+                val result = textToSpeech?.setLanguage(Locale.US)
+                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    Log.e(TAG, "TTS language not supported, falling back to device default")
+                    textToSpeech?.setLanguage(Locale.getDefault())
+                }
+
+                textToSpeech?.setSpeechRate(0.9f)
+                textToSpeech?.setPitch(1.0f)
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    if (defaultTTSVoice == null) {
+                        defaultTTSVoice = textToSpeech?.voice
+                    }
+
+                    val audioAttributes = AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build()
+                    textToSpeech?.setAudioAttributes(audioAttributes)
+                    Log.d(TAG, "Audio attributes set for TTS with USAGE_MEDIA/CONTENT_TYPE_SPEECH")
+
+                    val preferredVoiceName = preferredTTSVoiceName
+                    if (!preferredVoiceName.isNullOrBlank()) {
+                        val preferredVoice = textToSpeech?.voices?.find { it.name == preferredVoiceName }
+                        if (preferredVoice != null) {
+                            textToSpeech?.voice = preferredVoice
+                            Log.d(TAG, "Reapplied preferred TTS voice after init: $preferredVoiceName")
+                        } else {
+                            Log.w(TAG, "Preferred TTS voice no longer available after init: $preferredVoiceName")
+                            preferredTTSVoiceName = null
+                        }
+                    }
+                }
+
+                Log.d(TAG, "TTS initialized successfully with optimized settings and audio attributes")
+                isTTSInitialized = true
+                notifyTTSInitialized(true)
+
+                if (pendingTTSReadyCallbacks.isNotEmpty()) {
+                    val callbacks = pendingTTSReadyCallbacks.toList()
+                    pendingTTSReadyCallbacks.clear()
+                    callbacks.forEach { callback -> callback.invoke() }
+                }
+            } else {
+                Log.e(TAG, "TTS initialization failed with status=$status")
+
+                pendingTTSReadyCallbacks.clear()
+                isTTSInitialized = false
                 textToSpeech?.shutdown()
                 textToSpeech = null
-            }
-            textToSpeech = TextToSpeech(this) { status ->
-                if (status == TextToSpeech.SUCCESS) {
-                    val result = textToSpeech?.setLanguage(Locale.US)
-                    if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                        Log.e(TAG, "TTS Language not supported")
-                        textToSpeech?.setLanguage(Locale.getDefault())
-                    }
+                notifyTTSInitialized(false)
 
-                    // Optimize TTS settings for better audio quality
-                    textToSpeech?.setSpeechRate(0.9f)
-                    textToSpeech?.setPitch(1.0f)
-
-                    // Set proper audio attributes for API 21+
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        val audioAttributes = AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                            .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
-                            .build()
-                        textToSpeech?.setAudioAttributes(audioAttributes)
-                        Log.d(TAG, "Audio attributes set for TTS with media usage")
-                    }
-
-                    Log.d(TAG, "TTS initialized successfully with optimized settings and audio attributes")
-
-                    // Set initialization flag
-                    isTTSInitialized = true
-
-                    notifyTTSInitialized(true)
-                    // If a ready-callback was provided (e.g. auto-recovery), invoke it now.
-                    onReady?.invoke()
-                } else {
-                    Log.e(TAG, "TTS initialization failed")
-
-                    isTTSInitialized = false
-                    textToSpeech?.shutdown()
-                    textToSpeech = null
-                    notifyTTSInitialized(false)
-
-                    val failedRequestId = pendingTTSRequestId
-                    if (failedRequestId != null) {
-                        notifyTTSPlaybackError(failedRequestId, "Android TTS initialization failed")
-                        pendingTTSText = null
-                        pendingTTSRequestId = null
-                        currentTTSRequestId = null
-                        ttsRecoveryAttempts = 0
-                        ttsAutoRecovering = false
-                    }
+                val failedRequestId = pendingTTSRequestId
+                if (failedRequestId != null) {
+                    notifyTTSPlaybackError(failedRequestId, "Android TTS initialization failed")
+                    pendingTTSText = null
+                    pendingTTSRequestId = null
+                    currentTTSRequestId = null
+                    ttsRecoveryAttempts = 0
+                    ttsAutoRecovering = false
                 }
             }
         }
@@ -1669,6 +1760,15 @@ class WebViewActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun stop() {
+            stopInternal("unspecified")
+        }
+
+        @JavascriptInterface
+        fun stopWithReason(reason: String) {
+            stopInternal(reason.ifBlank { "unspecified" })
+        }
+
+        private fun stopInternal(reason: String) {
             runOnUiThread {
                 val stoppedRequestId = currentTTSRequestId ?: pendingTTSRequestId
                 resetTTSPlaybackState(
@@ -1679,7 +1779,7 @@ class WebViewActivity : AppCompatActivity() {
                 )
                 notifyTTSPlaybackCompleted(stoppedRequestId)
 
-                Log.d(TAG, "TTS stopped")
+                Log.d(TAG, "TTS stopped (reason: $reason)")
             }
         }
 
@@ -1799,6 +1899,7 @@ class WebViewActivity : AppCompatActivity() {
 
                     if (selectedVoice != null) {
                         textToSpeech?.voice = selectedVoice
+                        preferredTTSVoiceName = voiceName
                         Log.d(TAG, "Voice set to: $voiceName")
                         true
                     } else {
@@ -1811,6 +1912,34 @@ class WebViewActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error setting voice: ${e.message}")
+                false
+            }
+        }
+
+        @JavascriptInterface
+        fun resetVoice(): Boolean {
+            return try {
+                if (textToSpeech == null) {
+                    Log.w(TAG, "TTS not initialized, cannot reset voice")
+                    false
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    preferredTTSVoiceName = null
+                    val restoredVoice = defaultTTSVoice
+                    if (restoredVoice != null) {
+                        textToSpeech?.voice = restoredVoice
+                        Log.d(TAG, "TTS voice reset to engine default: ${restoredVoice.name}")
+                    } else {
+                        textToSpeech?.setLanguage(Locale.US)
+                        Log.d(TAG, "TTS voice reset by restoring default language")
+                    }
+                    true
+                } else {
+                    textToSpeech?.setLanguage(Locale.US)
+                    preferredTTSVoiceName = null
+                    true
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error resetting voice: ${e.message}")
                 false
             }
         }

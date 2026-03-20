@@ -42,7 +42,7 @@ function updateUiForPremium(isPremium) {
 function showInterstitialAd(action, callback) {
     // Globably stop any playing TTS audio before showing a fullscreen ad
     if (window.TTSService && typeof window.TTSService.stop === 'function') {
-        window.TTSService.stop();
+        window.TTSService.stop('before-interstitial-ad', true);
     }
 
     if (window.AndroidBilling && typeof window.AndroidBilling.showInterstitialAdAndExecute === 'function') {

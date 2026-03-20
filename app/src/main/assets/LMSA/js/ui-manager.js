@@ -1052,7 +1052,7 @@ export function appendMessage(sender, message, files = null, isStreaming = false
 
                             // Check if currently speaking and stop if needed
                             if (window.TTSService.isSpeaking()) {
-                                window.TTSService.stop();
+                                window.TTSService.stop('speaker-toggle-stop', true);
                                 speakerButton.innerHTML = '<i class="fas fa-volume-up"></i>';
                                 speakerButton.title = 'Read this message aloud';
                                 return;
@@ -1560,7 +1560,7 @@ export function refreshAllMessages() {
 
                                 // Check if currently speaking and stop if needed
                                 if (window.TTSService.isSpeaking()) {
-                                    window.TTSService.stop();
+                                    window.TTSService.stop('speaker-toggle-stop', true);
                                     speakerButton.innerHTML = '<i class="fas fa-volume-up"></i>';
                                     speakerButton.title = 'Read this message aloud';
                                     return;
@@ -2454,7 +2454,7 @@ export function addSpeakerButtonsToExistingMessages() {
 
                         // Check if currently speaking and stop if needed
                         if (window.TTSService.isSpeaking()) {
-                            window.TTSService.stop();
+                            window.TTSService.stop('speaker-toggle-stop', true);
                             speakerButton.innerHTML = '<i class="fas fa-volume-up"></i>';
                             speakerButton.title = 'Read this message aloud';
                             return;
