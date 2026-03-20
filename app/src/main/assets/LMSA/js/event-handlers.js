@@ -55,6 +55,13 @@ let abortController = null;
 let sidebar = document.getElementById('sidebar');
 const WELCOME_SETTINGS_TAPPED_KEY = 'welcomeSettingsTapped';
 
+function isConfirmationModalVisible() {
+    const confirmationModal = document.getElementById('confirmation-modal');
+    return !!(confirmationModal &&
+        !confirmationModal.classList.contains('hidden') &&
+        confirmationModal.style.display !== 'none');
+}
+
 /**
  * Initializes all event handlers
  */
@@ -844,13 +851,15 @@ export function initializeEventHandlers() {
         if (e.target.closest('#close-about') ||
             e.target.closest('#close-settings') ||
             e.target.closest('#close-settings-x') ||
-            e.target.closest('.modal-close-btn')) {
+            e.target.closest('.modal-close-btn') ||
+            e.target.closest('#confirmation-modal')) {
             return;
         }
 
         // Don't handle sidebar clicks if any modal is visible
         const anyModalVisible = document.querySelector('.modal-container:not(.hidden)') ||
-            (settingsModal && settingsModal.style.display === 'flex');
+            (settingsModal && settingsModal.style.display === 'flex') ||
+            isConfirmationModalVisible();
         if (anyModalVisible) {
             return;
         }
@@ -877,6 +886,10 @@ export function initializeEventHandlers() {
             return;
         }
         lastTouchTime = now;
+
+        if (e.target && e.target.closest('#confirmation-modal')) {
+            return;
+        }
 
         // Debug logging removed
         // Only process if this is a simple tap (not scrolling or other complex gestures)
@@ -905,7 +918,8 @@ export function initializeEventHandlers() {
 
             // Don't handle sidebar clicks if any modal is visible
             const anyModalVisible = document.querySelector('.modal-container:not(.hidden)') ||
-                (settingsModal && settingsModal.style.display === 'flex');
+                (settingsModal && settingsModal.style.display === 'flex') ||
+                isConfirmationModalVisible();
             if (anyModalVisible) {
                 return;
             }
@@ -1799,6 +1813,10 @@ function handleCloseSettingsButtonClick() {
  * @param {Event} e - The click event or touch event
  */
 function handleSidebarOutsideClick(e) {
+    if (e.target && e.target.closest('#confirmation-modal')) {
+        return;
+    }
+
     // First check if any modal is currently visible - don't react if a modal is open
     const settingsModalVisible = settingsModal &&
         (!settingsModal.classList.contains('hidden') ||
@@ -1811,7 +1829,7 @@ function handleSidebarOutsideClick(e) {
     }
 
     // Check for other open modals by class
-    const otherModalsVisible = document.querySelector('.modal-container:not(.hidden)');
+    const otherModalsVisible = document.querySelector('.modal-container:not(.hidden)') || isConfirmationModalVisible();
     if (otherModalsVisible) {
         return;
     }

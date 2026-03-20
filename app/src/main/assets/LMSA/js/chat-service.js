@@ -1536,12 +1536,10 @@ export function updateChatHistoryUI() {
                 }, { passive: true });
 
                 trashContainer.addEventListener('click', (e) => {
+                    e.preventDefault();
                     e.stopPropagation();
+                    suppressChatHistoryClickUntil = Date.now() + 500;
                     showDeleteConfirmation(id);
-                    const sidebar = document.getElementById('sidebar');
-                    if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('active')) {
-                        toggleSidebar();
-                    }
                 });
 
                 trashContainer.appendChild(trashIcon);
@@ -1779,7 +1777,8 @@ function openRenameChatModal(id, currentTitle) {
 
     requestAnimationFrame(() => {
         input.focus();
-        input.select();
+        const titleLength = input.value.length;
+        input.setSelectionRange(titleLength, titleLength);
     });
 }
 
@@ -1804,6 +1803,7 @@ export function renameChatTitle(id) {
  * @param {string} id - The ID of the chat to delete
  */
 export function deleteChatHistory(id) {
+    suppressChatHistoryClickUntil = Date.now() + 500;
     delete chatHistoryData[id];
     updateChatHistoryUI(); // This will also call updateChatHistoryScroll()
     saveChatHistory();
