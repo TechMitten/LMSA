@@ -215,7 +215,10 @@ async function loadModelInformation(silent = false) {
         try {
             console.log('Loading model information from server...');
             // Use the API service to fetch models
-            const modelData = await fetchAvailableModels();
+            const modelData = await fetchAvailableModels({
+                forceRefresh: true,
+                disableSelectionFallback: true
+            });
 
             // Restore the original flag value now that we've fetched models
             window.isInitialStartup = originalStartupFlag;
@@ -230,11 +233,19 @@ async function loadModelInformation(silent = false) {
             allAvailableModels = modelData;
             console.log('All available models:', allAvailableModels);
 
-            // Determine which model is actually loaded - use a single source of truth
-            // Priority: 1. Global variable, 2. API service loaded models
+            // Determine which model is actually loaded from the latest server status.
+            // Priority: 1. API service loaded models, 2. validated global state.
             let currentlyLoadedModelId = null;
 
-            if (window.currentLoadedModel) {
+            const loadedModels = getAvailableModels();
+            console.log('Currently loaded models according to API:', loadedModels);
+
+            if (loadedModels.length > 0) {
+                currentlyLoadedModelId = loadedModels[0];
+                console.log('Using model from API service:', currentlyLoadedModelId);
+            }
+
+            if (!currentlyLoadedModelId && window.currentLoadedModel) {
                 console.log('Using global currentLoadedModel variable:', window.currentLoadedModel);
                 // Verify if this model exists in the available models list
                 const foundModel = allAvailableModels.find(model => model.id === window.currentLoadedModel);
@@ -248,20 +259,12 @@ async function loadModelInformation(silent = false) {
                 }
             }
 
-            if (!currentlyLoadedModelId) {
-                // Check API service as fallback
-                const loadedModels = getAvailableModels();
-                console.log('Currently loaded models according to API:', loadedModels);
-
-                if (loadedModels.length > 0) {
-                    currentlyLoadedModelId = loadedModels[0];
-                    console.log('Using model from API service:', currentlyLoadedModelId);
-
-                    // Verify this model exists in our list
-                    const loadedModelInfo = allAvailableModels.find(model => model.id === currentlyLoadedModelId);
-                    if (!loadedModelInfo) {
-                        console.log('API-reported model not found in available models list');
-                    }
+            if (currentlyLoadedModelId) {
+                // Verify API-reported model exists in the latest list
+                const loadedModelInfo = allAvailableModels.find(model => model.id === currentlyLoadedModelId);
+                if (!loadedModelInfo) {
+                    console.log('API-reported model not found in available models list');
+                    currentlyLoadedModelId = null;
                 }
             }
 

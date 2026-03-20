@@ -57,8 +57,8 @@ async function detectApiVersion(ip, port) {
 
         if (response.ok) {
             const data = await response.json().catch(() => null);
-            // Native v1 API returns { models: [...] }
-            if (data && Array.isArray(data.models)) {
+            // Native v1 API returns { models: [...] } or { data: [...] } (OpenAI-compat format)
+            if (data && (Array.isArray(data.models) || Array.isArray(data.data))) {
                 apiVersionCache = { version: 'v1native', ip, port, timestamp: now, ttl: 30000 };
                 console.log('LM Studio native v1 API detected (/api/v1/*)');
                 return 'v1native';
@@ -295,9 +295,9 @@ export async function fetchAvailableModels(options = {}) {
             return [];
         }
 
-        // Check cache first
+        // Check cache first (unless caller explicitly requests a fresh status read)
         const now = Date.now();
-        if (modelInfoCache.data && (now - modelInfoCache.timestamp) < modelInfoCache.ttl) {
+        if (!options.forceRefresh && modelInfoCache.data && (now - modelInfoCache.timestamp) < modelInfoCache.ttl) {
             console.log('Returning cached model info');
             return modelInfoCache.data;
         }
@@ -339,37 +339,45 @@ export async function fetchAvailableModels(options = {}) {
 
                     const nativeData = await modelsResponse.json();
 
-                    if (!nativeData || !Array.isArray(nativeData.models)) {
+                    // Support both { models: [...] } and { data: [...] } response formats
+                    const rawModels = nativeData && (
+                        Array.isArray(nativeData.models) ? nativeData.models :
+                        Array.isArray(nativeData.data)   ? nativeData.data   : null
+                    );
+
+                    if (!rawModels) {
                         console.error('Invalid /api/v1/models response:', nativeData);
                         availableModels = [];
                         if (loadedModelDisplay) loadedModelDisplay.classList.add('hidden');
                         return [];
                     }
 
-                    // Normalise native model objects to have an `id` field (same as legacy)
-                    // The native API uses `key` as the identifier
-                    modelsList = nativeData.models
+                    // Normalise model objects to have an `id` field.
+                    // Native API uses `key`; OpenAI-compat format uses `id`.
+                    modelsList = rawModels
                         .filter(m => m.type === 'llm' || m.type == null) // skip pure embedding models for chat
                         .map(m => ({
                             ...m,
                             id: m.key || m.id,          // normalise to `id`
-                            display_name: m.display_name || m.key
+                            display_name: m.display_name || m.key || m.id
                         }));
 
-                    // Native API: a model is loaded when loaded_instances.length > 0
-                    const loadedNative = nativeData.models.find(
-                        m => Array.isArray(m.loaded_instances) && m.loaded_instances.length > 0
+                    // Detect loaded model: check loaded_instances (native format) OR state field (newer format)
+                    const loadedNative = rawModels.find(
+                        m => (Array.isArray(m.loaded_instances) && m.loaded_instances.length > 0) ||
+                             m.state === 'loaded' || m.state === 'running'
                     );
                     if (loadedNative) {
                         // Use the instance_id from the first loaded instance as the canonical id
-                        const instanceId = loadedNative.loaded_instances[0].id || loadedNative.key;
+                        const instanceId = loadedNative.loaded_instances?.[0]?.id ||
+                                           loadedNative.key || loadedNative.id;
                         loadedModelInfo = modelsList.find(m => m.id === instanceId) ||
-                                          modelsList.find(m => m.id === loadedNative.key) ||
+                                          modelsList.find(m => m.id === (loadedNative.key || loadedNative.id)) ||
                                           modelsList[0];
                         if (loadedModelInfo) {
                             // Store the instance_id so unload uses the right value
                             loadedModelInfo._instanceId = instanceId;
-                            console.log('Native v1 API: loaded model detected via loaded_instances:', loadedModelInfo.id);
+                            console.log('Native v1 API: loaded model detected:', loadedModelInfo.id);
                         }
                     }
                 } else {
@@ -482,9 +490,10 @@ export async function fetchAvailableModels(options = {}) {
                     } catch (_) { /* suppress probe errors */ }
                 }
 
-                // Method 4: Use a previously selected model if it's still in the list.
-                // This preserves user selection when runtime loaded-model detection is flaky.
-                if (!loadedModelInfo) {
+                // Method 4: Optional fallback to previously selected model.
+                // Disabled for strict status checks (e.g. when opening the Models modal),
+                // so we never show stale "last switched" model names.
+                if (!loadedModelInfo && options.disableSelectionFallback !== true) {
                     const fallbackModelId = window.currentLoadedModel || getPersistedLocalSelectedModel();
                     const matchingModel = fallbackModelId
                         ? modelsList.find(model => model.id === fallbackModelId)
@@ -943,6 +952,44 @@ export async function loadModel(modelId) {
         }
 
         console.log(`Attempting to load model: ${modelId}`);
+
+        // ── Unload the currently loaded model before loading a new one ──────
+        // This is required for LM Studio to actually switch models.
+        const currentlyLoaded = window.currentLoadedModel;
+        if (currentlyLoaded && currentlyLoaded !== modelId) {
+            console.log(`Unloading current model "${currentlyLoaded}" before loading "${modelId}"...`);
+            const apiVerUnload = await detectApiVersion(ip, port);
+            let unloadSuccess = false;
+
+            if (apiVerUnload === 'v1native') {
+                unloadSuccess = await tryEndpoints(ip, port, 'Pre-load unload (native)', [
+                    { path: '/api/v1/models/unload', method: 'POST' }
+                ], { instance_id: currentlyLoaded });
+            }
+
+            if (!unloadSuccess) {
+                // Legacy fallback
+                unloadSuccess = await tryEndpoints(ip, port, 'Pre-load unload (legacy)', [
+                    { path: '/v1/internal/model/unload', method: 'POST' },
+                    { path: '/v1/model/unload', method: 'POST' },
+                    { path: '/v1/models/unload', method: 'POST' }
+                ], {});
+            }
+
+            if (unloadSuccess) {
+                console.log(`Successfully unloaded "${currentlyLoaded}"`);
+                window.currentLoadedModel = null;
+                setPersistedLocalSelectedModel(null);
+                // Give LM Studio a moment to finish unloading
+                await new Promise(resolve => setTimeout(resolve, 500));
+            } else {
+                console.warn(`Could not unload "${currentlyLoaded}" — proceeding with load anyway`);
+            }
+
+            // Invalidate the API version / model-info caches
+            apiVersionCache.timestamp = 0;
+            modelInfoCache.timestamp = 0;
+        }
 
         // Determine API version and try the appropriate load endpoint first
         const apiVer = await detectApiVersion(ip, port);
