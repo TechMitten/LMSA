@@ -16,6 +16,7 @@ import { getEnterSendsNewline, clearOpenRouterApiKey, clearLMStudioApiToken } fr
 import {
     showWelcomeMessage, hideWelcomeMessage, toggleSidebar, closeSidebar, showLoadingIndicator,
     hideLoadingIndicator, toggleSendStopButton, hideConfirmationModal, showConfirmationModal,
+    checkAndShowWelcomeMessage,
     getSelectedText, getSelectedMessageElement, appendMessage
 } from './ui-manager.js';
 import {
@@ -479,6 +480,24 @@ export function initializeEventHandlers() {
 
         userInput.addEventListener('blur', function () {
             document.body.classList.remove('chat-input-focused');
+
+            // Defer until after the next focus target and click handlers have settled.
+            setTimeout(() => {
+                if (!userInput || document.activeElement === userInput) {
+                    return;
+                }
+
+                if (handleChatFormSubmit.isSubmitting || isGeneratingText()) {
+                    return;
+                }
+
+                const visibleModal = document.querySelector('.modal-container:not(.hidden)') || isConfirmationModalVisible();
+                if (visibleModal) {
+                    return;
+                }
+
+                checkAndShowWelcomeMessage();
+            }, 0);
         });
 
         // Handle touchstart events for touch devices to hide welcome screen immediately
