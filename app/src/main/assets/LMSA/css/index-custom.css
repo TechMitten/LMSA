@@ -1435,6 +1435,10 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     .welcome-content > .grid.grid-cols-1 > #welcome-templates-btn,
     .welcome-content > .grid.grid-cols-1 > #welcome-models-btn {
         grid-column: span 2 / span 2;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        justify-self: stretch !important;
     }
 
     .welcome-content > .grid.grid-cols-1 > #remove-ads-banner,
@@ -1443,7 +1447,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     }
 
     .welcome-content > .grid.grid-cols-1 > .grid.grid-cols-2 {
-        width: min(360px, 100%);
+        width: 100%;
         margin-left: auto;
         margin-right: auto;
     }
@@ -1466,6 +1470,84 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 
     .welcome-content > .grid.grid-cols-1 > #welcome-models-btn {
         grid-column: span 2 / span 2;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1366px) and (max-height: 1024px) and (orientation: landscape) {
+    #messages {
+        padding-bottom: 1.5rem !important;
+        scroll-padding-bottom: 7rem;
+    }
+
+    #messages > div.user,
+    #messages > div.ai {
+        overflow: visible !important;
+    }
+
+    #messages > div.user .message-controls,
+    #messages > div.ai .message-controls {
+        display: flex !important;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        position: relative;
+        z-index: 4;
+        width: 100%;
+        margin-top: 0.65rem !important;
+        gap: 0.45rem !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    #messages > div.user .message-controls > :not([hidden]) ~ :not([hidden]),
+    #messages > div.ai .message-controls > :not([hidden]) ~ :not([hidden]) {
+        margin-left: 0 !important;
+    }
+
+    #messages > div.user .message-controls > button,
+    #messages > div.ai .message-controls > button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 5;
+        min-width: 38px;
+        min-height: 38px;
+        padding: 8px 10px;
+        flex: 0 0 auto;
+        border-radius: 0.55rem;
+        color: rgba(226, 232, 240, 0.96) !important;
+        background: rgba(15, 23, 42, 0.42) !important;
+        border: 1px solid rgba(148, 163, 184, 0.22) !important;
+        box-shadow:
+            0 6px 14px rgba(2, 6, 23, 0.22),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    #messages > div.user .message-controls i,
+    #messages > div.ai .message-controls i {
+        font-size: 14px;
+        color: inherit !important;
+        opacity: 1 !important;
+    }
+
+    body.light-theme #messages > div.user .message-controls > button,
+    body.light-theme #messages > div.ai .message-controls > button {
+        color: rgba(30, 41, 59, 0.96) !important;
+        background: rgba(255, 255, 255, 0.88) !important;
+        border-color: rgba(148, 163, 184, 0.28) !important;
+        box-shadow:
+            0 6px 14px rgba(148, 163, 184, 0.18),
+            inset 0 1px 0 rgba(255, 255, 255, 0.92);
+    }
+}
+
+@media (hover: none) and (pointer: coarse) and (min-width: 900px) and (orientation: landscape) {
+    #messages > div.user .message-controls,
+    #messages > div.ai .message-controls {
+        opacity: 1 !important;
+        visibility: visible !important;
     }
 }
 
