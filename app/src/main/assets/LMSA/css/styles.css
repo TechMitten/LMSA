@@ -409,6 +409,10 @@ body.light-theme .chat-scrollbar-thumb {
     /* Prevent transform from affecting welcome message */
     width: 100%;
     /* Ensure full width */
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 300ms ease;
+    will-change: opacity;
 }
 
 /* Adjust welcome message when model banner is visible */

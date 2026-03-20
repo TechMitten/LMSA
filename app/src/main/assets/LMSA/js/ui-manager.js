@@ -12,6 +12,20 @@ import { domBatcher, rafThrottle } from './optimized-utils.js';
 let selectedText = '';
 let selectedMessageElement = null;
 let longPressTimer;
+const WELCOME_MESSAGE_FADE_DURATION_MS = 300;
+let welcomeMessageFadeTimeout = null;
+let welcomeMessageTransitionToken = 0;
+
+function isWelcomeMessageVisible() {
+    if (!welcomeMessage) {
+        return false;
+    }
+
+    const computedStyle = window.getComputedStyle(welcomeMessage);
+    return computedStyle.display !== 'none' &&
+        computedStyle.visibility !== 'hidden' &&
+        parseFloat(computedStyle.opacity || '1') >= 1;
+}
 
 function forceSidebarRepaint(element) {
     if (!element) return;
@@ -67,12 +81,17 @@ function setCollapsibleSectionExpanded(header, shouldExpand) {
 export function showWelcomeMessage() {
     // Performance monitoring removed
 
+    const transitionToken = ++welcomeMessageTransitionToken;
+    const shouldAnimate = !isWelcomeMessageVisible();
+    clearTimeout(welcomeMessageFadeTimeout);
+
     // Batch DOM operations to prevent layout thrashing
     domBatcher.write(() => {
         if (welcomeMessage) {
             welcomeMessage.style.display = 'flex';
-            welcomeMessage.style.opacity = '1';
             welcomeMessage.style.visibility = 'visible';
+            welcomeMessage.style.pointerEvents = 'auto';
+            welcomeMessage.style.opacity = shouldAnimate ? '0' : '1';
         }
         if (messagesContainer) {
             messagesContainer.style.opacity = '0';
@@ -93,6 +112,18 @@ export function showWelcomeMessage() {
         if (welcomeMessage) {
             void welcomeMessage.offsetWidth;
             ensureWelcomeMessagePosition();
+
+            if (!shouldAnimate) {
+                return;
+            }
+
+            requestAnimationFrame(() => {
+                if (welcomeMessageTransitionToken !== transitionToken || welcomeMessage.style.display === 'none') {
+                    return;
+                }
+
+                welcomeMessage.style.opacity = '1';
+            });
         }
     });
 }
@@ -103,12 +134,15 @@ export function showWelcomeMessage() {
 export function hideWelcomeMessage() {
     // Performance monitoring removed
 
+    const transitionToken = ++welcomeMessageTransitionToken;
+    clearTimeout(welcomeMessageFadeTimeout);
+
     // Batch DOM operations to prevent layout thrashing
     domBatcher.write(() => {
         if (welcomeMessage) {
+            welcomeMessage.style.display = 'flex';
             welcomeMessage.style.opacity = '0';
-            welcomeMessage.style.visibility = 'hidden';
-            welcomeMessage.style.display = 'none';
+            welcomeMessage.style.pointerEvents = 'none';
         }
 
         if (messagesContainer) {
@@ -124,6 +158,17 @@ export function hideWelcomeMessage() {
             removeAdsBanner.style.display = 'none';
         }
     });
+
+    if (welcomeMessage) {
+        welcomeMessageFadeTimeout = setTimeout(() => {
+            if (welcomeMessageTransitionToken !== transitionToken) {
+                return;
+            }
+
+            welcomeMessage.style.visibility = 'hidden';
+            welcomeMessage.style.display = 'none';
+        }, WELCOME_MESSAGE_FADE_DURATION_MS);
+    }
 }
 
 /**
