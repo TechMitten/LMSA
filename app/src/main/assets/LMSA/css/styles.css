@@ -1855,8 +1855,34 @@ button[type="submit"] {
     /* Keep button at fixed height matching input */
 }
 
+#chat-input-area {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: auto;
+    padding: 0.95rem 0.75rem 0.5rem;
+    background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(12, 18, 28, 0.82) 16%, rgba(6, 10, 17, 0.97) 58%, rgba(3, 6, 12, 1) 100%),
+        radial-gradient(circle at 50% 8%, rgba(100, 116, 139, 0.2) 0%, rgba(100, 116, 139, 0) 52%),
+        linear-gradient(135deg, rgba(30, 41, 59, 0.18) 0%, rgba(15, 23, 42, 0) 55%, rgba(51, 65, 85, 0.16) 100%);
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 -20px 38px rgba(2, 6, 23, 0.4);
+    backdrop-filter: blur(18px) saturate(120%);
+    -webkit-backdrop-filter: blur(18px) saturate(120%);
+}
+
+body.light-theme #chat-input-area {
+    background:
+        linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, rgba(226, 232, 240, 0.86) 16%, rgba(226, 232, 240, 0.98) 58%, rgba(241, 245, 249, 1) 100%),
+        radial-gradient(circle at 50% 8%, rgba(148, 163, 184, 0.24) 0%, rgba(148, 163, 184, 0) 56%),
+        linear-gradient(135deg, rgba(241, 245, 249, 0.88) 0%, rgba(226, 232, 240, 0.78) 100%);
+    border-top: 1px solid rgba(148, 163, 184, 0.28);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62), 0 -18px 32px rgba(148, 163, 184, 0.24);
+}
+
 #chat-form {
-    padding: 0.5rem 0.75rem 0.75rem 0.75rem;
+    padding: 0;
     background-color: transparent;
     border-top: none;
     position: relative;
@@ -1868,8 +1894,8 @@ button[type="submit"] {
     /* Align items to bottom for dynamic height */
     gap: 0px;
     /* Remove gap between elements */
-    min-height: calc(52px + 1rem);
-    /* Minimum height instead of fixed */
+    min-height: 52px;
+    /* Wrapper now provides the vertical padding */
     box-sizing: border-box;
     /* Include padding in height calculation */
     margin-bottom: 0;
@@ -1999,13 +2025,37 @@ button[type="submit"] {
     font-weight: normal;
     text-align: center;
     letter-spacing: 0.5px;
-    padding-top: 1mm;
-    padding-bottom: 1mm;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    min-height: 1.2rem;
+    margin-top: 0.4rem;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
     color: rgba(156, 163, 175, 0.7);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
     /* Grayer muted text */
 }
 
+body.chat-input-focused #ai-disclaimer {
+    opacity: 1;
+    visibility: visible;
+}
+
 @media (max-width: 480px) {
+
+    #chat-input-area {
+        padding: 0.8rem 0.5rem 0.4rem;
+    }
+
+    #ai-disclaimer {
+        min-height: 1.1rem;
+        margin-top: 0.35rem;
+    }
 
     #chat-form {
         align-items: center;
@@ -5104,9 +5154,9 @@ body.light-theme .regenerate-btn:hover {
 
     /* Adjust chat form for very small screens */
     #chat-form {
-        padding: 8px 8px 12px 8px;
-        min-height: calc(44px + 16px);
-        /* Minimum height for dynamic expansion */
+        padding: 0;
+        min-height: 44px;
+        /* Wrapper now provides the vertical padding */
     }
 
     #send-button {

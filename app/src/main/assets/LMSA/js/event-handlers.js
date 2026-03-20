@@ -451,6 +451,8 @@ export function initializeEventHandlers() {
 
         // Handle focus events to ensure cursor visibility when focusing the input field
         userInput.addEventListener('focus', function (e) {
+            document.body.classList.add('chat-input-focused');
+
             // Hide welcome screen when user focuses on input field
             import('./ui-manager.js').then(module => {
                 if (typeof module.hideWelcomeMessage === 'function' && welcomeMessage && welcomeMessage.style.display !== 'none') {
@@ -466,6 +468,10 @@ export function initializeEventHandlers() {
             // Then ensure cursor is visible
             scrollInputToEnd(e.target);
             ensureCursorVisible(e.target);
+        });
+
+        userInput.addEventListener('blur', function () {
+            document.body.classList.remove('chat-input-focused');
         });
 
         // Handle touchstart events for touch devices to hide welcome screen immediately

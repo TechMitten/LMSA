@@ -717,8 +717,34 @@ body.light-theme #messages>div.ai {
 
 
 /* Input Area Enhancements */
+#chat-input-area {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: auto;
+  padding: 1rem 0.9rem 0.55rem;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(11, 17, 27, 0.84) 16%, rgba(5, 8, 14, 0.97) 56%, rgba(2, 6, 12, 1) 100%),
+    radial-gradient(circle at 50% 8%, rgba(148, 163, 184, 0.22) 0%, rgba(148, 163, 184, 0) 52%),
+    linear-gradient(135deg, rgba(51, 65, 85, 0.22) 0%, rgba(15, 23, 42, 0) 50%, rgba(30, 41, 59, 0.24) 100%);
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 -22px 42px rgba(2, 6, 23, 0.42);
+  backdrop-filter: blur(20px) saturate(120%);
+  -webkit-backdrop-filter: blur(20px) saturate(120%);
+}
+
+body.light-theme #chat-input-area {
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, rgba(226, 232, 240, 0.88) 16%, rgba(226, 232, 240, 0.98) 56%, rgba(241, 245, 249, 1) 100%),
+    radial-gradient(circle at 50% 8%, rgba(148, 163, 184, 0.26) 0%, rgba(148, 163, 184, 0) 58%),
+    linear-gradient(135deg, rgba(241, 245, 249, 0.92) 0%, rgba(226, 232, 240, 0.82) 100%);
+  border-top: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62), 0 -18px 34px rgba(148, 163, 184, 0.22);
+}
+
 #chat-form {
-  padding: 0.75rem 1.25rem;
+  padding: 0;
   background-color: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -833,13 +859,33 @@ body.light-theme #active-character-display {
   font-weight: normal;
   text-align: center;
   letter-spacing: 0.5px;
-  padding-top: 1mm;
-  padding-bottom: 1mm;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 1.2rem;
+  margin-top: 0.4rem;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
   color: rgba(156, 163, 175, 0.7);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
   /* Grayer muted text */
 }
 
+body.chat-input-focused #ai-disclaimer {
+  opacity: 1;
+  visibility: visible;
+}
+
 @media (max-width: 768px) {
+  #ai-disclaimer {
+    min-height: 1.1rem;
+    margin-top: 0.35rem;
+  }
+
   #user-input {
     border-radius: 0.75rem 0 0 0.75rem;
     /* Consistent smaller rounded left side */
@@ -1233,8 +1279,12 @@ body.light-theme .close-btn:hover {
   }
 
   /* Input field fixes */
+  #chat-input-area {
+    padding: 0.85rem 0.65rem 0.45rem !important;
+  }
+
   #chat-form {
-    padding: 0.95rem 0.75rem !important;
+    padding: 0 !important;
   }
 
   #user-input {
