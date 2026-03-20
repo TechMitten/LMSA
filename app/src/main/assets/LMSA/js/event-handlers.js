@@ -97,6 +97,18 @@ export function initializeEventHandlers() {
         }, delayMs);
     };
 
+    const openPremiumFlow = () => {
+        // Prefer opening the premium modal; fall back to direct purchase only if needed.
+        if (typeof window.openPremiumModal === 'function') {
+            window.openPremiumModal();
+            return;
+        }
+
+        if (typeof window.removeAds === 'function') {
+            window.removeAds();
+        }
+    };
+
     // "Continue with Character" button has been removed
     // Event listeners for it are no longer needed
     // Settings button in welcome message
@@ -220,18 +232,6 @@ export function initializeEventHandlers() {
     if (removeAdsBannerButton) {
         bindPressInFeedback(removeAdsBannerButton);
 
-        const openPremiumFlow = () => {
-            // Prefer opening the premium modal; fall back to direct purchase only if needed.
-            if (typeof window.openPremiumModal === 'function') {
-                window.openPremiumModal();
-                return;
-            }
-
-            if (typeof window.removeAds === 'function') {
-                window.removeAds();
-            }
-        };
-
         removeAdsBannerButton.addEventListener('click', openPremiumFlow);
         removeAdsBannerButton.addEventListener('touchend', (e) => {
             e.preventDefault();
@@ -239,6 +239,26 @@ export function initializeEventHandlers() {
             runAfterPressIn(removeAdsBannerButton, () => {
                 openPremiumFlow();
                 removeAdsBannerButton.blur();
+            });
+        }, { passive: false });
+    }
+
+    const sidebarPremiumButton = document.getElementById('remove-ads-button');
+    if (sidebarPremiumButton) {
+        bindPressInFeedback(sidebarPremiumButton);
+
+        const openSidebarPremiumFlow = () => {
+            closeSidebar();
+            openPremiumFlow();
+        };
+
+        sidebarPremiumButton.addEventListener('click', openSidebarPremiumFlow);
+        sidebarPremiumButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            runAfterPressIn(sidebarPremiumButton, () => {
+                openSidebarPremiumFlow();
+                sidebarPremiumButton.blur();
             });
         }, { passive: false });
     }
