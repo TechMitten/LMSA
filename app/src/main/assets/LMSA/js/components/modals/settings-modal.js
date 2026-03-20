@@ -59,6 +59,18 @@ export const settingsModal = `
                                 <span>Configure</span>
                             </button>
                         </div>
+                        <!-- LM Studio API Token row (optional — for auth-enabled servers) -->
+                        <div class="connection-status-row mt-3">
+                            <div class="connection-status-info">
+                                <i class="fas fa-key connection-status-icon"></i>
+                                <span id="lmstudio-token-status-text" class="connection-status-text">No token (optional)</span>
+                            </div>
+                            <button id="configure-lmstudio-token-btn" type="button"
+                                class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
+                                <i class="fas fa-pencil-alt text-xs"></i>
+                                <span>Token</span>
+                            </button>
+                        </div>
                         <p class="text-xs text-gray-300 mt-2">Need help? Visit the <a href="#" id="open-help-from-settings-link" class="text-blue-400 hover:text-blue-300 underline">LMSA Help section</a>.</p>
                     </div>
 
@@ -313,6 +325,11 @@ export const settingsModal = `
                             <i class="fas fa-key text-sm"></i>
                             <span>Clear OpenRouter Key</span>
                         </button>
+
+                        <button id="clear-lmstudio-token" class="settings-action-button">
+                            <i class="fas fa-key text-sm"></i>
+                            <span>Clear LM Studio Token</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -462,7 +479,6 @@ export const settingsModal = `
             </div>
         </div>
     </div>
-
     <!-- OpenRouter API Key Input Modal -->
     <div id="openrouter-key-input-modal"
         class="fixed inset-0 items-center justify-center hidden modal-container"
@@ -499,6 +515,53 @@ export const settingsModal = `
                     Cancel
                 </button>
                 <button id="save-openrouter-key-input-modal" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
+                    <i class="fas fa-check mr-2"></i>Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LM Studio API Token Input Modal -->
+    <div id="lmstudio-token-input-modal"
+        class="fixed inset-0 items-center justify-center hidden modal-container"
+        style="z-index: 2500; background: rgba(0,0,0,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);"
+        role="dialog" aria-modal="true" aria-labelledby="lmstudio-token-input-title">
+        <div class="connection-input-modal-box animate-modal-in">
+            <div class="connection-input-modal-accent connection-input-modal-accent--blue"></div>
+            <div class="flex justify-between items-center mb-5">
+                <h3 id="lmstudio-token-input-title" class="text-lg font-bold flex items-center" style="color: var(--settings-title-color, #f1f5f9);">
+                    <i class="fas fa-key text-blue-400 mr-2"></i>LM Studio API Token
+                </h3>
+                <button id="close-lmstudio-token-input-modal" type="button" class="conn-modal-close-btn" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <p class="text-sm mb-4" style="color: var(--settings-help-text, #9ca3af);">Optionally enter an LM Studio API token if your server requires authentication. Generate tokens in LM Studio &rsaquo; Developer &rsaquo; Server Settings &rsaquo; Manage Tokens.</p>
+            <div class="mb-5">
+                <label for="lmstudio-api-token" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">API Token</label>
+                <div class="openrouter-key-input-wrapper">
+                    <input type="password" id="lmstudio-api-token"
+                        placeholder="sk-lm-xxxx:yyyy" autocomplete="off" data-form-type="other">
+                    <button type="button" id="lmstudio-api-token-reveal"
+                        class="openrouter-key-reveal-btn"
+                        title="Show/hide token"
+                        onclick="(function(){var i=document.getElementById('lmstudio-api-token'),b=document.getElementById('lmstudio-api-token-reveal');if(i.type==='password'){i.type='text';b.innerHTML='<i class=&quot;fas fa-eye-slash&quot;></i>';}else{i.type='password';b.innerHTML='<i class=&quot;fas fa-eye&quot;></i>';}})()">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);"><i class="fas fa-lock mr-1"></i>Stored locally on your device only. Expected format example: sk-lm-xxxx:yyyy</p>
+            </div>
+            <div class="flex gap-3">
+                <button id="cancel-lmstudio-token-input-modal" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    Cancel
+                </button>
+                <button id="clear-lmstudio-token-input-modal" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    <i class="fas fa-trash-alt mr-2"></i>Clear
+                </button>
+                <button id="save-lmstudio-token-input-modal" type="button"
                     class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
                     <i class="fas fa-check mr-2"></i>Save
                 </button>

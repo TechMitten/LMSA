@@ -1,7 +1,7 @@
 // File Upload functionality
 import { fileUploadInput as importedFileUploadInput } from './dom-elements.js';
 import { appendMessage } from './ui-manager.js';
-import { getUseOpenRouter, getUseOllama } from './settings-manager.js';
+import { getUseOpenRouter, getUseOllama, getLMStudioApiToken } from './settings-manager.js';
 // Optimization modules removed
 
 let uploadedFiles = [];
@@ -16,6 +16,11 @@ let visionModelCache = {
     timestamp: 0,
     ttl: 10000 // 10 second cache
 };
+
+function getLMStudioAuthHeaders() {
+    const token = getLMStudioApiToken();
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
 
 /**
  * Check if the current model is a vision language model
@@ -63,6 +68,7 @@ export async function isVisionModel() {
         try {
             const nativeResponse = await fetch(`http://${serverIp}:${serverPort}/api/v1/models`, {
                 method: 'GET',
+                headers: getLMStudioAuthHeaders(),
                 signal: AbortSignal.timeout(3000)
             });
 
@@ -90,6 +96,7 @@ export async function isVisionModel() {
         try {
             const modelsResponse = await fetch(`http://${serverIp}:${serverPort}/v1/models`, {
                 method: 'GET',
+                headers: getLMStudioAuthHeaders(),
                 signal: AbortSignal.timeout(3000) // 3 second timeout
             });
 
@@ -135,6 +142,7 @@ export async function isVisionModel() {
                 try {
                     const infoResponse = await fetch(`http://${serverIp}:${serverPort}${endpoint}`, {
                         method: 'GET',
+                        headers: getLMStudioAuthHeaders(),
                         signal: AbortSignal.timeout(2000)
                     });
 
@@ -331,7 +339,8 @@ async function testVisionCapability(serverIp, serverPort, modelId) {
         const response = await fetch(`http://${serverIp}:${serverPort}/v1/chat/completions`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                ...getLMStudioAuthHeaders()
             },
             body: JSON.stringify(testRequest),
             signal: AbortSignal.timeout(5000) // 5 second timeout

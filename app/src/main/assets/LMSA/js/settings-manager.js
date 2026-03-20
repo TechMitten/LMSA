@@ -35,6 +35,7 @@ let defaultModelId = null; // Default model to auto-select when models load
 let selectedTTSVoice = null; // Selected TTS voice name
 let useOpenRouter = false; // Use OpenRouter cloud API
 let openRouterApiKey = ''; // OpenRouter API key
+let lmStudioApiToken = ''; // Optional LM Studio API token for authenticated servers
 let showModelLabel = true; // Show model name on AI message bubbles
 let showChatScrollbar = false; // Show scrollbar in chat message area
 let showScrollToBottom = true; // Show scroll to bottom button in chat
@@ -1249,6 +1250,46 @@ export function clearOpenRouterApiKey() {
 }
 
 /**
+ * Loads the LM Studio API token from localStorage.
+ * The token is optional — only sent when the LM Studio server requires authentication.
+ */
+export function loadLMStudioApiTokenSetting() {
+  const savedToken = localStorage.getItem('lmStudioApiToken');
+  if (savedToken) {
+    lmStudioApiToken = savedToken;
+  }
+}
+
+/**
+ * Gets the current LM Studio API token.
+ * @returns {string} - The token string, or empty string if not set.
+ */
+export function getLMStudioApiToken() {
+  return lmStudioApiToken;
+}
+
+/**
+ * Sets and persists the LM Studio API token.
+ * @param {string} token
+ */
+export function setLMStudioApiToken(token) {
+  lmStudioApiToken = token || '';
+  if (lmStudioApiToken) {
+    localStorage.setItem('lmStudioApiToken', lmStudioApiToken);
+  } else {
+    localStorage.removeItem('lmStudioApiToken');
+  }
+}
+
+/**
+ * Clears the LM Studio API token from memory and localStorage.
+ */
+export function clearLMStudioApiToken() {
+  lmStudioApiToken = '';
+  localStorage.removeItem('lmStudioApiToken');
+}
+
+/**
  * Initialize TTS voice selection
  */
 export async function initializeTTSVoiceSelection() {
@@ -1458,6 +1499,7 @@ export function loadSettings() {
   loadDefaultModelSetting();
   loadOllamaSetting();
   loadOpenRouterSettings();
+  loadLMStudioApiTokenSetting();
   loadShowModelLabelSetting();
   loadShowChatScrollbarSetting();
   loadShowScrollToBottomSetting();

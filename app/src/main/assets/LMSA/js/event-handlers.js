@@ -12,7 +12,7 @@ import {
     welcomeModelsBtn, welcomeNewChatBtn, welcomeHelpBtn
 } from './dom-elements.js';
 import { showSettingsModal, hideSettingsModal } from './settings-modal-manager.js';
-import { getEnterSendsNewline, clearOpenRouterApiKey } from './settings-manager.js';
+import { getEnterSendsNewline, clearOpenRouterApiKey, clearLMStudioApiToken } from './settings-manager.js';
 import {
     showWelcomeMessage, hideWelcomeMessage, toggleSidebar, closeSidebar, showLoadingIndicator,
     hideLoadingIndicator, toggleSendStopButton, hideConfirmationModal, showConfirmationModal,
@@ -510,6 +510,18 @@ export function initializeEventHandlers() {
             setTimeout(() => {
                 setActionToPerform('clearOpenRouterKey');
                 showConfirmationModal('Are you sure you want to clear the OpenRouter API key? You will need to re-enter it to use OpenRouter.');
+            }, 100);
+        });
+    }
+
+    // Clear LM Studio token button
+    const clearLMStudioTokenButton = document.getElementById('clear-lmstudio-token');
+    if (clearLMStudioTokenButton) {
+        clearLMStudioTokenButton.addEventListener('click', () => {
+            hideSettingsModal();
+            setTimeout(() => {
+                setActionToPerform('clearLMStudioToken');
+                showConfirmationModal('Are you sure you want to clear the LM Studio API token? API requests will be sent without authentication.');
             }, 100);
         });
     }
@@ -1882,6 +1894,9 @@ function handleConfirmAction() {
     } else if (action === 'clearOpenRouterKey') {
         hideConfirmationModal();
         clearOpenRouterApiKey();
+    } else if (action === 'clearLMStudioToken') {
+        hideConfirmationModal();
+        clearLMStudioApiToken();
     } else {
         // Default case - just hide the modal
         hideConfirmationModal();

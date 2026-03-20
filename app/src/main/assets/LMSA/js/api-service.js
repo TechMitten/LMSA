@@ -1,6 +1,6 @@
 // API Service for handling server communication
 import { serverIpInput, serverPortInput, loadedModelDisplay } from './dom-elements.js';
-import { getLightThemeEnabled, getUseOllama, getUseOpenRouter, getOpenRouterApiKey } from './settings-manager.js';
+import { getLightThemeEnabled, getUseOllama, getUseOpenRouter, getOpenRouterApiKey, getLMStudioApiToken } from './settings-manager.js';
 import { showIpPortErrorModal, hideIpPortErrorModal } from './ui-manager.js';
 
 let API_URL = '';
@@ -29,6 +29,16 @@ let apiVersionCache = {
 };
 
 /**
+ * Returns headers for LM Studio API requests, including an Authorization Bearer
+ * token when the user has configured one (required for auth-enabled LM Studio servers).
+ * @returns {Object}
+ */
+function getLMStudioAuthHeaders() {
+    const token = getLMStudioApiToken();
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
+/**
  * Detect which API version the connected LM Studio instance supports.
  * Tries /api/v1/models (native v1, LM Studio ≥ 0.3.6) first;
  * falls back to /v1/models (legacy OpenAI-compat).
@@ -51,7 +61,8 @@ async function detectApiVersion(ip, port) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
         const response = await fetch(`http://${ip}:${port}/api/v1/models`, {
-            signal: controller.signal
+            signal: controller.signal,
+            headers: getLMStudioAuthHeaders()
         }).catch(() => ({ ok: false }));
         clearTimeout(timeoutId);
 
@@ -325,7 +336,8 @@ export async function fetchAvailableModels(options = {}) {
                     // ── Modern LM Studio native API (≥ 0.3.6) ────────────────────────
                     // GET /api/v1/models → { models: [ { key, display_name, loaded_instances: [...] } ] }
                     const modelsResponse = await fetch(`http://${ip}:${port}/api/v1/models`, {
-                        signal: controller.signal
+                        signal: controller.signal,
+                        headers: getLMStudioAuthHeaders()
                     });
 
                     clearTimeout(timeoutId);
@@ -383,7 +395,8 @@ export async function fetchAvailableModels(options = {}) {
                 } else {
                     // ── Legacy OpenAI-compat API (/v1/*) ─────────────────────────────
                     const modelsResponse = await fetch(`http://${ip}:${port}/v1/models`, {
-                        signal: controller.signal
+                        signal: controller.signal,
+                        headers: getLMStudioAuthHeaders()
                     });
 
                     clearTimeout(timeoutId);
@@ -432,6 +445,7 @@ export async function fetchAvailableModels(options = {}) {
                                 const infoTimer = setTimeout(() => infoCtrl.abort(), 2000);
                                 const infoResp = await fetch(`http://${ip}:${port}${endpoint}`, {
                                     method: 'GET',
+                                    headers: getLMStudioAuthHeaders(),
                                     signal: infoCtrl.signal
                                 }).catch(() => ({ ok: false }));
                                 clearTimeout(infoTimer);
@@ -464,7 +478,10 @@ export async function fetchAvailableModels(options = {}) {
 
                         const chatResponse = await fetch(`http://${ip}:${port}/v1/chat/completions`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...getLMStudioAuthHeaders()
+                            },
                             body: JSON.stringify({
                                 messages: [
                                     { role: 'system', content: 'You are a helpful assistant.' },
@@ -721,7 +738,8 @@ export async function isServerRunning() {
 
             const response = await fetch(checkUrl, {
                 method: 'GET',
-                signal: controller.signal
+                signal: controller.signal,
+                headers: getLMStudioAuthHeaders()
             });
 
             clearTimeout(timeoutId);
@@ -758,6 +776,7 @@ async function tryEndpoints(ip, port, operation, endpoints, requestData = null) 
                 method: endpoint.method,
                 headers: {
                     'Content-Type': 'application/json',
+                    ...getLMStudioAuthHeaders()
                 },
                 signal: controller.signal
             };
@@ -809,6 +828,7 @@ async function waitForModelLoad(ip, port, modelId, maxAttempts = 10) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    ...getLMStudioAuthHeaders()
                 },
                 body: JSON.stringify({
                     model: modelId,
@@ -862,6 +882,7 @@ async function forceLoadModel(ip, port, modelId) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                ...getLMStudioAuthHeaders()
             },
             body: JSON.stringify({
                 model: modelId,
@@ -1125,7 +1146,8 @@ export async function ejectModel() {
                 const legacyCtrl = new AbortController();
                 const legacyTimer = setTimeout(() => legacyCtrl.abort(), 3000);
                 const legacyResp = await fetch(`http://${ip}:${port}/v1/models`, {
-                    signal: legacyCtrl.signal
+                    signal: legacyCtrl.signal,
+                    headers: getLMStudioAuthHeaders()
                 }).catch(() => ({ ok: false }));
                 clearTimeout(legacyTimer);
 

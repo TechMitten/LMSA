@@ -1303,6 +1303,7 @@ function initializeClearSystemPromptModal() {
 export function updateConnectionStatusDisplays() {
     const localStatusEl = document.getElementById('local-server-status-text');
     const orKeyStatusEl = document.getElementById('openrouter-key-status-text');
+    const lmTokenStatusEl = document.getElementById('lmstudio-token-status-text');
 
     if (localStatusEl) {
         const ip = localStorage.getItem('serverIp') || '';
@@ -1329,6 +1330,20 @@ export function updateConnectionStatusDisplays() {
             orKeyStatusEl.style.color = '';
         }
     }
+
+    if (lmTokenStatusEl) {
+        const token = localStorage.getItem('lmStudioApiToken') || '';
+        if (token) {
+            const masked = token.length > 12
+                ? token.substring(0, 8) + '\u2026' + token.slice(-4)
+                : '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
+            lmTokenStatusEl.textContent = `Token saved (${masked})`;
+            lmTokenStatusEl.style.color = 'var(--accent-green, #10b981)';
+        } else {
+            lmTokenStatusEl.textContent = 'No token (optional)';
+            lmTokenStatusEl.style.color = '';
+        }
+    }
 }
 
 /**
@@ -1339,6 +1354,7 @@ export function updateConnectionStatusDisplays() {
 function initializeConnectionInputModals() {
     const ipPortModal = document.getElementById('ip-port-input-modal');
     const orKeyModal = document.getElementById('openrouter-key-input-modal');
+    const lmTokenModal = document.getElementById('lmstudio-token-input-modal');
 
     if (!ipPortModal || !orKeyModal) {
         debugLog('Connection input modals not found');
@@ -1503,6 +1519,95 @@ function initializeConnectionInputModals() {
                 orKeyInput.scrollIntoView({ behavior: 'auto', block: 'center' });
             }
         });
+    }
+
+    // ----- LM Studio API Token modal -----
+
+    if (lmTokenModal) {
+        const configLmTokenBtn = document.getElementById('configure-lmstudio-token-btn');
+        if (configLmTokenBtn) {
+            configLmTokenBtn.addEventListener('click', () => {
+                // Seed input with current saved value
+                const tokenInput = document.getElementById('lmstudio-api-token');
+                if (tokenInput) tokenInput.value = localStorage.getItem('lmStudioApiToken') || '';
+                showInputModal(lmTokenModal);
+            });
+        }
+
+        const closeLmTokenBtnX = document.getElementById('close-lmstudio-token-input-modal');
+        const cancelLmTokenBtn = document.getElementById('cancel-lmstudio-token-input-modal');
+        const clearLmTokenBtn = document.getElementById('clear-lmstudio-token-input-modal');
+        const saveLmTokenBtn = document.getElementById('save-lmstudio-token-input-modal');
+
+        const dismissLmTokenModal = () => {
+            const tokenInput = document.getElementById('lmstudio-api-token');
+            if (tokenInput) {
+                tokenInput.value = localStorage.getItem('lmStudioApiToken') || '';
+                tokenInput.type = 'password';
+                const revealBtn = document.getElementById('lmstudio-api-token-reveal');
+                if (revealBtn) revealBtn.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+            hideInputModal(lmTokenModal);
+        };
+
+        if (closeLmTokenBtnX) closeLmTokenBtnX.addEventListener('click', dismissLmTokenModal);
+        if (cancelLmTokenBtn) cancelLmTokenBtn.addEventListener('click', dismissLmTokenModal);
+        if (clearLmTokenBtn) {
+            clearLmTokenBtn.addEventListener('click', () => {
+                const tokenInput = document.getElementById('lmstudio-api-token');
+                if (tokenInput) {
+                    tokenInput.value = '';
+                    tokenInput.type = 'password';
+                    const revealBtn = document.getElementById('lmstudio-api-token-reveal');
+                    if (revealBtn) revealBtn.innerHTML = '<i class="fas fa-eye"></i>';
+                }
+
+                localStorage.removeItem('lmStudioApiToken');
+                import('./settings-manager.js').then(m => {
+                    if (typeof m.clearLMStudioApiToken === 'function') {
+                        m.clearLMStudioApiToken();
+                    } else if (typeof m.setLMStudioApiToken === 'function') {
+                        m.setLMStudioApiToken('');
+                    }
+                }).catch(() => {});
+
+                updateConnectionStatusDisplays();
+                hideInputModal(lmTokenModal);
+            });
+        }
+
+        if (saveLmTokenBtn) {
+            saveLmTokenBtn.addEventListener('click', () => {
+                const tokenInput = document.getElementById('lmstudio-api-token');
+                const token = tokenInput ? tokenInput.value.trim() : '';
+                if (token) {
+                    localStorage.setItem('lmStudioApiToken', token);
+                } else {
+                    localStorage.removeItem('lmStudioApiToken');
+                }
+                // Sync in-memory value via settings-manager
+                import('./settings-manager.js').then(m => {
+                    if (typeof m.setLMStudioApiToken === 'function') m.setLMStudioApiToken(token);
+                }).catch(() => {});
+                updateConnectionStatusDisplays();
+                hideInputModal(lmTokenModal);
+            });
+        }
+
+        // Close on backdrop tap
+        lmTokenModal.addEventListener('click', e => {
+            if (e.target === lmTokenModal) dismissLmTokenModal();
+        });
+
+        // Ensure input scrolls into view when focused
+        const lmTokenInput = lmTokenModal.querySelector('input[type="password"]') ||
+                             lmTokenModal.querySelector('input[type="text"]');
+        if (lmTokenInput) {
+            lmTokenInput.addEventListener('focus', () => {
+                const box = lmTokenModal.querySelector('.connection-input-modal-box');
+                if (box) lmTokenInput.scrollIntoView({ behavior: 'auto', block: 'center' });
+            });
+        }
     }
 }
 

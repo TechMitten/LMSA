@@ -3,7 +3,7 @@ import { messagesContainer, userInput, loadedModelDisplay } from './dom-elements
 import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll, renderSmartReplies, hideSmartReplies, showSmartRepliesLoading } from './ui-manager.js';
 import { openHelpModal } from './help.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
-import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getOpenRouterApiKey } from './settings-manager.js';
+import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getOpenRouterApiKey, getLMStudioApiToken } from './settings-manager.js';
 import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
 import { canSendCompletion, recordCompletion } from './usage-limiter.js';
@@ -478,6 +478,9 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             requestHeaders['Authorization'] = `Bearer ${getOpenRouterApiKey()}`;
             requestHeaders['HTTP-Referer'] = 'https://lmsa.app';
             requestHeaders['X-Title'] = 'LMSA';
+        } else {
+            const lmToken = getLMStudioApiToken();
+            if (lmToken) requestHeaders['Authorization'] = `Bearer ${lmToken}`;
         }
         const fetchPromise = fetch(apiUrl, {
             method: 'POST',
@@ -2802,6 +2805,9 @@ export async function generateChatTitle(userMessage) {
             requestHeaders['Authorization'] = `Bearer ${getOpenRouterApiKey()}`;
             requestHeaders['HTTP-Referer'] = 'https://lmsa.app';
             requestHeaders['X-Title'] = 'LMSA';
+        } else {
+            const lmToken = getLMStudioApiToken();
+            if (lmToken) requestHeaders['Authorization'] = `Bearer ${lmToken}`;
         }
 
         const response = await fetch(getApiUrl(), {
