@@ -62,8 +62,10 @@ export function initializeSettingsModalTouchHandler() {
             // This is necessary because touch devices sometimes have issues with click events
             newButton.addEventListener('touchend', function (e) {
                 debugLog(`Navigation button ${buttonId} touchend`);
-                // Prevent the default to avoid any ghost clicks
-                e.preventDefault();
+                // Prevent the default to avoid any ghost clicks (only when cancelable)
+                if (e.cancelable) {
+                    e.preventDefault();
+                }
                 // Trigger a click event to ensure the button action is performed
                 newButton.click();
             }, { passive: false });

@@ -14,6 +14,45 @@ let selectedText = '';
 let selectedMessageElement = null;
 let longPressTimer;
 
+function forceSidebarRepaint(element) {
+    if (!element) return;
+
+    element.classList.add('sidebar-repaint-fix');
+
+    const menuItems = element.querySelectorAll('.menu-item');
+    menuItems.forEach(item => item.classList.add('sidebar-repaint-fix'));
+
+    void element.offsetHeight;
+
+    requestAnimationFrame(() => {
+        element.classList.remove('sidebar-repaint-fix');
+        menuItems.forEach(item => item.classList.remove('sidebar-repaint-fix'));
+    });
+}
+
+function setCollapsibleSectionExpanded(header, shouldExpand) {
+    if (!header) return;
+
+    const content = header.nextElementSibling;
+    if (!content || !content.classList.contains('collapsible-content')) {
+        return;
+    }
+
+    header.classList.toggle('active', shouldExpand);
+    content.classList.toggle('show', shouldExpand);
+    content.classList.remove('hidden');
+
+    if (shouldExpand) {
+        content.style.maxHeight = 'none';
+        const measuredHeight = content.scrollHeight;
+        content.style.maxHeight = `${measuredHeight}px`;
+        forceSidebarRepaint(content);
+        return;
+    }
+
+    content.style.maxHeight = '0px';
+}
+
 /**
  * Shows the welcome message and hides the messages container
  */
@@ -234,11 +273,7 @@ export function toggleSidebar() {
         const sectionHeaders = document.querySelectorAll('.section-header');
         const chatHistorySection = document.querySelector('.sidebar-section:last-child');
         sectionHeaders.forEach(header => {
-            header.classList.remove('active');
-            const content = header.nextElementSibling;
-            if (content && content.classList.contains('collapsible-content')) {
-                content.classList.remove('show');
-            }
+            setCollapsibleSectionExpanded(header, false);
         });
 
         // Ensure chat history is visible when sidebar is closed
@@ -352,11 +387,7 @@ export function closeSidebar() {
     const sectionHeaders = document.querySelectorAll('.section-header');
     const chatHistorySection = document.querySelector('.sidebar-section:last-child');
     sectionHeaders.forEach(header => {
-        header.classList.remove('active');
-        const content = header.nextElementSibling;
-        if (content && content.classList.contains('collapsible-content')) {
-            content.classList.remove('show');
-        }
+        setCollapsibleSectionExpanded(header, false);
     });
 
     // Ensure chat history is visible when sidebar is closed
@@ -2026,6 +2057,12 @@ export function checkAndShowWelcomeMessage() {
 }
 
 // Long-press handling functions
+function preventDefaultIfCancelable(e) {
+    if (e && e.cancelable) {
+        e.preventDefault();
+    }
+}
+
 function handleTouchStart(e) {
     startLongPress(e);
 }
@@ -2076,7 +2113,7 @@ function showContextMenu(e) {
         contextMenu.style.display = 'block';
         contextMenu.style.left = `${e.clientX}px`;
         contextMenu.style.top = `${e.clientY}px`;
-        e.preventDefault();
+        preventDefaultIfCancelable(e);
     }
 }
 
@@ -2106,11 +2143,7 @@ export function initializeCollapsibleSections() {
 
     // First, ensure all sections are collapsed by default
     sectionHeaders.forEach(header => {
-        header.classList.remove('active');
-        const content = header.nextElementSibling;
-        if (content && content.classList.contains('collapsible-content')) {
-            content.classList.remove('show');
-        }
+        setCollapsibleSectionExpanded(header, false);
     });
 
     // Ensure chat history is visible by default
@@ -2135,12 +2168,7 @@ export function initializeCollapsibleSections() {
 
             const shouldExpand = !content.classList.contains('show');
 
-            // Set explicit state instead of toggling to avoid race conditions.
-            header.classList.toggle('active', shouldExpand);
-            content.classList.toggle('show', shouldExpand);
-            if (shouldExpand) {
-                content.classList.remove('hidden');
-            }
+            setCollapsibleSectionExpanded(header, shouldExpand);
 
             // Handle chat history visibility for options section only
             if (isOptionsSection && chatHistorySection) {
@@ -2161,11 +2189,7 @@ export function initializeCollapsibleSections() {
 
                     // Only close if it's not a coexisting section
                     if (!((isOptionsSection && otherIsCharactersSection) || (isCharactersSection && otherIsOptionsSection))) {
-                        otherHeader.classList.remove('active');
-                        const otherContent = otherHeader.nextElementSibling;
-                        if (otherContent && otherContent.classList.contains('collapsible-content')) {
-                            otherContent.classList.remove('show');
-                        }
+                        setCollapsibleSectionExpanded(otherHeader, false);
                     }
                 }
             });
@@ -2186,19 +2210,19 @@ export function initializeCollapsibleSections() {
         header.addEventListener('click', (e) => {
             // Ignore synthetic click fired right after a touch toggle.
             if (Date.now() - lastCollapsibleTouchTs < 450) {
-                e.preventDefault();
+                preventDefaultIfCancelable(e);
                 e.stopPropagation();
                 return;
             }
 
-            e.preventDefault();
+            preventDefaultIfCancelable(e);
             e.stopPropagation();
             toggleHeader();
         });
 
         header.addEventListener('touchend', (e) => {
             lastCollapsibleTouchTs = Date.now();
-            e.preventDefault();
+            preventDefaultIfCancelable(e);
             e.stopPropagation();
             toggleHeader();
         }, { passive: false });

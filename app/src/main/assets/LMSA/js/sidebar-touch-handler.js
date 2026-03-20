@@ -121,7 +121,9 @@ export function initializeSidebarTouchHandler() {
             Math.abs(swipeDeltaX) > Math.abs(swipeDeltaY)
         ) {
             isSidebarSwiping = true;
-            e.preventDefault();
+            if (e.cancelable) {
+                e.preventDefault();
+            }
             e.stopPropagation();
 
             // Move sidebar with finger
@@ -246,7 +248,9 @@ export function initializeSidebarTouchHandler() {
         swipeDeltaY = touchY - touchStartY;
 
         if (swipeDeltaX > 0 && Math.abs(swipeDeltaX) > Math.abs(swipeDeltaY)) {
-            e.preventDefault();
+            if (e.cancelable) {
+                e.preventDefault();
+            }
             e.stopPropagation();
 
             const sidebarWidth = sidebar.offsetWidth || window.innerWidth;
