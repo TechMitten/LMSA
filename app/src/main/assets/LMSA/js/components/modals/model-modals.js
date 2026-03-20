@@ -7,7 +7,7 @@ export const modelModals = `
             style="background: var(--modal-bg);">
 
             <!-- Header -->
-            <div class="model-modal-header flex justify-between items-center px-5 py-4">
+            <div class="model-modal-header flex justify-between items-center px-5 py-4" style="padding-top:1rem;padding-bottom:1rem;">
                 <h2 id="model-title" class="text-base font-semibold flex items-center gap-2.5 text-white light:text-gray-900">
                     Models
                 </h2>
@@ -18,7 +18,7 @@ export const modelModals = `
             </div>
 
             <!-- Body -->
-            <div class="overflow-y-auto flex-grow px-5 pb-5 model-modal-scroll">
+            <div class="overflow-y-auto flex-grow px-5 pb-5 model-modal-scroll" style="padding-top:1rem;">
 
                 <!-- Tip for mobile users -->
                 <div id="mobile-instructions"
@@ -31,14 +31,17 @@ export const modelModals = `
                 </div>
 
                 <!-- Active model -->
-                <div id="active-model-section" class="mb-4">
-                    <div class="flex items-center gap-1.5 mb-2 px-0.5">
-                        <span class="model-status-dot w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                        <span class="text-[11px] font-medium text-gray-500 light:text-gray-400 uppercase tracking-wider">Loaded</span>
+                <div id="active-model-section" style="margin-bottom:1rem;">
+                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:0 2px;">
+                        <span class="model-status-dot" style="width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 6px rgba(52,211,153,0.6);display:inline-block;flex-shrink:0;"></span>
+                        <span style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6ee7b7;">Currently Loaded</span>
                     </div>
                     <div id="current-model"
-                        class="model-active-display text-sm font-medium text-white light:text-gray-800 px-3.5 py-2.5 rounded-lg truncate">
-                        Loading...</div>
+                        class="model-active-display"
+                        style="font-size:13px;font-weight:500;color:#e2e8f0;padding:10px 14px;border-radius:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                        title="Click to see full model name">
+                        Loading...
+                    </div>
                 </div>
 
                 <!-- Available models list -->

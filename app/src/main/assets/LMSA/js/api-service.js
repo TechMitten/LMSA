@@ -19,6 +19,58 @@ let modelInfoCache = {
     ttl: 5000 // 5 second cache
 };
 
+// Cache for API version detection: 'v1native' | 'legacy' | null (unknown)
+let apiVersionCache = {
+    version: null,       // 'v1native' = /api/v1/* works; 'legacy' = only /v1/* works
+    ip: null,
+    port: null,
+    timestamp: 0,
+    ttl: 30000           // Re-detect every 30 s in case LM Studio is updated
+};
+
+/**
+ * Detect which API version the connected LM Studio instance supports.
+ * Tries /api/v1/models (native v1, LM Studio ≥ 0.3.6) first;
+ * falls back to /v1/models (legacy OpenAI-compat).
+ * @param {string} ip
+ * @param {string} port
+ * @returns {Promise<'v1native'|'legacy'>}
+ */
+async function detectApiVersion(ip, port) {
+    const now = Date.now();
+    if (
+        apiVersionCache.version &&
+        apiVersionCache.ip === ip &&
+        apiVersionCache.port === port &&
+        (now - apiVersionCache.timestamp) < apiVersionCache.ttl
+    ) {
+        return apiVersionCache.version;
+    }
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const response = await fetch(`http://${ip}:${port}/api/v1/models`, {
+            signal: controller.signal
+        }).catch(() => ({ ok: false }));
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+            const data = await response.json().catch(() => null);
+            // Native v1 API returns { models: [...] }
+            if (data && Array.isArray(data.models)) {
+                apiVersionCache = { version: 'v1native', ip, port, timestamp: now, ttl: 30000 };
+                console.log('LM Studio native v1 API detected (/api/v1/*)');
+                return 'v1native';
+            }
+        }
+    } catch (_) { /* fall through */ }
+
+    apiVersionCache = { version: 'legacy', ip, port, timestamp: now, ttl: 30000 };
+    console.log('LM Studio legacy API detected (/v1/*)');
+    return 'legacy';
+}
+
 // Debounce timer for fetchAvailableModels
 let fetchModelsDebounceTimer = null;
 let lastFetchPromise = null;
@@ -263,117 +315,148 @@ export async function fetchAvailableModels(options = {}) {
             const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
             try {
-                const modelsResponse = await fetch(`http://${ip}:${port}/v1/models`, {
-                    signal: controller.signal
-                });
+                // ── Detect API version then fetch the model list ─────────────────────
+                const apiVersion = await detectApiVersion(ip, port);
 
-                clearTimeout(timeoutId);
+                let modelsList = [];
+                let loadedModelInfo = null;
 
-                if (!modelsResponse.ok) {
-                    console.error('Failed to fetch models, server returned:', modelsResponse.status, modelsResponse.statusText);
-                    availableModels = []; // Ensure availableModels is empty
-                    if (loadedModelDisplay) {
-                        loadedModelDisplay.classList.add('hidden');
+                if (apiVersion === 'v1native') {
+                    // ── Modern LM Studio native API (≥ 0.3.6) ────────────────────────
+                    // GET /api/v1/models → { models: [ { key, display_name, loaded_instances: [...] } ] }
+                    const modelsResponse = await fetch(`http://${ip}:${port}/api/v1/models`, {
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    if (!modelsResponse.ok) {
+                        console.error('Failed to fetch models (v1native):', modelsResponse.status, modelsResponse.statusText);
+                        availableModels = [];
+                        if (loadedModelDisplay) loadedModelDisplay.classList.add('hidden');
+                        return [];
                     }
-                    return [];
-                }
 
-                const data = await modelsResponse.json();
+                    const nativeData = await modelsResponse.json();
 
-                if (!data || !data.data || !Array.isArray(data.data)) {
-                    console.error('Invalid response format from server:', data);
-                    availableModels = []; // Ensure availableModels is empty
-                    if (loadedModelDisplay) {
-                        loadedModelDisplay.classList.add('hidden');
+                    if (!nativeData || !Array.isArray(nativeData.models)) {
+                        console.error('Invalid /api/v1/models response:', nativeData);
+                        availableModels = [];
+                        if (loadedModelDisplay) loadedModelDisplay.classList.add('hidden');
+                        return [];
                     }
-                    return [];
-                }
 
-                const modelsList = data.data;
+                    // Normalise native model objects to have an `id` field (same as legacy)
+                    // The native API uses `key` as the identifier
+                    modelsList = nativeData.models
+                        .filter(m => m.type === 'llm' || m.type == null) // skip pure embedding models for chat
+                        .map(m => ({
+                            ...m,
+                            id: m.key || m.id,          // normalise to `id`
+                            display_name: m.display_name || m.key
+                        }));
 
-                // Try to determine which model is loaded through multiple methods
+                    // Native API: a model is loaded when loaded_instances.length > 0
+                    const loadedNative = nativeData.models.find(
+                        m => Array.isArray(m.loaded_instances) && m.loaded_instances.length > 0
+                    );
+                    if (loadedNative) {
+                        // Use the instance_id from the first loaded instance as the canonical id
+                        const instanceId = loadedNative.loaded_instances[0].id || loadedNative.key;
+                        loadedModelInfo = modelsList.find(m => m.id === instanceId) ||
+                                          modelsList.find(m => m.id === loadedNative.key) ||
+                                          modelsList[0];
+                        if (loadedModelInfo) {
+                            // Store the instance_id so unload uses the right value
+                            loadedModelInfo._instanceId = instanceId;
+                            console.log('Native v1 API: loaded model detected via loaded_instances:', loadedModelInfo.id);
+                        }
+                    }
+                } else {
+                    // ── Legacy OpenAI-compat API (/v1/*) ─────────────────────────────
+                    const modelsResponse = await fetch(`http://${ip}:${port}/v1/models`, {
+                        signal: controller.signal
+                    });
 
-                // Method 1: Look for status flags in the API response directly - add more possible attributes to check
-                let loadedModelInfo = modelsList.find(model =>
-                    model.ready === true ||
-                    model.loaded === true ||
-                    model.active === true ||
-                    model.current === true ||
-                    model.status === 'loaded' ||
-                    model.status === 'ready' ||
-                    model.state === 'loaded' ||
-                    model.state === 'ready' ||
-                    model.status === 'active' ||
-                    model.state === 'active'
-                );
+                    clearTimeout(timeoutId);
 
-                // Method 2: If no model is marked as loaded, check if we can get info via a different endpoint
-                if (!loadedModelInfo) {
-                    try {
-                        // Try different endpoints that LM Studio might use
-                        // Reduced from 4 to 2 endpoints to minimize log noise
-                        // Keep /v1/internal/model/info as it generates the intentional 400 error that prevents auto-loading
-                        const endpoints = [
+                    if (!modelsResponse.ok) {
+                        console.error('Failed to fetch models (legacy):', modelsResponse.status, modelsResponse.statusText);
+                        availableModels = [];
+                        if (loadedModelDisplay) loadedModelDisplay.classList.add('hidden');
+                        return [];
+                    }
+
+                    const data = await modelsResponse.json();
+
+                    if (!data || !data.data || !Array.isArray(data.data)) {
+                        console.error('Invalid /v1/models response:', data);
+                        availableModels = [];
+                        if (loadedModelDisplay) loadedModelDisplay.classList.add('hidden');
+                        return [];
+                    }
+
+                    modelsList = data.data;
+
+                    // Legacy Method 1: Look for status flags in the API response
+                    loadedModelInfo = modelsList.find(model =>
+                        model.ready === true ||
+                        model.loaded === true ||
+                        model.active === true ||
+                        model.current === true ||
+                        model.status === 'loaded' ||
+                        model.status === 'ready' ||
+                        model.state === 'loaded' ||
+                        model.state === 'ready' ||
+                        model.status === 'active' ||
+                        model.state === 'active'
+                    );
+
+                    // Legacy Method 2: Try additional info endpoints
+                    if (!loadedModelInfo) {
+                        const infoEndpoints = [
                             '/v1/internal/model/info',
                             '/v1/model/info'
                         ];
-
-                        for (const endpoint of endpoints) {
+                        for (const endpoint of infoEndpoints) {
                             try {
-                                const controller = new AbortController();
-                                const timeoutId = setTimeout(() => controller.abort(), 2000); // shorter timeout for info endpoints
-
-                                const modelInfoResponse = await fetch(`http://${ip}:${port}${endpoint}`, {
+                                const infoCtrl = new AbortController();
+                                const infoTimer = setTimeout(() => infoCtrl.abort(), 2000);
+                                const infoResp = await fetch(`http://${ip}:${port}${endpoint}`, {
                                     method: 'GET',
-                                    signal: controller.signal
-                                }).catch(() => {
-                                    // Silently catch network errors
-                                    return { ok: false };
-                                });
-
-                                clearTimeout(timeoutId);
-
-                                if (modelInfoResponse.ok) {
-                                    const modelInfo = await modelInfoResponse.json();
-
+                                    signal: infoCtrl.signal
+                                }).catch(() => ({ ok: false }));
+                                clearTimeout(infoTimer);
+                                if (infoResp.ok) {
+                                    const modelInfo = await infoResp.json();
                                     if (modelInfo && modelInfo.id) {
-                                        // Find the matching model in our list
-                                        loadedModelInfo = modelsList.find(model => model.id === modelInfo.id);
+                                        loadedModelInfo = modelsList.find(m => m.id === modelInfo.id);
                                         if (loadedModelInfo) {
-                                            console.log('Found loaded model through info endpoint:', loadedModelInfo.id);
+                                            console.log('Found loaded model via legacy info endpoint:', loadedModelInfo.id);
                                             break;
                                         }
                                     }
-                                } else {
-                                    // Don't log errors for expected 400 responses
                                 }
-                            } catch (endpointError) {
-                                // Silently continue - don't log to reduce console noise
-                            }
+                            } catch (_) { /* suppress */ }
                         }
-                    } catch (infoError) {
-                        // Silently continue - this is expected when endpoints don't exist
                     }
                 }
 
-                // Method 3 (legacy fallback): If we still couldn't detect a loaded model,
-                // optionally try a tiny completion request.
-                // Disabled by default because some servers return expected 400 responses,
-                // which creates noisy red errors in browser devtools.
+                // Method: Optional legacy completion probe (disabled by default to avoid noisy 400s)
+                const apiVersion2 = apiVersionCache.version; // already resolved above
                 const enableLegacyCompletionProbe =
-                    options.enableCompletionProbe === true ||
-                    localStorage.getItem('enableLegacyCompletionProbe') === 'true';
+                    apiVersion2 !== 'v1native' && // skip if we already have reliable detection
+                    (options.enableCompletionProbe === true ||
+                     localStorage.getItem('enableLegacyCompletionProbe') === 'true');
 
                 if (enableLegacyCompletionProbe && !loadedModelInfo && modelsList.length > 0 && !window.currentLoadedModel) {
                     try {
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 3000);
+                        const probeCtrl = new AbortController();
+                        const probeTimer = setTimeout(() => probeCtrl.abort(), 3000);
 
                         const chatResponse = await fetch(`http://${ip}:${port}/v1/chat/completions`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 messages: [
                                     { role: 'system', content: 'You are a helpful assistant.' },
@@ -382,29 +465,21 @@ export async function fetchAvailableModels(options = {}) {
                                 max_tokens: 1,
                                 stream: false
                             }),
-                            signal: controller.signal
-                        }).catch(() => {
-                            return { ok: false };
-                        });
+                            signal: probeCtrl.signal
+                        }).catch(() => ({ ok: false }));
 
-                        clearTimeout(timeoutId);
+                        clearTimeout(probeTimer);
 
                         if (chatResponse.ok) {
                             const result = await chatResponse.json();
-
                             if (result && result.model) {
-                                // Find this model in our list
-                                loadedModelInfo = modelsList.find(model => model.id === result.model);
+                                loadedModelInfo = modelsList.find(m => m.id === result.model);
                                 if (!loadedModelInfo && modelsList.length > 0) {
-                                    // If we can't find the exact model but know one is loaded, use the first one
-                                    console.log('Model from completion API not in list, assuming first model');
                                     loadedModelInfo = modelsList[0];
                                 }
                             }
                         }
-                    } catch (completionError) {
-                        // Suppress fallback probe errors to keep console clean.
-                    }
+                    } catch (_) { /* suppress probe errors */ }
                 }
 
                 // Method 4: Use a previously selected model if it's still in the list.
@@ -629,11 +704,14 @@ export async function isServerRunning() {
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
         try {
-            const response = await fetch(`http://${ip}:${port}/v1/models`, {
+            // Try the modern native v1 endpoint first, fall back to legacy
+            const apiVer = await detectApiVersion(ip, port);
+            const checkUrl = apiVer === 'v1native'
+                ? `http://${ip}:${port}/api/v1/models`
+                : `http://${ip}:${port}/v1/models`;
+
+            const response = await fetch(checkUrl, {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 signal: controller.signal
             });
 
@@ -866,17 +944,37 @@ export async function loadModel(modelId) {
 
         console.log(`Attempting to load model: ${modelId}`);
 
-        // Try the direct model loading approach first
-        // Some LM Studio versions have direct APIs
-        const loadEndpoints = [
-            { path: '/v1/internal/model/load', method: 'POST' },
-            { path: '/v1/model/load', method: 'POST' },
-            { path: '/v1/models/load', method: 'POST' },
-            { path: `/v1/models/${modelId}/load`, method: 'POST' }
-        ];
+        // Determine API version and try the appropriate load endpoint first
+        const apiVer = await detectApiVersion(ip, port);
 
-        const requestData = { model_id: modelId };
-        const directSuccess = await tryEndpoints(ip, port, 'Load model', loadEndpoints, requestData);
+        let directSuccess = false;
+
+        if (apiVer === 'v1native') {
+            // Modern LM Studio (≥ 0.3.6): POST /api/v1/models/load  { model: modelId }
+            console.log(`Using native v1 API to load model: ${modelId}`);
+            directSuccess = await tryEndpoints(ip, port, 'Load model (native)', [
+                { path: '/api/v1/models/load', method: 'POST' }
+            ], { model: modelId });
+
+            // Invalidate the version cache so the next fetchAvailableModels re-reads loaded_instances
+            apiVersionCache.timestamp = 0;
+
+            if (!directSuccess) {
+                // Unexpected — fall through to legacy endpoints
+                console.log('Native /api/v1/models/load failed, trying legacy endpoints...');
+            }
+        }
+
+        if (!directSuccess) {
+            // Legacy fallback endpoints (older LM Studio versions)
+            const loadEndpoints = [
+                { path: '/v1/internal/model/load', method: 'POST' },
+                { path: '/v1/model/load', method: 'POST' },
+                { path: '/v1/models/load', method: 'POST' },
+                { path: `/v1/models/${modelId}/load`, method: 'POST' }
+            ];
+            directSuccess = await tryEndpoints(ip, port, 'Load model (legacy)', loadEndpoints, { model_id: modelId });
+        }
 
         // If the endpoint call succeeds, verify the model is actually loaded by making a test request
         if (directSuccess) {
@@ -944,67 +1042,62 @@ export async function ejectModel() {
 
         console.log('Attempting to eject model');
 
-        // Try all known eject model endpoints
-        const ejectEndpoints = [
-            { path: '/v1/internal/model/unload', method: 'POST' },
-            { path: '/v1/model/unload', method: 'POST' },
-            { path: '/v1/models/unload', method: 'POST' }
-        ];
+        // Determine API version and try the appropriate unload endpoint
+        const apiVerEject = await detectApiVersion(ip, port);
+        let success = false;
 
-        // Try the endpoints with an empty request body
-        let success = await tryEndpoints(ip, port, 'Eject model', ejectEndpoints, {});
+        if (apiVerEject === 'v1native') {
+            // Modern LM Studio (≥ 0.3.6): POST /api/v1/models/unload  { instance_id: instanceId }
+            // The instance_id is typically the model key (same as model id for most models)
+            const instanceId = window.currentLoadedModel || '';
+            console.log(`Using native v1 API to unload model instance: ${instanceId}`);
+            if (instanceId) {
+                success = await tryEndpoints(ip, port, 'Eject model (native)', [
+                    { path: '/api/v1/models/unload', method: 'POST' }
+                ], { instance_id: instanceId });
+            }
 
-        // If direct API methods fail, try to determine the currently loaded model ID
-        // and use a different approach
+            // Invalidate version cache to force re-fetch
+            apiVersionCache.timestamp = 0;
+        }
+
         if (!success) {
-            console.log('Standard eject endpoints failed, trying to identify current model...');
+            // Legacy fallback endpoints
+            const ejectEndpoints = [
+                { path: '/v1/internal/model/unload', method: 'POST' },
+                { path: '/v1/model/unload', method: 'POST' },
+                { path: '/v1/models/unload', method: 'POST' }
+            ];
+            success = await tryEndpoints(ip, port, 'Eject model (legacy)', ejectEndpoints, {});
+        }
 
+        // If all attempts failed, try model-specific legacy path as last resort
+        if (!success) {
+            console.log('Standard eject endpoints failed, trying model-specific legacy path...');
             try {
-                // Get the current models list to find which one is loaded
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const legacyCtrl = new AbortController();
+                const legacyTimer = setTimeout(() => legacyCtrl.abort(), 3000);
+                const legacyResp = await fetch(`http://${ip}:${port}/v1/models`, {
+                    signal: legacyCtrl.signal
+                }).catch(() => ({ ok: false }));
+                clearTimeout(legacyTimer);
 
-                const modelsResponse = await fetch(`http://${ip}:${port}/v1/models`, {
-                    signal: controller.signal
-                }).catch(() => {
-                    return { ok: false };
-                });
-
-                clearTimeout(timeoutId);
-
-                if (modelsResponse.ok) {
-                    const data = await modelsResponse.json();
-                    if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {
-                        // Try to find which model is loaded
-                        const loadedModel = data.data.find(model =>
-                            model.ready === true ||
-                            model.loaded === true ||
-                            model.status === 'loaded' ||
-                            model.status === 'ready' ||
-                            model.state === 'loaded' ||
-                            model.state === 'ready'
-                        );
-
-                        if (loadedModel) {
-                            console.log(`Found loaded model: ${loadedModel.id}, trying model-specific eject...`);
-
-                            // Try model-specific unload endpoints
-                            const modelSpecificEndpoints = [
-                                { path: `/v1/models/${loadedModel.id}/unload`, method: 'POST' }
-                            ];
-
-                            success = await tryEndpoints(ip, port, 'Model-specific eject', modelSpecificEndpoints, {});
-                        } else {
-                            console.log('No loaded model found in models list');
-                        }
-                    } else {
-                        console.log('Invalid or empty models response:', data);
+                if (legacyResp.ok) {
+                    const data = await legacyResp.json();
+                    const modelList = data?.data || [];
+                    const loadedModel = modelList.find(m =>
+                        m.ready === true || m.loaded === true ||
+                        m.status === 'loaded' || m.status === 'ready' ||
+                        m.state === 'loaded' || m.state === 'ready'
+                    );
+                    if (loadedModel) {
+                        console.log(`Found loaded model: ${loadedModel.id}, trying model-specific eject...`);
+                        success = await tryEndpoints(ip, port, 'Model-specific eject',
+                            [{ path: `/v1/models/${loadedModel.id}/unload`, method: 'POST' }], {});
                     }
-                } else {
-                    console.log('Failed to fetch models for model-specific ejection');
                 }
-            } catch (modelCheckError) {
-                console.log('Error checking for loaded model:', modelCheckError.message || 'Unknown error');
+            } catch (e) {
+                console.log('Error in model-specific eject fallback:', e.message || 'Unknown error');
             }
         }
 

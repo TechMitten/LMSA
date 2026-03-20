@@ -1004,20 +1004,21 @@ function attachModelSearch(container, isLightTheme) {
     wrapper.id = 'or-model-search-wrapper';
     wrapper.className = 'mb-5 pb-1';
     wrapper.innerHTML = `
-        <div class="relative max-w-full" style="width: calc(100% - 16px); margin: 0 auto;">
-            <i class="fas fa-search absolute top-1/2 -translate-y-1/2 ${isLightTheme ? 'text-gray-400' : 'text-gray-500'} pointer-events-none text-sm" style="left: 0.75rem;"></i>
+        <div style="position:relative;width:100%;">
+            <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:12px;color:${isLightTheme ? '#9ca3af' : '#4b5563'};pointer-events:none;"></i>
             <input id="or-model-search"
                 type="text"
-                placeholder="Search models..."
+                placeholder="Search models…"
                 autocomplete="off"
-                class="w-full pr-10 py-3 rounded-xl text-sm border outline-none transition-colors duration-200 ${isLightTheme ? 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-blue-500' : 'bg-darkBg-70 border-white/10 text-gray-200 placeholder-gray-500 focus:border-blue-500/60'}"
-                style="box-sizing: border-box; max-width: 100%; padding-left: 2rem;"
+                style="width:100%;box-sizing:border-box;padding:10px 36px 10px 34px;border-radius:10px;border:1px solid ${isLightTheme ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.08)'};background:${isLightTheme ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)'};color:${isLightTheme ? '#1e293b' : '#e2e8f0'};font-size:13px;outline:none;transition:border-color 0.15s;"
+                onfocus="this.style.borderColor='${isLightTheme ? 'rgba(59,130,246,0.5)' : 'rgba(59,130,246,0.4)'}'"
+                onblur="this.style.borderColor='${isLightTheme ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.08)'}'"
             />
-            <button id="or-model-search-clear" class="absolute right-3 top-1/2 -translate-y-1/2 hidden text-gray-500 hover:text-gray-300 w-8 h-8 flex items-center justify-center">
-                <i class="fas fa-times text-sm"></i>
+            <button id="or-model-search-clear" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);display:none;background:none;border:none;cursor:pointer;color:${isLightTheme ? '#9ca3af' : '#6b7280'};padding:4px;border-radius:4px;">
+                <i class="fas fa-times" style="font-size:11px;"></i>
             </button>
         </div>
-        <div id="or-model-search-count" class="mt-2 text-xs text-right" style="color: ${isLightTheme ? '#9ca3af' : '#6b7280'}; padding-right: 8px;"></div>
+        <div id="or-model-search-count" style="margin-top:6px;font-size:11px;text-align:right;color:${isLightTheme ? '#9ca3af' : '#4b5563'};padding-right:4px;"></div>
     `;
     container.appendChild(wrapper);
 
@@ -1027,7 +1028,7 @@ function attachModelSearch(container, isLightTheme) {
 
     function applyFilter() {
         const q = searchInput.value.toLowerCase().trim();
-        clearBtn.classList.toggle('hidden', q === '');
+        clearBtn.style.display = q === '' ? 'none' : 'block';
         const items = container.querySelectorAll('.model-item');
         let visible = 0;
         items.forEach(item => {
@@ -1092,17 +1093,15 @@ function displayAvailableModels(models, loadedModelId) {
         // Clear the list
         availableModelsList.innerHTML = '';
 
-        // Add a section title
+        // Add a section title / divider
         const titleElement = document.createElement('div');
-        titleElement.className = `mb-4 pb-2 border-b ${isLightTheme ? 'border-gray-200' : 'border-white/10'} flex items-center`;
+        titleElement.style.cssText = 'margin-bottom:14px;';
         titleElement.innerHTML = `
-            <div class="icon-wrapper mr-3 flex items-center justify-center rounded-full bg-purple-500/20 w-8 h-8 text-purple-400 shadow-md">
-                <i class="fas fa-list-ul text-sm"></i>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <span style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:${isLightTheme ? '#3b82f6' : '#93c5fd'};">Available Models</span>
+                <div style="flex:1;height:1px;background:${isLightTheme ? 'rgba(59,130,246,0.2)' : 'rgba(147,197,253,0.15)'};"></div>
             </div>
-            <div>
-                <h3 class="text-lg font-semibold text-blue-400">Available Models</h3>
-                <p class="text-sm" style="color: ${isLightTheme ? '#6b7280' : '#9ca3af'} !important;">${getUseOpenRouter() ? 'Click &quot;Select&quot; to use a different cloud model' : 'Click &quot;Load&quot; to switch to a different model'}</p>
-            </div>
+            <p style="font-size:12px;color:${isLightTheme ? '#6b7280' : '#94a3b8'};margin:0;">${getUseOpenRouter() ? 'Click &quot;Select&quot; to use a different cloud model' : 'Click &quot;Load&quot; to switch to a different model'}</p>
         `;
         availableModelsList.appendChild(titleElement);
 
@@ -1268,12 +1267,14 @@ function displayPotentialModels(models) {
         // Clear the list
         availableModelsList.innerHTML = '';
 
-        // Add a section title
+        // Section header
         const titleElement = document.createElement('div');
         titleElement.className = 'model-list-header flex items-center justify-between px-0.5 mb-2 pb-2';
+        titleElement.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:14px;';
         titleElement.innerHTML = `
-            <span class="text-[11px] font-medium text-gray-500 light:text-gray-400 uppercase tracking-wider">Available</span>
-            <span class="text-[11px] font-medium text-gray-600 light:text-gray-400">${models.length}</span>
+            <span style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:${isLightTheme ? '#3b82f6' : '#93c5fd'};">Available Models</span>
+            <div style="flex:1;height:1px;background:${isLightTheme ? 'rgba(59,130,246,0.2)' : 'rgba(147,197,253,0.15'});"></div>
+            <span style="font-size:11px;font-weight:700;color:${isLightTheme ? '#3b82f6' : '#93c5fd'};">${models.length}</span>
         `;
         availableModelsList.appendChild(titleElement);
 

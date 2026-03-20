@@ -760,75 +760,107 @@ async function generateSystemPrompt() {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-            const modelsResponse = await fetch(`http://${serverIp}:${serverPort}/v1/models`, {
-                signal: controller.signal
-            });
+            // Try the modern native v1 endpoint first (LM Studio ≥ 0.3.6)
+            let loadedModelInfo = null;
+            let triedNative = false;
 
-            clearTimeout(timeoutId);
-
-            if (!modelsResponse.ok) {
-                throw new Error('Failed to fetch models from server');
-            }
-
-            const data = await modelsResponse.json();
-
-            if (!data || !data.data || !Array.isArray(data.data)) {
-                throw new Error('Invalid response from server');
-            }
-
-            const modelsList = data.data;
-
-            // Try to find the loaded model
-            let loadedModelInfo = modelsList.find(model =>
-                model.ready === true ||
-                model.loaded === true ||
-                model.active === true ||
-                model.current === true ||
-                model.status === 'loaded' ||
-                model.status === 'ready' ||
-                model.state === 'loaded' ||
-                model.state === 'ready' ||
-                model.status === 'active' ||
-                model.state === 'active'
-            );
-
-            // If no model is marked as loaded, try to check via info endpoint
-            if (!loadedModelInfo) {
-                try {
-                    const endpoints = ['/v1/internal/model/info', '/v1/model/info'];
-
-                    for (const endpoint of endpoints) {
-                        try {
-                            const infoController = new AbortController();
-                            const infoTimeout = setTimeout(() => infoController.abort(), 2000);
-
-                            const modelInfoResponse = await fetch(`http://${serverIp}:${serverPort}${endpoint}`, {
-                                method: 'GET',
-                                signal: infoController.signal
-                            }).catch(() => ({ ok: false }));
-
-                            clearTimeout(infoTimeout);
-
-                            if (modelInfoResponse.ok) {
-                                const modelInfo = await modelInfoResponse.json();
-
-                                if (modelInfo && modelInfo.id) {
-                                    loadedModelInfo = modelsList.find(model => model.id === modelInfo.id);
-                                    if (loadedModelInfo) break;
-                                }
-                            }
-                        } catch (endpointError) {
-                            // Silently continue
+            try {
+                const nativeResp = await fetch(`http://${serverIp}:${serverPort}/api/v1/models`, {
+                    signal: controller.signal
+                });
+                if (nativeResp.ok) {
+                    const nativeData = await nativeResp.json();
+                    if (nativeData && Array.isArray(nativeData.models)) {
+                        triedNative = true;
+                        clearTimeout(timeoutId);
+                        // Find the model with a loaded instance
+                        const loadedNative = nativeData.models.find(
+                            m => Array.isArray(m.loaded_instances) && m.loaded_instances.length > 0
+                        );
+                        if (loadedNative) {
+                            loadedModelInfo = {
+                                id: loadedNative.loaded_instances[0].id || loadedNative.key
+                            };
+                        } else if (nativeData.models.length > 0) {
+                            // Fall back to first model if nothing loaded
+                            loadedModelInfo = { id: nativeData.models[0].key };
                         }
                     }
-                } catch (infoError) {
-                    // Silently continue
                 }
-            }
+            } catch (_) { /* fall through to legacy */ }
 
-            // If still no model found, fall back to the first available model
-            if (!loadedModelInfo && modelsList.length > 0) {
-                loadedModelInfo = modelsList[0];
+            if (!triedNative) {
+                // Legacy /v1/models fallback
+                const modelsResponse = await fetch(`http://${serverIp}:${serverPort}/v1/models`, {
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!modelsResponse.ok) {
+                    throw new Error('Failed to fetch models from server');
+                }
+
+                const data = await modelsResponse.json();
+
+                if (!data || !data.data || !Array.isArray(data.data)) {
+                    throw new Error('Invalid response from server');
+                }
+
+                const modelsList = data.data;
+
+                // Try to find the loaded model
+                loadedModelInfo = modelsList.find(model =>
+                    model.ready === true ||
+                    model.loaded === true ||
+                    model.active === true ||
+                    model.current === true ||
+                    model.status === 'loaded' ||
+                    model.status === 'ready' ||
+                    model.state === 'loaded' ||
+                    model.state === 'ready' ||
+                    model.status === 'active' ||
+                    model.state === 'active'
+                );
+
+                // If no model is marked as loaded, try to check via info endpoint
+                if (!loadedModelInfo) {
+                    try {
+                        const endpoints = ['/v1/internal/model/info', '/v1/model/info'];
+
+                        for (const endpoint of endpoints) {
+                            try {
+                                const infoController = new AbortController();
+                                const infoTimeout = setTimeout(() => infoController.abort(), 2000);
+
+                                const modelInfoResponse = await fetch(`http://${serverIp}:${serverPort}${endpoint}`, {
+                                    method: 'GET',
+                                    signal: infoController.signal
+                                }).catch(() => ({ ok: false }));
+
+                                clearTimeout(infoTimeout);
+
+                                if (modelInfoResponse.ok) {
+                                    const modelInfo = await modelInfoResponse.json();
+
+                                    if (modelInfo && modelInfo.id) {
+                                        loadedModelInfo = modelsList.find(model => model.id === modelInfo.id);
+                                        if (loadedModelInfo) break;
+                                    }
+                                }
+                            } catch (endpointError) {
+                                // Silently continue
+                            }
+                        }
+                    } catch (infoError) {
+                        // Silently continue
+                    }
+                }
+
+                // If still no model found, fall back to the first available model
+                if (!loadedModelInfo && modelsList.length > 0) {
+                    loadedModelInfo = modelsList[0];
+                }
             }
 
             if (!loadedModelInfo) {

@@ -58,7 +58,35 @@ export async function isVisionModel() {
             return result;
         }
 
-        // Method 1: Check model details from /v1/models endpoint
+        // Method 1a: Try modern native /api/v1/models endpoint first (LM Studio ≥ 0.3.6)
+        // This returns capabilities.vision: boolean directly — no heuristics needed.
+        try {
+            const nativeResponse = await fetch(`http://${serverIp}:${serverPort}/api/v1/models`, {
+                method: 'GET',
+                signal: AbortSignal.timeout(3000)
+            });
+
+            if (nativeResponse.ok) {
+                const nativeData = await nativeResponse.json();
+                if (nativeData && Array.isArray(nativeData.models)) {
+                    // Match by key or the first loaded instance id
+                    const nativeModel = nativeData.models.find(m =>
+                        m.key === modelId ||
+                        (Array.isArray(m.loaded_instances) &&
+                         m.loaded_instances.some(inst => inst.id === modelId))
+                    );
+                    if (nativeModel) {
+                        // The native API has capabilities.vision: bool
+                        const isVision = nativeModel.capabilities?.vision === true;
+                        console.log(`Native v1 API: vision capability for ${modelId}: ${isVision}`);
+                        updateVisionCache(modelId, isVision);
+                        return isVision;
+                    }
+                }
+            }
+        } catch (_) { /* fall through to legacy */ }
+
+        // Method 1b: Check model details from /v1/models endpoint (legacy fallback)
         try {
             const modelsResponse = await fetch(`http://${serverIp}:${serverPort}/v1/models`, {
                 method: 'GET',

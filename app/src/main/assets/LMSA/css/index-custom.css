@@ -259,6 +259,8 @@ body.keyboard-visible #chat-form,
     /* Header separator */
     .model-modal-header {
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
     }
     body.light-theme .model-modal-header {
         border-bottom-color: #f1f5f9;
@@ -266,6 +268,7 @@ body.keyboard-visible #chat-form,
 
     /* Scroll area */
     .model-modal-scroll {
+        padding-top: 1rem !important;
         scrollbar-width: thin;
         scrollbar-color: rgba(255,255,255,0.08) transparent;
     }
