@@ -33,6 +33,29 @@ let currentModelFullName = '';
 let isAutoLoadingDefaultModel = false;
 // Store the model ID pending confirmation for default
 let pendingDefaultModelId = null;
+// Track the model currently showing a transient loading label in the picker
+let pendingModelActionId = null;
+// Track auto-dismiss timers for transient model confirmation cards
+const transientModelModalTimers = {
+    'openrouter-model-selected-modal': { intro: null, hide: null, close: null },
+    'local-model-loaded-modal': { intro: null, hide: null, close: null }
+};
+const transientModelModalDurations = {
+    'openrouter-model-selected-modal': 2000,
+    'local-model-loaded-modal': 2000
+};
+
+function syncTransientModelBodyLock() {
+    const hasVisibleTransientModal = Boolean(
+        document.querySelector('#openrouter-model-selected-modal:not(.hidden), #local-model-loaded-modal:not(.hidden)')
+    );
+    document.body.classList.toggle('model-toast-open', hasVisibleTransientModal);
+
+    const modelModalElement = document.getElementById('model-modal');
+    if (modelModalElement) {
+        modelModalElement.classList.toggle('model-modal-frozen', hasVisibleTransientModal);
+    }
+}
 
 /**
  * Initializes the model manager
@@ -489,6 +512,8 @@ async function loadModel(modelId) {
 
         // Set loading flag to true
         isModelLoading = true;
+        pendingModelActionId = modelId;
+        disableLoadButtons();
 
         // OpenRouter: model selection
         if (getUseOpenRouter()) {
@@ -496,17 +521,6 @@ async function loadModel(modelId) {
 
             if (showAdDuringLoad) {
                 console.log('Showing interstitial ad during OpenRouter model load for:', modelId);
-
-                disableLoadButtons();
-
-                // Show loading indicator
-                const modelElement = document.getElementById(`model-${modelId}`);
-                if (modelElement) {
-                    const actionSpan = modelElement.querySelector('.model-action');
-                    if (actionSpan) {
-                        actionSpan.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Selecting...';
-                    }
-                }
 
                 if (currentModelDisplay) {
                     currentModelDisplay.innerHTML = `
@@ -551,6 +565,7 @@ async function loadModel(modelId) {
             }
 
             isModelLoading = false;
+            pendingModelActionId = null;
             enableLoadButtons();
             return true;
         }
@@ -562,18 +577,6 @@ async function loadModel(modelId) {
             console.log('Auto-loading default model without extra transition UI');
         } else {
             console.log('Model switch in progress');
-        }
-
-        // Disable all load buttons in the modal
-        disableLoadButtons();
-
-        // Show loading indicator
-        const modelElement = document.getElementById(`model-${modelId}`);
-        if (modelElement) {
-            const actionSpan = modelElement.querySelector('.model-action');
-            if (actionSpan) {
-                actionSpan.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-            }
         }
 
         // Update current model display to show switching status
@@ -623,6 +626,7 @@ async function loadModel(modelId) {
             if (!success) {
                 console.log(`Failed to load model: ${modelId}`);
                 showActionError(modelId, 'Failed to load');
+                pendingModelActionId = null;
                 await updateModelDisplay(null);
                 isModelLoading = false;
                 enableLoadButtons();
@@ -648,6 +652,7 @@ async function loadModel(modelId) {
             if (!success) {
                 console.log(`Failed to load model: ${modelId}`);
                 showActionError(modelId, 'Failed to load');
+                pendingModelActionId = null;
                 await updateModelDisplay(null);
                 isModelLoading = false;
                 enableLoadButtons();
@@ -680,6 +685,7 @@ async function loadModel(modelId) {
 
         // Set loading flag back to false
         isModelLoading = false;
+        pendingModelActionId = null;
 
         // Re-enable all load buttons
         enableLoadButtons();
@@ -688,6 +694,7 @@ async function loadModel(modelId) {
     } catch (error) {
         console.error('Error loading model:', error);
         showActionError(modelId, 'Failed to load');
+        pendingModelActionId = null;
 
         // Restore the current model display
         await updateModelDisplay(null);
@@ -711,24 +718,14 @@ async function loadModel(modelId) {
  * Disables all load buttons in the modal
  */
 function disableLoadButtons() {
-    const loadButtons = availableModelsList.querySelectorAll('.load-model-btn');
-    loadButtons.forEach(button => {
-        button.disabled = true;
-        button.classList.add('opacity-50', 'cursor-not-allowed');
-        button.classList.remove('hover:bg-blue-700');
-    });
+    syncModelActionButtons();
 }
 
 /**
  * Enables all load buttons in the modal
  */
 function enableLoadButtons() {
-    const loadButtons = availableModelsList.querySelectorAll('.load-model-btn');
-    loadButtons.forEach(button => {
-        button.disabled = false;
-        button.classList.remove('opacity-50', 'cursor-not-allowed');
-        button.classList.add('hover:bg-blue-700');
-    });
+    syncModelActionButtons();
 }
 
 /**
@@ -739,34 +736,70 @@ function enableLoadButtons() {
 function showActionError(modelId, errorMsg) {
     const modelElement = document.getElementById(`model-${modelId}`);
     if (modelElement) {
-        const actionSpan = modelElement.querySelector('.model-action');
-        if (actionSpan) {
-            actionSpan.innerHTML = `<span class="text-red-500"><i class="fas fa-exclamation-triangle"></i> ${errorMsg}</span>`;
+        const loadButton = modelElement.querySelector('.load-model-btn');
+        if (loadButton) {
+            loadButton.textContent = errorMsg;
+            loadButton.disabled = true;
+            loadButton.setAttribute('aria-disabled', 'true');
+            loadButton.classList.add('opacity-50', 'cursor-not-allowed');
 
-            // Reset after a delay
             setTimeout(() => {
-                // Get the latest loaded model from the API
-                const loadedModels = getAvailableModels();
-                const isLoaded = loadedModels.includes(modelId);
-
-                if (isLoaded) {
-                    actionSpan.innerHTML = '<span class="text-xs bg-green-600 text-white px-2 py-1 rounded-full">Loaded</span>';
-                } else {
-                    actionSpan.innerHTML = '<button class="load-model-btn bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded transition-colors duration-300 flex items-center"><i class="fas fa-play mr-1"></i>Load</button>';
-
-                    // Re-attach the event listener
-                    const loadButton = actionSpan.querySelector('.load-model-btn');
-                    if (loadButton) {
-                        loadButton.addEventListener('click', async (e) => {
-                            e.preventDefault();
-                            // Legacy ad trigger removed
-                            await loadModel(modelId);
-                        });
-                    }
-                }
-            }, 3000);
+                syncModelActionButtons();
+            }, 1500);
         }
     }
+}
+
+function getIdleModelActionLabel() {
+    return 'Select';
+}
+
+function syncModelActionButtons() {
+    if (!availableModelsList) {
+        return;
+    }
+
+    const loadButtons = availableModelsList.querySelectorAll('.load-model-btn');
+    loadButtons.forEach((button) => {
+        const modelId = button.dataset.modelId;
+        const isCurrentModel = Boolean(modelId) && modelId === window.currentLoadedModel;
+        const isPendingModel = Boolean(modelId) && modelId === pendingModelActionId && isModelLoading;
+
+        if (isCurrentModel) {
+            button.textContent = 'Active';
+            button.disabled = true;
+            button.setAttribute('aria-disabled', 'true');
+            button.classList.add('is-active');
+            button.classList.remove('opacity-50', 'cursor-not-allowed');
+            button.style.opacity = '';
+            button.style.cursor = 'default';
+            return;
+        }
+
+        if (isPendingModel) {
+            button.textContent = 'Loading';
+            button.disabled = true;
+            button.setAttribute('aria-disabled', 'true');
+            button.classList.remove('is-active');
+            button.style.opacity = '';
+            button.style.cursor = '';
+            button.classList.remove('opacity-50');
+            button.classList.remove('cursor-not-allowed');
+            return;
+        }
+
+        button.textContent = getIdleModelActionLabel();
+        button.disabled = isModelLoading;
+        button.setAttribute('aria-disabled', isModelLoading ? 'true' : 'false');
+        button.classList.remove('is-active');
+        button.style.opacity = '';
+        button.style.cursor = '';
+        button.classList.remove('opacity-50', 'cursor-not-allowed');
+
+        if (isModelLoading) {
+            button.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    });
 }
 
 /**
@@ -914,7 +947,7 @@ function displayAvailableModels(models, loadedModelId) {
                 <span style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:${isLightTheme ? '#3b82f6' : '#93c5fd'};">Available Models</span>
                 <div style="flex:1;height:1px;background:${isLightTheme ? 'rgba(59,130,246,0.2)' : 'rgba(147,197,253,0.15)'};"></div>
             </div>
-            <p style="font-size:12px;color:${isLightTheme ? '#6b7280' : '#94a3b8'};margin:0;">${getUseOpenRouter() ? 'Click &quot;Select&quot; to use a different cloud model' : 'Click &quot;Load&quot; to switch to a different model'}</p>
+            <p style="font-size:12px;color:${isLightTheme ? '#6b7280' : '#94a3b8'};margin:0;">Click &quot;Select&quot; to switch to a different model</p>
         `;
         availableModelsList.appendChild(titleElement);
 
@@ -980,8 +1013,8 @@ function displayAvailableModels(models, loadedModelId) {
                             <i class="fas fa-star"></i>
                         </button>
                         ${isCurrentModel ?
-                            '<button class="load-model-btn" type="button" disabled aria-disabled="true" style="opacity:0.5;cursor:default;">Active</button>' :
-                            '<button class="load-model-btn">Select</button>'
+                            `<button class="load-model-btn is-active" type="button" data-model-id="${model.id}" disabled aria-disabled="true" style="cursor:default;">Active</button>` :
+                            `<button class="load-model-btn" type="button" data-model-id="${model.id}" ${isModelLoading ? 'disabled aria-disabled="true"' : 'aria-disabled="false"'}>${pendingModelActionId === model.id && isModelLoading ? 'Loading' : getIdleModelActionLabel()}</button>`
                         }
                     </div>
                 </div>
@@ -1132,8 +1165,8 @@ function displayPotentialModels(models) {
                             data-model-id="${model.id}" title="${isDefaultModel ? 'Remove as default' : 'Set as default'}">
                             <i class="fas fa-star"></i>
                         </button>
-                        <button class="load-model-btn">
-                            ${getUseOpenRouter() ? 'Select' : 'Load'}
+                        <button class="load-model-btn" type="button" data-model-id="${model.id}" ${isModelLoading ? 'disabled aria-disabled="true"' : 'aria-disabled="false"'}>
+                            ${pendingModelActionId === model.id && isModelLoading ? 'Loading' : getIdleModelActionLabel()}
                         </button>
                     </div>
                 </div>
@@ -1417,34 +1450,7 @@ function showDefaultModelLoadedModal(modelName) {
  * @param {string} modelId - The ID of the selected model
  */
 function showOpenRouterModelSelectedModal(modelId) {
-    const modal = document.getElementById('openrouter-model-selected-modal');
-    const nameDisplay = document.getElementById('openrouter-model-selected-name');
-    if (!modal || !nameDisplay) return;
-
-    nameDisplay.textContent = modelId;
-    modal.classList.remove('hidden');
-    modal.style.display = 'flex';
-
-    const modalContent = modal.querySelector('.modal-content');
-    if (modalContent) {
-        modalContent.classList.add('animate-modal-in');
-        setTimeout(() => modalContent.classList.remove('animate-modal-in'), 300);
-    }
-
-    // Auto-close after 3 seconds
-    setTimeout(() => {
-        if (modalContent) {
-            modalContent.classList.add('animate-modal-out');
-            setTimeout(() => {
-                modalContent.classList.remove('animate-modal-out');
-                modal.classList.add('hidden');
-                modal.style.display = '';
-            }, 300);
-        } else {
-            modal.classList.add('hidden');
-            modal.style.display = '';
-        }
-    }, 3000);
+    showTransientModelConfirmationModal('openrouter-model-selected-modal', 'openrouter-model-selected-name', modelId);
 }
 
 /**
@@ -1452,34 +1458,102 @@ function showOpenRouterModelSelectedModal(modelId) {
  * @param {string} modelId - The ID of the loaded model
  */
 function showLocalModelLoadedModal(modelId) {
-    const modal = document.getElementById('local-model-loaded-modal');
-    const nameDisplay = document.getElementById('local-model-loaded-name');
-    if (!modal || !nameDisplay) return;
+    showTransientModelConfirmationModal('local-model-loaded-modal', 'local-model-loaded-name', modelId);
+}
+
+function clearTransientModelModalTimers(modalId) {
+    const timers = transientModelModalTimers[modalId];
+    if (!timers) {
+        return;
+    }
+
+    if (timers.intro) {
+        clearTimeout(timers.intro);
+        timers.intro = null;
+    }
+
+    if (timers.hide) {
+        clearTimeout(timers.hide);
+        timers.hide = null;
+    }
+
+    if (timers.close) {
+        clearTimeout(timers.close);
+        timers.close = null;
+    }
+}
+
+function showTransientModelConfirmationModal(modalId, nameDisplayId, modelId) {
+    const modal = document.getElementById(modalId);
+    const nameDisplay = document.getElementById(nameDisplayId);
+    if (!modal || !nameDisplay) {
+        return;
+    }
+
+    clearTransientModelModalTimers(modalId);
+    const timers = transientModelModalTimers[modalId];
+    const displayDuration = transientModelModalDurations[modalId] ?? 3000;
 
     nameDisplay.textContent = modelId;
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
+    syncTransientModelBodyLock();
+    blockTransientModalScroll(modal);
 
     const modalContent = modal.querySelector('.modal-content');
+    const progressBar = modal.querySelector('.model-toast-progress');
     if (modalContent) {
+        modalContent.classList.remove('animate-modal-in', 'animate-modal-out');
+        void modalContent.offsetWidth;
         modalContent.classList.add('animate-modal-in');
-        setTimeout(() => modalContent.classList.remove('animate-modal-in'), 300);
+        timers.intro = setTimeout(() => {
+            modalContent.classList.remove('animate-modal-in');
+            timers.intro = null;
+        }, 300);
     }
 
-    // Auto-close after 3 seconds
-    setTimeout(() => {
+    if (progressBar) {
+        progressBar.style.animation = 'none';
+        void progressBar.offsetWidth;
+        progressBar.style.animation = '';
+    }
+
+    timers.hide = setTimeout(() => {
         if (modalContent) {
+            modalContent.classList.remove('animate-modal-in');
             modalContent.classList.add('animate-modal-out');
-            setTimeout(() => {
+            timers.close = setTimeout(() => {
                 modalContent.classList.remove('animate-modal-out');
                 modal.classList.add('hidden');
                 modal.style.display = '';
+                syncTransientModelBodyLock();
+                timers.close = null;
             }, 300);
         } else {
             modal.classList.add('hidden');
             modal.style.display = '';
+            syncTransientModelBodyLock();
         }
-    }, 3000);
+
+        timers.hide = null;
+    }, displayDuration);
+}
+
+function blockTransientModalScroll(modal) {
+    if (!modal || modal.dataset.scrollBlocked === 'true') {
+        return;
+    }
+
+    const preventScroll = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+    };
+
+    modal.addEventListener('wheel', preventScroll, { passive: false });
+    modal.addEventListener('touchmove', preventScroll, { passive: false });
+    modal.addEventListener('scroll', preventScroll, { passive: false });
+    modal._preventTransientScroll = preventScroll;
+    modal.dataset.scrollBlocked = 'true';
 }
 
 /**

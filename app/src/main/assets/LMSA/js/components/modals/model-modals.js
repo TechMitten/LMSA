@@ -103,45 +103,64 @@ export const modelModals = `
 
     <!-- OpenRouter Model Selected Confirmation modal -->
     <div id="openrouter-model-selected-modal"
-        class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center hidden modal-container"
-        aria-labelledby="openrouter-model-selected-title" role="dialog" aria-modal="true" style="z-index: 2200;">
-        <div class="model-modal-panel rounded-2xl w-[400px] max-w-[90%] overflow-hidden modal-content"
-            style="background: var(--modal-bg);">
-            <div class="px-5 pt-5 pb-4">
-                <div class="flex items-center gap-2.5 mb-4">
-                    <div class="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center">
-                        <i class="fas fa-check text-emerald-400 text-sm"></i>
+        class="fixed inset-0 hidden modal-container model-toast-modal"
+        aria-labelledby="openrouter-model-selected-title" role="status" aria-live="polite" style="z-index: 2200;">
+        <div class="model-modal-panel model-toast-card model-toast-card--openrouter rounded-2xl w-[420px] max-w-full overflow-hidden modal-content">
+            <div class="model-toast-accent model-toast-accent--openrouter"></div>
+            <div class="model-toast-body">
+                <div class="model-toast-header">
+                    <div class="model-toast-icon model-toast-icon--openrouter" aria-hidden="true">
+                        <i class="fas fa-cloud text-base"></i>
                     </div>
-                    <div>
-                        <h2 id="openrouter-model-selected-title" class="text-base font-semibold text-white light:text-gray-900">
+                    <div class="model-toast-copy">
+                        <div class="model-toast-meta">
+                            <span class="model-toast-chip model-toast-chip--openrouter">OpenRouter</span>
+                            <span class="model-toast-chip model-toast-chip--success">Ready</span>
+                        </div>
+                        <h2 id="openrouter-model-selected-title" class="model-toast-title">
                             Model Selected</h2>
-                        <p class="text-[11px] text-gray-500 light:text-gray-400">Now active via OpenRouter</p>
+                        <p class="model-toast-subtitle">Cloud routing is active for your next response.</p>
                     </div>
                 </div>
-                <div id="openrouter-model-selected-name"
-                    class="model-active-display text-sm font-medium text-white light:text-gray-800 px-3.5 py-2.5 rounded-lg break-all">
+                <div class="model-toast-name-group">
+                    <p class="model-toast-name-label">Selected model</p>
+                    <div id="openrouter-model-selected-name"
+                        class="model-active-display model-toast-name text-sm font-medium text-white light:text-gray-800 px-3.5 py-2.5 rounded-lg break-all">
+                    </div>
                 </div>
+                <div class="model-toast-progress"></div>
             </div>
         </div>
     </div>
 
     <!-- Local Model Loaded Confirmation modal -->
     <div id="local-model-loaded-modal"
-        class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center hidden modal-container"
-        aria-labelledby="local-model-loaded-title" role="dialog" aria-modal="true" style="z-index: 2200;">
-        <div class="model-modal-panel rounded-2xl w-[400px] max-w-[90%] overflow-hidden modal-content"
-            style="background: var(--modal-bg);">
-            <div class="px-5 pt-5 pb-4">
-                <div class="flex items-center gap-2.5 mb-4">
-                    <div class="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center">
-                        <i class="fas fa-check text-emerald-400 text-sm"></i>
+        class="fixed inset-0 hidden modal-container model-toast-modal"
+        aria-labelledby="local-model-loaded-title" role="status" aria-live="polite" style="z-index: 2200;">
+        <div class="model-modal-panel model-toast-card model-toast-card--local rounded-2xl w-[420px] max-w-full overflow-hidden modal-content">
+            <div class="model-toast-accent model-toast-accent--local"></div>
+            <div class="model-toast-body">
+                <div class="model-toast-header">
+                    <div class="model-toast-icon model-toast-icon--local" aria-hidden="true">
+                        <i class="fas fa-microchip text-base"></i>
                     </div>
-                    <h2 id="local-model-loaded-title" class="text-base font-semibold text-white light:text-gray-900">
-                        Model Loaded</h2>
+                    <div class="model-toast-copy">
+                        <div class="model-toast-meta">
+                            <span class="model-toast-chip model-toast-chip--local">Local Model</span>
+                            <span class="model-toast-chip model-toast-chip--success">Loaded</span>
+                        </div>
+                        <h2 id="local-model-loaded-title" class="model-toast-title">
+                            Model Loaded</h2>
+                        <p class="model-toast-subtitle">Your local runtime is ready for the next reply.</p>
+                    </div>
                 </div>
-                <div id="local-model-loaded-name"
-                    class="model-active-display text-sm font-medium text-white light:text-gray-800 px-3.5 py-2.5 rounded-lg break-all">
+                <div class="model-toast-name-group">
+                    <p class="model-toast-name-label">Loaded model</p>
+                    <div id="local-model-loaded-name"
+                        class="model-active-display model-toast-name text-sm font-medium text-white light:text-gray-800 px-3.5 py-2.5 rounded-lg break-all">
+                    </div>
                 </div>
+                <div class="model-toast-progress"></div>
             </div>
         </div>
     </div>
