@@ -695,11 +695,57 @@ class WebViewActivity : AppCompatActivity() {
         })
     }
 
+    override fun onPause() {
+        super.onPause()
+        val webView: WebView = findViewById(R.id.webView)
+        webView.onPause()
+        // Stop any ongoing TTS cleanly so audio doesn't bleed into the background.
+        if (isSpeakingChunks || textToSpeech?.isSpeaking == true) {
+            clearTTSWatchdog()
+            isSpeakingChunks = false
+            currentChunks = emptyList()
+            currentChunkIndex = 0
+            textToSpeech?.stop()
+            abandonAudioFocus()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val webView: WebView = findViewById(R.id.webView)
+        webView.onResume()
+        // Android may kill the TTS engine service while the app is in the background.
+        // Proactively shut down the (potentially stale/dead) TTS instance and immediately
+        // start a fresh one so the engine is warm by the time the user taps the speaker
+        // button, avoiding the multi-tap delay caused by lazy re-initialization.
+        clearTTSWatchdog()
+        isSpeakingChunks = false
+        currentChunks = emptyList()
+        currentChunkIndex = 0
+        textToSpeech?.shutdown()
+        textToSpeech = null
+        isTTSInitialized = false
+        abandonAudioFocus()
+        // Tell JS the engine is resetting so it doesn't try to speak during init.
+        webView.post {
+            webView.evaluateJavascript(
+                "if (window.TTSService) { window.TTSService.initialized = false; window.TTSService.isInitializing = true; }",
+                null
+            )
+        }
+        // Immediately begin re-initialization — the success callback will flip
+        // TTSService.initialized back to true without requiring a JS-side trigger.
+        startTTSEngine()
+        Log.d(TAG, "TTS reset and re-initialization started on resume")
+    }
+
     override fun onDestroy() {
         mInterstitialAd?.fullScreenContentCallback = null
         mInterstitialAd = null
 
         textToSpeech?.shutdown()
+        textToSpeech = null
+        isTTSInitialized = false
         super.onDestroy()
     }
 
@@ -1138,100 +1184,111 @@ class WebViewActivity : AppCompatActivity() {
         ttsWatchdogRunnable = null
     }
 
+    /**
+     * Starts a fresh TTS engine. Must be called on the UI thread.
+     * Shared by TTSInterface.initializeTTS() and the proactive re-init in onResume().
+     */
+    private fun startTTSEngine() {
+        if (textToSpeech == null || !isTTSInitialized) {
+            // Shut down any stale broken instance before creating a fresh one
+            if (textToSpeech != null && !isTTSInitialized) {
+                textToSpeech?.shutdown()
+                textToSpeech = null
+            }
+            textToSpeech = TextToSpeech(this) { status ->
+                if (status == TextToSpeech.SUCCESS) {
+                    val result = textToSpeech?.setLanguage(Locale.US)
+                    if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        Log.e(TAG, "TTS Language not supported")
+                        textToSpeech?.setLanguage(Locale.getDefault())
+                    }
+
+                    // Optimize TTS settings for better audio quality
+                    textToSpeech?.setSpeechRate(0.9f)
+                    textToSpeech?.setPitch(1.0f)
+
+                    // Set proper audio attributes for API 21+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        val audioAttributes = AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                            .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
+                            .build()
+                        textToSpeech?.setAudioAttributes(audioAttributes)
+                        Log.d(TAG, "Audio attributes set for TTS with media usage")
+                    }
+
+                    // Generate and store a persistent audio session ID
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            ttsAudioSessionId = audioManager.generateAudioSessionId()
+                            Log.d(TAG, "Generated persistent audio session ID: $ttsAudioSessionId")
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Could not generate audio session ID: ${e.message}")
+                    }
+
+                    // Set utterance progress listener for audio focus management
+                    textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                        override fun onStart(utteranceId: String?) {
+                            Log.d(TAG, "TTS started speaking: $utteranceId")
+                        }
+
+                        override fun onDone(utteranceId: String?) {
+                            clearTTSWatchdog()
+                            Log.d(TAG, "TTS finished speaking: $utteranceId")
+                            abandonAudioFocus()
+                        }
+
+                        override fun onError(utteranceId: String?) {
+                            clearTTSWatchdog()
+                            Log.e(TAG, "TTS error for utterance: $utteranceId")
+                            abandonAudioFocus()
+                        }
+                    })
+
+                    Log.d(TAG, "TTS initialized successfully with optimized settings and audio attributes")
+
+                    // Set initialization flag
+                    isTTSInitialized = true
+
+                    // Notify JavaScript that TTS is ready. We update TTSService.initialized
+                    // directly in addition to firing the onTTSInitialized callback, because
+                    // when Kotlin proactively re-inits TTS on resume the JS onTTSInitialized
+                    // callback may not be registered yet.
+                    val webView: WebView = findViewById(R.id.webView)
+                    webView.post {
+                        webView.evaluateJavascript(
+                            "if (window.onTTSInitialized) window.onTTSInitialized(true);" +
+                            "if (window.TTSService) { window.TTSService.initialized = true; window.TTSService.isInitializing = false; }",
+                            null
+                        )
+                    }
+                } else {
+                    Log.e(TAG, "TTS initialization failed")
+
+                    isTTSInitialized = false
+                    textToSpeech?.shutdown()
+                    textToSpeech = null
+
+                    val webView: WebView = findViewById(R.id.webView)
+                    webView.post {
+                        webView.evaluateJavascript(
+                            "if (window.onTTSInitialized) window.onTTSInitialized(false);" +
+                            "if (window.TTSService) { window.TTSService.initialized = false; window.TTSService.isInitializing = false; }",
+                            null
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     inner class TTSInterface {
         @JavascriptInterface
         fun initializeTTS() {
             runOnUiThread {
-                if (textToSpeech == null || !isTTSInitialized) {
-                    // Shut down any stale broken instance before creating a fresh one
-                    if (textToSpeech != null && !isTTSInitialized) {
-                        textToSpeech?.shutdown()
-                        textToSpeech = null
-                    }
-                    textToSpeech = TextToSpeech(this@WebViewActivity) { status ->
-                        if (status == TextToSpeech.SUCCESS) {
-                            val result = textToSpeech?.setLanguage(Locale.US)
-                            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                                Log.e(TAG, "TTS Language not supported")
-                                // Try to set default language
-                                textToSpeech?.setLanguage(Locale.getDefault())
-                            }
-                            
-                            // Optimize TTS settings for better audio quality
-                            textToSpeech?.setSpeechRate(0.9f) // Slightly slower for clarity
-                            textToSpeech?.setPitch(1.0f) // Normal pitch
-                            
-                            // Set proper audio attributes for API 21+
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                val audioAttributes = AudioAttributes.Builder()
-                                    .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
-                                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                                    .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
-                                    .build()
-                                textToSpeech?.setAudioAttributes(audioAttributes)
-                                Log.d(TAG, "Audio attributes set for TTS with media usage")
-                            }
-
-                            // Generate and store a persistent audio session ID
-                            try {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                    ttsAudioSessionId = audioManager.generateAudioSessionId()
-                                    Log.d(TAG, "Generated persistent audio session ID: $ttsAudioSessionId")
-                                }
-                            } catch (e: Exception) {
-                                Log.w(TAG, "Could not generate audio session ID: ${e.message}")
-                            }
-
-
-                            
-                            // Set utterance progress listener for audio focus management
-                            textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                                override fun onStart(utteranceId: String?) {
-                                    Log.d(TAG, "TTS started speaking: $utteranceId")
-                                }
-                                
-                                override fun onDone(utteranceId: String?) {
-                                    clearTTSWatchdog()
-                                    Log.d(TAG, "TTS finished speaking: $utteranceId")
-                                    // Release audio focus when done
-                                    // Release audio focus when done
-                                    abandonAudioFocus()
-                                }
-                                
-                                override fun onError(utteranceId: String?) {
-                                    clearTTSWatchdog()
-                                    Log.e(TAG, "TTS error for utterance: $utteranceId")
-                                    // Release audio focus on error
-                                    // Release audio focus on error
-                                    abandonAudioFocus()
-                                }
-                            })
-                            
-                            Log.d(TAG, "TTS initialized successfully with optimized settings and audio attributes")
-                            
-                            // Set initialization flag
-                            isTTSInitialized = true
-                            
-                            // Notify JavaScript that TTS is ready
-                            val webView: WebView = findViewById(R.id.webView)
-                            webView.post {
-                                webView.evaluateJavascript("if (window.onTTSInitialized) window.onTTSInitialized(true);", null)
-                            }
-                        } else {
-                            Log.e(TAG, "TTS initialization failed")
-                            
-                            // Set initialization flag to false
-                            isTTSInitialized = false
-                            textToSpeech?.shutdown()
-                            textToSpeech = null
-                            
-                            val webView: WebView = findViewById(R.id.webView)
-                            webView.post {
-                                webView.evaluateJavascript("if (window.onTTSInitialized) window.onTTSInitialized(false);", null)
-                            }
-                        }
-                    }
-                }
+                startTTSEngine()
             }
         }
 
@@ -1404,29 +1461,12 @@ class WebViewActivity : AppCompatActivity() {
 
                     override fun onError(utteranceId: String?) {
                         runOnUiThread {
-                            clearTTSWatchdog()
-                            Log.e(TAG, "TTS error for chunk: $utteranceId")
-                            if (utteranceId?.startsWith("chunk_") == true && isSpeakingChunks) {
-                                val errorIndex = utteranceId.substringAfter("chunk_").toIntOrNull()
-                                if (errorIndex != null) {
-                                    val nextIndex = errorIndex + 1
-                                    if (nextIndex < currentChunks.size) {
-                                        // Try to continue with next chunk
-                                        Handler(Looper.getMainLooper()).postDelayed({
-                                            if (isSpeakingChunks) {
-                                                currentChunkIndex = nextIndex
-                                                speakNextChunk()
-                                            }
-                                        }, 100)
-                                    } else {
-                                        isSpeakingChunks = false
-                                        currentChunkIndex = 0
-                                        currentChunks = emptyList()
-                                        clearTTSWatchdog()
-                                        abandonAudioFocus()
-                                    }
-                                }
-                            }
+                            Log.e(TAG, "TTS engine error for chunk: $utteranceId — triggering full recovery")
+                            // An engine error means the TTS service has likely died or entered a
+                            // bad state. Reset everything and let the JS layer re-initialize on the
+                            // next speak() call rather than trying to continue with more chunks
+                            // (which would all fail too).
+                            handleTTSEngineFailure()
                         }
                     }
                 })
