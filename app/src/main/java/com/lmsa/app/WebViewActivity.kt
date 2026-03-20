@@ -729,7 +729,7 @@ class WebViewActivity : AppCompatActivity() {
         // Tell JS the engine is resetting so it doesn't try to speak during init.
         webView.post {
             webView.evaluateJavascript(
-                "if (window.TTSService) { window.TTSService.initialized = false; window.TTSService.isInitializing = true; }",
+                "if (window.TTSService) { window.TTSService.initialized = false; window.TTSService.isInitializing = false; }",
                 null
             )
         }

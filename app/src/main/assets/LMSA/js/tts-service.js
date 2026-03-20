@@ -8,6 +8,7 @@ class TTSService {
         this.isAndroid = typeof AndroidTTS !== 'undefined';
         this.initialized = false;
         this.isInitializing = false;
+        this.initializationPromise = null;
         this.currentUtterance = null;
         this.speechSynthesis = window.speechSynthesis;
         this.voices = [];
@@ -20,23 +21,38 @@ class TTSService {
      * Initialize TTS service
      */
     async initialize() {
-        if (this.isInitializing) return;
+        if (this.isInitializing) {
+            if (this.initializationPromise) {
+                return this.initializationPromise;
+            }
+            // Recover from stale native/UI flag states where isInitializing was set
+            // externally but no JS initialization promise is in flight.
+            console.warn('TTSService detected stale isInitializing flag; resetting and reinitializing');
+            this.isInitializing = false;
+        }
         // Allow re-initialization if previously initialized but engine is no longer available
-        if (this.initialized && this.isAvailable()) return;
+        if (this.initialized && this.isAvailable()) return true;
         if (this.initialized && !this.isAvailable()) {
             // Engine has died since last init — reset so we can do a fresh init
             this.initialized = false;
         }
-        
+
         this.isInitializing = true;
-        
-        if (this.isAndroid) {
-            await this.initializeAndroidTTS();
-        } else {
-            await this.initializeWebTTS();
+        this.initializationPromise = (async () => {
+            if (this.isAndroid) {
+                await this.initializeAndroidTTS();
+            } else {
+                await this.initializeWebTTS();
+            }
+            return this.initialized;
+        })();
+
+        try {
+            return await this.initializationPromise;
+        } finally {
+            this.isInitializing = false;
+            this.initializationPromise = null;
         }
-        
-        this.isInitializing = false;
     }
 
     /**
