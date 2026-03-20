@@ -37,18 +37,27 @@ function setCollapsibleSectionExpanded(header, shouldExpand) {
         return;
     }
 
+    clearTimeout(content._collapsibleHeightResetTimer);
     header.classList.toggle('active', shouldExpand);
     content.classList.toggle('show', shouldExpand);
     content.classList.remove('hidden');
 
     if (shouldExpand) {
-        content.style.maxHeight = 'none';
         const measuredHeight = content.scrollHeight;
         content.style.maxHeight = `${measuredHeight}px`;
         forceSidebarRepaint(content);
+        content._collapsibleHeightResetTimer = setTimeout(() => {
+            if (content.classList.contains('show')) {
+                content.style.maxHeight = 'none';
+            }
+        }, 260);
         return;
     }
 
+    if (content.style.maxHeight === 'none' || !content.style.maxHeight) {
+        content.style.maxHeight = `${content.scrollHeight}px`;
+        void content.offsetHeight;
+    }
     content.style.maxHeight = '0px';
 }
 

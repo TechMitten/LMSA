@@ -7309,9 +7309,15 @@ body.light-theme #whats-new-modal .flex.justify-between.items-center.pt-3.pb-2.m
         transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-#import-export-container.animate-fade-in,
-#premium-container.animate-fade-in {
+#import-export-container.animate-fade-in {
     max-height: 200px;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+#premium-container.animate-fade-in {
+    max-height: 320px;
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;

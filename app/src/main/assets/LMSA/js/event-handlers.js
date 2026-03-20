@@ -2926,6 +2926,21 @@ function togglePremiumContainer() {
     toggleSidebarGroupContainer('premium-group-btn', 'premium-container');
 }
 
+function syncSidebarCollapsibleHeight(element) {
+    const parentCollapsibleContent = element?.closest('.collapsible-content.show');
+    if (!parentCollapsibleContent) {
+        return;
+    }
+
+    clearTimeout(parentCollapsibleContent._collapsibleHeightResetTimer);
+    parentCollapsibleContent.style.maxHeight = `${parentCollapsibleContent.scrollHeight}px`;
+    parentCollapsibleContent._collapsibleHeightResetTimer = setTimeout(() => {
+        if (parentCollapsibleContent.classList.contains('show')) {
+            parentCollapsibleContent.style.maxHeight = 'none';
+        }
+    }, 320);
+}
+
 function toggleSidebarGroupContainer(groupButtonId, containerId) {
     const groupButton = document.getElementById(groupButtonId);
     const groupContainer = document.getElementById(containerId);
@@ -2936,20 +2951,46 @@ function toggleSidebarGroupContainer(groupButtonId, containerId) {
 
     if (groupContainer.classList.contains('hidden')) {
         groupContainer.classList.remove('hidden');
+        syncSidebarCollapsibleHeight(groupContainer);
         setTimeout(() => {
             groupContainer.classList.add('animate-fade-in');
+            syncSidebarCollapsibleHeight(groupContainer);
         }, 10);
+        groupButton.classList.add('active');
 
         const caretIcon = groupButton.querySelector('.fa-caret-down');
         if (caretIcon) {
             caretIcon.classList.add('fa-caret-up');
             caretIcon.classList.remove('fa-caret-down');
         }
+
+        if (containerId === 'premium-container') {
+            const sidebarScrollContent = document.getElementById('sidebar-scroll-content');
+            setTimeout(() => {
+                syncSidebarCollapsibleHeight(groupContainer);
+                const scrollTarget = groupContainer.lastElementChild || groupContainer;
+                if (sidebarScrollContent && scrollTarget instanceof HTMLElement) {
+                    const targetBottom = scrollTarget.offsetTop + scrollTarget.offsetHeight + 16;
+                    const visibleBottom = sidebarScrollContent.scrollTop + sidebarScrollContent.clientHeight;
+                    if (targetBottom > visibleBottom) {
+                        sidebarScrollContent.scrollTo({
+                            top: targetBottom - sidebarScrollContent.clientHeight,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            }, 80);
+        }
     } else {
+        groupContainer.style.maxHeight = `${groupContainer.scrollHeight}px`;
         groupContainer.classList.remove('animate-fade-in');
+        groupButton.classList.remove('active');
+        syncSidebarCollapsibleHeight(groupContainer);
 
         setTimeout(() => {
             groupContainer.classList.add('hidden');
+            groupContainer.style.maxHeight = '';
+            syncSidebarCollapsibleHeight(groupContainer);
         }, 300);
 
         const caretIcon = groupButton.querySelector('.fa-caret-up');
@@ -2970,6 +3011,7 @@ function resetSidebarGroup(groupButtonId, containerId) {
 
     groupContainer.classList.add('hidden');
     groupContainer.classList.remove('animate-fade-in');
+    groupButton.classList.remove('active');
 
     let caretIcon = groupButton.querySelector('.fa-caret-up');
     if (caretIcon) {
