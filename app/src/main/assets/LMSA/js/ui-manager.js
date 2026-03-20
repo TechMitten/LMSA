@@ -162,6 +162,8 @@ export function toggleSidebar() {
     // Add animation for smooth transition
     if (!isOpen) {
         // Opening the sidebar
+        sidebar.style.transition = '';
+        sidebar.style.transform = 'translateX(0)';
         sidebar.classList.remove('hidden');
         sidebar.classList.add('active');
         sidebar.classList.add('animate-slide-in');
@@ -371,6 +373,10 @@ export function closeSidebar() {
     sidebar.classList.remove('active');
     sidebar.classList.add('hidden');
     sidebar.classList.remove('animate-slide-out');
+
+    // Reset transform state after touch-swipe interactions
+    sidebar.style.transition = '';
+    sidebar.style.transform = '';
 }
 
 /**
@@ -2096,6 +2102,7 @@ export function getSelectedMessageElement() {
 export function initializeCollapsibleSections() {
     const sectionHeaders = document.querySelectorAll('.section-header');
     const chatHistorySection = document.querySelector('.sidebar-section:last-child');
+    let lastCollapsibleTouchTs = 0;
 
     // First, ensure all sections are collapsed by default
     sectionHeaders.forEach(header => {
@@ -2118,10 +2125,7 @@ export function initializeCollapsibleSections() {
 
         header.dataset.collapsibleBound = 'true';
 
-        header.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-
+        const toggleHeader = () => {
             // Check if this is the options section header
             const isOptionsSection = header.closest('.sidebar-section.collapsible');
             const isCharactersSection = header.closest('.sidebar-section.characters-section');
@@ -2177,7 +2181,27 @@ export function initializeCollapsibleSections() {
                     chatHistorySection.classList.remove('chat-history-hidden');
                 }
             }
+        };
+
+        header.addEventListener('click', (e) => {
+            // Ignore synthetic click fired right after a touch toggle.
+            if (Date.now() - lastCollapsibleTouchTs < 450) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
+
+            e.preventDefault();
+            e.stopPropagation();
+            toggleHeader();
         });
+
+        header.addEventListener('touchend', (e) => {
+            lastCollapsibleTouchTs = Date.now();
+            e.preventDefault();
+            e.stopPropagation();
+            toggleHeader();
+        }, { passive: false });
     });
 }
 

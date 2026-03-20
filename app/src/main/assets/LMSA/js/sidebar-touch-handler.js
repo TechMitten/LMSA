@@ -1,6 +1,6 @@
 // Sidebar touch handler for improved touch scrolling on mobile devices
 import { debugError, debugLog } from './utils.js';
-import { closeSidebar } from './ui-manager.js';
+import { closeSidebar, updateHamburgerIcon } from './ui-manager.js';
 
 /**
  * Initializes touch handlers for the sidebar to improve scrolling on mobile devices
@@ -26,8 +26,21 @@ export function initializeSidebarTouchHandler() {
     let swipeDeltaX = 0;
     let swipeDeltaY = 0;
 
+    let isSidebarSwiping = false;
+    let isEdgeSwipeOpening = false;
+    const SIDEBAR_CLOSE_SWIPE_THRESHOLD = 0.3; // close after 30% swipe
+    const SIDEBAR_OPEN_SWIPE_THRESHOLD = 0.2; // open after 20% swipe
+    const EDGE_SWIPE_ZONE = 24; // left gap for opening gesture
+    const SWIPE_OPEN_MIN_DISTANCE = 40; // minimum to prevent accidental edges
     const SWIPE_CLOSE_MIN_DISTANCE = 48;
     const SWIPE_CLOSE_MAX_VERTICAL_DRIFT = 72;
+
+    function setSidebarGestureState(state) {
+        window.__sidebarGestureState = state;
+        if (state === 'idle') {
+            window.__sidebarGestureReleaseAt = Date.now();
+        }
+    }
 
     function isPhoneLayout() {
         return window.matchMedia('(max-width: 767px)').matches;
@@ -100,9 +113,27 @@ export function initializeSidebarTouchHandler() {
             setScrollingState(true);
         }
 
-        // Stop propagation but don't prevent default scrolling
-        e.stopPropagation();
-    }, { passive: true, capture: true });
+        // Handle sidebar closing gesture while in mobile/phone layout
+        if (
+            isPhoneLayout() &&
+            sidebar.classList.contains('active') &&
+            swipeDeltaX < 0 &&
+            Math.abs(swipeDeltaX) > Math.abs(swipeDeltaY)
+        ) {
+            isSidebarSwiping = true;
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Move sidebar with finger
+            const sidebarWidth = sidebar.offsetWidth || window.innerWidth;
+            const translateX = Math.max(-sidebarWidth, swipeDeltaX);
+            sidebar.style.transition = 'none';
+            sidebar.style.transform = `translateX(${translateX}px)`;
+        } else {
+            // Stop propagation but don't prevent default scrolling for regular interactions
+            e.stopPropagation();
+        }
+    }, { passive: false, capture: true });
 
     sidebar.addEventListener('touchend', function(e) {
         // Calculate if this was a quick tap or a scroll/drag
@@ -128,14 +159,35 @@ export function initializeSidebarTouchHandler() {
         // Reset dragging state
         isDragging = false;
 
-        // Swipe-left to close for phones when sidebar is open full-width.
-        if (
+        if (isSidebarSwiping) {
+            const sidebarWidth = sidebar.offsetWidth || window.innerWidth;
+            const shouldClose = (
+                Math.abs(swipeDeltaX) >= Math.max(SWIPE_CLOSE_MIN_DISTANCE, sidebarWidth * SIDEBAR_CLOSE_SWIPE_THRESHOLD) &&
+                Math.abs(swipeDeltaY) <= SWIPE_CLOSE_MAX_VERTICAL_DRIFT &&
+                Math.abs(swipeDeltaX) > Math.abs(swipeDeltaY)
+            );
+
+            if (shouldClose) {
+                closeSidebar();
+            } else {
+                // Return to original position if swipe was insufficient
+                sidebar.style.transition = 'transform 180ms ease-out';
+                sidebar.style.transform = 'translateX(0)';
+                setTimeout(() => {
+                    sidebar.style.transition = '';
+                    sidebar.style.transform = '';
+                }, 200);
+            }
+
+            isSidebarSwiping = false;
+        } else if (
             isPhoneLayout() &&
             sidebar.classList.contains('active') &&
             swipeDeltaX <= -SWIPE_CLOSE_MIN_DISTANCE &&
             Math.abs(swipeDeltaY) <= SWIPE_CLOSE_MAX_VERTICAL_DRIFT &&
             Math.abs(swipeDeltaX) > Math.abs(swipeDeltaY)
         ) {
+            // Fallback behavior: quick swipe without previous move
             closeSidebar();
         }
     }, { passive: true, capture: true });
@@ -144,6 +196,130 @@ export function initializeSidebarTouchHandler() {
     sidebar.addEventListener('scroll', function() {
         setScrollingState(true);
     }, { passive: true });
+
+    // Support opening the sidebar from a left-edge swipe when closed
+    document.addEventListener('touchstart', function(e) {
+        if (!isPhoneLayout() || sidebar.classList.contains('active')) {
+            return;
+        }
+
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        swipeDeltaX = 0;
+        swipeDeltaY = 0;
+
+        if (touchStartX <= EDGE_SWIPE_ZONE) {
+            isEdgeSwipeOpening = true;
+            setSidebarGestureState('opening');
+
+            // Prepare sidebar for drag-open in real-time
+            sidebar.classList.remove('hidden');
+            sidebar.classList.remove('active');
+            sidebar.style.transition = 'none';
+            sidebar.style.visibility = 'visible';
+            sidebar.style.opacity = '1';
+
+            const sidebarWidth = sidebar.offsetWidth || window.innerWidth;
+            sidebar.style.transform = `translateX(-${sidebarWidth}px)`;
+
+            // Show overlay progressively
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            if (sidebarOverlay) {
+                sidebarOverlay.classList.remove('hidden');
+                sidebarOverlay.style.visibility = 'visible';
+                sidebarOverlay.style.transition = 'none';
+                sidebarOverlay.style.opacity = '0';
+                sidebarOverlay.classList.add('active');
+            }
+        }
+    }, { passive: false, capture: true });
+
+    document.addEventListener('touchmove', function(e) {
+        if (!isEdgeSwipeOpening) return;
+
+        const touch = e.touches[0];
+        const touchX = touch.clientX;
+        const touchY = touch.clientY;
+
+        swipeDeltaX = touchX - touchStartX;
+        swipeDeltaY = touchY - touchStartY;
+
+        if (swipeDeltaX > 0 && Math.abs(swipeDeltaX) > Math.abs(swipeDeltaY)) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const sidebarWidth = sidebar.offsetWidth || window.innerWidth;
+            const translateX = Math.min(0, -sidebarWidth + swipeDeltaX);
+            sidebar.style.transform = `translateX(${translateX}px)`;
+
+            const progress = Math.min(1, swipeDeltaX / sidebarWidth);
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            if (sidebarOverlay) {
+                sidebarOverlay.style.opacity = `${0.5 * progress}`;
+            }
+        }
+    }, { passive: false, capture: true });
+
+    document.addEventListener('touchend', function() {
+        if (!isEdgeSwipeOpening) return;
+
+        const sidebarWidth = sidebar.offsetWidth || window.innerWidth;
+        const openThreshold = Math.max(SWIPE_OPEN_MIN_DISTANCE, sidebarWidth * SIDEBAR_OPEN_SWIPE_THRESHOLD);
+        const openPercent = swipeDeltaX / sidebarWidth;
+
+        const shouldOpen = (openPercent >= 0.5 || swipeDeltaX >= openThreshold) &&
+            Math.abs(swipeDeltaY) <= SWIPE_CLOSE_MAX_VERTICAL_DRIFT &&
+            swipeDeltaX > Math.abs(swipeDeltaY);
+
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+        if (shouldOpen) {
+            // Animate to fully open after following finger
+            sidebar.classList.add('active');
+            sidebar.style.transition = 'transform 180ms ease-out';
+            sidebar.style.transform = 'translateX(0)';
+
+            if (sidebarOverlay) {
+                sidebarOverlay.style.transition = 'opacity 180ms ease-out';
+                sidebarOverlay.style.opacity = '1';
+            }
+
+            document.body.classList.add('sidebar-open');
+            updateHamburgerIcon(true);
+
+            setTimeout(() => {
+                sidebar.style.transition = '';
+                sidebar.style.transform = '';
+                if (sidebarOverlay) {
+                    sidebarOverlay.style.transition = '';
+                }
+            }, 200);
+        } else {
+            // Animate back closed
+            sidebar.style.transition = 'transform 180ms ease-out';
+            sidebar.style.transform = `translateX(-${sidebarWidth}px)`;
+            if (sidebarOverlay) {
+                sidebarOverlay.style.transition = 'opacity 180ms ease-out';
+                sidebarOverlay.style.opacity = '0';
+            }
+            setTimeout(() => {
+                sidebar.classList.add('hidden');
+                sidebar.style.transition = '';
+                sidebar.style.transform = '';
+                sidebar.classList.remove('active');
+
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.remove('active');
+                    sidebarOverlay.classList.add('hidden');
+                    sidebarOverlay.style.transition = '';
+                }
+            }, 200);
+        }
+
+        isEdgeSwipeOpening = false;
+        setSidebarGestureState('idle');
+    }, { passive: true, capture: true });
 
     // Add specific touch event handlers to the chat history section
     chatHistory.addEventListener('touchstart', function(e) {

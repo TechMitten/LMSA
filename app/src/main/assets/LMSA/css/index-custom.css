@@ -642,7 +642,8 @@ body.keyboard-visible #chat-form,
     #sidebar #new-chat,
     #sidebar #sidebar-models-btn,
     #sidebar #sidebar-settings-btn,
-    #sidebar #sidebar-templates-btn {
+    #sidebar #sidebar-templates-btn,
+    #sidebar .section-header {
         background: rgba(255, 255, 255, 0.06) !important;
         background-image: none !important;
         color: #dbeafe !important;
@@ -672,7 +673,8 @@ body.keyboard-visible #chat-form,
     #sidebar #new-chat:hover,
     #sidebar #sidebar-models-btn:hover,
     #sidebar #sidebar-settings-btn:hover,
-    #sidebar #sidebar-templates-btn:hover {
+    #sidebar #sidebar-templates-btn:hover,
+    #sidebar .section-header:hover {
         background: rgba(255, 255, 255, 0.08) !important;
         background-image: none !important;
         box-shadow: 0 8px 15px -3px rgba(16, 185, 129, 0.2), 0 4px 6px -2px rgba(14, 165, 233, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
@@ -698,7 +700,8 @@ body.keyboard-visible #chat-form,
     body.light-theme #sidebar #new-chat,
     body.light-theme #sidebar #sidebar-models-btn,
     body.light-theme #sidebar #sidebar-settings-btn,
-    body.light-theme #sidebar #sidebar-templates-btn {
+    body.light-theme #sidebar #sidebar-templates-btn,
+    body.light-theme #sidebar .section-header {
         background: rgba(15, 23, 42, 0.04) !important;
         background-image: none !important;
         color: #0f172a !important;
