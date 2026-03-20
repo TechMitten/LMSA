@@ -506,7 +506,7 @@ function showModelLoadingModal(modelId, showSponsorMessage = false) {
                 titleElement.innerHTML = '<i class="fas fa-bullhorn mr-3"></i>Loading Model';
             }
             if (messageElement) {
-                messageElement.textContent = 'A word from our sponsors while your model is loading...';
+                messageElement.textContent = 'Advertisement while your model is loading...';
             }
             // Hide the spinner since the ad will take over
             if (spinnerWrapper) {

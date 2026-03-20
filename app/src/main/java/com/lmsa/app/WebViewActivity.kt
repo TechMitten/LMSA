@@ -90,7 +90,13 @@ class WebViewActivity : AppCompatActivity() {
     private var ttsWatchdogRunnable: Runnable? = null
     private var ttsStartCallbackReceived: Boolean = false
     private var pendingTTSText: String? = null
+    private var pendingTTSRequestId: String? = null
+    private var currentTTSRequestId: String? = null
+    private var ttsRecoveryAttempts: Int = 0
     private var ttsAutoRecovering: Boolean = false
+    private var hasNotifiedTTSStart: Boolean = false
+    private var ttsRequestCounter: Long = 0L
+    private val maxTTSRecoveryAttempts = 1
 
     // Billing Client
     private lateinit var billingClient: BillingClient
@@ -178,15 +184,14 @@ class WebViewActivity : AppCompatActivity() {
         audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
             when (focusChange) {
                 AudioManager.AUDIOFOCUS_LOSS -> {
-                    // Only stop on permanent focus loss
-                    clearTTSWatchdog()
-                    textToSpeech?.stop()
-                    // Reset chunk state so isSpeakingChunks doesn't get stuck true
-                    isSpeakingChunks = false
-                    currentChunks = emptyList()
-                    currentChunkIndex = 0
-                    pendingTTSText = null
-                    abandonAudioFocus()
+                    val interruptedRequestId = currentTTSRequestId ?: pendingTTSRequestId
+                    resetTTSPlaybackState(
+                        stopPlayback = true,
+                        shutdownEngine = false,
+                        clearPendingRequest = true,
+                        releaseAudioFocus = true
+                    )
+                    notifyTTSPlaybackError(interruptedRequestId, "TTS stopped because audio focus was lost")
                 }
                 AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
                     // Don't stop on transient loss - just pause if needed
@@ -705,13 +710,14 @@ class WebViewActivity : AppCompatActivity() {
         webView.onPause()
         // Stop any ongoing TTS cleanly so audio doesn't bleed into the background.
         if (isSpeakingChunks || textToSpeech?.isSpeaking == true) {
-            clearTTSWatchdog()
-            isSpeakingChunks = false
-            currentChunks = emptyList()
-            currentChunkIndex = 0
-            pendingTTSText = null
-            textToSpeech?.stop()
-            abandonAudioFocus()
+            val interruptedRequestId = currentTTSRequestId ?: pendingTTSRequestId
+            resetTTSPlaybackState(
+                stopPlayback = true,
+                shutdownEngine = false,
+                clearPendingRequest = true,
+                releaseAudioFocus = true
+            )
+            notifyTTSPlaybackError(interruptedRequestId, "TTS stopped because the app was paused")
         }
     }
 
@@ -723,24 +729,13 @@ class WebViewActivity : AppCompatActivity() {
         // Proactively shut down the (potentially stale/dead) TTS instance and immediately
         // start a fresh one so the engine is warm by the time the user taps the speaker
         // button, avoiding the multi-tap delay caused by lazy re-initialization.
-        clearTTSWatchdog()
-        isSpeakingChunks = false
-        currentChunks = emptyList()
-        currentChunkIndex = 0
-        pendingTTSText = null
-        ttsAutoRecovering = false
-        textToSpeech?.shutdown()
-        textToSpeech = null
-        isTTSInitialized = false
-        pendingTTSText = null
-        abandonAudioFocus()
-        // Tell JS the engine is resetting so it doesn't try to speak during init.
-        webView.post {
-            webView.evaluateJavascript(
-                "if (window.TTSService) { window.TTSService.initialized = false; window.TTSService.isInitializing = false; }",
-                null
-            )
-        }
+        resetTTSPlaybackState(
+            stopPlayback = false,
+            shutdownEngine = true,
+            clearPendingRequest = true,
+            releaseAudioFocus = true
+        )
+        notifyTTSInitialized(false)
         // Immediately begin re-initialization — the success callback will flip
         // TTSService.initialized back to true without requiring a JS-side trigger.
         startTTSEngine()
@@ -818,6 +813,110 @@ class WebViewActivity : AppCompatActivity() {
         } else {
             @Suppress("DEPRECATION")
             audioManager.abandonAudioFocus(audioFocusChangeListener)
+        }
+    }
+
+    private fun nextTTSRequestId(): String {
+        ttsRequestCounter += 1
+        return "tts_${System.currentTimeMillis()}_$ttsRequestCounter"
+    }
+
+    private fun escapeJsString(value: String): String {
+        return value
+            .replace("\\", "\\\\")
+            .replace("'", "\\'")
+            .replace("\r", "\\r")
+            .replace("\n", "\\n")
+            .replace("</", "<\\/")
+    }
+
+    private fun runTTSJavascript(script: String) {
+        val webView: WebView = findViewById(R.id.webView)
+        webView.post {
+            webView.evaluateJavascript(script, null)
+        }
+    }
+
+    private fun notifyTTSInitialized(success: Boolean) {
+        runTTSJavascript(
+            "if (window.onTTSInitialized) window.onTTSInitialized(${if (success) "true" else "false"});" +
+                "if (window.TTSService) { window.TTSService.initialized = ${if (success) "true" else "false"}; window.TTSService.isInitializing = false; }"
+        )
+    }
+
+    private fun notifyTTSPlaybackStarted(requestId: String?) {
+        if (requestId.isNullOrBlank()) return
+        runTTSJavascript(
+            "if (window.TTSService && window.TTSService._handleNativePlaybackStarted) { " +
+                "window.TTSService._handleNativePlaybackStarted('${escapeJsString(requestId)}'); }"
+        )
+    }
+
+    private fun notifyTTSPlaybackCompleted(requestId: String?) {
+        if (requestId.isNullOrBlank()) return
+        runTTSJavascript(
+            "if (window.TTSService && window.TTSService._handleNativePlaybackCompleted) { " +
+                "window.TTSService._handleNativePlaybackCompleted('${escapeJsString(requestId)}'); }"
+        )
+    }
+
+    private fun notifyTTSPlaybackError(requestId: String?, message: String) {
+        val escapedMessage = escapeJsString(message)
+        if (requestId.isNullOrBlank()) {
+            runTTSJavascript(
+                "if (window.TTSService && window.TTSService._notifyPlaybackFailed) { " +
+                    "window.TTSService._notifyPlaybackFailed('$escapedMessage'); }"
+            )
+            return
+        }
+
+        runTTSJavascript(
+            "if (window.TTSService && window.TTSService._handleNativePlaybackError) { " +
+                "window.TTSService._handleNativePlaybackError('${escapeJsString(requestId)}', '$escapedMessage'); }"
+        )
+    }
+
+    private fun resetTTSPlaybackState(
+        stopPlayback: Boolean,
+        shutdownEngine: Boolean,
+        clearPendingRequest: Boolean,
+        releaseAudioFocus: Boolean
+    ) {
+        clearTTSWatchdog()
+        if (stopPlayback) {
+            try {
+                textToSpeech?.stop()
+            } catch (stopError: Exception) {
+                Log.w(TAG, "Error stopping TTS during reset: ${stopError.message}")
+            }
+        }
+
+        isSpeakingChunks = false
+        currentChunks = emptyList()
+        currentChunkIndex = 0
+        ttsStartCallbackReceived = false
+        hasNotifiedTTSStart = false
+        currentTTSRequestId = null
+
+        if (shutdownEngine) {
+            isTTSInitialized = false
+            try {
+                textToSpeech?.shutdown()
+            } catch (shutdownError: Exception) {
+                Log.w(TAG, "Error shutting down TTS during reset: ${shutdownError.message}")
+            }
+            textToSpeech = null
+        }
+
+        if (clearPendingRequest) {
+            pendingTTSText = null
+            pendingTTSRequestId = null
+            ttsRecoveryAttempts = 0
+            ttsAutoRecovering = false
+        }
+
+        if (releaseAudioFocus) {
+            abandonAudioFocus()
         }
     }
 
@@ -1155,41 +1254,51 @@ class WebViewActivity : AppCompatActivity() {
      * call triggers a clean re-initialization via initializeTTS().
      * Also notifies JavaScript so TTSService.initialized is cleared.
      */
-    private fun handleTTSEngineFailure() {
-        clearTTSWatchdog()
+    private fun handleTTSEngineFailure(errorMessage: String = "Android TTS engine failed") {
         val textToRetry = pendingTTSText
-        val wasAutoRecovering = ttsAutoRecovering
-        isSpeakingChunks = false
-        currentChunks = emptyList()
-        currentChunkIndex = 0
-        isTTSInitialized = false
-        pendingTTSText = null
-        textToSpeech?.shutdown()
-        textToSpeech = null
-        val webView: WebView = findViewById(R.id.webView)
-        webView.post {
-            webView.evaluateJavascript(
-                "if (window.TTSService) { window.TTSService.initialized = false; window.TTSService.isInitializing = false; }",
-                null
-            )
-        }
-        Log.w(TAG, "TTS engine failure: state reset, wasAutoRecovering=$wasAutoRecovering")
-        // Auto-recover only once: re-init and retry the failed text.
-        // If we were already auto-recovering, don't retry again to avoid infinite loops.
-        if (textToRetry != null && !wasAutoRecovering) {
-            Log.d(TAG, "TTS auto-recovery: reinitializing engine and retrying speak")
+        val requestIdToRetry = pendingTTSRequestId ?: currentTTSRequestId
+        val canRetry = !textToRetry.isNullOrBlank() &&
+            !requestIdToRetry.isNullOrBlank() &&
+            ttsRecoveryAttempts < maxTTSRecoveryAttempts
+
+        resetTTSPlaybackState(
+            stopPlayback = false,
+            shutdownEngine = true,
+            clearPendingRequest = false,
+            releaseAudioFocus = true
+        )
+        notifyTTSInitialized(false)
+
+        Log.w(
+            TAG,
+            "TTS engine failure: requestId=$requestIdToRetry, canRetry=$canRetry, attempts=$ttsRecoveryAttempts"
+        )
+
+        if (canRetry) {
             ttsAutoRecovering = true
+            ttsRecoveryAttempts += 1
+            Log.d(TAG, "TTS auto-recovery: reinitializing engine and retrying speak")
             startTTSEngine(onReady = {
-                // Re-speak after successful re-init
                 runOnUiThread {
-                    val ttsInterface = TTSInterface()
-                    ttsInterface.speak(textToRetry)
-                    // Clear recovery flag after speak is dispatched
-                    ttsAutoRecovering = false
+                    val retryText = pendingTTSText
+                    val retryRequestId = pendingTTSRequestId
+                    if (retryText.isNullOrBlank() || retryRequestId.isNullOrBlank()) {
+                        ttsAutoRecovering = false
+                        ttsRecoveryAttempts = 0
+                        notifyTTSPlaybackError(requestIdToRetry, errorMessage)
+                        return@runOnUiThread
+                    }
+
+                    TTSInterface().speakInternal(retryText, retryRequestId)
                 }
             })
         } else {
+            pendingTTSText = null
+            pendingTTSRequestId = null
+            currentTTSRequestId = null
+            ttsRecoveryAttempts = 0
             ttsAutoRecovering = false
+            notifyTTSPlaybackError(requestIdToRetry, errorMessage)
         }
     }
 
@@ -1263,18 +1372,7 @@ class WebViewActivity : AppCompatActivity() {
                     // Set initialization flag
                     isTTSInitialized = true
 
-                    // Notify JavaScript that TTS is ready. We update TTSService.initialized
-                    // directly in addition to firing the onTTSInitialized callback, because
-                    // when Kotlin proactively re-inits TTS on resume the JS onTTSInitialized
-                    // callback may not be registered yet.
-                    val webView: WebView = findViewById(R.id.webView)
-                    webView.post {
-                        webView.evaluateJavascript(
-                            "if (window.onTTSInitialized) window.onTTSInitialized(true);" +
-                            "if (window.TTSService) { window.TTSService.initialized = true; window.TTSService.isInitializing = false; }",
-                            null
-                        )
-                    }
+                    notifyTTSInitialized(true)
                     // If a ready-callback was provided (e.g. auto-recovery), invoke it now.
                     onReady?.invoke()
                 } else {
@@ -1283,14 +1381,16 @@ class WebViewActivity : AppCompatActivity() {
                     isTTSInitialized = false
                     textToSpeech?.shutdown()
                     textToSpeech = null
+                    notifyTTSInitialized(false)
 
-                    val webView: WebView = findViewById(R.id.webView)
-                    webView.post {
-                        webView.evaluateJavascript(
-                            "if (window.onTTSInitialized) window.onTTSInitialized(false);" +
-                            "if (window.TTSService) { window.TTSService.initialized = false; window.TTSService.isInitializing = false; }",
-                            null
-                        )
+                    val failedRequestId = pendingTTSRequestId
+                    if (failedRequestId != null) {
+                        notifyTTSPlaybackError(failedRequestId, "Android TTS initialization failed")
+                        pendingTTSText = null
+                        pendingTTSRequestId = null
+                        currentTTSRequestId = null
+                        ttsRecoveryAttempts = 0
+                        ttsAutoRecovering = false
                     }
                 }
             }
@@ -1307,85 +1407,107 @@ class WebViewActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun speak(text: String) {
+            speakWithRequestId(nextTTSRequestId(), text)
+        }
+
+        @JavascriptInterface
+        fun speakWithRequestId(requestId: String, text: String) {
             runOnUiThread {
-                if (textToSpeech != null && isTTSInitialized) {
-                    // Request audio focus before speaking
-                    val result = requestAudioFocus()
-                    
-                    if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                        Log.w(TAG, "Audio focus request denied")
-                        // Notify JS so the button resets
-                        val webView: WebView = findViewById(R.id.webView)
-                        webView.post {
-                            webView.evaluateJavascript(
-                                "if (window.TTSService) { window.TTSService._notifyPlaybackFailed && window.TTSService._notifyPlaybackFailed(); }",
-                                null
-                            )
-                        }
-                        return@runOnUiThread
-                    }
-                    
-                    // Store the text for auto-retry on engine failure
-                    pendingTTSText = text
-                    
-                    // Clean the text to remove markdown and HTML
-                    val cleanText = text
-                        .replace(Regex("<think>[\\s\\S]*?</think>"), "") // Remove thinking/reasoning blocks
-                        .replace(Regex("<[^>]*>"), "") // Remove HTML tags
-                        .replace(Regex("\\*\\*([^*]+)\\*\\*"), "$1") // Remove bold markdown
-                        .replace(Regex("\\*([^*]+)\\*"), "$1") // Remove italic markdown
-                        .replace(Regex("```[\\s\\S]*?```"), " Code block. ") // Replace code blocks
-                        .replace(Regex("`([^`]+)`"), "$1") // Remove inline code backticks
-                        .replace(Regex("#{1,6}\\s*"), "") // Remove headers
-                        .replace(Regex("\\[([^\\]]+)\\]\\([^)]+\\)"), "$1") // Convert links to text
-                        // Remove emojis (they cause TTS to stop or produce artifacts)
-                        // This regex matches most emoji ranges
-                        .replace(Regex("[\\p{So}\\p{Sk}\\p{Cn}]"), " ")
-                        // Remove other problematic unicode characters but keep basic text
-                        .replace(Regex("[^\\p{L}\\p{N}\\s.,!?;:()\\-'\" ]"), " ")
-                        // Fix common abbreviations
-                        .replace(Regex("\\bAPI\\b"), "A P I")
-                        .replace(Regex("\\bURL\\b"), "U R L")
-                        .replace(Regex("\\bHTML\\b"), "H T M L")
-                        .replace(Regex("\\bCSS\\b"), "C S S")
-                        .replace(Regex("\\bJS\\b"), "JavaScript")
-                        .replace(Regex("\\bJSON\\b"), "J S O N")
-                        .replace(Regex("\\bXML\\b"), "X M L")
-                        .replace(Regex("\\bSQL\\b"), "S Q L")
-                        // Handle numbers and special cases
-                        .replace(Regex("(\\d+)\\.(\\d+)"), "$1 point $2")
-                        .replace(Regex("\\b(\\d+)%"), "$1 percent")
-                        .replace(Regex("\\$(\\d+)"), "$1 dollars")
-                        // Fix punctuation spacing
-                        .replace(Regex("([.!?])\\s*([.!?])"), "$1 ")
-                        .replace(Regex("([,;:])\\s*([,;:])"), "$1 ")
-                        // Add pauses for better speech flow
-                        .replace(Regex("\\.\\s+"), ". ")
-                        .replace(Regex("!\\s+"), "! ")
-                        .replace(Regex("\\?\\s+"), "? ")
-                        .replace(Regex(":\\s+"), ": ")
-                        .replace(Regex(";\\s+"), "; ")
-                        // Remove extra whitespace
-                        .replace(Regex("\\s+"), " ")
-                        .trim()
-                    
-                    if (cleanText.isNotEmpty()) {
-                        // Split long text into chunks to prevent audio artifacts
-                        val maxChunkLength = 200 // Maximum characters per chunk
-                        val chunks = if (cleanText.length <= maxChunkLength) {
-                            listOf(cleanText)
-                        } else {
-                            chunkText(cleanText, maxChunkLength)
-                        }
-                        
-                        // Speak chunks sequentially
-                        speakChunks(chunks, 0)
-                    }
-                } else {
-                    Log.w(TAG, "TTS not ready, attempting to initialize...")
-                    initializeTTS()
-                }
+                speakInternal(text, requestId.ifBlank { nextTTSRequestId() })
             }
+        }
+
+        fun speakInternal(text: String, requestId: String) {
+            if (textToSpeech == null || !isTTSInitialized) {
+                Log.w(TAG, "TTS not ready for request $requestId, initializing and queueing playback")
+                pendingTTSText = text
+                pendingTTSRequestId = requestId
+                currentTTSRequestId = requestId
+                startTTSEngine(onReady = {
+                    runOnUiThread {
+                        val retryText = pendingTTSText
+                        val retryRequestId = pendingTTSRequestId
+                        if (!retryText.isNullOrBlank() && !retryRequestId.isNullOrBlank()) {
+                            speakInternal(retryText, retryRequestId)
+                        }
+                    }
+                })
+                return
+            }
+
+            val result = requestAudioFocus()
+            if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                Log.w(TAG, "Audio focus request denied for request $requestId")
+                notifyTTSPlaybackError(requestId, "Audio focus request denied")
+                resetTTSPlaybackState(
+                    stopPlayback = false,
+                    shutdownEngine = false,
+                    clearPendingRequest = true,
+                    releaseAudioFocus = true
+                )
+                return
+            }
+
+            if (pendingTTSRequestId != requestId) {
+                ttsRecoveryAttempts = 0
+            }
+
+            pendingTTSText = text
+            pendingTTSRequestId = requestId
+            currentTTSRequestId = requestId
+            hasNotifiedTTSStart = false
+
+            val cleanText = text
+                .replace(Regex("<think>[\\s\\S]*?</think>"), "")
+                .replace(Regex("<[^>]*>"), "")
+                .replace(Regex("\\*\\*([^*]+)\\*\\*"), "$1")
+                .replace(Regex("\\*([^*]+)\\*"), "$1")
+                .replace(Regex("```[\\s\\S]*?```"), " Code block. ")
+                .replace(Regex("`([^`]+)`"), "$1")
+                .replace(Regex("#{1,6}\\s*"), "")
+                .replace(Regex("\\[([^\\]]+)\\]\\([^)]+\\)"), "$1")
+                .replace(Regex("[\\p{So}\\p{Sk}\\p{Cn}]"), " ")
+                .replace(Regex("[^\\p{L}\\p{N}\\s.,!?;:()\\-'\" ]"), " ")
+                .replace(Regex("\\bAPI\\b"), "A P I")
+                .replace(Regex("\\bURL\\b"), "U R L")
+                .replace(Regex("\\bHTML\\b"), "H T M L")
+                .replace(Regex("\\bCSS\\b"), "C S S")
+                .replace(Regex("\\bJS\\b"), "JavaScript")
+                .replace(Regex("\\bJSON\\b"), "J S O N")
+                .replace(Regex("\\bXML\\b"), "X M L")
+                .replace(Regex("\\bSQL\\b"), "S Q L")
+                .replace(Regex("(\\d+)\\.(\\d+)"), "$1 point $2")
+                .replace(Regex("\\b(\\d+)%"), "$1 percent")
+                .replace(Regex("\\$(\\d+)"), "$1 dollars")
+                .replace(Regex("([.!?])\\s*([.!?])"), "$1 ")
+                .replace(Regex("([,;:])\\s*([,;:])"), "$1 ")
+                .replace(Regex("\\.\\s+"), ". ")
+                .replace(Regex("!\\s+"), "! ")
+                .replace(Regex("\\?\\s+"), "? ")
+                .replace(Regex(":\\s+"), ": ")
+                .replace(Regex(";\\s+"), "; ")
+                .replace(Regex("\\s+"), " ")
+                .trim()
+
+            if (cleanText.isEmpty()) {
+                notifyTTSPlaybackError(requestId, "No speakable text was available")
+                resetTTSPlaybackState(
+                    stopPlayback = false,
+                    shutdownEngine = false,
+                    clearPendingRequest = true,
+                    releaseAudioFocus = true
+                )
+                return
+            }
+
+            val maxChunkLength = 200
+            val chunks = if (cleanText.length <= maxChunkLength) {
+                listOf(cleanText)
+            } else {
+                chunkText(cleanText, maxChunkLength)
+            }
+
+            speakChunks(chunks, 0)
         }
         
         private fun chunkText(text: String, maxLength: Int): List<String> {
@@ -1447,14 +1569,19 @@ class WebViewActivity : AppCompatActivity() {
                     override fun onStart(utteranceId: String?) {
                         ttsStartCallbackReceived = true
                         Log.d(TAG, "TTS started chunk: $utteranceId")
+                        if (!hasNotifiedTTSStart) {
+                            hasNotifiedTTSStart = true
+                            ttsAutoRecovering = false
+                            notifyTTSPlaybackStarted(currentTTSRequestId)
+                        }
                     }
 
                     override fun onDone(utteranceId: String?) {
                         runOnUiThread {
                             clearTTSWatchdog()
                             Log.d(TAG, "TTS done callback for: $utteranceId, current index: $currentChunkIndex, total chunks: ${currentChunks.size}")
-                            if (utteranceId?.startsWith("chunk_") == true && isSpeakingChunks) {
-                                val completedIndex = utteranceId.substringAfter("chunk_").toIntOrNull()
+                            if (utteranceId?.contains("_chunk_") == true && isSpeakingChunks) {
+                                val completedIndex = utteranceId.substringAfterLast("_chunk_").toIntOrNull()
                                 Log.d(TAG, "Completed chunk index: $completedIndex")
 
                                 // Check if this is the last utterance in the queue
@@ -1473,13 +1600,14 @@ class WebViewActivity : AppCompatActivity() {
                                     } else {
                                         // All chunks completed
                                         Log.d(TAG, "All chunks completed")
-                                        isSpeakingChunks = false
-                                        currentChunkIndex = 0
-                                        currentChunks = emptyList()
-                                        pendingTTSText = null
-                                        ttsAutoRecovering = false
-                                        clearTTSWatchdog()
-                                        abandonAudioFocus()
+                                        val completedRequestId = currentTTSRequestId
+                                        notifyTTSPlaybackCompleted(completedRequestId)
+                                        resetTTSPlaybackState(
+                                            stopPlayback = false,
+                                            shutdownEngine = false,
+                                            clearPendingRequest = true,
+                                            releaseAudioFocus = true
+                                        )
                                     }
                                 }
                             }
@@ -1493,22 +1621,25 @@ class WebViewActivity : AppCompatActivity() {
                             // bad state. Reset everything and let the JS layer re-initialize on the
                             // next speak() call rather than trying to continue with more chunks
                             // (which would all fail too).
-                            handleTTSEngineFailure()
+                            handleTTSEngineFailure("Android TTS engine error")
                         }
                     }
                 })
             }
 
             val chunk = chunks[index]
+            currentChunkIndex = index
             val params = Bundle()
-            params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "chunk_$index")
+            val requestId = currentTTSRequestId ?: pendingTTSRequestId ?: nextTTSRequestId()
+            val utteranceId = "${requestId}_chunk_$index"
+            params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId)
             params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f)
 
             // Always use QUEUE_FLUSH to ensure clean playback
-            val ttsResult = textToSpeech?.speak(chunk, TextToSpeech.QUEUE_FLUSH, params, "chunk_$index")
+            val ttsResult = textToSpeech?.speak(chunk, TextToSpeech.QUEUE_FLUSH, params, utteranceId)
             if (ttsResult == TextToSpeech.ERROR) {
                 Log.e(TAG, "TTS speak() returned ERROR for chunk $index, initiating recovery")
-                handleTTSEngineFailure()
+                handleTTSEngineFailure("Android TTS failed to start playback")
                 return
             }
             scheduleTTSWatchdog(index, chunk)
@@ -1519,14 +1650,16 @@ class WebViewActivity : AppCompatActivity() {
             if (currentChunkIndex < currentChunks.size && isSpeakingChunks) {
                 val chunk = currentChunks[currentChunkIndex]
                 val params = Bundle()
-                params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "chunk_$currentChunkIndex")
+                val requestId = currentTTSRequestId ?: pendingTTSRequestId ?: nextTTSRequestId()
+                val utteranceId = "${requestId}_chunk_$currentChunkIndex"
+                params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId)
                 params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f)
 
                 // Use QUEUE_FLUSH for clean playback of each chunk
-                val ttsResult = textToSpeech?.speak(chunk, TextToSpeech.QUEUE_FLUSH, params, "chunk_$currentChunkIndex")
+                val ttsResult = textToSpeech?.speak(chunk, TextToSpeech.QUEUE_FLUSH, params, utteranceId)
                 if (ttsResult == TextToSpeech.ERROR) {
                     Log.e(TAG, "TTS speak() returned ERROR for next chunk $currentChunkIndex, initiating recovery")
-                    handleTTSEngineFailure()
+                    handleTTSEngineFailure("Android TTS failed during chunk playback")
                     return
                 }
                 scheduleTTSWatchdog(currentChunkIndex, chunk)
@@ -1537,14 +1670,14 @@ class WebViewActivity : AppCompatActivity() {
         @JavascriptInterface
         fun stop() {
             runOnUiThread {
-                clearTTSWatchdog()
-                isSpeakingChunks = false
-                currentChunks = emptyList()
-                currentChunkIndex = 0
-                textToSpeech?.stop()
-                pendingTTSText = null
-                ttsAutoRecovering = false
-                abandonAudioFocus()
+                val stoppedRequestId = currentTTSRequestId ?: pendingTTSRequestId
+                resetTTSPlaybackState(
+                    stopPlayback = true,
+                    shutdownEngine = false,
+                    clearPendingRequest = true,
+                    releaseAudioFocus = true
+                )
+                notifyTTSPlaybackCompleted(stoppedRequestId)
 
                 Log.d(TAG, "TTS stopped")
             }

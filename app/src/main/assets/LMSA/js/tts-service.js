@@ -12,7 +12,9 @@ class TTSService {
         this.currentUtterance = null;
         this.speechSynthesis = window.speechSynthesis;
         this.voices = [];
-        
+        this.currentAndroidPlayback = null;
+        this.androidPlaybackCounter = 0;
+
         // Don't auto-initialize, let it be called explicitly
         console.log('TTSService created, Android available:', this.isAndroid);
     }
@@ -30,10 +32,10 @@ class TTSService {
             console.warn('TTSService detected stale isInitializing flag; resetting and reinitializing');
             this.isInitializing = false;
         }
+
         // Allow re-initialization if previously initialized but engine is no longer available
         if (this.initialized && this.isAvailable()) return true;
         if (this.initialized && !this.isAvailable()) {
-            // Engine has died since last init — reset so we can do a fresh init
             this.initialized = false;
         }
 
@@ -60,7 +62,6 @@ class TTSService {
      */
     async initializeAndroidTTS() {
         return new Promise((resolve) => {
-            // Check if AndroidTTS is available
             if (typeof AndroidTTS === 'undefined') {
                 console.warn('AndroidTTS interface not available');
                 this.initialized = false;
@@ -68,7 +69,6 @@ class TTSService {
                 return;
             }
 
-            // Set up callback for TTS initialization
             window.onTTSInitialized = (success) => {
                 console.log('TTS initialization callback received:', success);
                 this.initialized = success;
@@ -79,13 +79,11 @@ class TTSService {
                 }
                 resolve(success);
             };
-            
-            // Initialize Android TTS
+
             try {
                 console.log('Calling AndroidTTS.initializeTTS()');
                 AndroidTTS.initializeTTS();
-                
-                // Set a timeout in case the callback never comes
+
                 setTimeout(() => {
                     if (!this.initialized) {
                         console.warn('TTS initialization timeout, assuming failure');
@@ -110,7 +108,6 @@ class TTSService {
         }
 
         return new Promise((resolve) => {
-            // Load voices
             const loadVoices = () => {
                 this.voices = this.speechSynthesis.getVoices();
                 if (this.voices.length > 0) {
@@ -118,12 +115,10 @@ class TTSService {
                     console.log('Web Speech API initialized with', this.voices.length, 'voices');
                     resolve(true);
                 } else {
-                    // Some browsers load voices asynchronously
                     setTimeout(loadVoices, 100);
                 }
             };
 
-            // Handle voice changes
             this.speechSynthesis.onvoiceschanged = loadVoices;
             loadVoices();
         });
@@ -140,7 +135,6 @@ class TTSService {
             return Promise.resolve(false);
         }
 
-        // Ensure TTS is initialized
         if (!this.isInitialized()) {
             await this.initialize();
         }
@@ -150,14 +144,12 @@ class TTSService {
             return Promise.resolve(false);
         }
 
-        // Stop any current speech
         this.stop();
 
         if (this.isAndroid) {
             return this.speakAndroid(text, options);
-        } else {
-            return this.speakWeb(text, options);
         }
+        return this.speakWeb(text, options);
     }
 
     /**
@@ -166,54 +158,177 @@ class TTSService {
      * @param {Object} options - Speech options
      */
     speakAndroid(text, options = {}) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
-                // Set language if specified
+                await this.waitForAndroidTTSReady();
+
                 if (options.language) {
                     AndroidTTS.setLanguage(options.language);
                 }
 
-                // Set speech rate if specified
                 if (options.rate) {
                     AndroidTTS.setSpeechRate(options.rate);
                 }
 
-                // Set pitch if specified
                 if (options.pitch) {
                     AndroidTTS.setPitch(options.pitch);
                 }
 
-                // Speak the text
-                AndroidTTS.speak(text);
-                
-                // Poll for completion. Use a safety timeout so the loop never runs forever
-                // if the engine fails silently and isSpeaking() never returns false.
-                const POLL_TIMEOUT_MS = 300000; // 5-minute absolute max for any utterance
-                const pollStartTime = Date.now();
-                const checkCompletion = () => {
-                    try {
-                        if (!AndroidTTS.isSpeaking()) {
-                            resolve(true);
-                        } else if (Date.now() - pollStartTime > POLL_TIMEOUT_MS) {
-                            // Safety timeout — treat as done so the button resets
-                            console.warn('TTS polling safety timeout reached');
-                            resolve(true);
-                        } else {
-                            setTimeout(checkCompletion, 100); // Check every 100ms
-                        }
-                    } catch (error) {
-                        reject(error);
-                    }
+                const requestId = this.createAndroidPlaybackRequestId();
+                this.currentAndroidPlayback = {
+                    requestId,
+                    resolve,
+                    reject,
+                    timeoutId: null,
+                    started: false,
                 };
-                
-                // Start polling after a short delay to ensure TTS has started
-                setTimeout(checkCompletion, 200);
-                
+
+                this.scheduleAndroidPlaybackTimeout(requestId, text);
+
+                if (typeof AndroidTTS.speakWithRequestId === 'function') {
+                    AndroidTTS.speakWithRequestId(requestId, text);
+                } else {
+                    AndroidTTS.speak(text);
+                    this.startAndroidPollingFallback(requestId);
+                }
             } catch (error) {
+                const handled = this.rejectAndroidPlayback(error, { resetInitialized: true });
                 console.error('Error speaking with Android TTS:', error);
-                reject(error);
+                if (!handled) {
+                    reject(error);
+                }
             }
         });
+    }
+
+    createAndroidPlaybackRequestId() {
+        this.androidPlaybackCounter += 1;
+        return `tts_${Date.now()}_${this.androidPlaybackCounter}`;
+    }
+
+    scheduleAndroidPlaybackTimeout(requestId, text) {
+        const playback = this.currentAndroidPlayback;
+        if (!playback || playback.requestId !== requestId) {
+            return;
+        }
+
+        const timeoutMs = Math.min(Math.max(text.length * 240, 6000), 300000) + 3000;
+        playback.timeoutId = setTimeout(() => {
+            if (!this.currentAndroidPlayback || this.currentAndroidPlayback.requestId !== requestId) {
+                return;
+            }
+
+            console.warn('Android TTS playback timeout reached');
+            this.initialized = false;
+            try {
+                AndroidTTS.stop();
+            } catch (stopError) {
+                console.error('Error stopping Android TTS after timeout:', stopError);
+            }
+            this.rejectAndroidPlayback(new Error('Android TTS playback timeout'), {
+                resetInitialized: true,
+            });
+        }, timeoutMs);
+    }
+
+    clearAndroidPlaybackState() {
+        if (this.currentAndroidPlayback?.timeoutId) {
+            clearTimeout(this.currentAndroidPlayback.timeoutId);
+        }
+        this.currentAndroidPlayback = null;
+    }
+
+    resolveAndroidPlayback(result = true) {
+        const playback = this.currentAndroidPlayback;
+        if (!playback) {
+            return false;
+        }
+
+        this.clearAndroidPlaybackState();
+        playback.resolve(result);
+        return true;
+    }
+
+    rejectAndroidPlayback(error, { resetInitialized = false } = {}) {
+        const playback = this.currentAndroidPlayback;
+        if (!playback) {
+            if (resetInitialized) {
+                this.initialized = false;
+            }
+            return false;
+        }
+
+        if (resetInitialized) {
+            this.initialized = false;
+        }
+
+        this.clearAndroidPlaybackState();
+        playback.reject(error instanceof Error ? error : new Error(String(error)));
+        return true;
+    }
+
+    startAndroidPollingFallback(requestId) {
+        const pollStartTime = Date.now();
+        const maxPollMs = 300000;
+
+        const checkCompletion = () => {
+            const playback = this.currentAndroidPlayback;
+            if (!playback || playback.requestId !== requestId) {
+                return;
+            }
+
+            try {
+                if (!AndroidTTS.isSpeaking()) {
+                    this.resolveAndroidPlayback(true);
+                } else if (Date.now() - pollStartTime > maxPollMs) {
+                    console.warn('Android TTS polling fallback timeout reached');
+                    this.rejectAndroidPlayback(new Error('Android TTS polling fallback timeout'), {
+                        resetInitialized: true,
+                    });
+                } else {
+                    setTimeout(checkCompletion, 100);
+                }
+            } catch (error) {
+                this.rejectAndroidPlayback(error, { resetInitialized: true });
+            }
+        };
+
+        setTimeout(checkCompletion, 200);
+    }
+
+    _handleNativePlaybackStarted(requestId) {
+        const playback = this.currentAndroidPlayback;
+        if (!playback || playback.requestId !== requestId) {
+            return;
+        }
+
+        playback.started = true;
+        console.log('Android TTS started:', requestId);
+    }
+
+    _handleNativePlaybackCompleted(requestId) {
+        const playback = this.currentAndroidPlayback;
+        if (!playback || playback.requestId !== requestId) {
+            return;
+        }
+
+        console.log('Android TTS completed:', requestId);
+        this.resolveAndroidPlayback(true);
+    }
+
+    _handleNativePlaybackError(requestId, message = 'Android TTS playback failed') {
+        const playback = this.currentAndroidPlayback;
+        if (playback && requestId && playback.requestId !== requestId) {
+            return;
+        }
+
+        console.error('Android TTS playback error:', requestId, message);
+        this.rejectAndroidPlayback(new Error(message), { resetInitialized: true });
+    }
+
+    _notifyPlaybackFailed(message = 'Android TTS playback failed') {
+        const requestId = this.currentAndroidPlayback?.requestId ?? null;
+        this._handleNativePlaybackError(requestId, message);
     }
 
     /**
@@ -225,17 +340,15 @@ class TTSService {
         return new Promise((resolve, reject) => {
             try {
                 this.currentUtterance = new SpeechSynthesisUtterance(text);
-                
-                // Set voice options
+
                 this.currentUtterance.lang = options.language || 'en-US';
                 this.currentUtterance.rate = options.rate || 1.0;
                 this.currentUtterance.pitch = options.pitch || 1.0;
                 this.currentUtterance.volume = options.volume || 1.0;
 
-                // Use selected voice or find appropriate voice
                 let voice = this.selectedVoice;
                 if (!voice) {
-                    voice = this.voices.find(v => 
+                    voice = this.voices.find(v =>
                         v.lang.startsWith(this.currentUtterance.lang.split('-')[0])
                     );
                 }
@@ -243,7 +356,6 @@ class TTSService {
                     this.currentUtterance.voice = voice;
                 }
 
-                // Set up event handlers
                 this.currentUtterance.onstart = () => {
                     console.log('TTS started');
                     if (options.onStart) options.onStart();
@@ -263,7 +375,6 @@ class TTSService {
                     reject(event.error);
                 };
 
-                // Speak
                 this.speechSynthesis.speak(this.currentUtterance);
             } catch (error) {
                 console.error('Error speaking with Web Speech API:', error);
@@ -282,6 +393,7 @@ class TTSService {
             } catch (error) {
                 console.error('Error stopping Android TTS:', error);
             }
+            this.resolveAndroidPlayback(false);
         } else if (this.speechSynthesis) {
             this.speechSynthesis.cancel();
             this.currentUtterance = null;
@@ -325,9 +437,8 @@ class TTSService {
                 console.error('Error checking Android TTS availability:', error);
                 return false;
             }
-        } else {
-            return this.speechSynthesis && this.speechSynthesis.getVoices().length > 0;
         }
+        return this.speechSynthesis && this.speechSynthesis.getVoices().length > 0;
     }
 
     /**
@@ -348,12 +459,10 @@ class TTSService {
     async getAvailableVoices() {
         if (this.isAndroid) {
             try {
-                // Ensure TTS is initialized first
                 if (!this.initialized) {
                     await this.initialize();
                 }
 
-                // Wait for Android TTS to be fully ready
                 await this.waitForAndroidTTSReady();
 
                 if (typeof AndroidTTS !== 'undefined' && AndroidTTS.getAvailableVoices) {
@@ -367,19 +476,18 @@ class TTSService {
                 console.error('Error getting Android TTS voices:', error);
                 return [];
             }
-        } else {
-            // Web Speech API
-            if (!this.initialized) {
-                await this.initialize();
-            }
-
-            return this.voices.map(voice => ({
-                name: voice.name,
-                locale: voice.lang,
-                quality: voice.localService ? 'High' : 'Network',
-                isNetworkConnectionRequired: !voice.localService
-            }));
         }
+
+        if (!this.initialized) {
+            await this.initialize();
+        }
+
+        return this.voices.map((voice) => ({
+            name: voice.name,
+            locale: voice.lang,
+            quality: voice.localService ? 'High' : 'Network',
+            isNetworkConnectionRequired: !voice.localService,
+        }));
     }
 
     /**
@@ -389,11 +497,11 @@ class TTSService {
     async waitForAndroidTTSReady() {
         return new Promise((resolve, reject) => {
             let attempts = 0;
-            const maxAttempts = 50; // 5 seconds max wait time
-            
+            const maxAttempts = 50;
+
             const checkReady = () => {
-                attempts++;
-                
+                attempts += 1;
+
                 try {
                     if (typeof AndroidTTS !== 'undefined' && AndroidTTS.isReady && AndroidTTS.isReady()) {
                         console.log('Android TTS is ready after', attempts * 100, 'ms');
@@ -403,17 +511,16 @@ class TTSService {
                 } catch (error) {
                     console.error('Error checking TTS readiness:', error);
                 }
-                
+
                 if (attempts >= maxAttempts) {
                     console.warn('Timeout waiting for Android TTS to be ready');
                     reject(new Error('TTS initialization timeout'));
                     return;
                 }
-                
-                // Check again after 100ms
+
                 setTimeout(checkReady, 100);
             };
-            
+
             checkReady();
         });
     }
@@ -426,10 +533,10 @@ class TTSService {
     async setVoice(voiceName) {
         if (this.isAndroid) {
             try {
-                if (!this.isInitialized) {
+                if (!this.isInitialized()) {
                     await this.initialize();
                 }
-                
+
                 if (typeof AndroidTTS !== 'undefined' && AndroidTTS.setVoice) {
                     return AndroidTTS.setVoice(voiceName);
                 }
@@ -438,22 +545,21 @@ class TTSService {
                 console.error('Error setting Android TTS voice:', error);
                 return false;
             }
-        } else {
-            // Web Speech API
-            if (!this.isInitialized) {
-                await this.initialize();
-            }
-            
-            const voice = this.voices.find(v => v.name === voiceName);
-            if (voice) {
-                this.selectedVoice = voice;
-                console.log('Voice set to:', voiceName);
-                return true;
-            } else {
-                console.warn('Voice not found:', voiceName);
-                return false;
-            }
         }
+
+        if (!this.isInitialized()) {
+            await this.initialize();
+        }
+
+        const voice = this.voices.find(v => v.name === voiceName);
+        if (voice) {
+            this.selectedVoice = voice;
+            console.log('Voice set to:', voiceName);
+            return true;
+        }
+
+        console.warn('Voice not found:', voiceName);
+        return false;
     }
 
     /**
