@@ -48,6 +48,40 @@ body.light-theme header::before {
         radial-gradient(circle at top center, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0) 60%);
 }
 
+#settings-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}
+
+#settings-content-wrapper::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
+}
+
+#settings-step-actions.active {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 100%;
+}
+
+#settings-step-actions.active > .mb-4 {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 100%;
+    margin-top: auto !important;
+    margin-bottom: auto !important;
+    transform: translateY(0.25in);
+}
+
+#settings-step-actions.active > .mb-4 > h3 {
+    margin-bottom: 0.9rem !important;
+}
+
 
 /* Button animations */
 @keyframes pulse-subtle {

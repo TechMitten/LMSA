@@ -308,9 +308,6 @@ export const settingsModal = `
                 <!-- Step 5: Actions -->
                 <div id="settings-step-actions" class="settings-step hidden" data-step-name="Actions">
                     <div class="mb-4">
-                        <h3 class="text-sm font-medium mb-3 text-gray-200">
-                            <i class="fas fa-bolt mr-2 text-blue-400"></i>Actions:
-                        </h3>
                         <button id="clear-chat" class="settings-action-button">
                             <i class="fas fa-trash-alt text-sm"></i>
                             <span>Clear All Chats</span>

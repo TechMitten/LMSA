@@ -952,69 +952,66 @@
 
 /* Next buttons */
 #settings-modal button[id^="to-"] {
-  background: linear-gradient(135deg, #4f46e5, #3b82f6);
-  border: none;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06),
-    0 0 1px rgba(255, 255, 255, 0.1) inset;
-  font-weight: 500;
+  background: linear-gradient(135deg,
+      rgba(15, 23, 42, 0.92) 0%,
+      rgba(30, 41, 59, 0.88) 25%,
+      rgba(51, 65, 85, 0.82) 50%,
+      rgba(30, 41, 59, 0.88) 75%,
+      rgba(15, 23, 42, 0.92) 100%);
+  border: 2px solid rgba(16, 185, 129, 0.45);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(16, 185, 129, 0.16);
+  font-weight: 600;
   padding: 0.8rem 1.2rem;
-  border-radius: 0.5rem;
-
+  border-radius: 1rem;
   position: relative;
   overflow: hidden;
-  color: #ffffff;
+  color: rgba(248, 250, 252, 0.95);
   font-family: "Segoe UI", system-ui, sans-serif;
   font-size: 0.9rem;
-
-  /* Enhanced appearance for light mode */
-  .light-theme & {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    box-shadow: 0 4px 6px rgba(15, 23, 42, 0.08),
-      0 2px 4px rgba(15, 23, 42, 0.05), 0 0 1px rgba(255, 255, 255, 0.5) inset,
-      0 -1px 0 rgba(0, 0, 0, 0.1) inset;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-    font-weight: 600;
-  }
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Hover state */
 #settings-modal button[id^="to-"]:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05),
-    0 0 1px rgba(255, 255, 255, 0.2) inset;
-  background: linear-gradient(135deg, #4338ca, #3b82f6);
-
-  /* Enhanced appearance for light mode */
-  .light-theme & {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    box-shadow: 0 6px 15px rgba(15, 23, 42, 0.1),
-      0 4px 6px rgba(15, 23, 42, 0.05), 0 0 1px rgba(255, 255, 255, 0.5) inset;
-  }
+  transform: translateY(-2px);
+  background: linear-gradient(135deg,
+      rgba(30, 41, 59, 0.96) 0%,
+      rgba(51, 65, 85, 0.9) 25%,
+      rgba(71, 85, 105, 0.85) 50%,
+      rgba(51, 65, 85, 0.9) 75%,
+      rgba(30, 41, 59, 0.96) 100%);
+  border-color: rgba(16, 185, 129, 0.7);
+  box-shadow:
+    0 12px 40px rgba(16, 185, 129, 0.18),
+    0 6px 20px rgba(6, 95, 70, 0.12),
+    0 3px 10px rgba(4, 120, 87, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    0 0 0 2px rgba(16, 185, 129, 0.22);
 }
 
 /* Focus state for keyboard navigation */
 #settings-modal button[id^="to-"]:focus-visible {
-  outline: 2px solid #60a5fa;
+  outline: 2px solid rgba(16, 185, 129, 0.75);
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.3);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.22);
   transform: translateY(-2px);
-
-  /* Enhanced appearance for light mode */
-  .light-theme & {
-    outline: 2px solid #3b82f6;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
-  }
 }
 
 /* Active state */
 #settings-modal button[id^="to-"]:active {
-  transform: translateY(1px);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-
-  /* Enhanced appearance for light mode */
-  .light-theme & {
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
-  }
+  transform: translateY(0);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Icon */
@@ -1022,6 +1019,35 @@
   margin-right: 0.5rem;
   font-size: 1rem;
   position: relative;
+}
+
+body.light-theme #settings-modal button[id^="to-"] {
+  background: linear-gradient(135deg,
+      rgba(51, 65, 85, 0.95) 0%,
+      rgba(71, 85, 105, 0.9) 25%,
+      rgba(100, 116, 139, 0.85) 50%,
+      rgba(71, 85, 105, 0.9) 75%,
+      rgba(51, 65, 85, 0.95) 100%);
+  border-color: rgba(16, 185, 129, 0.5);
+  color: rgba(248, 250, 252, 0.98);
+  box-shadow:
+    0 8px 32px rgba(15, 23, 42, 0.15),
+    0 4px 16px rgba(30, 41, 59, 0.1),
+    0 2px 8px rgba(51, 65, 85, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(16, 185, 129, 0.18);
+}
+
+body.light-theme #settings-modal button[id^="to-"]:hover {
+  border-color: rgba(16, 185, 129, 0.72);
+  box-shadow:
+    0 12px 40px rgba(16, 185, 129, 0.22),
+    0 6px 20px rgba(6, 95, 70, 0.14),
+    0 3px 10px rgba(4, 120, 87, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+    0 0 0 2px rgba(16, 185, 129, 0.24);
 }
 
 /* Back buttons */
