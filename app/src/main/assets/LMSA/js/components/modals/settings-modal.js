@@ -169,7 +169,7 @@ export const settingsModal = `
                     <div class="mb-5">
                         <div class="flex justify-between items-center mb-2">
                             <label for="auto-generate-titles" class="text-sm font-medium">
-                                <i class="fas fa-magic mr-2 text-blue-400"></i>Auto-Generate Chat Titles</label>
+                                <i class="fas fa-magic mr-2 text-blue-400"></i>Generate Chat Titles</label>
                             <div class="toggle-container">
                                 <input type="checkbox" id="auto-generate-titles">
                                 <div class="toggle-switch"></div>

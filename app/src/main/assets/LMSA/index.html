@@ -110,184 +110,199 @@
         <div id="sidebar" class="w-[280px] z-20 hidden shadow-xl" style="color: var(--sidebar-text); overflow: hidden;">
 
             <!-- Scrollable content wrapper -->
-            <div id="sidebar-scroll-content" style="flex: 1 1 0; min-height: 0; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column;">
+            <div id="sidebar-scroll-content"
+                style="flex: 1 1 0; min-height: 0; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column;">
 
-            <div class="relative flex items-center justify-end p-6 border-b sidebar-header"
-                style="border-color: var(--sidebar-border);">
-                <button id="close-sidebar" class="p-2 rounded-full focus:outline-none close-sidebar-btn"
-                    style="color: var(--text-muted);" aria-label="Close Sidebar">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Main Menu Section -->
-            <div class="sidebar-section main-menu-section">
-                <div class="main-menu-primary-actions">
-                    <button id="new-chat" class="menu-item w-full text-left">
-                        <i class="fas fa-plus-circle w-6 mr-3" style="color: #60a5fa !important;"></i>
-                        <span style="color: #f1f5f9;">New Chat</span>
-                    </button>
-                    <button id="sidebar-models-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-robot w-6 mr-3" style="color: #60a5fa !important;"></i>
-                        <span style="color: #f1f5f9;">Models</span>
-                    </button>
-                    <button id="sidebar-settings-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-cog w-6 mr-3" style="color: #60a5fa !important;"></i>
-                        <span style="color: #f1f5f9;">Settings</span>
-                    </button>
-                    <button id="sidebar-templates-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-th-large w-6 mr-3" style="color: #60a5fa !important;"></i>
-                        <span style="color: #f1f5f9;">Templates</span>
+                <div class="relative flex items-center justify-end p-6 border-b sidebar-header"
+                    style="border-color: var(--sidebar-border);">
+                    <button id="close-sidebar" class="p-2 rounded-full focus:outline-none close-sidebar-btn"
+                        style="color: var(--text-muted);" aria-label="Close Sidebar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12">
+                            </path>
+                        </svg>
                     </button>
                 </div>
 
-                <!-- Options Section (moved here, where Templates was) -->
-                <div class="sidebar-section collapsible">
-                    <button class="section-header w-full text-left flex items-center justify-between py-2 px-3">
-                        <div class="flex items-center">
-                            <i class="fas fa-cog w-6 mr-3" style="color: #60a5fa !important;"></i>
-                            <span style="color: #f1f5f9;">Options</span>
-                        </div>
-                        <i class="fas fa-chevron-down" style="color: #64748b;"></i>
-                    </button>
-                    <div class="collapsible-content">
-                        <!-- Settings -->
-                        <button id="settings-btn" class="menu-item w-full text-left">
-                            <i class="fas fa-cog" style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                            <span style="color: #f1f5f9;">Settings</span>
+                <!-- Main Menu Section -->
+                <div class="sidebar-section main-menu-section">
+                    <div class="main-menu-primary-actions">
+                        <button id="new-chat" class="menu-item w-full text-left">
+                            <i class="fas fa-plus-circle w-6 mr-3" style="color: #60a5fa !important;"></i>
+                            <span style="color: #f1f5f9;">New Chat</span>
                         </button>
-
-                        <!-- Model Settings -->
-                        <button id="model-btn" class="menu-item w-full text-left">
-                            <i class="fas fa-robot" style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                        <button id="sidebar-models-btn" class="menu-item w-full text-left">
+                            <i class="fas fa-robot w-6 mr-3" style="color: #60a5fa !important;"></i>
                             <span style="color: #f1f5f9;">Models</span>
                         </button>
-
-                        <!-- Templates Button -->
-                        <button id="templates-btn" class="menu-item w-full text-left"
-                            onclick="window.location.href='templates.html'">
-                            <i class="fas fa-th-large" style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                        <button id="sidebar-settings-btn" class="menu-item w-full text-left">
+                            <i class="fas fa-cog w-6 mr-3" style="color: #60a5fa !important;"></i>
+                            <span style="color: #f1f5f9;">Settings</span>
+                        </button>
+                        <button id="sidebar-templates-btn" class="menu-item w-full text-left">
+                            <i class="fas fa-th-large w-6 mr-3" style="color: #60a5fa !important;"></i>
                             <span style="color: #f1f5f9;">Templates</span>
                         </button>
+                    </div>
 
-                        <!-- Saved System Prompts -->
-                        <button id="saved-prompts-btn" class="menu-item w-full text-left">
-                            <i class="fas fa-save" style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                            <span style="color: #f1f5f9;">Saved Prompts</span>
-                        </button>
-
-                        <!-- Import/Export -->
-                        <button id="import-export-group-btn"
-                            class="menu-item w-full text-left flex items-center justify-between">
+                    <!-- Options Section (moved here, where Templates was) -->
+                    <div class="sidebar-section collapsible">
+                        <button class="section-header w-full text-left flex items-center justify-between py-2 px-3">
                             <div class="flex items-center">
-                                <i class="fas fa-exchange-alt" style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                                <span style="color: #f1f5f9;">Import/Export</span>
+                                <i class="fas fa-cog w-6 mr-3" style="color: #60a5fa !important;"></i>
+                                <span style="color: #f1f5f9;">Options</span>
                             </div>
-                            <i class="fas fa-caret-down" style="color: #64748b;"></i>
+                            <i class="fas fa-chevron-down" style="color: #64748b;"></i>
                         </button>
-                        <div id="import-export-container" class="hidden">
-                            <button id="import-chats-btn" class="menu-item w-full text-left">
-                                <i class="fas fa-file-import" style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                                <span style="color: #f1f5f9;">Import Chats</span>
+                        <div class="collapsible-content">
+                            <!-- Settings -->
+                            <button id="settings-btn" class="menu-item w-full text-left">
+                                <i class="fas fa-cog"
+                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Settings</span>
                             </button>
-                            <button id="export-chats-btn" class="menu-item w-full text-left">
-                                <i class="fas fa-file-export" style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                                <span style="color: #f1f5f9;">Export Chats</span>
+
+                            <!-- Model Settings -->
+                            <button id="model-btn" class="menu-item w-full text-left">
+                                <i class="fas fa-robot"
+                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Models</span>
+                            </button>
+
+                            <!-- Templates Button -->
+                            <button id="templates-btn" class="menu-item w-full text-left"
+                                onclick="window.location.href='templates.html'">
+                                <i class="fas fa-th-large"
+                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Templates</span>
+                            </button>
+
+                            <!-- Saved System Prompts -->
+                            <button id="saved-prompts-btn" class="menu-item w-full text-left">
+                                <i class="fas fa-save"
+                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Saved Prompts</span>
+                            </button>
+
+                            <!-- Import/Export -->
+                            <button id="import-export-group-btn"
+                                class="menu-item w-full text-left flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <i class="fas fa-exchange-alt"
+                                        style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                    <span style="color: #f1f5f9;">Import/Export</span>
+                                </div>
+                                <i class="fas fa-caret-down" style="color: #64748b;"></i>
+                            </button>
+                            <div id="import-export-container" class="hidden">
+                                <button id="import-chats-btn" class="menu-item w-full text-left">
+                                    <i class="fas fa-file-import"
+                                        style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                    <span style="color: #f1f5f9;">Import Chats</span>
+                                </button>
+                                <button id="export-chats-btn" class="menu-item w-full text-left">
+                                    <i class="fas fa-file-export"
+                                        style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                    <span style="color: #f1f5f9;">Export Chats</span>
+                                </button>
+                            </div>
+
+                            <button id="whats-new-btn" class="menu-item w-full text-left">
+                                <i class="fas fa-wand-magic-sparkles"
+                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">What's New</span>
+                            </button>
+
+                            <!-- Help -->
+                            <button id="help-btn" class="menu-item w-full text-left">
+                                <i class="fas fa-question-circle"
+                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Help</span>
+                            </button>
+
+                            <!-- Premium -->
+                            <button id="premium-group-btn"
+                                class="menu-item w-full text-left flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <i class="fas fa-crown"></i>
+                                    Premium
+                                </div>
+                                <i class="fas fa-caret-down"></i>
+                            </button>
+                            <div id="premium-container" class="hidden">
+                                <button id="remove-ads-button" class="menu-item w-full text-left">
+                                    <i class="fas fa-ban"></i>
+                                    Remove Ads
+                                </button>
+
+                                <button id="restore-purchases-button" class="menu-item w-full text-left"
+                                    onclick="restorePurchases()">
+                                    <i class="fas fa-undo"></i>
+                                    Restore Purchase
+                                </button>
+
+                                <button id="legacy-access-btn" class="menu-item w-full text-left">
+                                    <i class="fas fa-key"></i>
+                                    Legacy Access
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Active Template Indicator -->
+                    <div id="template-indicator" class="hidden"
+                        style="margin: 0.5rem 0.75rem; padding: 0.75rem; background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 0.5rem;">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 flex-1 min-w-0">
+                                <i class="fas fa-th-large"
+                                    style="font-size: 0.875rem; color: #60A5FA; flex-shrink: 0;"></i>
+                                <div class="flex flex-col min-w-0 flex-1">
+                                    <span class="text-xs opacity-75"
+                                        style="font-weight: 500; letter-spacing: 0.5px; color: #94a3b8;">ACTIVE</span>
+                                    <span id="template-name" class="font-semibold truncate"
+                                        style="font-size: 0.875rem; color: #e2e8f0;"></span>
+                                </div>
+                            </div>
+                            <button id="disable-template-btn"
+                                class="flex items-center justify-center p-1.5 rounded-md transition-all flex-shrink-0"
+                                style="background: transparent; border: none; color: #60A5FA; cursor: pointer;"
+                                title="Disable template">
+                                <i class="fas fa-times" style="font-size: 1rem;"></i>
                             </button>
                         </div>
-
-                        <button id="whats-new-btn" class="menu-item w-full text-left">
-                            <i class="fas fa-wand-magic-sparkles" style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                            <span style="color: #f1f5f9;">What's New</span>
-                        </button>
-
-                        <!-- Help -->
-                        <button id="help-btn" class="menu-item w-full text-left">
-                            <i class="fas fa-question-circle" style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                            <span style="color: #f1f5f9;">Help</span>
-                        </button>
-
-                        <!-- Premium -->
-                        <button id="premium-group-btn"
-                            class="menu-item w-full text-left flex items-center justify-between">
-                            <div class="flex items-center">
-                                <i class="fas fa-crown"></i>
-                                Premium
-                            </div>
-                            <i class="fas fa-caret-down"></i>
-                        </button>
-                        <div id="premium-container" class="hidden">
-                            <button id="remove-ads-button" class="menu-item w-full text-left">
-                                <i class="fas fa-ban"></i>
-                                Remove Ads
-                            </button>
-
-                            <button id="restore-purchases-button" class="menu-item w-full text-left"
-                                onclick="restorePurchases()">
-                                <i class="fas fa-undo"></i>
-                                Restore Purchase
-                            </button>
-
-                            <button id="legacy-access-btn" class="menu-item w-full text-left">
-                                <i class="fas fa-key"></i>
-                                Legacy Access
-                            </button>
-                        </div>
-
                     </div>
                 </div>
 
-                <!-- Active Template Indicator -->
-                <div id="template-indicator" class="hidden"
-                    style="margin: 0.5rem 0.75rem; padding: 0.75rem; background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 0.5rem;">
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2 flex-1 min-w-0">
-                            <i class="fas fa-th-large" style="font-size: 0.875rem; color: #60A5FA; flex-shrink: 0;"></i>
-                            <div class="flex flex-col min-w-0 flex-1">
-                                <span class="text-xs opacity-75"
-                                    style="font-weight: 500; letter-spacing: 0.5px; color: #94a3b8;">ACTIVE</span>
-                                <span id="template-name" class="font-semibold truncate"
-                                    style="font-size: 0.875rem; color: #e2e8f0;"></span>
-                            </div>
-                        </div>
-                        <button id="disable-template-btn"
-                            class="flex items-center justify-center p-1.5 rounded-md transition-all flex-shrink-0"
-                            style="background: transparent; border: none; color: #60A5FA; cursor: pointer;"
-                            title="Disable template">
-                            <i class="fas fa-times" style="font-size: 1rem;"></i>
-                        </button>
+                <!-- Characters Section -->
+                <!-- Removed sidebar-section characters-section for mobile side menu as requested -->
+
+                <!-- Chat History Section -->
+                <div class="sidebar-section">
+                    <div class="w-full text-left flex items-center py-2 px-3 mb-2">
+                        <i class="fas fa-comments w-6 mr-3 chat-history-icon"></i>
+                        <span class="chat-history-title">CHAT HISTORY</span>
+                    </div>
+                    <div id="chat-history" class="px-2">
+                        <!-- Chat history items will be dynamically added here -->
                     </div>
                 </div>
-            </div>
-
-            <!-- Characters Section -->
-            <!-- Removed sidebar-section characters-section for mobile side menu as requested -->
-
-            <!-- Chat History Section -->
-            <div class="sidebar-section">
-                <div class="w-full text-left flex items-center py-2 px-3 mb-2">
-                    <i class="fas fa-comments w-6 mr-3 chat-history-icon"></i>
-                    <span class="chat-history-title">CHAT HISTORY</span>
-                </div>
-                <div id="chat-history" class="px-2">
-                    <!-- Chat history items will be dynamically added here -->
-                </div>
-            </div>
 
             </div><!-- end scrollable content wrapper -->
 
             <!-- Sidebar Footer -->
             <div class="sidebar-footer mt-auto pt-3 pb-4 px-4 border-t" style="border-color: var(--sidebar-border);">
                 <div class="flex items-center justify-center gap-4">
-                    <button id="terms-service-btn" class="text-xs" style="background: none !important; border: none; padding: 0; cursor: pointer; color: var(--text-muted); opacity: 0.7;">Terms</button>
+                    <button id="terms-service-btn" class="text-xs"
+                        style="background: none !important; border: none; padding: 0; cursor: pointer; color: var(--text-muted); opacity: 0.7;">Terms</button>
                     <span style="color: var(--text-muted); opacity: 0.4; font-size: 0.6rem;">•</span>
-                    <button id="privacy-policy-btn" class="text-xs" style="background: none !important; border: none; padding: 0; cursor: pointer; color: var(--text-muted); opacity: 0.7;">Privacy</button>
+                    <button id="privacy-policy-btn" class="text-xs"
+                        style="background: none !important; border: none; padding: 0; cursor: pointer; color: var(--text-muted); opacity: 0.7;">Privacy</button>
                     <span style="color: var(--text-muted); opacity: 0.4; font-size: 0.6rem;">•</span>
-                    <button id="about-btn" class="text-xs" style="background: none; border: none; padding: 0; cursor: pointer; color: var(--text-muted); opacity: 0.7;">About</button>
+                    <button id="about-btn" class="text-xs"
+                        style="background: none; border: none; padding: 0; cursor: pointer; color: var(--text-muted); opacity: 0.7;">About</button>
                 </div>
             </div>
         </div>
@@ -323,26 +338,34 @@
                                 Ollama & LM Studio Android Remote
                             </p>
 
-                            <div class="grid grid-cols-1 gap-4 mb-8">
-                                <!-- Settings Button - Professional styling -->
-                                <button id="get-started-btn"
-                                    class="professional-button flex items-center justify-center gap-3 w-full h-[48px]"
-                                    style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
-                                    <span>Settings</span>
-                                </button>
-                                <!-- Templates Button - Professional styling -->
-                                <button id="welcome-templates-btn"
-                                    class="professional-button flex items-center justify-center gap-3 w-full h-[48px]"
-                                    style="border: 2px solid rgba(16, 185, 129, 0.45) !important;"
-                                    onclick="window.location.href='templates.html'">
-                                    <span>Templates</span>
-                                </button>
-                                <!-- Models Button - Professional styling -->
-                                <button id="welcome-models-btn"
-                                    class="professional-button flex items-center justify-center gap-3 w-full h-[48px]"
-                                    style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
-                                    <span>Models</span>
-                                </button>
+                            <div class="mb-8">
+                                <div class="grid grid-cols-2 gap-3 w-full mb-3">
+                                    <!-- Settings Button - Professional styling -->
+                                    <button id="get-started-btn"
+                                        class="professional-button flex items-center justify-center gap-3 w-full h-[48px]"
+                                        style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
+                                        <span>Settings</span>
+                                    </button>
+                                    <!-- Models Button - Professional styling -->
+                                    <button id="welcome-models-btn"
+                                        class="professional-button flex items-center justify-center gap-3 w-full h-[48px]"
+                                        style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
+                                        <span>Models</span>
+                                    </button>
+                                    <!-- Templates Button - Professional styling -->
+                                    <button id="welcome-templates-btn"
+                                        class="professional-button flex items-center justify-center gap-3 w-full h-[48px]"
+                                        style="border: 2px solid rgba(16, 185, 129, 0.45) !important;"
+                                        onclick="window.location.href='templates.html'">
+                                        <span>Templates</span>
+                                    </button>
+                                    <!-- Help Button - Professional styling -->
+                                    <button id="welcome-help-btn"
+                                        class="professional-button flex items-center justify-center gap-2 w-full h-[48px]"
+                                        style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
+                                        <span>Help</span>
+                                    </button>
+                                </div>
 
                                 <!-- Premium Button - Professional styling -->
                                 <div id="remove-ads-banner" class="w-full">
@@ -350,15 +373,6 @@
                                         class="professional-button flex items-center justify-center gap-2 w-full h-[48px]"
                                         style="border: 2px solid rgba(59, 130, 246, 0.45) !important;">
                                         <span>Premium</span>
-                                    </button>
-                                </div>
-
-                                <!-- Secondary buttons in a 2-column grid with professional styling -->
-                                <div class="grid grid-cols-2 gap-3 w-full">
-                                    <button id="welcome-help-btn"
-                                        class="professional-button flex items-center justify-center gap-2 w-full h-[48px]"
-                                        style="border: 2px solid rgba(16, 185, 129, 0.45) !important; grid-column: 1 / -1;">
-                                        <span>Help</span>
                                     </button>
                                 </div>
                             </div>
@@ -380,10 +394,13 @@
                 </div>
 
                 <!-- Input area -->
-                <div id="chat-input-area" style="position: relative; z-index: 10; width: 100%; box-sizing: border-box; margin-top: auto;">
+                <div id="chat-input-area"
+                    style="position: relative; z-index: 10; width: 100%; box-sizing: border-box; margin-top: auto;">
 
                     <!-- Smart Replies Container -->
-                    <div id="smart-replies-container" class="flex-nowrap gap-2 p-2 hidden mb-2 w-full max-w-full overflow-x-auto select-none" style="padding-bottom: 0px; padding-top: 0px;"></div>
+                    <div id="smart-replies-container"
+                        class="flex-nowrap gap-2 p-2 hidden mb-2 w-full max-w-full overflow-x-auto select-none"
+                        style="padding-bottom: 0px; padding-top: 0px;"></div>
 
                     <form id="chat-form" class="flex" style="position: relative; background-color: transparent;">
                         <div class="flex-grow relative">
@@ -414,7 +431,8 @@
                     </form>
 
                     <!-- AI Disclaimer Text -->
-                    <div id="ai-disclaimer" class="text-center text-xs mt-1.5 mb-1" style="color: var(--text-muted); font-weight: normal;">
+                    <div id="ai-disclaimer" class="text-center text-xs mt-1.5 mb-1"
+                        style="color: var(--text-muted); font-weight: normal;">
                         AI models can be inaccurate.
                     </div>
                 </div>

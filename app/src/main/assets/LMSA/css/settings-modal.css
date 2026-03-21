@@ -214,7 +214,7 @@
   align-items: center;
   font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
     sans-serif;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   color: var(--modal-title);
   text-shadow: var(--title-shadow);
   /* Ensure crisp text rendering */
@@ -317,9 +317,14 @@
   align-items: center;
   position: relative;
   overflow: hidden;
-  font-size: 1rem;
+  font-size: 0.95rem;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+}
+
+/* Slightly tighten regular settings labels to match the updated title scale */
+#settings-modal .settings-step label.text-sm.font-medium:not(.block) {
+  font-size: 0.95rem;
 }
 
 /* Section header hover effect */

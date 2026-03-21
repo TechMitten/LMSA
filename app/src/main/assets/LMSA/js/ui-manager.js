@@ -149,6 +149,7 @@ export function updateChatHistoryScroll() {
 
 // Prevent multiple rapid toggle calls
 const SIDEBAR_TRANSITION_DURATION_MS = 360;
+const SIDEBAR_CLOSE_TRANSITION = `transform ${SIDEBAR_TRANSITION_DURATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
 let toggleSidebarTimeout = null;
 let sidebarHideTimeout = null;
 
@@ -172,6 +173,33 @@ function queueSidebarHide() {
         sidebar.classList.add('hidden');
         resetSidebarInlineTransitionState();
     }, SIDEBAR_TRANSITION_DURATION_MS);
+}
+
+function animateSidebarClosed() {
+    if (!sidebar) return;
+
+    clearTimeout(sidebarHideTimeout);
+    sidebar.classList.remove('hidden');
+    sidebar.style.visibility = 'visible';
+
+    const sidebarWidth = sidebar.offsetWidth || window.innerWidth;
+    const computedTransform = window.getComputedStyle(sidebar).transform;
+    const currentTransform = computedTransform && computedTransform !== 'none'
+        ? computedTransform
+        : 'translate3d(0, 0, 0)';
+
+    sidebar.style.transition = 'none';
+    sidebar.style.transform = currentTransform;
+
+    void sidebar.offsetWidth;
+
+    requestAnimationFrame(() => {
+        sidebar.classList.remove('active');
+        sidebar.style.transition = SIDEBAR_CLOSE_TRANSITION;
+        sidebar.style.transform = `translate3d(-${sidebarWidth}px, 0, 0)`;
+    });
+
+    queueSidebarHide();
 }
 
 /**
@@ -204,19 +232,16 @@ export function toggleSidebar() {
     // Update hamburger icon based on sidebar state
     updateHamburgerIcon(!isOpen);
 
+    if (isOpen) {
+        closeSidebar();
+        return;
+    }
+
     // Toggle the overlay in mobile and tablet view first
     // Increased width threshold to 1024px to include tablets
     if (window.innerWidth <= 1024 && sidebarOverlay) {
-        if (!isOpen) {
-            // Opening
-            sidebarOverlay.classList.add('active');
-            sidebarOverlay.classList.remove('hidden');
-        } else {
-            // Closing
-            sidebarOverlay.classList.remove('active');
-            // Optimized: Immediate hide for better performance
-            sidebarOverlay.classList.add('hidden');
-        }
+        sidebarOverlay.classList.add('active');
+        sidebarOverlay.classList.remove('hidden');
     }
 
     // Ensure touch events work properly on the sidebar
@@ -262,70 +287,6 @@ export function toggleSidebar() {
         // Update chat history scrolling behavior
         // Optimized: Immediate execution for better performance
         updateChatHistoryScroll();
-    } else {
-        // Closing the sidebar
-        clearTimeout(sidebarHideTimeout);
-        sidebar.style.visibility = 'visible';
-        document.body.classList.remove('sidebar-open');
-
-        // Only hide settings modal if it exists and is actually visible
-        if (settingsModal && !settingsModal.classList.contains('hidden')) {
-            settingsModal.classList.add('hidden');
-        }
-
-        // Collapse options container when sidebar is closed in mobile or tablet view
-        const optionsContainer = document.getElementById('options-container');
-        if (optionsContainer && window.innerWidth <= 1024) {
-            optionsContainer.classList.add('hidden');
-            optionsContainer.classList.remove('animate-fade-in');
-        }
-
-        // Reset expandable groups so they do not persist across sidebar reopen.
-        const importExportContainer = document.getElementById('import-export-container');
-        if (importExportContainer) {
-            importExportContainer.classList.add('hidden');
-            importExportContainer.classList.remove('animate-fade-in');
-
-            const importExportGroupButton = document.getElementById('import-export-group-btn');
-            const importExportCaret = importExportGroupButton?.querySelector('.fa-caret-up');
-            if (importExportCaret) {
-                importExportCaret.classList.remove('fa-caret-up');
-                importExportCaret.classList.add('fa-caret-down');
-            }
-        }
-
-        const premiumContainer = document.getElementById('premium-container');
-        if (premiumContainer) {
-            premiumContainer.classList.add('hidden');
-            premiumContainer.classList.remove('animate-fade-in');
-
-            const premiumGroupButton = document.getElementById('premium-group-btn');
-            const premiumCaret = premiumGroupButton?.querySelector('.fa-caret-up');
-            if (premiumCaret) {
-                premiumCaret.classList.remove('fa-caret-up');
-                premiumCaret.classList.add('fa-caret-down');
-            }
-        }
-
-        // Collapse all sections when sidebar is closed
-        const sectionHeaders = document.querySelectorAll('.section-header');
-        const chatHistorySection = document.querySelector('.sidebar-section:last-child');
-        sectionHeaders.forEach(header => {
-            setCollapsibleSectionExpanded(header, false);
-        });
-
-        // Ensure chat history is visible when sidebar is closed
-        if (chatHistorySection) {
-            chatHistorySection.classList.remove('chat-history-hidden');
-        }
-
-        // Only ensure welcome message position if there are no chat messages  
-        if (welcomeMessage && welcomeMessage.style.display !== 'none' && messagesContainer && messagesContainer.children.length === 0) {
-            ensureWelcomeMessagePosition();
-        }
-
-        sidebar.classList.remove('active');
-        queueSidebarHide();
     }
 }
 
@@ -376,8 +337,6 @@ export function closeSidebar() {
         sidebarOverlay.classList.add('hidden');
     }
 
-    clearTimeout(sidebarHideTimeout);
-    sidebar.style.visibility = 'visible';
     document.body.classList.remove('sidebar-open');
 
     // Only hide settings modal if it exists and is actually visible
@@ -435,8 +394,7 @@ export function closeSidebar() {
         ensureWelcomeMessagePosition();
     }
 
-    sidebar.classList.remove('active');
-    queueSidebarHide();
+    animateSidebarClosed();
 }
 
 /**

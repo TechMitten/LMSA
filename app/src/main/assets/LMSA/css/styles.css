@@ -95,6 +95,7 @@ body.preview-mode {
     height: 0;
     background: transparent;
 }
+
 #smart-replies-container {
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -1721,7 +1722,7 @@ body.light-theme #loaded-model {
     margin-left: 0.75rem;
 }
 
-#sidebar .section-header > div {
+#sidebar .section-header>div {
     display: flex !important;
     align-items: center !important;
     height: 100% !important;
@@ -5173,7 +5174,7 @@ body.light-theme .regenerate-btn:hover {
 }
 
 /* Uniform vertical spacing between all direct block children */
-.message-content > * + * {
+.message-content>*+* {
     margin-top: 1em;
 }
 
@@ -5197,7 +5198,7 @@ body.light-theme .regenerate-btn:hover {
 }
 
 /* Expand AI message bubble to near full width when it contains a table */
-#messages > div.ai:has(.table-wrapper) {
+#messages>div.ai:has(.table-wrapper) {
     max-width: 96%;
 }
 
@@ -5832,6 +5833,7 @@ body.keyboard-visible #scroll-to-bottom {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -5850,6 +5852,7 @@ body.keyboard-visible #scroll-to-bottom {
     from {
         opacity: 1;
     }
+
     to {
         opacity: 0;
     }
@@ -5875,6 +5878,7 @@ body.light-theme #whats-new-modal.fade-in {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -9033,6 +9037,7 @@ body.light-theme #template-indicator #disable-template-btn:hover {
 }
 
 @media (forced-colors: active) {
+
     .thinking-indicator,
     .think {
         border-color: CanvasText;
