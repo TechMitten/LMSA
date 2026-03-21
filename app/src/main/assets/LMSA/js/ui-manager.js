@@ -12,20 +12,6 @@ import { domBatcher, rafThrottle } from './optimized-utils.js';
 let selectedText = '';
 let selectedMessageElement = null;
 let longPressTimer;
-const WELCOME_MESSAGE_FADE_DURATION_MS = 300;
-let welcomeMessageFadeTimeout = null;
-let welcomeMessageTransitionToken = 0;
-
-function isWelcomeMessageVisible() {
-    if (!welcomeMessage) {
-        return false;
-    }
-
-    const computedStyle = window.getComputedStyle(welcomeMessage);
-    return computedStyle.display !== 'none' &&
-        computedStyle.visibility !== 'hidden' &&
-        parseFloat(computedStyle.opacity || '1') >= 1;
-}
 
 function forceSidebarRepaint(element) {
     if (!element) return;
@@ -81,17 +67,13 @@ function setCollapsibleSectionExpanded(header, shouldExpand) {
 export function showWelcomeMessage() {
     // Performance monitoring removed
 
-    const transitionToken = ++welcomeMessageTransitionToken;
-    const shouldAnimate = !isWelcomeMessageVisible();
-    clearTimeout(welcomeMessageFadeTimeout);
-
     // Batch DOM operations to prevent layout thrashing
     domBatcher.write(() => {
         if (welcomeMessage) {
             welcomeMessage.style.display = 'flex';
             welcomeMessage.style.visibility = 'visible';
             welcomeMessage.style.pointerEvents = 'auto';
-            welcomeMessage.style.opacity = shouldAnimate ? '0' : '1';
+            welcomeMessage.style.opacity = '1';
         }
         if (messagesContainer) {
             messagesContainer.style.opacity = '0';
@@ -112,18 +94,6 @@ export function showWelcomeMessage() {
         if (welcomeMessage) {
             void welcomeMessage.offsetWidth;
             ensureWelcomeMessagePosition();
-
-            if (!shouldAnimate) {
-                return;
-            }
-
-            requestAnimationFrame(() => {
-                if (welcomeMessageTransitionToken !== transitionToken || welcomeMessage.style.display === 'none') {
-                    return;
-                }
-
-                welcomeMessage.style.opacity = '1';
-            });
         }
     });
 }
@@ -134,14 +104,12 @@ export function showWelcomeMessage() {
 export function hideWelcomeMessage() {
     // Performance monitoring removed
 
-    const transitionToken = ++welcomeMessageTransitionToken;
-    clearTimeout(welcomeMessageFadeTimeout);
-
     // Batch DOM operations to prevent layout thrashing
     domBatcher.write(() => {
         if (welcomeMessage) {
-            welcomeMessage.style.display = 'flex';
-            welcomeMessage.style.opacity = '0';
+            welcomeMessage.style.display = 'none';
+            welcomeMessage.style.visibility = 'hidden';
+            welcomeMessage.style.opacity = '1';
             welcomeMessage.style.pointerEvents = 'none';
         }
 
@@ -158,17 +126,6 @@ export function hideWelcomeMessage() {
             removeAdsBanner.style.display = 'none';
         }
     });
-
-    if (welcomeMessage) {
-        welcomeMessageFadeTimeout = setTimeout(() => {
-            if (welcomeMessageTransitionToken !== transitionToken) {
-                return;
-            }
-
-            welcomeMessage.style.visibility = 'hidden';
-            welcomeMessage.style.display = 'none';
-        }, WELCOME_MESSAGE_FADE_DURATION_MS);
-    }
 }
 
 /**
@@ -191,7 +148,31 @@ export function updateChatHistoryScroll() {
 }
 
 // Prevent multiple rapid toggle calls
+const SIDEBAR_TRANSITION_DURATION_MS = 360;
 let toggleSidebarTimeout = null;
+let sidebarHideTimeout = null;
+
+function resetSidebarInlineTransitionState() {
+    if (!sidebar) return;
+
+    sidebar.style.transition = '';
+    sidebar.style.transform = '';
+    sidebar.style.visibility = '';
+}
+
+function queueSidebarHide() {
+    if (!sidebar) return;
+
+    clearTimeout(sidebarHideTimeout);
+    sidebarHideTimeout = setTimeout(() => {
+        if (sidebar.classList.contains('active')) {
+            return;
+        }
+
+        sidebar.classList.add('hidden');
+        resetSidebarInlineTransitionState();
+    }, SIDEBAR_TRANSITION_DURATION_MS);
+}
 
 /**
  * Toggles the sidebar visibility
@@ -207,7 +188,7 @@ export function toggleSidebar() {
     // Set a short timeout to prevent rapid calls
     toggleSidebarTimeout = setTimeout(() => {
         toggleSidebarTimeout = null;
-    }, 300);
+    }, SIDEBAR_TRANSITION_DURATION_MS);
 
     // Debug logging
 
@@ -254,13 +235,18 @@ export function toggleSidebar() {
     // Add animation for smooth transition
     if (!isOpen) {
         // Opening the sidebar
-        sidebar.style.transition = '';
-        sidebar.style.transform = 'translateX(0)';
+        clearTimeout(sidebarHideTimeout);
+        resetSidebarInlineTransitionState();
         sidebar.classList.remove('hidden');
-        sidebar.classList.add('active');
-        sidebar.classList.add('animate-slide-in');
-        sidebar.classList.remove('animate-slide-out');
+        sidebar.style.visibility = 'visible';
         document.body.classList.add('sidebar-open');
+
+        void sidebar.offsetWidth;
+        requestAnimationFrame(() => {
+            if (!sidebar.classList.contains('hidden')) {
+                sidebar.classList.add('active');
+            }
+        });
 
         // Ensure chat history is visible when sidebar is opened
         const chatHistorySection = document.querySelector('.sidebar-section:last-child');
@@ -276,11 +262,10 @@ export function toggleSidebar() {
         // Update chat history scrolling behavior
         // Optimized: Immediate execution for better performance
         updateChatHistoryScroll();
-        sidebar.classList.remove('animate-slide-in');
     } else {
         // Closing the sidebar
-        sidebar.classList.add('animate-slide-out');
-        sidebar.classList.remove('animate-slide-in');
+        clearTimeout(sidebarHideTimeout);
+        sidebar.style.visibility = 'visible';
         document.body.classList.remove('sidebar-open');
 
         // Only hide settings modal if it exists and is actually visible
@@ -339,10 +324,8 @@ export function toggleSidebar() {
             ensureWelcomeMessagePosition();
         }
 
-        // Optimized: Immediate execution for better performance
         sidebar.classList.remove('active');
-        sidebar.classList.add('hidden');
-        sidebar.classList.remove('animate-slide-out');
+        queueSidebarHide();
     }
 }
 
@@ -393,9 +376,8 @@ export function closeSidebar() {
         sidebarOverlay.classList.add('hidden');
     }
 
-    // Add closing animation
-    sidebar.classList.add('animate-slide-out');
-    sidebar.classList.remove('animate-slide-in');
+    clearTimeout(sidebarHideTimeout);
+    sidebar.style.visibility = 'visible';
     document.body.classList.remove('sidebar-open');
 
     // Only hide settings modal if it exists and is actually visible
@@ -453,14 +435,8 @@ export function closeSidebar() {
         ensureWelcomeMessagePosition();
     }
 
-    // Complete the closing after animation
     sidebar.classList.remove('active');
-    sidebar.classList.add('hidden');
-    sidebar.classList.remove('animate-slide-out');
-
-    // Reset transform state after touch-swipe interactions
-    sidebar.style.transition = '';
-    sidebar.style.transform = '';
+    queueSidebarHide();
 }
 
 /**
