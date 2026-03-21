@@ -3,6 +3,51 @@
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+header {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 24%),
+        linear-gradient(180deg, rgba(30, 41, 59, 0.96) 0%, rgba(15, 23, 42, 0.94) 58%, rgba(10, 15, 28, 0.98) 100%) !important;
+    border-bottom: 1px solid rgba(71, 85, 105, 0.34) !important;
+    box-shadow:
+        0 16px 30px rgba(2, 6, 23, 0.28),
+        0 4px 12px rgba(15, 23, 42, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        inset 0 -1px 0 rgba(15, 23, 42, 0.45) !important;
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+
+header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at top center, rgba(96, 165, 250, 0.14) 0%, rgba(96, 165, 250, 0) 58%);
+    pointer-events: none;
+}
+
+header>* {
+    position: relative;
+    z-index: 1;
+}
+
+body.light-theme header {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.52) 22%),
+        linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(241, 245, 249, 0.97) 58%, rgba(226, 232, 240, 0.98) 100%) !important;
+    border-bottom-color: rgba(148, 163, 184, 0.34) !important;
+    box-shadow:
+        0 14px 28px rgba(148, 163, 184, 0.2),
+        0 4px 10px rgba(148, 163, 184, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.92),
+        inset 0 -1px 0 rgba(203, 213, 225, 0.72) !important;
+}
+
+body.light-theme header::before {
+    background:
+        radial-gradient(circle at top center, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0) 60%);
+}
+
 
 /* Button animations */
 @keyframes pulse-subtle {

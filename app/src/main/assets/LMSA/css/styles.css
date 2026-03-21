@@ -5089,12 +5089,29 @@ body.light-theme .regenerate-btn:hover {
     font-size: 0.95rem;
 }
 
+#chat-form button#send-button {
+    box-shadow:
+        0 14px 24px rgba(15, 23, 42, 0.28),
+        0 4px 10px rgba(37, 99, 235, 0.26),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        inset 0 -2px 6px rgba(15, 23, 42, 0.18);
+}
+
 #send-button span,
 #stop-button span {
     display: none !important;
 }
 
-#chat-form button#send-button:hover,
+#chat-form button#send-button:hover {
+    transform: translateY(-1px);
+    box-shadow:
+        0 16px 28px rgba(15, 23, 42, 0.32),
+        0 6px 14px rgba(59, 130, 246, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.26),
+        inset 0 -2px 7px rgba(15, 23, 42, 0.2);
+    filter: brightness(1.06);
+}
+
 #chat-form button#stop-button:hover {
     transform: translateY(-1px);
     box-shadow: 0 10px 20px rgba(15, 23, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
