@@ -9,7 +9,7 @@ let gotItButton;
 let versionElement;
 
 // Local storage keys
-const WHATS_NEW_VERSION = '10.3'; // Updated to version 10.3
+const WHATS_NEW_VERSION = '10.4'; // Updated to version 10.4
 
 // Flag to track if the modal has been shown in the current session
 let modalShownInCurrentSession = false;

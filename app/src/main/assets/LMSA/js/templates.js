@@ -259,7 +259,7 @@ function openCreateModal(editMode = false) {
         const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
         if (!isPremium) {
             if (typeof window.openPremiumModal === 'function') {
-                window.openPremiumModal();
+                window.openPremiumModal('Custom Templates');
             } else {
                 alert('This feature is reserved for premium users.');
             }
@@ -706,8 +706,20 @@ async function generateSystemPrompt() {
         return;
     }
 
-    // Detect connection mode from localStorage
-    const useOpenRouter = localStorage.getItem('useOpenRouter') === 'true';
+    // Detect connection mode from localStorage and check premium status
+    const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function'
+        ? window.AndroidBilling.checkPremiumStatus()
+        : false;
+    const savedUseOpenRouter = localStorage.getItem('useOpenRouter') === 'true';
+
+    if (savedUseOpenRouter && !isPremium) {
+        if (typeof window.openPremiumModal === 'function') {
+            window.openPremiumModal('Custom Templates');
+        }
+        return;
+    }
+
+    const useOpenRouter = savedUseOpenRouter && isPremium;
 
     // Set loading state immediately
     const originalBtnContent = generateBtn.innerHTML;

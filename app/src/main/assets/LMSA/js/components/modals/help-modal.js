@@ -652,7 +652,9 @@ export const helpModal = `
                                     <li><strong>Chat Completion Limit: 20 per day</strong> — After reaching this limit, you'll enter a cooldown period</li>
                                     <li><strong>Automatic Reset: Midnight (Local Time)</strong> — Your chat completion count resets at midnight in your timezone, allowing you to chat freely again</li>
                                     <li><strong>Advertisements:</strong> Free users see advertisements throughout the app</li>
-                                    <li><strong>Custom Templates:</strong> Not available on the Free tier; upgrade to Premium to use this feature</li>
+                                    <li><strong>OpenRouter (Cloud AI):</strong> Not available on the Free tier; upgrade to Premium to use cloud models</li>
+                                    <li><strong>TTS (Text-to-Speech):</strong> Not available on the Free tier; upgrade to Premium to hear AI responses</li>
+                                    <li><strong>Custom Templates:</strong> Not available on the Free tier; upgrade to Premium to create and use custom templates</li>
                                 </ul>
                             </div>
 
@@ -664,6 +666,8 @@ export const helpModal = `
                                     <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
                                     <li><strong>Unlimited Chat Completions</strong> — No daily limits or cooldown periods</li>
                                     <li><strong>Ad-Free Experience</strong> — No advertisements throughout the app</li>
+                                    <li><strong>OpenRouter Access:</strong> Full access to cloud models via OpenRouter</li>
+                                    <li><strong>TTS (Text-to-Speech):</strong> Hear AI responses using high-quality voices</li>
                                     <li><strong>Custom Templates:</strong> Create, save, and reuse prompt templates</li>
                                     <li><strong>One-Time Purchase:</strong> Upgrade with a single lifetime purchase</li>
                                 </ul>

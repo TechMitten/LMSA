@@ -19,7 +19,7 @@ export const aboutModal = `
                     <i class="fas fa-times"></i>
                 </button>
                 <div class="version-badge px-4 py-1.5 rounded-full mx-auto w-fit mt-2">
-                    <p class="text-sm font-medium text-blue-300 text-center">Version 10.3.2</p>
+                    <p class="text-sm font-medium text-blue-300 text-center">Version 10.4</p>
                 </div>
             </div>
 

@@ -430,7 +430,7 @@
     <script src="js/templates.js"></script>
 
     <script type="module">
-        import { premiumModal, initPremiumModal } from './js/components/modals/premium-modal.js';
+        import { premiumModal, initPremiumModal, openPremiumModal } from './js/components/modals/premium-modal.js';
         
         // Inject premium modal HTML
         document.body.insertAdjacentHTML('beforeend', premiumModal);
@@ -439,16 +439,7 @@
         initPremiumModal();
         
         // Expose openPremiumModal to global scope for templates.js
-        window.openPremiumModal = function() {
-            const modal = document.getElementById('premium-modal');
-            if (modal) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                setTimeout(() => {
-                    modal.style.opacity = '1';
-                }, 10);
-            }
-        };
+        window.openPremiumModal = openPremiumModal;
     </script>
 </body>
 

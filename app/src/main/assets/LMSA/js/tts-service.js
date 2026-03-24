@@ -173,6 +173,19 @@ class TTSService {
      * @param {Object} options - Speech options
      */
     async speak(text, options = {}) {
+        // Check if user is premium for TTS functionality
+        const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' 
+            ? window.AndroidBilling.checkPremiumStatus() 
+            : false;
+
+        if (!isPremium) {
+            console.warn('TTS is a premium feature');
+            if (typeof window.openPremiumModal === 'function') {
+                window.openPremiumModal('TTS');
+            }
+            return Promise.resolve(false);
+        }
+
         if (!text || text.trim().length === 0) {
             console.warn('No text provided for TTS');
             return Promise.resolve(false);

@@ -159,7 +159,7 @@ export async function initializeApp() {
     initializeIpPortConfirmationModal();
     initPremiumModal();
     window.openPremiumModal = openPremiumModal;
-    document.addEventListener('completionLimitReached', openPremiumModal);
+    document.addEventListener('completionLimitReached', () => openPremiumModal('Chat Messages'));
     initSmartReplyWarningModal();
     initOpenRouterWarningModal();
     initializeTemplateIndicator();

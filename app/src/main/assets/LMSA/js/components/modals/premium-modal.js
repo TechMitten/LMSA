@@ -1,6 +1,6 @@
 export const premiumModal = `
-    <div id="premium-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center hidden modal-container z-50 overflow-hidden"
-        style="padding: 0.5rem;" aria-labelledby="premium-title" role="dialog" aria-modal="true">
+    <div id="premium-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center hidden modal-container overflow-hidden"
+        style="padding: 0.5rem; z-index: 2100 !important;" aria-labelledby="premium-title" role="dialog" aria-modal="true">
         <div class="modal-content relative overflow-hidden flex flex-col" style="max-width: 460px; width: 90%; max-height: 95vh; border-radius: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.2) inset;">
             <!-- Animated gradient background -->
             <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(6, 182, 212, 0.1) 100%); pointer-events: none; z-index: 0;"></div>
@@ -27,6 +27,11 @@ export const premiumModal = `
                     </h2>
                     <p class="premium-modal-subtitle" style="color: var(--text-secondary); margin: 0 0 0.625rem 0; font-size: 0.8rem; letter-spacing: 0.3px; text-transform: uppercase; font-weight: 600; flex-shrink: 0;">
                         <i class="fas fa-sparkles" style="color: #06b6d4; margin-right: 0.3rem;"></i>Lifetime Access
+                    </p>
+
+                    <!-- Dynamic feature notice -->
+                    <p id="premium-feature-notice" style="color: #fbbf24; margin: 0 0 1rem 0; font-size: 0.95rem; font-weight: 700; display: none;">
+                        <span id="premium-feature-name">Feature</span> is a premium feature!
                     </p>
 
                     <!-- Benefits cards -->
@@ -336,9 +341,20 @@ export const premiumModal = `
     </style>
 `;
 
-export function openPremiumModal() {
+export function openPremiumModal(featureName) {
     const modal = document.getElementById('premium-modal');
     if (!modal) return;
+
+    const notice = document.getElementById('premium-feature-notice');
+    const nameSpan = document.getElementById('premium-feature-name');
+
+    if (featureName && notice && nameSpan) {
+        nameSpan.textContent = featureName;
+        notice.style.display = 'block';
+    } else if (notice) {
+        notice.style.display = 'none';
+    }
+
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     requestAnimationFrame(() => {
@@ -357,6 +373,12 @@ export function initPremiumModal() {
     const closeModal = () => {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+        
+        // Hide the feature notice when modal is closed
+        const notice = document.getElementById('premium-feature-notice');
+        if (notice) {
+            notice.style.display = 'none';
+        }
     };
 
     // Open modal
