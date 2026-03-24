@@ -70,7 +70,7 @@ class TTSService {
                 return;
             }
 
-            window.onTTSInitialized = (success) => {
+            const finalizeInitialization = (success) => {
                 if (settled) {
                     this.initialized = success;
                     return;
@@ -86,9 +86,44 @@ class TTSService {
                 resolve(success);
             };
 
+            window.onTTSInitialized = (success) => {
+                finalizeInitialization(success);
+            };
+            window.onNativeTtsReady = () => {
+                finalizeInitialization(true);
+            };
+            window.onNativeTtsInitFailed = () => {
+                finalizeInitialization(false);
+            };
+
+            try {
+                if (typeof AndroidTTS.isReady === 'function' && AndroidTTS.isReady()) {
+                    console.log('Android TTS already ready; resolving initialization immediately');
+                    finalizeInitialization(true);
+                    return;
+                }
+            } catch (error) {
+                console.warn('Error checking Android TTS readiness before initialization:', error);
+            }
+
             try {
                 console.log('Calling AndroidTTS.initializeTTS()');
                 AndroidTTS.initializeTTS();
+
+                setTimeout(() => {
+                    if (settled) {
+                        return;
+                    }
+
+                    try {
+                        if (typeof AndroidTTS.isReady === 'function' && AndroidTTS.isReady()) {
+                            console.log('Android TTS became ready without a callback; resolving from native readiness state');
+                            finalizeInitialization(true);
+                        }
+                    } catch (error) {
+                        console.warn('Error checking Android TTS readiness after initializeTTS():', error);
+                    }
+                }, 250);
 
                 setTimeout(() => {
                     if (!settled && !this.initialized) {
@@ -408,6 +443,14 @@ class TTSService {
                 console.error('Error checking active Android TTS playback:', error);
                 return false;
             }
+        }
+
+        return !!this.currentUtterance || !!(this.speechSynthesis && this.speechSynthesis.speaking);
+    }
+
+    hasTrackedPlayback() {
+        if (this.isAndroid) {
+            return !!this.currentAndroidPlayback;
         }
 
         return !!this.currentUtterance || !!(this.speechSynthesis && this.speechSynthesis.speaking);

@@ -1038,8 +1038,10 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                                 await window.TTSService.initialize();
                             }
 
-                            // Check if currently speaking and stop if needed
-                            if (window.TTSService.isSpeaking()) {
+                            // Only treat this as a stop toggle when the JS layer is still
+                            // tracking an active playback request. If Android is stuck in a
+                            // stale speaking state, let speak() recover it and start fresh.
+                            if (window.TTSService.hasTrackedPlayback()) {
                                 window.TTSService.stop('speaker-toggle-stop', true);
                                 speakerButton.innerHTML = '<i class="fas fa-volume-up"></i>';
                                 speakerButton.title = 'Read this message aloud';
@@ -1546,8 +1548,10 @@ export function refreshAllMessages() {
                                     await window.TTSService.initialize();
                                 }
 
-                                // Check if currently speaking and stop if needed
-                                if (window.TTSService.isSpeaking()) {
+                                // Only treat this as a stop toggle when the JS layer is still
+                                // tracking an active playback request. If Android is stuck in a
+                                // stale speaking state, let speak() recover it and start fresh.
+                                if (window.TTSService.hasTrackedPlayback()) {
                                     window.TTSService.stop('speaker-toggle-stop', true);
                                     speakerButton.innerHTML = '<i class="fas fa-volume-up"></i>';
                                     speakerButton.title = 'Read this message aloud';
@@ -2440,8 +2444,10 @@ export function addSpeakerButtonsToExistingMessages() {
                             await window.TTSService.initialize();
                         }
 
-                        // Check if currently speaking and stop if needed
-                        if (window.TTSService.isSpeaking()) {
+                        // Only treat this as a stop toggle when the JS layer is still
+                        // tracking an active playback request. If Android is stuck in a
+                        // stale speaking state, let speak() recover it and start fresh.
+                        if (window.TTSService.hasTrackedPlayback()) {
                             window.TTSService.stop('speaker-toggle-stop', true);
                             speakerButton.innerHTML = '<i class="fas fa-volume-up"></i>';
                             speakerButton.title = 'Read this message aloud';

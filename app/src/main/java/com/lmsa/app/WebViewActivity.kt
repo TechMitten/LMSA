@@ -845,7 +845,10 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun notifyTTSInitialized(success: Boolean) {
         runTTSJavascript(
-            "if (window.onTTSInitialized) window.onTTSInitialized(${if (success) "true" else "false"});" +
+            "window.__nativeTtsReady = ${if (success) "true" else "false"};" +
+                "if (${if (success) "window.onNativeTtsReady" else "window.onNativeTtsInitFailed"}) { " +
+                "${if (success) "window.onNativeTtsReady()" else "window.onNativeTtsInitFailed()"}; }" +
+                "if (window.onTTSInitialized) window.onTTSInitialized(${if (success) "true" else "false"});" +
                 "if (window.TTSService) { window.TTSService.initialized = ${if (success) "true" else "false"}; window.TTSService.isInitializing = false; }"
         )
     }
@@ -1365,7 +1368,7 @@ class WebViewActivity : AppCompatActivity() {
 
         if (ttsInitInProgress) {
             val initAgeMs = SystemClock.elapsedRealtime() - ttsInitStartedAtMs
-            if (initAgeMs < 15000L && textToSpeech != null) {
+            if (initAgeMs < 15000L) {
                 Log.d(TAG, "TTS initialization already in progress for ${initAgeMs}ms; keeping current attempt")
                 return
             }
@@ -1418,71 +1421,77 @@ class WebViewActivity : AppCompatActivity() {
         ttsWatchdogHandler.postDelayed(ttsInitWatchdogRunnable!!, 15000L)
 
         textToSpeech = TextToSpeech(this) { status ->
-            clearTTSInitWatchdog()
-            ttsInitInProgress = false
-            ttsInitStartedAtMs = 0L
+            // Post the init work back onto the main queue after constructor assignment
+            // completes. This avoids racing a second initializeTTS() call against the
+            // window where ttsInitInProgress is true but textToSpeech has not been stored.
+            ttsWatchdogHandler.post {
+                clearTTSInitWatchdog()
+                ttsInitInProgress = false
+                ttsInitStartedAtMs = 0L
 
-            if (status == TextToSpeech.SUCCESS) {
-                val result = textToSpeech?.setLanguage(Locale.US)
-                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    Log.e(TAG, "TTS language not supported, falling back to device default")
-                    textToSpeech?.setLanguage(Locale.getDefault())
-                }
-
-                textToSpeech?.setSpeechRate(0.9f)
-                textToSpeech?.setPitch(1.0f)
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    if (defaultTTSVoice == null) {
-                        defaultTTSVoice = textToSpeech?.voice
+                val tts = textToSpeech
+                if (status == TextToSpeech.SUCCESS && tts != null) {
+                    val result = tts.setLanguage(Locale.US)
+                    if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        Log.e(TAG, "TTS language not supported, falling back to device default")
+                        tts.setLanguage(Locale.getDefault())
                     }
 
-                    val audioAttributes = AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                        .build()
-                    textToSpeech?.setAudioAttributes(audioAttributes)
-                    Log.d(TAG, "Audio attributes set for TTS with USAGE_MEDIA/CONTENT_TYPE_SPEECH")
+                    tts.setSpeechRate(0.9f)
+                    tts.setPitch(1.0f)
 
-                    val preferredVoiceName = preferredTTSVoiceName
-                    if (!preferredVoiceName.isNullOrBlank()) {
-                        val preferredVoice = textToSpeech?.voices?.find { it.name == preferredVoiceName }
-                        if (preferredVoice != null) {
-                            textToSpeech?.voice = preferredVoice
-                            Log.d(TAG, "Reapplied preferred TTS voice after init: $preferredVoiceName")
-                        } else {
-                            Log.w(TAG, "Preferred TTS voice no longer available after init: $preferredVoiceName")
-                            preferredTTSVoiceName = null
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        if (defaultTTSVoice == null) {
+                            defaultTTSVoice = tts.voice
+                        }
+
+                        val audioAttributes = AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                            .build()
+                        tts.setAudioAttributes(audioAttributes)
+                        Log.d(TAG, "Audio attributes set for TTS with USAGE_MEDIA/CONTENT_TYPE_SPEECH")
+
+                        val preferredVoiceName = preferredTTSVoiceName
+                        if (!preferredVoiceName.isNullOrBlank()) {
+                            val preferredVoice = tts.voices?.find { it.name == preferredVoiceName }
+                            if (preferredVoice != null) {
+                                tts.voice = preferredVoice
+                                Log.d(TAG, "Reapplied preferred TTS voice after init: $preferredVoiceName")
+                            } else {
+                                Log.w(TAG, "Preferred TTS voice no longer available after init: $preferredVoiceName")
+                                preferredTTSVoiceName = null
+                            }
                         }
                     }
-                }
 
-                Log.d(TAG, "TTS initialized successfully with optimized settings and audio attributes")
-                isTTSInitialized = true
-                notifyTTSInitialized(true)
+                    Log.d(TAG, "TTS initialized successfully with optimized settings and audio attributes")
+                    isTTSInitialized = true
+                    notifyTTSInitialized(true)
 
-                if (pendingTTSReadyCallbacks.isNotEmpty()) {
-                    val callbacks = pendingTTSReadyCallbacks.toList()
+                    if (pendingTTSReadyCallbacks.isNotEmpty()) {
+                        val callbacks = pendingTTSReadyCallbacks.toList()
+                        pendingTTSReadyCallbacks.clear()
+                        callbacks.forEach { callback -> callback.invoke() }
+                    }
+                } else {
+                    Log.e(TAG, "TTS initialization failed with status=$status")
+
                     pendingTTSReadyCallbacks.clear()
-                    callbacks.forEach { callback -> callback.invoke() }
-                }
-            } else {
-                Log.e(TAG, "TTS initialization failed with status=$status")
+                    isTTSInitialized = false
+                    textToSpeech?.shutdown()
+                    textToSpeech = null
+                    notifyTTSInitialized(false)
 
-                pendingTTSReadyCallbacks.clear()
-                isTTSInitialized = false
-                textToSpeech?.shutdown()
-                textToSpeech = null
-                notifyTTSInitialized(false)
-
-                val failedRequestId = pendingTTSRequestId
-                if (failedRequestId != null) {
-                    notifyTTSPlaybackError(failedRequestId, "Android TTS initialization failed")
-                    pendingTTSText = null
-                    pendingTTSRequestId = null
-                    currentTTSRequestId = null
-                    ttsRecoveryAttempts = 0
-                    ttsAutoRecovering = false
+                    val failedRequestId = pendingTTSRequestId
+                    if (failedRequestId != null) {
+                        notifyTTSPlaybackError(failedRequestId, "Android TTS initialization failed")
+                        pendingTTSText = null
+                        pendingTTSRequestId = null
+                        currentTTSRequestId = null
+                        ttsRecoveryAttempts = 0
+                        ttsAutoRecovering = false
+                    }
                 }
             }
         }
@@ -1492,6 +1501,11 @@ class WebViewActivity : AppCompatActivity() {
         @JavascriptInterface
         fun initializeTTS() {
             runOnUiThread {
+                if (textToSpeech != null && isTTSInitialized) {
+                    Log.d(TAG, "initializeTTS called while engine already ready; notifying JavaScript immediately")
+                    notifyTTSInitialized(true)
+                    return@runOnUiThread
+                }
                 startTTSEngine()
             }
         }
