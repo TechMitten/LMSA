@@ -670,39 +670,7 @@
   transform: none !important;
 }
 
-/* Reveal/hide button — plain flex sibling, no absolute positioning */
-.openrouter-key-reveal-btn {
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  padding: 0.4rem 0.35rem;
-  cursor: pointer;
-  color: var(--settings-help-text, #6b7280);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  transition: color 0.2s ease, opacity 0.2s ease;
-  opacity: 0.6;
-  line-height: 1;
-  -webkit-tap-highlight-color: transparent;
-}
 
-.openrouter-key-reveal-btn:hover {
-  color: var(--toggle-active-bg, #3b82f6);
-  opacity: 1;
-}
-
-.openrouter-key-reveal-btn:focus {
-  outline: none;
-}
-
-.openrouter-key-reveal-btn:focus-visible {
-  outline: 2px solid var(--toggle-active-bg, #3b82f6);
-  outline-offset: 2px;
-  border-radius: 4px;
-  opacity: 1;
-}
 
 /* IP and Port container */
 .ip-port-container {
@@ -2507,25 +2475,6 @@ body.light-theme .conn-modal-action-btn--cancel {
   color: var(--settings-help-text, #9ca3af);
 }
 
-.openrouter-key-reveal-btn {
-  background: transparent;
-  border: none;
-  color: var(--settings-help-text, #9ca3af);
-  cursor: pointer;
-  padding: 0.625rem 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  flex-shrink: 0;
-  transition: color 0.15s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.openrouter-key-reveal-btn:active {
-  color: var(--toggle-active-bg, #3b82f6);
-}
-
 body.light-theme .openrouter-key-input-wrapper {
   background: rgba(255, 255, 255, 0.9);
   border-color: rgba(203, 213, 225, 0.8);
@@ -2533,14 +2482,6 @@ body.light-theme .openrouter-key-input-wrapper {
 
 body.light-theme .openrouter-key-input-wrapper input {
   color: #1e293b;
-}
-
-body.light-theme .openrouter-key-reveal-btn {
-  color: #94a3b8;
-}
-
-body.light-theme .openrouter-key-reveal-btn:active {
-  color: #3b82f6;
 }
 
 /* Tablet adjustments */

@@ -1128,13 +1128,8 @@ function updateOpenRouterUI(isEnabled) {
  * Loads the OpenRouter settings from localStorage
  */
 export function loadOpenRouterSettings() {
-  const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function'
-    ? window.AndroidBilling.checkPremiumStatus()
-    : false;
-
   const savedUseOpenRouter = localStorage.getItem('useOpenRouter');
-  // If not premium, ensure OpenRouter is disabled even if it was saved as true
-  useOpenRouter = isPremium && (savedUseOpenRouter === 'true');
+  useOpenRouter = (savedUseOpenRouter === 'true');
 
   if (openRouterToggleCheckbox) {
     openRouterToggleCheckbox.checked = useOpenRouter;
@@ -1191,20 +1186,6 @@ export function saveOpenRouterSettings() {
   const isEnabling = openRouterToggleCheckbox && openRouterToggleCheckbox.checked;
 
   if (isEnabling) {
-    // Check for premium status before allowing to enable OpenRouter
-    const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function'
-      ? window.AndroidBilling.checkPremiumStatus()
-      : false;
-
-    if (!isPremium) {
-      console.warn('OpenRouter is a premium feature');
-      openRouterToggleCheckbox.checked = false;
-      if (typeof window.openPremiumModal === 'function') {
-        window.openPremiumModal('OpenRouter');
-      }
-      return;
-    }
-
     // Temporarily revert the checkbox until the user confirms the warning
     openRouterToggleCheckbox.checked = false;
 
@@ -1248,12 +1229,7 @@ export function saveOpenRouterSettings() {
  * @returns {boolean}
  */
 export function getUseOpenRouter() {
-  // Extra safety check for premium status
-  const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function'
-    ? window.AndroidBilling.checkPremiumStatus()
-    : false;
-
-  return isPremium && useOpenRouter;
+  return useOpenRouter;
 }
 
 /**

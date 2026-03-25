@@ -494,16 +494,8 @@ export const settingsModal = `
             <p class="text-sm mb-4" style="color: var(--settings-help-text, #9ca3af);">Enter your OpenRouter API key to access cloud AI models.</p>
             <div class="mb-5">
                 <label for="openrouter-api-key" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">API Key</label>
-                <div class="openrouter-key-input-wrapper">
-                    <input type="password" id="openrouter-api-key"
-                        placeholder="sk-or-v1-..." autocomplete="off" data-form-type="other">
-                    <button type="button" id="openrouter-api-key-reveal"
-                        class="openrouter-key-reveal-btn"
-                        title="Show/hide API key"
-                        onclick="(function(){var i=document.getElementById('openrouter-api-key'),b=document.getElementById('openrouter-api-key-reveal');if(i.type==='password'){i.type='text';b.innerHTML='<i class=&quot;fas fa-eye-slash&quot;></i>';}else{i.type='password';b.innerHTML='<i class=&quot;fas fa-eye&quot;></i>';}})()">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
+                <input type="password" id="openrouter-api-key"
+                    placeholder="sk-or-v1-..." autocomplete="off" data-form-type="other" style="width: 100%;">
                 <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);"><i class="fas fa-lock mr-1"></i>Stored locally on your device only.</p>
             </div>
             <div class="flex gap-3">

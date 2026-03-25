@@ -1478,10 +1478,6 @@ function initializeConnectionInputModals() {
         const keyInput = document.getElementById('openrouter-api-key');
         if (keyInput) {
             keyInput.value = localStorage.getItem('openRouterApiKey') || '';
-            // Reset reveal button to password state
-            keyInput.type = 'password';
-            const revealBtn = document.getElementById('openrouter-api-key-reveal');
-            if (revealBtn) revealBtn.innerHTML = '<i class="fas fa-eye"></i>';
         }
         hideInputModal(orKeyModal);
     };
