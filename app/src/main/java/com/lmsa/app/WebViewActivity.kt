@@ -59,6 +59,13 @@ import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdOptions
+import com.google.android.gms.ads.AdLoader
+import com.google.android.gms.ads.nativead.NativeAdView
+import android.widget.ImageView
+import android.widget.TextView
+
 import android.widget.FrameLayout
 import com.android.billingclient.api.*
 
@@ -72,7 +79,10 @@ class WebViewActivity : AppCompatActivity() {
     private var pendingFileContent: String? = null
     private var pendingFileName: String? = null
     private var isImageFile: Boolean = false
-    private var mInterstitialAd: InterstitialAd? = null
+    
+    private var nativeAd: NativeAd? = null
+    private val NATIVE_AD_UNIT_ID = "ca-app-pub-1388425042154340/5848689323"
+
     private var isInterstitialAdLoading = false
     private var isInterstitialAdShowing = false
     private val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-1388425042154340/3976255369"
@@ -395,6 +405,14 @@ class WebViewActivity : AppCompatActivity() {
         webView.addJavascriptInterface(UsageLimiterInterface(), "AndroidUsageLimiter")
 
         webView.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                // Hide native ad whenever we start loading a new page
+                // to prevent it from overlaying pages that don't have ad placeholders
+                val adContainer = findViewById<FrameLayout>(R.id.nativeAdContainer)
+                adContainer.visibility = View.GONE
+            }
+
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 // Now that the page is loaded, update the UI with the persisted premium status
@@ -559,91 +577,72 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadInterstitialAd(onAdLoaded: () -> Unit = {}, onAdFailedToLoad: () -> Unit = {}) {
+
+    private fun loadNativeAd() {
         val effectivePremium = isPremium && !isDebugMode
-        if (effectivePremium) {
-            onAdFailedToLoad()
-            return
-        }
+        if (effectivePremium) return
 
-        if (isInterstitialAdLoading) {
-            onAdFailedToLoad()
-            return
-        }
-
-        if (mInterstitialAd != null) {
-            onAdLoaded()
-            return
-        }
-
-        isInterstitialAdLoading = true
-
-        val adRequest = AdRequest.Builder().build()
-        InterstitialAd.load(this, INTERSTITIAL_AD_UNIT_ID, adRequest,
-            object : InterstitialAdLoadCallback() {
-                override fun onAdLoaded(interstitialAd: InterstitialAd) {
-                    mInterstitialAd = interstitialAd
-                    isInterstitialAdLoading = false
-                    Log.d(TAG, "Interstitial ad loaded successfully")
-                    onAdLoaded()
+        val adLoader = AdLoader.Builder(this, NATIVE_AD_UNIT_ID)
+            .forNativeAd { ad : NativeAd ->
+                if (isDestroyed) {
+                    ad.destroy()
+                    return@forNativeAd
                 }
-
+                nativeAd?.destroy()
+                nativeAd = ad
+                populateNativeAdView(ad)
+            }
+            .withAdListener(object : com.google.android.gms.ads.AdListener() {
                 override fun onAdFailedToLoad(adError: LoadAdError) {
-                    mInterstitialAd = null
-                    isInterstitialAdLoading = false
-                    Log.d(TAG, "Interstitial ad failed to load: ${adError.message}")
-                    onAdFailedToLoad()
+                    Log.e(TAG, "Native ad failed to load: " + adError.message)
                 }
             })
+            .withNativeAdOptions(NativeAdOptions.Builder().build())
+            .build()
+
+        adLoader.loadAd(AdRequest.Builder().build())
     }
 
-    private fun showInterstitialAd(onAdDismissed: () -> Unit) {
-        val effectivePremium = isPremium && !isDebugMode
+    private fun populateNativeAdView(nativeAd: NativeAd) {
+        val adView = layoutInflater.inflate(R.layout.native_ad_layout, null) as NativeAdView
+        
+        val headlineView = adView.findViewById<TextView>(R.id.ad_headline)
+        val bodyView = adView.findViewById<TextView>(R.id.ad_body)
+        val iconView = adView.findViewById<ImageView>(R.id.ad_app_icon)
+        val ctaView = adView.findViewById<Button>(R.id.ad_call_to_action)
 
-        if (effectivePremium) {
-            onAdDismissed()
-            return
+        headlineView.text = nativeAd.headline
+        adView.headlineView = headlineView
+
+        if (nativeAd.body == null) {
+            bodyView.visibility = View.INVISIBLE
+        } else {
+            bodyView.visibility = View.VISIBLE
+            bodyView.text = nativeAd.body
         }
+        adView.bodyView = bodyView
 
-        if (mInterstitialAd == null) {
-            loadInterstitialAd(
-                onAdLoaded = { showInterstitialAd(onAdDismissed) },
-                onAdFailedToLoad = {
-                    Log.d(TAG, "Proceeding without interstitial ad")
-                    onAdDismissed()
-                }
-            )
-            return
+        if (nativeAd.icon == null) {
+            iconView.visibility = View.GONE
+        } else {
+            iconView.setImageDrawable(nativeAd.icon?.drawable)
+            iconView.visibility = View.VISIBLE
         }
+        adView.iconView = iconView
 
-        mInterstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
-            override fun onAdShowedFullScreenContent() {
-                isInterstitialAdShowing = true
-                Log.d(TAG, "Interstitial ad showed in full screen")
-            }
-
-            override fun onAdDismissedFullScreenContent() {
-                isInterstitialAdShowing = false
-                mInterstitialAd = null
-                Log.d(TAG, "Interstitial ad dismissed")
-                onAdDismissed()
-
-                // Preload next ad immediately after dismissal for faster display next time
-                loadInterstitialAd()
-            }
-
-            override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
-                isInterstitialAdShowing = false
-                mInterstitialAd = null
-                Log.e(TAG, "Failed to show interstitial ad: ${adError.message}")
-                onAdDismissed()
-
-                // Try to preload next ad after failure
-                loadInterstitialAd()
-            }
+        if (nativeAd.callToAction == null) {
+            ctaView.visibility = View.INVISIBLE
+        } else {
+            ctaView.visibility = View.VISIBLE
+            ctaView.text = nativeAd.callToAction
         }
+        adView.callToActionView = ctaView
 
-        mInterstitialAd?.show(this@WebViewActivity)
+        adView.setNativeAd(nativeAd)
+
+        val adContainer = findViewById<FrameLayout>(R.id.nativeAdContainer)
+        adContainer.removeAllViews()
+        adContainer.addView(adView)
     }
 
     private fun checkAndRequestStoragePermissions() {
@@ -749,8 +748,7 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        mInterstitialAd?.fullScreenContentCallback = null
-        mInterstitialAd = null
+        nativeAd?.destroy()
 
         textToSpeech?.shutdown()
         textToSpeech = null
@@ -1209,24 +1207,37 @@ class WebViewActivity : AppCompatActivity() {
             updatePremiumUiState()
         }
 
-        @JavascriptInterface
-        fun showInterstitialAdAndExecute(actionName: String) {
+        
+@JavascriptInterface
+        fun updateNativeAdPosition(left: Int, top: Int, width: Int, height: Int) {
             runOnUiThread {
-                showInterstitialAd {
-                    // Execute the pending callback for both newChat and reload actions
-                    val webView: WebView = findViewById(R.id.webView)
-                    webView.evaluateJavascript(
-                        "if(typeof createNewChatAfterAd === 'function') { createNewChatAfterAd(); }",
-                        null
-                    )
+                val effectivePremium = isPremium && !isDebugMode
+                if (effectivePremium) {
+                    hideNativeAd()
+                    return@runOnUiThread
                 }
+                
+                if (nativeAd == null) {
+                    loadNativeAd()
+                }
+
+                val adContainer = findViewById<FrameLayout>(R.id.nativeAdContainer)
+                adContainer.visibility = View.VISIBLE
+                
+                val layoutParams = adContainer.layoutParams as androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
+                layoutParams.width = width
+                layoutParams.height = height
+                layoutParams.leftMargin = left
+                layoutParams.topMargin = top
+                adContainer.layoutParams = layoutParams
             }
         }
 
         @JavascriptInterface
-        fun preloadInterstitialAd() {
+        fun hideNativeAd() {
             runOnUiThread {
-                loadInterstitialAd()
+                val adContainer = findViewById<FrameLayout>(R.id.nativeAdContainer)
+                adContainer.visibility = View.GONE
             }
         }
     }

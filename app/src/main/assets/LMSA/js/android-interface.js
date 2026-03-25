@@ -32,6 +32,18 @@ function updateUiForPremium(isPremium) {
     if (removeAdsBanner) {
         removeAdsBanner.style.display = isPremium ? 'none' : 'flex';
     }
+
+    // Manage Native Ad placeholder
+    const nativeAdPlaceholder = document.getElementById('native-ad-placeholder');
+    if (nativeAdPlaceholder) {
+        nativeAdPlaceholder.style.display = isPremium ? 'none' : 'block';
+    }
+    
+    // Manage Native Ad divider
+    const nativeAdDivider = document.getElementById('native-ad-divider');
+    if (nativeAdDivider) {
+        nativeAdDivider.style.display = isPremium ? 'none' : 'block';
+    }
 }
 
 /**
@@ -45,27 +57,16 @@ function showInterstitialAd(action, callback) {
         window.TTSService.stop('before-interstitial-ad', true);
     }
 
-    if (window.AndroidBilling && typeof window.AndroidBilling.showInterstitialAdAndExecute === 'function') {
-        // Store callback for later execution
-        window._pendingAdCallback = callback;
-        window._pendingAdAction = action;
-
-        // Call Android to show ad
-        window.AndroidBilling.showInterstitialAdAndExecute(action);
-    } else {
-        // No ad interface available, just execute callback
-        console.log('Ad interface not available, proceeding without ad');
-        if (callback) callback();
-    }
+    // We no longer show interstitial ads, just execute callback
+    console.log('Ad interface requested interstitial, but they are removed. Proceeding directly.');
+    if (callback) callback();
 }
 
 /**
  * Preloads interstitial ad for faster display
  */
 function preloadInterstitialAd() {
-    if (window.AndroidBilling && typeof window.AndroidBilling.preloadInterstitialAd === 'function') {
-        window.AndroidBilling.preloadInterstitialAd();
-    }
+    // No-op since interstitial ads are removed
 }
 
 /**
