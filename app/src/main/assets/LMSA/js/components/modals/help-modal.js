@@ -649,8 +649,9 @@ export const helpModal = `
                                 <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
                                     Free users have the following limits and features:</p>
                                 <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
-                                    <li><strong>Chat Completion Limit: 20 per day</strong> — After reaching this limit, you'll enter a cooldown period</li>
-                                    <li><strong>Automatic Reset: Midnight (Local Time)</strong> — Your chat completion count resets at midnight in your timezone, allowing you to chat freely again</li>
+                                    <li><strong>Local Chat Limit: 20 per day</strong> — After reaching this limit, you'll enter a cooldown period</li>
+                                    <li><strong>OpenRouter Limit: 5 per day</strong> — Separate daily limit when using cloud models</li>
+                                    <li><strong>Automatic Reset: Midnight (Local Time)</strong> — Your chat completion counts reset at midnight in your timezone, allowing you to chat freely again</li>
                                     <li><strong>Advertisements:</strong> Free users see advertisements throughout the app</li>
                                     <li><strong>TTS (Text-to-Speech):</strong> Not available on the Free tier; upgrade to Premium to hear AI responses</li>
                                     <li><strong>Custom Templates:</strong> Not available on the Free tier; upgrade to Premium to create and use custom templates</li>

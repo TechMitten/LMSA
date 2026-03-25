@@ -160,6 +160,7 @@ export async function initializeApp() {
     initPremiumModal();
     window.openPremiumModal = openPremiumModal;
     document.addEventListener('completionLimitReached', () => openPremiumModal('Chat Messages'));
+    document.addEventListener('openRouterLimitReached', () => openPremiumModal('OpenRouter Messages'));
     initSmartReplyWarningModal();
     initOpenRouterWarningModal();
     initializeTemplateIndicator();

@@ -348,8 +348,14 @@ export function openPremiumModal(featureName) {
     const notice = document.getElementById('premium-feature-notice');
     const nameSpan = document.getElementById('premium-feature-name');
 
-    if (featureName && notice && nameSpan) {
-        nameSpan.textContent = featureName;
+    if (featureName && notice) {
+        if (featureName === 'OpenRouter Messages') {
+            notice.innerHTML = `You've reached your daily limit for OpenRouter Messages!`;
+        } else if (featureName === 'Chat Messages') {
+            notice.innerHTML = `You've reached your daily limit for Chat Messages!`;
+        } else {
+            notice.innerHTML = `<span id="premium-feature-name">${featureName}</span> is a premium feature!`;
+        }
         notice.style.display = 'block';
     } else if (notice) {
         notice.style.display = 'none';
