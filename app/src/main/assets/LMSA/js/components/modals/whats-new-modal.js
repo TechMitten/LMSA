@@ -6,14 +6,14 @@ export const whatsNewModal = `
             style="box-shadow: 0 20px 60px -15px rgba(0,0,0,0.7), 0 0 30px rgba(31, 66, 135, 0.2), 0 0 0 1px rgba(255,255,255,0.1) inset;">
             <div class="flex justify-between items-center mb-3 pb-3 border-b border-white/15">
                 <h2 id="whats-new-title" class="text-xl font-bold flex items-center">
-                    <div
+                        <div
                         class="icon-wrapper mr-3 flex items-center justify-center rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 w-9 h-9 text-darkBg shadow-lg">
                         <i class="fas fa-wand-magic-sparkles text-sm"></i>
                     </div>
                     <div class="flex flex-col">
                         <span class="text-blue-400 font-extrabold">What's New</span>
                         <span class="text-xs text-blue-300/80 font-medium">v<span
-                            id="whats-new-version">10.4</span></span>
+                            id="whats-new-version">10.5</span></span>
                     </div>
                 </h2>
                 <button id="close-whats-new"
@@ -22,7 +22,7 @@ export const whatsNewModal = `
                 </button>
             </div>
 
-            <div class="features-container overflow-y-auto flex-grow px-1 py-2">
+                    <div class="features-container overflow-y-auto grow px-1 py-2">
                 <div class="space-y-3">
                     <!-- (Premium feature removed) -->
                     <div class="feature-item">
