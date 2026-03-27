@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -59,12 +59,12 @@
         style="min-height: 100vh; min-height: -webkit-fill-available; display: flex; flex-direction: column;">
         <!-- Header - Enhanced with modern styling and effects -->
         <header class="p-4 flex justify-between items-center">
-            <div class="flex items-center flex-shrink-0">
+            <div class="flex items-center shrink-0">
                 <div
-                    class="w-10 h-10 mr-3 relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 shadow-xl flex items-center justify-center">
+                    class="w-10 h-10 mr-3 relative overflow-hidden rounded-xl bg-linear-to-br from-blue-500 to-indigo-700 shadow-xl flex items-center justify-center">
                     <img src="icon.png" alt="LMSA Icon" class="w-7 h-7 relative z-10">
                     <div
-                        class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-50">
+                        class="absolute inset-0 bg-linear-to-tr from-transparent via-white/10 to-transparent opacity-50">
                     </div>
                 </div>
                 <h1 class="text-2xl font-bold header-title">LMSA</h1>
@@ -267,7 +267,7 @@
                                 </div>
                             </div>
                             <button id="disable-template-btn"
-                                class="flex items-center justify-center p-1.5 rounded-md transition-all flex-shrink-0"
+                                class="flex items-center justify-center p-1.5 rounded-md transition-all shrink-0"
                                 style="background: transparent; border: none; color: #60A5FA; cursor: pointer;"
                                 title="Disable template">
                                 <i class="fas fa-times" style="font-size: 1rem;"></i>
@@ -316,12 +316,12 @@
                     <div id="welcome-message" class="absolute inset-0 flex items-center justify-center text-center"
                         style="transform: none !important; left: 0; right: 0; color: var(--text-muted);">
                         <div class="welcome-content glass-card p-8 sm:p-10 max-w-md mx-auto">
-                            <div class="relative mx-auto mb-4 sm:mb-6 mt-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl flex items-center justify-center icon-container"
+                            <div class="relative mx-auto mb-4 sm:mb-6 mt-2 bg-linear-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl flex items-center justify-center icon-container"
                                 style="width: 5.5rem; height: 5.5rem; min-height: 5rem; min-width: 5rem; padding: 0.75rem;">
                                 <img src="icon.png" alt="LMSA Icon" class="relative z-10 object-contain"
                                     style="width: 3.5rem; height: 3.5rem; max-width: 75%; max-height: 75%;">
                                 <div
-                                    class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-50">
+                                    class="absolute inset-0 bg-linear-to-tr from-transparent via-white/10 to-transparent opacity-50">
                                 </div>
                                 <div
                                     class="absolute -top-8 -left-8 sm:-top-10 sm:-left-10 w-16 h-16 sm:w-20 sm:h-20 bg-white/10 rounded-full blur-xl">
@@ -341,26 +341,26 @@
                                 <div class="grid grid-cols-2 gap-3 w-full mb-3">
                                     <!-- Settings Button - Professional styling -->
                                     <button id="get-started-btn"
-                                        class="professional-button flex items-center justify-center gap-3 w-full h-[48px]"
+                                        class="professional-button flex items-center justify-center gap-3 w-full h-12"
                                         style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
                                         <span>Settings</span>
                                     </button>
                                     <!-- Models Button - Professional styling -->
                                     <button id="welcome-models-btn"
-                                        class="professional-button flex items-center justify-center gap-3 w-full h-[48px]"
+                                        class="professional-button flex items-center justify-center gap-3 w-full h-12"
                                         style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
                                         <span>Models</span>
                                     </button>
                                     <!-- Templates Button - Professional styling -->
                                     <button id="welcome-templates-btn"
-                                        class="professional-button flex items-center justify-center gap-3 w-full h-[48px]"
+                                        class="professional-button flex items-center justify-center gap-3 w-full h-12"
                                         style="border: 2px solid rgba(16, 185, 129, 0.45) !important;"
                                         onclick="window.location.href='templates.html'">
                                         <span>Templates</span>
                                     </button>
                                     <!-- Help Button - Professional styling -->
                                     <button id="welcome-help-btn"
-                                        class="professional-button flex items-center justify-center gap-2 w-full h-[48px]"
+                                        class="professional-button flex items-center justify-center gap-2 w-full h-12"
                                         style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
                                         <span>Help</span>
                                     </button>
@@ -369,7 +369,7 @@
                                 <!-- Premium Button - Professional styling -->
                                 <div id="remove-ads-banner" class="w-full">
                                     <button id="remove-ads-banner-button"
-                                        class="professional-button flex items-center justify-center gap-2 w-full h-[48px]"
+                                        class="professional-button flex items-center justify-center gap-2 w-full h-12"
                                         style="border: 2px solid rgba(59, 130, 246, 0.45) !important;">
                                         <i class="fas fa-crown" style="color: #fbbf24;"></i>
                                         <span>Premium</span>
@@ -377,7 +377,7 @@
                                 </div>
                                 
                                 <!-- Elegant Divider -->
-                                <div id="native-ad-divider" class="w-[85%] mx-auto h-px bg-gradient-to-r from-transparent via-gray-400/60 to-transparent mt-8 mb-8" style="display: none;"></div>
+                                <div id="native-ad-divider" class="w-[85%] mx-auto h-px bg-linear-to-r from-transparent via-gray-400/60 to-transparent mt-8 mb-8" style="display: none;"></div>
                                 
                                 <div id="native-ad-placeholder" class="w-full rounded-xl border border-white/5" style="height: 300px; display: none;"></div>
                             </div>
@@ -406,7 +406,7 @@
                         style="padding-bottom: 0px; padding-top: 0px;"></div>
 
                     <form id="chat-form" class="flex" style="position: relative; background-color: transparent;">
-                        <div class="flex-grow relative">
+                        <div class="grow relative">
                             <textarea id="user-input" class="w-full focus:outline-none"
                                 placeholder="Type your message..." aria-label="Type your message" autocomplete="off"
                                 wrap="soft"
@@ -467,10 +467,10 @@
 
                 <!-- Image Upload Error Modal -->
                 <div id="image-upload-error-modal"
-                    class="fixed inset-0 bg-black/70 dark:bg-black/70 light:bg-gray-900/50 backdrop-blur-sm items-center justify-center hidden z-[2050]"
+                    class="fixed inset-0 bg-black/70 dark:bg-black/70 light:bg-gray-900/50 backdrop-blur-sm items-center justify-center hidden z-2050"
                     aria-labelledby="image-upload-error-title" role="dialog" aria-modal="true">
                     <div
-                        class="bg-gradient-to-b from-[#0a192f] to-[#0d1f3d] dark:from-[#0a192f] dark:to-[#0d1f3d] light:from-[#f8fafc] light:to-[#f1f5f9] p-6 rounded-xl w-[420px] max-w-[90%] shadow-2xl modal-content border border-blue-900/30 dark:border-blue-900/30 light:border-blue-200 overflow-hidden">
+                        class="bg-linear-to-b from-[#0a192f] to-[#0d1f3d] dark:from-[#0a192f] dark:to-[#0d1f3d] light:from-[#f8fafc] light:to-[#f1f5f9] p-6 rounded-xl w-[420px] max-w-[90%] shadow-2xl modal-content border border-blue-900/30 dark:border-blue-900/30 light:border-blue-200 overflow-hidden">
                         <div class="flex justify-between items-center mb-4">
                             <h3 id="image-upload-error-title"
                                 class="text-xl font-bold flex items-center modal-title text-blue-400 dark:text-blue-400 light:text-blue-600">
@@ -734,7 +734,7 @@
         style="display: none; background: var(--modal-overlay); backdrop-filter: blur(12px) saturate(180%); -webkit-backdrop-filter: blur(12px) saturate(180%);"
         aria-labelledby="system-prompt-overlay-title" role="dialog" aria-modal="true">
         <div
-            class="relative dark:bg-gradient-to-b dark:from-[#1e293b] dark:via-[#334155] dark:to-[#1e293b] light:bg-gradient-to-b light:from-[#f8fafc] light:via-[#f1f5f9] light:to-[#f8fafc] p-8 rounded-2xl w-[700px] max-w-[90%] shadow-2xl overflow-hidden flex flex-col modal-content border border-blue-400/50 dark:border-blue-400/50 light:border-blue-400/30 backdrop-blur-sm system-prompt-z-2001">
+            class="relative dark:bg-linear-to-b dark:from-[#1e293b] dark:via-[#334155] dark:to-[#1e293b] light:bg-linear-to-b light:from-[#f8fafc] light:via-[#f1f5f9] light:to-[#f8fafc] p-8 rounded-2xl w-[700px] max-w-[90%] shadow-2xl overflow-hidden flex flex-col modal-content border border-blue-400/50 dark:border-blue-400/50 light:border-blue-400/30 backdrop-blur-sm system-prompt-z-2001">
             <div class="flex justify-between items-center mb-6">
                 <h2 id="system-prompt-overlay-title" class="text-2xl font-bold text-gray-800 dark:text-gray-200">
                     <i class="fas fa-edit mr-3 text-blue-400"></i>Edit System Prompt
@@ -902,15 +902,15 @@
     <div id="model-loading-modal" class="fixed inset-0 items-center justify-center hidden modal-container"
         style="z-index: 2200;" aria-labelledby="model-loading-title" role="dialog" aria-modal="true">
         <div
-            class="relative dark:bg-gradient-to-b dark:from-[#1e293b] dark:via-[#334155] dark:to-[#1e293b] light:bg-gradient-to-b light:from-[#f8fafc] light:via-[#f1f5f9] light:to-[#f8fafc] p-10 rounded-2xl w-[550px] max-w-[90%] shadow-2xl overflow-hidden flex flex-col modal-content border border-blue-400/50 dark:border-blue-400/50 light:border-blue-400/30 backdrop-blur-sm">
+            class="relative dark:bg-linear-to-b dark:from-[#1e293b] dark:via-[#334155] dark:to-[#1e293b] light:bg-linear-to-b light:from-[#f8fafc] light:via-[#f1f5f9] light:to-[#f8fafc] p-10 rounded-2xl w-[550px] max-w-[90%] shadow-2xl overflow-hidden flex flex-col modal-content border border-blue-400/50 dark:border-blue-400/50 light:border-blue-400/30 backdrop-blur-sm">
             <!-- Animated background gradient -->
             <div
-                class="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 rounded-2xl">
+                class="absolute inset-0 bg-linear-to-br from-blue-500/10 via-transparent to-purple-500/10 rounded-2xl">
             </div>
 
             <!-- Decorative border glow -->
             <div
-                class="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/30 via-purple-500/20 to-blue-500/30">
+                class="absolute inset-0 rounded-2xl bg-linear-to-r from-blue-500/30 via-purple-500/20 to-blue-500/30">
             </div>
 
             <div class="relative z-10 flex flex-col items-center justify-center text-center">
@@ -920,7 +920,7 @@
                         class="text-2xl font-bold mb-2 text-blue-400 dark:text-blue-400 light:text-blue-600">
                         <i class="fas fa-robot mr-3"></i>Loading Model
                     </h2>
-                    <div class="w-20 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full"></div>
+                    <div class="w-20 h-0.5 bg-linear-to-r from-blue-500 to-purple-500 mx-auto rounded-full"></div>
                 </div>
 
                 <!-- Enhanced message with better spacing -->
@@ -932,7 +932,7 @@
                 <!-- Enhanced model name display -->
                 <div class="model-name-container mb-6">
                     <p id="model-loading-name"
-                        class="text-blue-300 dark:text-blue-300 light:text-blue-600 text-sm font-mono bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/10 dark:to-purple-500/10 light:from-blue-100 light:to-purple-100 px-4 py-2 rounded-xl border border-blue-500/20 dark:border-blue-500/20 light:border-blue-400/30 shadow-inner backdrop-blur-sm">
+                        class="text-blue-300 dark:text-blue-300 light:text-blue-600 text-sm font-mono bg-linear-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/10 dark:to-purple-500/10 light:from-blue-100 light:to-purple-100 px-4 py-2 rounded-xl border border-blue-500/20 dark:border-blue-500/20 light:border-blue-400/30 shadow-inner backdrop-blur-sm">
                         <!-- Model name will be inserted here -->
                     </p>
                 </div>
@@ -947,7 +947,7 @@
 
                 <!-- Enhanced info section with better styling -->
                 <div
-                    class="mt-6 flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-xl border border-blue-500/10 dark:border-blue-500/10 light:border-blue-400/20">
+                    class="mt-6 flex items-center justify-center px-4 py-2 bg-linear-to-r from-blue-500/5 to-purple-500/5 rounded-xl border border-blue-500/10 dark:border-blue-500/10 light:border-blue-400/20">
                     <div class="flex items-center text-sm text-gray-400 dark:text-gray-400 light:text-gray-500">
                         <span>This may take a few moments, depending on the model size</span>
                     </div>
@@ -966,12 +966,12 @@
             style="background: var(--modal-bg); border: 1px solid var(--border-color); box-shadow: 0 25px 50px -12px var(--modal-overlay), 0 0 0 1px var(--border-color) inset, 0 1px 3px 0 var(--border-color) inset;">
             <!-- Animated background gradient -->
             <div
-                class="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-yellow-500/10 rounded-2xl">
+                class="absolute inset-0 bg-linear-to-br from-orange-500/10 via-transparent to-yellow-500/10 rounded-2xl">
             </div>
 
             <!-- Decorative border glow -->
             <div
-                class="absolute inset-0 rounded-2xl bg-gradient-to-r from-orange-500/30 via-yellow-500/20 to-orange-500/30 opacity-20">
+                class="absolute inset-0 rounded-2xl bg-linear-to-r from-orange-500/30 via-yellow-500/20 to-orange-500/30 opacity-20">
             </div>
 
             <div class="relative z-10">
@@ -980,7 +980,7 @@
                     <h2 id="ip-port-confirmation-title" class="text-2xl font-bold mb-2" style="color: #f97316;">
                         <i class="fas fa-exclamation-triangle mr-3"></i>Network Settings Checklist
                     </h2>
-                    <div class="w-20 h-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 mx-auto rounded-full"></div>
+                    <div class="w-20 h-0.5 bg-linear-to-r from-orange-500 to-yellow-500 mx-auto rounded-full"></div>
                 </div>
 
                 <!-- Main message -->
@@ -1069,7 +1069,7 @@
             style="background: var(--modal-bg); border: 1px solid var(--border-color); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
 
             <!-- Decorative background glow -->
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-rose-500 to-red-500"></div>
+            <div class="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-red-500 via-rose-500 to-red-500"></div>
 
             <div class="text-center mb-6 mt-2">
                 <div
