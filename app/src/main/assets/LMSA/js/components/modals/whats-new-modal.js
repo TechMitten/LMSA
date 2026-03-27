@@ -25,6 +25,46 @@ export const whatsNewModal = `
                     <div class="features-container overflow-y-auto grow px-1 py-2">
                 <div class="space-y-3">
                     <!-- (Premium feature removed) -->
+                            <div class="feature-item">
+                                <div class="relative overflow-hidden">
+                                    <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-emerald-500/10 to-green-700/5 rounded-full blur-xl">
+                                    </div>
+                                    <div class="flex items-start relative z-10">
+                                        <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-emerald-500/20 w-10 h-10 shadow-sm">
+                                            <i class="fas fa-file-import text-emerald-300"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center">
+                                                <h3 class="feature-title">Import/Export Fixed</h3>
+                                            </div>
+                                            <div class="feature-description">
+                                                <p class="mb-3">The Import/Export feature is now fully functional again.</p>
+                                                <p class="mb-3">We fixed the bug so backups and restores should now work reliably.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="relative overflow-hidden">
+                                    <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-cyan-500/10 to-blue-700/5 rounded-full blur-xl">
+                                    </div>
+                                    <div class="flex items-start relative z-10">
+                                        <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-cyan-500/20 w-10 h-10 shadow-sm">
+                                            <i class="fas fa-bars text-cyan-300"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center">
+                                                <h3 class="feature-title">Swipe to Open Side Menu</h3>
+                                            </div>
+                                            <div class="feature-description">
+                                                <p class="mb-3">You can now open the side menu by swiping in from the left edge of the screen for quicker navigation.</p>
+                                                <p class="mb-3">Prefer not to use gestures? You can disable this swipe action anytime in Settings.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                     <div class="feature-item">
                         <div class="relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-blue-600/10 to-blue-800/5 rounded-full blur-xl">
