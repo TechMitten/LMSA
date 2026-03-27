@@ -11,9 +11,20 @@ import { isAndroidWebView, isMobileDevice } from './utils.js';
 import { showExportConfirmationModal, hideExportConfirmationModal, checkAndShowWelcomeMessage } from './ui-manager.js';
 import { setActionToPerform, getActionToPerform } from './shared-state.js';
 import { getSavedSystemPrompts, restoreSavedSystemPrompts } from './saved-system-prompts.js';
+import { openPremiumModal } from './components/modals/premium-modal.js';
 
 // Variable to store the selected file for import
 let selectedImportFile = null;
+
+/**
+ * Checks if the user has premium status
+ * @returns {boolean} - True if user is premium, false otherwise
+ */
+function isPremiumUser() {
+    return window.AndroidBilling && 
+           typeof window.AndroidBilling.checkPremiumStatus === 'function' && 
+           window.AndroidBilling.checkPremiumStatus();
+}
 
 /**
  * Initializes the export/import functionality
@@ -23,6 +34,11 @@ export function initializeExportImport() {
     // Add event listeners
     if (exportChatsButton) {
         exportChatsButton.addEventListener('click', () => {
+            // Check if user is premium
+            if (!isPremiumUser()) {
+                openPremiumModal('Import/Export');
+                return;
+            }
             // Close the sidebar first
             closeSidebar();
             // Show the export confirmation modal
@@ -66,6 +82,11 @@ export function initializeExportImport() {
 
     if (importChatsButton && importChatsInput) {
         importChatsButton.addEventListener('click', () => {
+            // Check if user is premium
+            if (!isPremiumUser()) {
+                openPremiumModal('Import/Export');
+                return;
+            }
             // Close the sidebar first
             closeSidebar();
             // Trigger the file input

@@ -12,6 +12,7 @@ import {
     welcomeModelsBtn, welcomeNewChatBtn, welcomeHelpBtn
 } from './dom-elements.js';
 import { showSettingsModal, hideSettingsModal } from './settings-modal-manager.js';
+import { openPremiumModal } from './components/modals/premium-modal.js';
 import { getEnterSendsNewline, clearOpenRouterApiKey, clearLMStudioApiToken } from './settings-manager.js';
 import {
     showWelcomeMessage, hideWelcomeMessage, toggleSidebar, closeSidebar, showLoadingIndicator,
@@ -61,6 +62,16 @@ function isConfirmationModalVisible() {
     return !!(confirmationModal &&
         !confirmationModal.classList.contains('hidden') &&
         confirmationModal.style.display !== 'none');
+}
+
+/**
+ * Checks if the user has premium status
+ * @returns {boolean} - True if user is premium, false otherwise
+ */
+function isPremiumUser() {
+    return window.AndroidBilling && 
+           typeof window.AndroidBilling.checkPremiumStatus === 'function' && 
+           window.AndroidBilling.checkPremiumStatus();
 }
 
 /**
@@ -1584,6 +1595,11 @@ export function initializeEventHandlers() {
 
         // Add the event listener to the new button
         newExportChatsButton.addEventListener('click', () => {
+            // Check if user is premium
+            if (!isPremiumUser()) {
+                openPremiumModal('Import/Export');
+                return;
+            }
             // Close the sidebar first
             closeSidebarExport();
 
@@ -1633,6 +1649,11 @@ export function initializeEventHandlers() {
 
         // Add the event listener to the new button
         newImportChatsButton.addEventListener('click', () => {
+            // Check if user is premium
+            if (!isPremiumUser()) {
+                openPremiumModal('Import/Export');
+                return;
+            }
             // Close the sidebar first
             closeSidebarExport();
 
@@ -2080,6 +2101,11 @@ function handleOptionsButtonClick() {
 
                 // Add the event listener to the new button
                 newExportChatsButton.addEventListener('click', () => {
+                    // Check if user is premium
+                    if (!isPremiumUser()) {
+                        openPremiumModal('Import/Export');
+                        return;
+                    }
                     // Close the sidebar first
                     closeSidebarExport();
 
@@ -2134,6 +2160,11 @@ function handleOptionsButtonClick() {
 
                 // Add the event listener to the new button
                 newImportChatsButton.addEventListener('click', () => {
+                    // Check if user is premium
+                    if (!isPremiumUser()) {
+                        openPremiumModal('Import/Export');
+                        return;
+                    }
                     // Close the sidebar first
                     closeSidebarExport();
 
