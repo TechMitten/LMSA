@@ -253,18 +253,16 @@ function selectAvatar(url, btnElement) {
 }
 
 function openCreateModal(editMode = false) {
-    // Check premium status for creating new templates
+    // Check premium status for custom templates (both create and edit)
     // Paid users bypass this, free users get the premium modal
-    if (!editMode) {
-        const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
-        if (!isPremium) {
-            if (typeof window.openPremiumModal === 'function') {
-                window.openPremiumModal('Custom Templates');
-            } else {
-                alert('This feature is reserved for premium users.');
-            }
-            return;
+    const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
+    if (!isPremium) {
+        if (typeof window.openPremiumModal === 'function') {
+            window.openPremiumModal('Custom Templates');
+        } else {
+            alert('This feature is reserved for premium users.');
         }
+        return;
     }
 
     document.body.style.overflow = 'hidden';
