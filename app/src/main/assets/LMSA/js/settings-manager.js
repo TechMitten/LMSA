@@ -9,6 +9,7 @@ import {
   openRouterToggleCheckbox,
   openRouterApiKeyInput,
   showModelLabelCheckbox,
+  enableSwipeSidebarCheckbox,
 } from "./dom-elements.js";
 
 import { applyThinkingVisibility, refreshAllMessages, applyModelLabelVisibility } from "./ui-manager.js";
@@ -41,6 +42,7 @@ let showChatScrollbar = false; // Show scrollbar in chat message area
 let showScrollToBottom = true; // Show scroll to bottom button in chat
 let chatFontFamily = 'system-ui, sans-serif'; // Font family for chat message bubbles
 let chatFontSize = '16px'; // Font size for chat message bubbles
+let enableSwipeSidebar = true; // Use horizontal swipe to open sidebar
 
 const ALLOWED_CHAT_FONT_SIZES = ['12px', '14px', '16px', '20px', '24px'];
 
@@ -723,6 +725,43 @@ export function loadShowModelLabelSetting() {
     // Add event listener for the checkbox
     showModelLabelCheckbox.addEventListener("change", saveShowModelLabelSetting);
   }
+}
+
+/**
+ * Loads the enable swipe sidebar setting from localStorage
+ */
+export function loadEnableSwipeSidebarSetting() {
+  if (enableSwipeSidebarCheckbox) {
+    const saved = localStorage.getItem("enableSwipeSidebar");
+    if (saved === null || saved === "true") {
+      enableSwipeSidebarCheckbox.checked = true;
+      enableSwipeSidebar = true;
+    } else {
+      enableSwipeSidebarCheckbox.checked = false;
+      enableSwipeSidebar = false;
+    }
+
+    // Add event listener for the checkbox
+    enableSwipeSidebarCheckbox.addEventListener("change", saveEnableSwipeSidebarSetting);
+  }
+}
+
+/**
+ * Saves the enable swipe sidebar setting to localStorage
+ */
+export function saveEnableSwipeSidebarSetting() {
+  if (enableSwipeSidebarCheckbox) {
+    enableSwipeSidebar = enableSwipeSidebarCheckbox.checked;
+    localStorage.setItem("enableSwipeSidebar", enableSwipeSidebar);
+  }
+}
+
+/**
+ * Gets the current enable swipe sidebar setting
+ * @returns {boolean} - True if swipe-to-open sidebar is enabled
+ */
+export function getEnableSwipeSidebar() {
+  return enableSwipeSidebar;
 }
 
 /**
@@ -1517,6 +1556,7 @@ export function loadSettings() {
   loadShowChatScrollbarSetting();
   loadShowScrollToBottomSetting();
   loadChatFontSettings();
+  loadEnableSwipeSidebarSetting();
   // TTS voice selection will be initialized separately when settings modal opens
 }
 

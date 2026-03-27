@@ -113,3 +113,17 @@ function keepScreenOn(enabled) {
         window.AndroidPower.keepScreenOn(enabled);
     }
 }
+
+/**
+ * Triggers device haptic feedback
+ * @param {boolean} light - True for a light tap, false for a standard virtual key feel
+ */
+function triggerHapticFeedback(light = false) {
+    if (window.AndroidHaptics) {
+        if (light && typeof window.AndroidHaptics.triggerLightHaptic === 'function') {
+            window.AndroidHaptics.triggerLightHaptic();
+        } else if (typeof window.AndroidHaptics.triggerHapticFeedback === 'function') {
+            window.AndroidHaptics.triggerHapticFeedback();
+        }
+    }
+}

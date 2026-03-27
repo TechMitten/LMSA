@@ -1,6 +1,7 @@
 // Sidebar touch handler for improved touch scrolling on mobile devices
 import { debugError, debugLog } from './utils.js';
 import { closeSidebar, updateHamburgerIcon } from './ui-manager.js';
+import { getEnableSwipeSidebar } from './settings-manager.js';
 
 /**
  * Initializes touch handlers for the sidebar to improve scrolling on mobile devices
@@ -28,12 +29,13 @@ export function initializeSidebarTouchHandler() {
 
     let isSidebarSwiping = false;
     let isEdgeSwipeOpening = false;
+    let hasLatchedHaptic = false;
     const SIDEBAR_CLOSE_SWIPE_THRESHOLD = 0.3; // close after 30% swipe
-    const SIDEBAR_OPEN_SWIPE_THRESHOLD = 0.2; // open after 20% swipe
-    const EDGE_SWIPE_ZONE = 24; // left gap for opening gesture
-    const SWIPE_OPEN_MIN_DISTANCE = 40; // minimum to prevent accidental edges
+    const SIDEBAR_OPEN_SWIPE_THRESHOLD = 0.15; // open after 15% swipe
+    const EDGE_SWIPE_ZONE = 40; // left gap for opening gesture (matched to native exclusion zone)
+    const SWIPE_OPEN_MIN_DISTANCE = 28; // reduced to make opening easier with exclusion limit
     const SWIPE_CLOSE_MIN_DISTANCE = 48;
-    const SWIPE_CLOSE_MAX_VERTICAL_DRIFT = 72;
+    const SWIPE_CLOSE_MAX_VERTICAL_DRIFT = 120; // increased tolerance for vertical movement
 
     function setSidebarGestureState(state) {
         window.__sidebarGestureState = state;
@@ -131,6 +133,17 @@ export function initializeSidebarTouchHandler() {
             const translateX = Math.max(-sidebarWidth, swipeDeltaX);
             sidebar.style.transition = 'none';
             sidebar.style.transform = `translateX(${translateX}px)`;
+
+            // Haptic feedback when crossing the commit threshold
+            const closeThreshold = Math.max(SWIPE_CLOSE_MIN_DISTANCE, sidebarWidth * SIDEBAR_CLOSE_SWIPE_THRESHOLD);
+            if (!hasLatchedHaptic && Math.abs(swipeDeltaX) >= closeThreshold) {
+                if (typeof window.triggerHapticFeedback === 'function') {
+                    window.triggerHapticFeedback(true);
+                }
+                hasLatchedHaptic = true;
+            } else if (hasLatchedHaptic && Math.abs(swipeDeltaX) < closeThreshold) {
+                hasLatchedHaptic = false; // Reset if they pull it back
+            }
         } else {
             // Stop propagation but don't prevent default scrolling for regular interactions
             e.stopPropagation();
@@ -161,15 +174,21 @@ export function initializeSidebarTouchHandler() {
         // Reset dragging state
         isDragging = false;
 
+        const sidebarWidth = sidebar.offsetWidth || window.innerWidth;
         if (isSidebarSwiping) {
-            const sidebarWidth = sidebar.offsetWidth || window.innerWidth;
+            const velocity = Math.abs(swipeDeltaX) / touchDuration; // px/ms
+            const isFlick = velocity > 0.5 && Math.abs(swipeDeltaX) > 20;
+
             const shouldClose = (
-                Math.abs(swipeDeltaX) >= Math.max(SWIPE_CLOSE_MIN_DISTANCE, sidebarWidth * SIDEBAR_CLOSE_SWIPE_THRESHOLD) &&
+                (Math.abs(swipeDeltaX) >= Math.max(SWIPE_CLOSE_MIN_DISTANCE, sidebarWidth * SIDEBAR_CLOSE_SWIPE_THRESHOLD) || isFlick) &&
                 Math.abs(swipeDeltaY) <= SWIPE_CLOSE_MAX_VERTICAL_DRIFT &&
                 Math.abs(swipeDeltaX) > Math.abs(swipeDeltaY)
             );
 
             if (shouldClose) {
+                if (typeof window.triggerHapticFeedback === 'function') {
+                    window.triggerHapticFeedback(false);
+                }
                 closeSidebar();
             } else {
                 // Return to original position if swipe was insufficient
@@ -190,9 +209,13 @@ export function initializeSidebarTouchHandler() {
             Math.abs(swipeDeltaX) > Math.abs(swipeDeltaY)
         ) {
             // Fallback behavior: quick swipe without previous move
+            if (typeof window.triggerHapticFeedback === 'function') {
+                window.triggerHapticFeedback(false);
+            }
             closeSidebar();
         }
     }, { passive: true, capture: true });
+
 
     // Handle scroll events to maintain the no-highlight state during scrolling
     sidebar.addEventListener('scroll', function() {
@@ -201,7 +224,7 @@ export function initializeSidebarTouchHandler() {
 
     // Support opening the sidebar from a left-edge swipe when closed
     document.addEventListener('touchstart', function(e) {
-        if (!isPhoneLayout() || sidebar.classList.contains('active')) {
+        if (!isPhoneLayout() || sidebar.classList.contains('active') || !getEnableSwipeSidebar()) {
             return;
         }
 
@@ -214,6 +237,8 @@ export function initializeSidebarTouchHandler() {
         if (touchStartX <= EDGE_SWIPE_ZONE) {
             isEdgeSwipeOpening = true;
             setSidebarGestureState('opening');
+            scrollStartTime = Date.now();
+            hasLatchedHaptic = false;
 
             // Prepare sidebar for drag-open in real-time
             sidebar.classList.remove('hidden');
@@ -262,6 +287,17 @@ export function initializeSidebarTouchHandler() {
             if (sidebarOverlay) {
                 sidebarOverlay.style.opacity = `${0.5 * progress}`;
             }
+
+            // Haptic feedback when crossing the commit threshold
+            const openThreshold = Math.max(SWIPE_OPEN_MIN_DISTANCE, sidebarWidth * SIDEBAR_OPEN_SWIPE_THRESHOLD);
+            if (!hasLatchedHaptic && swipeDeltaX >= openThreshold) {
+                if (typeof window.triggerHapticFeedback === 'function') {
+                    window.triggerHapticFeedback(true);
+                }
+                hasLatchedHaptic = true;
+            } else if (hasLatchedHaptic && swipeDeltaX < openThreshold) {
+                hasLatchedHaptic = false;
+            }
         }
     }, { passive: false, capture: true });
 
@@ -271,14 +307,20 @@ export function initializeSidebarTouchHandler() {
         const sidebarWidth = sidebar.offsetWidth || window.innerWidth;
         const openThreshold = Math.max(SWIPE_OPEN_MIN_DISTANCE, sidebarWidth * SIDEBAR_OPEN_SWIPE_THRESHOLD);
         const openPercent = swipeDeltaX / sidebarWidth;
+        const touchDuration = Date.now() - scrollStartTime;
+        const velocity = swipeDeltaX / touchDuration; // px/ms
+        const isFlick = velocity > 0.5 && swipeDeltaX > 20;
 
-        const shouldOpen = (openPercent >= 0.5 || swipeDeltaX >= openThreshold) &&
-            Math.abs(swipeDeltaY) <= SWIPE_CLOSE_MAX_VERTICAL_DRIFT &&
-            swipeDeltaX > Math.abs(swipeDeltaY);
+        const shouldOpen = (openPercent >= 0.35 || swipeDeltaX >= openThreshold || isFlick) &&
+            Math.abs(swipeDeltaY) <= SWIPE_CLOSE_MAX_VERTICAL_DRIFT;
+
 
         const sidebarOverlay = document.getElementById('sidebar-overlay');
 
         if (shouldOpen) {
+            if (typeof window.triggerHapticFeedback === 'function') {
+                window.triggerHapticFeedback(false);
+            }
             // Animate to fully open after following finger
             sidebar.classList.add('active');
             sidebar.style.transition = 'transform 180ms ease-out';

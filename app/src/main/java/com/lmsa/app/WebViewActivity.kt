@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
+import android.graphics.Rect
 import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -399,6 +400,7 @@ class WebViewActivity : AppCompatActivity() {
         webView.addJavascriptInterface(BillingInterface(), "AndroidBilling")
         webView.addJavascriptInterface(UsageLimiterInterface(), "AndroidUsageLimiter")
         webView.addJavascriptInterface(PowerManagementInterface(), "AndroidPower")
+        webView.addJavascriptInterface(HapticInterface(), "AndroidHaptics")
 
         webView.webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
@@ -505,6 +507,30 @@ class WebViewActivity : AppCompatActivity() {
         checkAndRequestStoragePermissions()
         setupBackPressHandler()
         webView.loadUrl("file:///android_asset/LMSA/index.html")
+        
+        // Add layout listener to update gesture exclusion rects when layout changes
+        webView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            updateGestureExclusionRects()
+        }
+    }
+
+    private fun updateGestureExclusionRects() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val webView: WebView = findViewById(R.id.webView)
+            val density = resources.displayMetrics.density
+            
+            // Reverting to a strict 200dp height cap, as providing a full-height rect 
+            // can cause some Android versions (especially on Pixel/Samsung) to reject 
+            // the exclusion entirely for the back gesture.
+            val exclusionWidth = (40 * density).toInt()
+            val exclusionHeightLimit = (200 * density).toInt()
+            val actualExclusionHeight = Math.min(webView.height, exclusionHeightLimit)
+            val topOffset = (webView.height - actualExclusionHeight) / 2
+            
+            val exclusionRect = Rect(0, topOffset, exclusionWidth, topOffset + actualExclusionHeight)
+            webView.systemGestureExclusionRects = listOf(exclusionRect)
+            Log.d(TAG, "Updated system gesture exclusion rects: $exclusionRect")
+        }
     }
 
 
@@ -2037,6 +2063,28 @@ class WebViewActivity : AppCompatActivity() {
                 } else {
                     window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                     Log.d(TAG, "Keep screen on: disabled")
+                }
+            }
+        }
+    }
+
+    inner class HapticInterface {
+        @JavascriptInterface
+        fun triggerHapticFeedback() {
+            runOnUiThread {
+                val webView: WebView = findViewById(R.id.webView)
+                webView.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+            }
+        }
+        
+        @JavascriptInterface
+        fun triggerLightHaptic() {
+            runOnUiThread {
+                val webView: WebView = findViewById(R.id.webView)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                    webView.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+                } else {
+                    webView.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
                 }
             }
         }

@@ -38,12 +38,12 @@
 
                 <TextView
                     android:id="@+id/ad_headline"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="#F1F5F9"
                     android:textSize="15sp"
                     android:textStyle="bold"
-                    android:maxLines="1"
+                    android:maxLines="2"
                     android:ellipsize="end" />
 
                 <TextView
