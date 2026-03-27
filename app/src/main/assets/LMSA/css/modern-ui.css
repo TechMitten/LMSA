@@ -823,7 +823,7 @@ body.light-theme #active-character-display {
   /* Reduced minimum width to allow smaller button */
   color: #e0f2fe;
   transition: min-width 0.2s ease, padding 0.2s ease;
-}}
+}
 
 #chat-form #send-button i,
 #chat-form #stop-button i {
@@ -1612,14 +1612,38 @@ body.light-theme .welcome-content .modern-button-secondary:hover {
 }
 
 /* Welcome Screen Enhancement */
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 #welcome-message {
   background-image:
     radial-gradient(circle at 20% 25%, rgba(59, 130, 246, 0.08) 0%, transparent 30%),
     radial-gradient(circle at 80% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
     radial-gradient(circle at 40% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 35%);
-  overflow: hidden;
-  overscroll-behavior: none;
-  touch-action: none;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  touch-action: pan-y !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+#welcome-message::-webkit-scrollbar,
+#welcome-message::-webkit-scrollbar-track,
+#welcome-message::-webkit-scrollbar-thumb,
+#welcome-message::-webkit-scrollbar-thumb:hover,
+#chat-container::-webkit-scrollbar,
+#chat-container::-webkit-scrollbar-track,
+#chat-container::-webkit-scrollbar-thumb,
+#chat-container::-webkit-scrollbar-thumb:hover {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 
 /* Add more visible background gradients for light mode */
@@ -1640,6 +1664,7 @@ body.light-theme #welcome-message {
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: var(--modern-shadow-lg), 0 0 20px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   padding: 2.5rem 2rem;
+  margin: auto;
   /* Fixed base padding */
   max-width: min(500px, 95%);
   width: 95%;

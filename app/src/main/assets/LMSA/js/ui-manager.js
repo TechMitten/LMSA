@@ -1886,6 +1886,7 @@ export function ensureWelcomeMessagePosition() {
 
         // Make sure welcome message is visible (only if it should be)
         welcomeMessage.style.display = 'flex';
+        welcomeMessage.style.flexDirection = 'column';
         welcomeMessage.style.visibility = 'visible';
         welcomeMessage.style.opacity = '1';
 
@@ -1900,128 +1901,46 @@ export function ensureWelcomeMessagePosition() {
 
         // Ensure proper alignment
         welcomeMessage.style.alignItems = 'center';
-        welcomeMessage.style.justifyContent = 'center';
+        welcomeMessage.style.justifyContent = 'flex-start';
+        welcomeMessage.style.overflowY = 'auto';
+        welcomeMessage.style.webkitOverflowScrolling = 'touch';
 
         // Prevent unwanted scrolling but allow content to be visible
-        welcomeMessage.style.overflow = 'visible';
+        welcomeMessage.style.overflowX = 'hidden';
+        welcomeMessage.style.paddingTop = '72px';
+        welcomeMessage.style.paddingBottom = '140px';
 
-        // Check if model banner is visible and adjust welcome message position
+        // Handle dynamic top padding for the model banner (if visible)
         const modelWrapper = document.getElementById('loaded-model-wrapper');
-        if (modelWrapper && modelWrapper.style.display !== 'none' && !modelWrapper.classList.contains('hidden')) {
-            // Get the height of the model wrapper
-            const modelHeight = modelWrapper.offsetHeight;
-
-            // Add minimal top padding to account for the model banner without creating large gaps
-            // Use smaller padding values to reduce the gap
-            welcomeMessage.style.paddingTop = `${modelHeight + 8}px`;
-
-            // Adjust the content container to maintain proper centering
-            const welcomeContent = welcomeMessage.querySelector('.welcome-content');
-            if (welcomeContent) {
-                // Check if character icon is enabled
-                const activeCharacterDisplay = document.getElementById('active-character-display');
-                const isCharacterActive = activeCharacterDisplay &&
-                    !activeCharacterDisplay.classList.contains('hidden') &&
-                    activeCharacterDisplay.style.display !== 'none';
-
-                // Center the welcome content vertically within the available space
-                welcomeMessage.style.alignItems = 'center';
-
-                // Add top margin to icon container inside welcome content to prevent touching top edge
-                const iconContainer = welcomeContent.querySelector('.icon-container');
-                if (iconContainer) {
-                    // Check screen size and apply appropriate margin
-                    if (window.innerWidth <= 320 && window.innerHeight <= 480) {
-                        // Extra margin for extremely small screens like 320x480
-                        iconContainer.style.marginTop = '2.5rem';
-                    } else if (window.innerWidth <= 320 && window.innerHeight <= 568) {
-                        // Extra margin for very small screens like iPhone SE (320x568)
-                        iconContainer.style.marginTop = '2.25rem';
-                    } else if (window.innerWidth <= 320) {
-                        // For all other 320px width screens
-                        iconContainer.style.marginTop = '2rem';
-                    } else if ((window.innerWidth >= 343 && window.innerWidth <= 345) &&
-                        (window.innerHeight >= 880 && window.innerHeight <= 884)) {
-                        // Special handling for 344x882 screens
-                        iconContainer.style.marginTop = '2rem';
-                    } else if ((window.innerWidth >= 359 && window.innerWidth <= 361) &&
-                        (window.innerHeight >= 639 && window.innerHeight <= 641)) {
-                        // Special handling for 360x640 screens
-                        iconContainer.style.marginTop = '1.75rem';
-                    } else if (window.innerWidth <= 375) {
-                        // For other small screens up to 375px width
-                        iconContainer.style.marginTop = '1.75rem';
-                    } else {
-                        // Default for all other screens
-                        iconContainer.style.marginTop = '1.5rem';
-                    }
-
-                    // Ensure the icon container is visible
-                    iconContainer.style.position = 'relative';
-                    iconContainer.style.zIndex = '10';
-                    iconContainer.style.transform = 'translateY(0)';
-                }
-
-                // Adjust margins to maintain proper spacing
-                welcomeContent.style.marginTop = '0';
-                welcomeContent.style.marginBottom = isCharacterActive ? '1.5rem' : '0.5rem';
-            }
+        const isModelVisible = modelWrapper && modelWrapper.style.display !== 'none' && !modelWrapper.classList.contains('hidden');
+        if (isModelVisible) {
+            const modelHeight = modelWrapper.offsetHeight || 44;
+            welcomeMessage.style.paddingTop = `${modelHeight + 72}px`;
         } else {
-            // Reset padding if model banner is not visible
-            welcomeMessage.style.paddingTop = '0';
-            // Reset alignment
-            welcomeMessage.style.alignItems = 'center';
+            welcomeMessage.style.paddingTop = '72px';
+        }
 
-            // Reset margins on welcome content
-            const welcomeContent = welcomeMessage.querySelector('.welcome-content');
-            if (welcomeContent) {
-                // Check if character icon is enabled
-                const activeCharacterDisplay = document.getElementById('active-character-display');
-                const isCharacterActive = activeCharacterDisplay &&
-                    !activeCharacterDisplay.classList.contains('hidden') &&
-                    activeCharacterDisplay.style.display !== 'none';
+        // Apply robust layout to the content container
+        const welcomeContent = welcomeMessage.querySelector('.welcome-content');
+        if (welcomeContent) {
+            // Using auto margin with flex-start parent is the most robust way to center content
+            // while allowing it to flow correctly when it exceeds the viewport height.
+            welcomeContent.style.margin = 'auto';
+            welcomeContent.style.position = 'relative';
+            welcomeContent.style.zIndex = '5';
 
-                // Add top margin to icon container inside welcome content to prevent touching top edge
-                const iconContainer = welcomeContent.querySelector('.icon-container');
-                if (iconContainer) {
-                    // Check screen size and apply appropriate margin
-                    if (window.innerWidth <= 320 && window.innerHeight <= 480) {
-                        // Extra margin for extremely small screens like 320x480
-                        iconContainer.style.marginTop = '2.5rem';
-                    } else if (window.innerWidth <= 320 && window.innerHeight <= 568) {
-                        // Extra margin for very small screens like iPhone SE (320x568)
-                        iconContainer.style.marginTop = '2.25rem';
-                    } else if (window.innerWidth <= 320) {
-                        // For all other 320px width screens
-                        iconContainer.style.marginTop = '2rem';
-                    } else if ((window.innerWidth >= 343 && window.innerWidth <= 345) &&
-                        (window.innerHeight >= 880 && window.innerHeight <= 884)) {
-                        // Special handling for 344x882 screens
-                        iconContainer.style.marginTop = '2rem';
-                    } else if ((window.innerWidth >= 359 && window.innerWidth <= 361) &&
-                        (window.innerHeight >= 639 && window.innerHeight <= 641)) {
-                        // Special handling for 360x640 screens
-                        iconContainer.style.marginTop = '1.75rem';
-                    } else if (window.innerWidth <= 375) {
-                        // For other small screens up to 375px width
-                        iconContainer.style.marginTop = '1.75rem';
-                    } else {
-                        // Default for all other screens
-                        iconContainer.style.marginTop = '1.5rem';
-                    }
-
-                    // Ensure the icon container is visible
-                    iconContainer.style.position = 'relative';
-                    iconContainer.style.zIndex = '10';
-                    iconContainer.style.transform = 'translateY(0)';
-                }
-
-                welcomeContent.style.marginTop = '0';
-                welcomeContent.style.marginBottom = isCharacterActive ? '1.5rem' : '0.5rem';
+            // Ensure consistent icon spacing regardless of screen-specific hacks
+            const iconContainer = welcomeContent.querySelector('.icon-container');
+            if (iconContainer) {
+                iconContainer.style.marginTop = '1.5rem';
+                iconContainer.style.marginBottom = '1.25rem';
+                iconContainer.style.position = 'relative';
+                iconContainer.style.zIndex = '10';
             }
         }
     }
 }
+
 
 /**
  * Checks if the welcome message should be shown (when there are no messages)
