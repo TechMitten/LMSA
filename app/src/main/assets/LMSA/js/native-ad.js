@@ -23,7 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Check for overlays that should hide the ad
         const sidebar = document.getElementById('sidebar');
-        const isSidebarOpen = sidebar && sidebar.classList.contains('active');
+        // The sidebar doesn't have 'hidden' class during opening/closing transitions
+        const isSidebarVisible = sidebar && !sidebar.classList.contains('hidden');
         
         const settingsModal = document.getElementById('settings-modal');
         const isSettingsOpen = settingsModal && !settingsModal.classList.contains('hidden');
@@ -49,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
             parent = parent.parentElement;
         }
 
-        const shouldBeVisible = !isAncestorHidden && !isSidebarOpen && !isSettingsOpen && !isModelOpen && !hasOtherModal;
+        const shouldBeVisible = !isAncestorHidden && !isSidebarVisible && !isSettingsOpen && !isModelOpen && !hasOtherModal;
 
         if (shouldBeVisible) {
             // Show placeholder and divider to ensure they take space and are detectable by getBoundingClientRect
@@ -80,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             // For dividers and placeholder, we might want to hide them if sidebar is open
-            if (isSidebarOpen || isSettingsOpen || isModelOpen || hasOtherModal) {
+            if (isSidebarVisible || isSettingsOpen || isModelOpen || hasOtherModal) {
                 placeholder.style.visibility = 'hidden';
                 if (divider) divider.style.visibility = 'hidden';
             } else if (isAncestorHidden) {

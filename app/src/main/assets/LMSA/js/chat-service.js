@@ -201,6 +201,10 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
     // Reset the flags
     isGenerating = true;
 
+    if (window.keepScreenOn && typeof window.keepScreenOn === 'function') {
+        window.keepScreenOn(true);
+    }
+
     // Abort any ongoing smart replies generation to free up concurrent connection limits
     if (smartReplyAbortController) {
         debugLog('Aborting pending smart replies for new generation');
@@ -1024,6 +1028,10 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         }
     } finally {
         debugLog('Finalizing text generation...');
+
+        if (window.keepScreenOn && typeof window.keepScreenOn === 'function') {
+            window.keepScreenOn(false);
+        }
 
         // Clean up all timeouts
         if (streamingTimeoutId) {

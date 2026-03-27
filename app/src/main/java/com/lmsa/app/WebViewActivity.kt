@@ -53,12 +53,9 @@ import kotlinx.coroutines.launch
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.interstitial.InterstitialAd
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.AdLoader
@@ -81,11 +78,8 @@ class WebViewActivity : AppCompatActivity() {
     private var isImageFile: Boolean = false
     
     private var nativeAd: NativeAd? = null
+    private var lastAdLoadTime: Long = 0L
     private val NATIVE_AD_UNIT_ID = "ca-app-pub-1388425042154340/5848689323"
-
-    private var isInterstitialAdLoading = false
-    private var isInterstitialAdShowing = false
-    private val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-1388425042154340/3976255369"
 
 
 
@@ -397,12 +391,12 @@ class WebViewActivity : AppCompatActivity() {
 
         // Add JavaScript interface for file operations
         webView.addJavascriptInterface(FileOperationInterface(), "AndroidFileOps")
-
         webView.addJavascriptInterface(ReviewInterface(), "AndroidReview")
         // Add JavaScript interface for TTS
         webView.addJavascriptInterface(TTSInterface(), "AndroidTTS")
         webView.addJavascriptInterface(BillingInterface(), "AndroidBilling")
         webView.addJavascriptInterface(UsageLimiterInterface(), "AndroidUsageLimiter")
+        webView.addJavascriptInterface(PowerManagementInterface(), "AndroidPower")
 
         webView.webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
@@ -590,6 +584,7 @@ class WebViewActivity : AppCompatActivity() {
                 }
                 nativeAd?.destroy()
                 nativeAd = ad
+                lastAdLoadTime = System.currentTimeMillis()
                 populateNativeAdView(ad)
             }
             .withAdListener(object : com.google.android.gms.ads.AdListener() {
@@ -610,17 +605,22 @@ class WebViewActivity : AppCompatActivity() {
         val bodyView = adView.findViewById<TextView>(R.id.ad_body)
         val iconView = adView.findViewById<ImageView>(R.id.ad_app_icon)
         val ctaView = adView.findViewById<Button>(R.id.ad_call_to_action)
+        adView.findViewById<View>(R.id.ad_container_inner)?.setOnClickListener { }
 
         headlineView.text = nativeAd.headline
         adView.headlineView = headlineView
+        headlineView.isClickable = false
+        headlineView.isFocusable = false
 
         if (nativeAd.body == null) {
-            bodyView.visibility = View.INVISIBLE
+            bodyView.visibility = View.GONE
         } else {
             bodyView.visibility = View.VISIBLE
             bodyView.text = nativeAd.body
         }
         adView.bodyView = bodyView
+        bodyView.isClickable = false
+        bodyView.isFocusable = false
 
         if (nativeAd.icon == null) {
             iconView.visibility = View.GONE
@@ -629,9 +629,11 @@ class WebViewActivity : AppCompatActivity() {
             iconView.visibility = View.VISIBLE
         }
         adView.iconView = iconView
+        iconView.isClickable = false
+        iconView.isFocusable = false
 
         if (nativeAd.callToAction == null) {
-            ctaView.visibility = View.INVISIBLE
+            ctaView.visibility = View.GONE
         } else {
             ctaView.visibility = View.VISIBLE
             ctaView.text = nativeAd.callToAction
@@ -639,6 +641,10 @@ class WebViewActivity : AppCompatActivity() {
         adView.callToActionView = ctaView
 
         adView.setNativeAd(nativeAd)
+        
+        // Ensure the NativeAdView itself doesn't intercept clicks
+        adView.isClickable = false
+        adView.isFocusable = false
 
         val adContainer = findViewById<FrameLayout>(R.id.nativeAdContainer)
         adContainer.removeAllViews()
@@ -1217,11 +1223,15 @@ class WebViewActivity : AppCompatActivity() {
                     return@runOnUiThread
                 }
                 
-                if (nativeAd == null) {
+                val adContainer = findViewById<FrameLayout>(R.id.nativeAdContainer)
+                
+                // Navigation-based refresh: If ad was hidden and shows up again after a while, refresh it
+                val shouldRefresh = nativeAd == null || (adContainer.visibility == View.GONE && System.currentTimeMillis() - lastAdLoadTime > 60000)
+                
+                if (shouldRefresh) {
                     loadNativeAd()
                 }
 
-                val adContainer = findViewById<FrameLayout>(R.id.nativeAdContainer)
                 adContainer.visibility = View.VISIBLE
                 
                 val layoutParams = adContainer.layoutParams as androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
@@ -1998,6 +2008,21 @@ class WebViewActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e(TAG, "Error resetting voice: ${e.message}")
                 false
+            }
+        }
+    }
+
+    inner class PowerManagementInterface {
+        @JavascriptInterface
+        fun keepScreenOn(enabled: Boolean) {
+            runOnUiThread {
+                if (enabled) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    Log.d(TAG, "Keep screen on: enabled")
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    Log.d(TAG, "Keep screen on: disabled")
+                }
             }
         }
     }

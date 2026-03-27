@@ -517,7 +517,7 @@ async function loadModel(modelId) {
 
         // OpenRouter: model selection
         if (getUseOpenRouter()) {
-            const showAdDuringLoad = !isAutoLoadingDefaultModel && shouldShowAds();
+            const showAdDuringLoad = false;
 
             if (showAdDuringLoad) {
                 console.log('Showing interstitial ad during OpenRouter model load for:', modelId);

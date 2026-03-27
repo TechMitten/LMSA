@@ -103,3 +103,13 @@ function isModelLoadedForAds() {
     // Check the global currentLoadedModel variable (set by api-service.js)
     return window.currentLoadedModel && window.currentLoadedModel !== null;
 }
+
+/**
+ * Keeps the screen on or allows it to turn off
+ * @param {boolean} enabled - True to keep screen on, false to allow it to turn off
+ */
+function keepScreenOn(enabled) {
+    if (window.AndroidPower && typeof window.AndroidPower.keepScreenOn === 'function') {
+        window.AndroidPower.keepScreenOn(enabled);
+    }
+}
