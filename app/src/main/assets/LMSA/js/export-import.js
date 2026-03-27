@@ -283,10 +283,25 @@ export function initializeExportImport() {
                     console.log(`Chat ${key}: "${title}"`);
                 }
 
-                // Update the chat history in localStorage
-                localStorage.setItem('chatHistory', JSON.stringify(updatedChatData));
+                // Update the chat history using the same strategy as saveChatHistory
+                // This ensures compatibility with Android internal storage
+                const chatHistoryJSON = JSON.stringify(updatedChatData);
 
-                // Force a reload of the chat history from localStorage
+                // Check if native storage is available, use it; otherwise fall back to localStorage
+                if (window.AndroidFileOps && typeof window.AndroidFileOps.saveData === 'function') {
+                    const success = window.AndroidFileOps.saveData('chatHistory', chatHistoryJSON);
+                    if (success) {
+                        console.log('Successfully saved imported chat history to Android internal storage');
+                    } else {
+                        console.error('Failed to save to Android internal storage, falling back to localStorage');
+                        localStorage.setItem('chatHistory', chatHistoryJSON);
+                    }
+                } else {
+                    // Fallback for non-Android environments
+                    localStorage.setItem('chatHistory', chatHistoryJSON);
+                }
+
+                // Force a reload of the chat history from the appropriate storage location
                 // This ensures the chatHistoryData variable in chat-service.js is updated
                 loadChatHistory();
 
@@ -684,6 +699,9 @@ function hideImportSuccessModal() {
                 importSuccessModal.classList.add('hidden');
                 modalContent.classList.remove('animate-modal-out');
 
+                // Collapse the options menu after import
+                collapseOptionsMenu();
+
                 // Show the sidebar so the user can see the imported chats
                 showSidebar();
 
@@ -693,11 +711,52 @@ function hideImportSuccessModal() {
         } else {
             importSuccessModal.classList.add('hidden');
 
+            // Collapse the options menu after import
+            collapseOptionsMenu();
+
             // Show the sidebar so the user can see the imported chats
             showSidebar();
 
             // Check if welcome message should be shown
             checkAndShowWelcomeMessage();
+        }
+    }
+}
+
+/**
+ * Collapses the options menu
+ */
+function collapseOptionsMenu() {
+    // The Options section is a .sidebar-section.collapsible div.
+    // Its header is a .section-header button; its body is a .collapsible-content div.
+    const collapsibleSections = document.querySelectorAll('.sidebar-section.collapsible');
+    collapsibleSections.forEach(section => {
+        const header = section.querySelector('.section-header');
+        const content = section.querySelector('.collapsible-content');
+        if (header) header.classList.remove('active');
+        if (content) {
+            content.classList.remove('show');
+            content.style.maxHeight = '';
+            content.style.height = '';
+        }
+    });
+
+    // Also collapse the import/export submenu and reset its caret icon
+    const importExportContainer = document.getElementById('import-export-container');
+    const importExportGroupButton = document.getElementById('import-export-group-btn');
+
+    if (importExportContainer) {
+        importExportContainer.classList.add('hidden');
+        importExportContainer.classList.remove('show');
+        importExportContainer.style.maxHeight = '';
+        importExportContainer.style.height = '';
+    }
+
+    if (importExportGroupButton) {
+        const caret = importExportGroupButton.querySelector('.fa-caret-up');
+        if (caret) {
+            caret.classList.remove('fa-caret-up');
+            caret.classList.add('fa-caret-down');
         }
     }
 }
@@ -747,6 +806,10 @@ function closeSidebar() {
             const content = header.nextElementSibling;
             if (content && content.classList.contains('collapsible-content')) {
                 content.classList.remove('show');
+                // Clear inline maxHeight left by syncSidebarCollapsibleHeight so the
+                // CSS max-height:0 takes effect when the sidebar is re-opened
+                content.style.maxHeight = '';
+                content.style.height = '';
             }
         });
 
@@ -1136,6 +1199,10 @@ export function closeSidebarExport() {
             const content = header.nextElementSibling;
             if (content && content.classList.contains('collapsible-content')) {
                 content.classList.remove('show');
+                // Clear inline maxHeight left by syncSidebarCollapsibleHeight so the
+                // CSS max-height:0 takes effect when the sidebar is re-opened
+                content.style.maxHeight = '';
+                content.style.height = '';
             }
         });
 
