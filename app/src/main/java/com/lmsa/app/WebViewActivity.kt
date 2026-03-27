@@ -60,6 +60,7 @@ import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.nativead.NativeAdView
+import com.google.android.gms.ads.nativead.MediaView
 import android.widget.ImageView
 import android.widget.TextView
 
@@ -80,6 +81,7 @@ class WebViewActivity : AppCompatActivity() {
     private var nativeAd: NativeAd? = null
     private var lastAdLoadTime: Long = 0L
     private val NATIVE_AD_UNIT_ID = "ca-app-pub-1388425042154340/5848689323"
+    private val TEST_NATIVE_AD_UNIT_ID = "ca-app-pub-3940256099942544/2247696110"
 
 
 
@@ -576,7 +578,8 @@ class WebViewActivity : AppCompatActivity() {
         val effectivePremium = isPremium && !isDebugMode
         if (effectivePremium) return
 
-        val adLoader = AdLoader.Builder(this, NATIVE_AD_UNIT_ID)
+        val adUnitId = if (isDebugMode || BuildConfig.DEBUG) TEST_NATIVE_AD_UNIT_ID else NATIVE_AD_UNIT_ID
+        val adLoader = AdLoader.Builder(this, adUnitId)
             .forNativeAd { ad : NativeAd ->
                 if (isDestroyed) {
                     ad.destroy()
@@ -609,8 +612,9 @@ class WebViewActivity : AppCompatActivity() {
 
         headlineView.text = nativeAd.headline
         adView.headlineView = headlineView
-        headlineView.isClickable = false
-        headlineView.isFocusable = false
+        // Allow headline to be clickable for better user experience as per AdMob standard layouts
+        headlineView.isClickable = true
+        headlineView.isFocusable = true
 
         if (nativeAd.body == null) {
             bodyView.visibility = View.GONE
@@ -629,8 +633,18 @@ class WebViewActivity : AppCompatActivity() {
             iconView.visibility = View.VISIBLE
         }
         adView.iconView = iconView
-        iconView.isClickable = false
-        iconView.isFocusable = false
+        // Allow icon to be clickable for better compliance
+        iconView.isClickable = true
+        iconView.isFocusable = true
+
+        val mediaView = adView.findViewById<MediaView>(R.id.ad_media)
+        if (nativeAd.mediaContent != null) {
+            mediaView.setMediaContent(nativeAd.mediaContent!!)
+            mediaView.visibility = View.VISIBLE
+        } else {
+            mediaView.visibility = View.GONE
+        }
+        adView.mediaView = mediaView
 
         if (nativeAd.callToAction == null) {
             ctaView.visibility = View.GONE
@@ -642,7 +656,8 @@ class WebViewActivity : AppCompatActivity() {
 
         adView.setNativeAd(nativeAd)
         
-        // Ensure the NativeAdView itself doesn't intercept clicks
+        // Ensure the NativeAdView itself doesn't intercept clicks, 
+        // letting children (Headline, Icon, Media, CTA) handle them via SDK registration
         adView.isClickable = false
         adView.isFocusable = false
 
