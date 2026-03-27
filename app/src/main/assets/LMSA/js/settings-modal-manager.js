@@ -1,13 +1,15 @@
 // Settings Modal Manager
 // This module centralizes all settings modal functionality
 
-import { settingsModal } from './dom-elements.js';
+import { settingsModal, getStartedBtn } from './dom-elements.js';
 import { debugLog } from './utils.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { getApiUrl, getAvailableModels, isServerRunning, validateIpPort, saveServerSettings } from './api-service.js';
 import { showOpenRouterKeyRequiredModal, initOpenRouterKeyRequiredModal } from './components/modals/openrouter-key-required-modal.js';
 import { getUseOpenRouter, getOpenRouterApiKey } from './settings-manager.js';
 import { interceptIpPortChanges } from './ip-port-confirmation-modal.js';
+
+const WELCOME_SETTINGS_TAPPED_KEY = 'welcomeSettingsTapped';
 
 // Holds a reference to the internal showStep function once the modal is initialised
 let _navigateToStep = null;
@@ -23,6 +25,17 @@ export async function showSettingsModal() {
     if (!settingsModal) return;
 
     debugLog('Opening settings modal');
+
+    // Mark that settings have been opened to update the welcome screen button
+    if (localStorage.getItem(WELCOME_SETTINGS_TAPPED_KEY) !== 'true') {
+        localStorage.setItem(WELCOME_SETTINGS_TAPPED_KEY, 'true');
+        
+        // Update the welcome screen button label immediately
+        const label = (getStartedBtn || document.getElementById('get-started-btn'))?.querySelector('span');
+        if (label) {
+            label.textContent = 'Settings';
+        }
+    }
 
     // Initialize TTS voice selection
     import('./settings-manager.js').then(module => {

@@ -65,6 +65,16 @@ function setCollapsibleSectionExpanded(header, shouldExpand) {
  * Shows the welcome message and hides the messages container
  */
 export function showWelcomeMessage() {
+    // Check if the welcome screen button should show "Settings" instead of "Start Here"
+    const WELCOME_SETTINGS_TAPPED_KEY = 'welcomeSettingsTapped';
+    const hasTappedWelcomeSettings = localStorage.getItem(WELCOME_SETTINGS_TAPPED_KEY) === 'true';
+    const getStartedBtn = document.getElementById('get-started-btn');
+    const getStartedBtnLabel = getStartedBtn?.querySelector('span');
+    
+    if (getStartedBtnLabel) {
+        getStartedBtnLabel.textContent = hasTappedWelcomeSettings ? 'Settings' : 'Start Here';
+    }
+
     // Performance monitoring removed
 
     // Batch DOM operations to prevent layout thrashing

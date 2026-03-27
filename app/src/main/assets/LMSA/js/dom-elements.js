@@ -205,6 +205,7 @@ export const modelLoadingMessage = document.getElementById('model-loading-messag
 export const modelLoadingName = document.getElementById('model-loading-name');
 
 // Welcome screen buttons
+export const getStartedBtn = document.getElementById('get-started-btn');
 export const welcomeModelsBtn = document.getElementById('welcome-models-btn');
 export const welcomeNewChatBtn = document.getElementById('welcome-new-chat-btn');
 export const welcomeHelpBtn = document.getElementById('welcome-help-btn');
