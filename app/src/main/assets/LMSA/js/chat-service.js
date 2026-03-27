@@ -174,12 +174,22 @@ export async function generateAIResponse(userMessage, fileContents = []) {
     if (isUsingOpenRouter) {
         if (!canSendOpenRouterCompletion()) {
             document.dispatchEvent(new CustomEvent('openRouterLimitReached'));
+            hideLoadingIndicator();
+            const stopButton = document.getElementById('stop-button');
+            if (stopButton && !stopButton.classList.contains('hidden')) {
+                toggleSendStopButton();
+            }
             return;
         }
         recordOpenRouterCompletion();
     } else {
         if (!canSendCompletion()) {
             document.dispatchEvent(new CustomEvent('completionLimitReached'));
+            hideLoadingIndicator();
+            const stopButton = document.getElementById('stop-button');
+            if (stopButton && !stopButton.classList.contains('hidden')) {
+                toggleSendStopButton();
+            }
             return;
         }
         recordCompletion();
@@ -2983,6 +2993,23 @@ export async function regenerateLastResponse(isRetry = false) {
             appendMessage('error', 'No chat available to regenerate');
             isGenerating = false;
             return;
+        }
+
+        // Usage limits check
+        if (getUseOpenRouter()) {
+            if (!canSendOpenRouterCompletion()) {
+                document.dispatchEvent(new CustomEvent('openRouterLimitReached'));
+                isGenerating = false;
+                return;
+            }
+            recordOpenRouterCompletion();
+        } else {
+            if (!canSendCompletion()) {
+                document.dispatchEvent(new CustomEvent('completionLimitReached'));
+                isGenerating = false;
+                return;
+            }
+            recordCompletion();
         }
 
         // Get the chat messages

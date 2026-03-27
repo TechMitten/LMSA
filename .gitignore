@@ -7,6 +7,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+AGENTS.md
 
 # IDE settings - personal workspace files
 .idea/
