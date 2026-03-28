@@ -5416,7 +5416,7 @@ body.light-theme .regenerate-btn:hover {
 .edit-textarea {
     display: block;
     /* Prominent border to make the editing area clearly visible */
-    border: 2px solid rgba(255, 255, 255, 0.6) !important;
+    border: 3px solid rgba(59, 130, 246, 0.8) !important;
     /* Clear background to indicate editable area */
     background: rgba(255, 255, 255, 0.15) !important;
     /* Generous padding for better visual separation */
@@ -5432,37 +5432,37 @@ body.light-theme .regenerate-btn:hover {
 
 .edit-textarea:focus {
     /* More visible border when focused */
-    border-color: rgba(255, 255, 255, 0.8) !important;
+    border-color: rgb(59, 130, 246) !important;
     /* Brighter background when focused */
     background: rgba(255, 255, 255, 0.2) !important;
     /* Enhanced shadow on focus */
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
 }
 
 /* Dark theme adjustments for edit textarea */
 body.dark-theme .edit-textarea {
-    border-color: rgba(255, 255, 255, 0.5) !important;
+    border-color: rgba(59, 130, 246, 0.8) !important;
     background: rgba(255, 255, 255, 0.12) !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
 }
 
 body.dark-theme .edit-textarea:focus {
-    border-color: rgba(255, 255, 255, 0.7) !important;
+    border-color: rgb(59, 130, 246) !important;
     background: rgba(255, 255, 255, 0.18) !important;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
 }
 
 /* Light theme adjustments */
 body:not(.dark-theme) .edit-textarea {
-    border-color: rgba(0, 0, 0, 0.4) !important;
-    background: rgba(0, 0, 0, 0.08) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    border-color: rgb(59, 130, 246) !important;
+    background: rgba(59, 130, 246, 0.08) !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15) !important;
 }
 
 body:not(.dark-theme) .edit-textarea:focus {
-    border-color: rgba(0, 0, 0, 0.6) !important;
-    background: rgba(0, 0, 0, 0.12) !important;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(0, 0, 0, 0.1) !important;
+    border-color: rgb(37, 99, 235) !important;
+    background: rgba(59, 130, 246, 0.12) !important;
+    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.2), 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
 }
 
 /* Edit buttons container */
@@ -5473,7 +5473,8 @@ body:not(.dark-theme) .edit-textarea:focus {
 
 /* Compact button styling - mobile-first and touch-friendly */
 .edit-cancel-btn,
-.edit-resend-btn {
+.edit-resend-btn,
+.edit-save-ai-btn {
     font-size: 0.875rem;
     padding: 0.625rem 1rem;
     cursor: pointer;
@@ -5488,14 +5489,16 @@ body:not(.dark-theme) .edit-textarea:focus {
 }
 
 .edit-cancel-btn:hover,
-.edit-resend-btn:hover {
+.edit-resend-btn:hover,
+.edit-save-ai-btn:hover {
     opacity: 0.9;
     transform: translateY(-1px);
 }
 
 /* Active state for touch feedback */
 .edit-cancel-btn:active,
-.edit-resend-btn:active {
+.edit-resend-btn:active,
+.edit-save-ai-btn:active {
     transform: translateY(0);
     opacity: 1;
 }

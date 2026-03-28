@@ -7,12 +7,28 @@ import { showSettingsModal } from './settings-modal-manager.js';
 export function openHelpModal() {
     const helpModal = document.getElementById('help-modal');
 
+    const resetHelpModalDemos = () => {
+        if (!helpModal) {
+            return;
+        }
+
+        helpModal.querySelectorAll('[data-demo-panel]').forEach((panel) => {
+            panel.classList.add('hidden');
+        });
+
+        helpModal.querySelectorAll('[data-demo-button]').forEach((button) => {
+            button.classList.remove('hidden');
+            button.setAttribute('aria-expanded', 'false');
+        });
+    };
+
     if (helpModal) {
         // Close the sidebar first using the imported function
         closeSidebar();
 
         // Show the help modal
         helpModal.classList.remove('hidden');
+        resetHelpModalDemos();
 
         const modalContent = helpModal.querySelector('.modal-content');
         if (modalContent) {
@@ -87,6 +103,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (closeHelpBtn) {
             closeHelpBtn.addEventListener('click', closeHelpModal);
         }
+
+        helpModal.addEventListener('click', (event) => {
+            const demoButton = event.target.closest('[data-demo-button]');
+            if (!demoButton) {
+                return;
+            }
+
+            const panelId = demoButton.getAttribute('data-demo-button');
+            const demoPanel = panelId ? helpModal.querySelector(`#${panelId}`) : null;
+
+            if (!demoPanel) {
+                return;
+            }
+
+            demoPanel.classList.remove('hidden');
+            demoButton.classList.add('hidden');
+            demoButton.setAttribute('aria-expanded', 'true');
+        });
 
 
 

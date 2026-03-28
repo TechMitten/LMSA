@@ -50,8 +50,7 @@ import { showModelModal } from './model-manager.js';
 import { showWhatsNewModal } from './whats-new.js';
 
 import { showExternalSiteModal } from './external-site-confirmation-modal.js';
-import { debugLog, debugError, formatDate } from './utils.js';
-import { closeApplication, copyToClipboard, sanitizeInput, scrollToBottom, scrollToBottomManual, handleScroll, ensureCursorVisible } from './utils.js';
+import { debugLog, debugError, formatDate, closeApplication, copyToClipboard, sanitizeInput, initializeCodeMirror, stripReasoningSections, scrollToBottom, scrollToBottomManual, handleScroll, ensureCursorVisible } from './utils.js';
 
 let abortController = null;
 let sidebar = document.getElementById('sidebar');
@@ -1548,6 +1547,7 @@ export function initializeEventHandlers() {
     if (messagesContainer) {
         messagesContainer.addEventListener('click', handleRegenerateButtonClick);
         messagesContainer.addEventListener('click', handleEditButtonClick);
+        messagesContainer.addEventListener('click', handleAIEditButtonClick);
         messagesContainer.addEventListener('click', handleDeleteButtonClick);
     }
 
@@ -2964,6 +2964,165 @@ function deleteMessage(messageElement, messageElements, messageIndex) {
         debugError('Failed to delete message:', error);
         appendMessage('error', 'An error occurred while deleting the message.');
     }
+}
+
+/**
+ * Handles click on the edit button for AI messages.
+ * Allows the user to directly modify the AI response in-place (like LM Studio).
+ * The edited content is saved to chat history without triggering regeneration.
+ * @param {Event} e - The click event
+ */
+function handleAIEditButtonClick(e) {
+    const target = e.target.closest('.ai-edit-btn');
+    if (!target) return;
+
+    // Find the AI message element
+    const messageElement = target.closest('.ai');
+    if (!messageElement) return;
+
+    const contentContainer = messageElement.querySelector('.message-content');
+    if (!contentContainer) return;
+
+    const controlsContainer = messageElement.querySelector('.message-controls');
+    if (!controlsContainer) return;
+
+    // Prevent editing while a generation is in progress
+    if (isGeneratingText()) return;
+
+    // Hide controls during editing
+    controlsContainer.style.display = 'none';
+
+    // Get the raw content, stripping any thinking/reasoning sections
+    let rawContent = messageElement.originalContent || contentContainer.textContent || '';
+    rawContent = stripReasoningSections(rawContent).trim();
+
+    // Store original HTML to restore on cancel
+    const originalHTML = contentContainer.innerHTML;
+
+    // Lock the bubble width so it doesn't collapse while editing
+    const currentWidth = messageElement.offsetWidth;
+    const minEditWidth = 280;
+    const editWidth = Math.max(currentWidth, minEditWidth);
+    messageElement.style.width = editWidth + 'px';
+    messageElement.style.minWidth = editWidth + 'px';
+    messageElement.style.maxWidth = editWidth + 'px';
+
+    // Create the editable textarea pre-filled with the AI's response
+    const textarea = document.createElement('textarea');
+    textarea.classList.add('edit-textarea');
+    textarea.value = rawContent;
+    textarea.style.cssText = `
+        width: 100%;
+        color: inherit;
+        outline: none;
+        resize: none;
+        font-family: inherit;
+        font-size: inherit;
+        line-height: inherit;
+        margin: 0;
+        overflow: hidden;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+    `;
+
+    const autoResize = () => {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    };
+    textarea.addEventListener('input', autoResize);
+
+    // Create button row (Cancel | Save)
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.classList.add('edit-buttons-container', 'flex', 'gap-2', 'mt-3');
+
+    const cancelButton = document.createElement('button');
+    cancelButton.classList.add(
+        'edit-cancel-btn', 'bg-gray-600', 'text-white',
+        'rounded-md', 'px-5', 'py-3', 'text-sm', 'hover:bg-gray-700', 'transition-colors'
+    );
+    cancelButton.textContent = 'Cancel';
+
+    const saveButton = document.createElement('button');
+    saveButton.classList.add(
+        'edit-save-ai-btn', 'bg-blue-600', 'text-white',
+        'rounded-md', 'px-5', 'py-3', 'text-sm', 'transition-colors'
+    );
+    saveButton.textContent = 'Save';
+
+    buttonsContainer.appendChild(cancelButton);
+    buttonsContainer.appendChild(saveButton);
+
+    // Replace content with editor
+    contentContainer.innerHTML = '';
+    contentContainer.appendChild(textarea);
+    contentContainer.appendChild(buttonsContainer);
+
+    messageElement.classList.add('editing-mode');
+
+    autoResize();
+    textarea.focus();
+    // Move cursor to end
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+    // --- Cancel: restore original content ---
+    cancelButton.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        contentContainer.innerHTML = originalHTML;
+        messageElement.classList.remove('editing-mode');
+        messageElement.style.width = '';
+        messageElement.style.minWidth = '';
+        messageElement.style.maxWidth = '';
+        controlsContainer.style.display = '';
+        initializeCodeMirror(messageElement);
+    });
+
+    // --- Save: update in-place without regenerating ---
+    saveButton.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const editedContent = textarea.value.trim();
+        if (!editedContent) return;
+
+        // Update the rendered bubble with the edited Markdown
+        contentContainer.innerHTML = sanitizeInput(editedContent);
+        messageElement.originalContent = editedContent;
+        messageElement.dataset.hasThinking = 'false';
+
+        messageElement.classList.remove('editing-mode');
+        messageElement.style.width = '';
+        messageElement.style.minWidth = '';
+        messageElement.style.maxWidth = '';
+        controlsContainer.style.display = '';
+
+        // Re-apply code highlighting
+        initializeCodeMirror(messageElement);
+
+        // Persist the edit to chat history
+        const chatData = chatHistoryData[currentChatId];
+        if (!chatData) return;
+
+        const messages = Array.isArray(chatData) ? chatData : chatData.messages;
+        if (!messages || messages.length === 0) return;
+
+        // Determine which assistant message in history corresponds to this bubble.
+        // We count all .ai elements before (and including) the edited one and match
+        // to the nth assistant entry in the history array.
+        const allAIElements = Array.from(messagesContainer.querySelectorAll('.ai'));
+        const bubbleIndex = allAIElements.indexOf(messageElement); // 0-based
+
+        let assistantCount = 0;
+        for (let i = 0; i < messages.length; i++) {
+            if (messages[i].role === 'assistant') {
+                if (assistantCount === bubbleIndex) {
+                    messages[i].content = editedContent;
+                    break;
+                }
+                assistantCount++;
+            }
+        }
+
+        saveChatHistory();
+    });
 }
 
 /**

@@ -2,6 +2,7 @@
 import { fileUploadInput as importedFileUploadInput } from './dom-elements.js';
 import { appendMessage } from './ui-manager.js';
 import { getUseOpenRouter, getUseOllama, getLMStudioApiToken } from './settings-manager.js';
+import { openPremiumModal } from './components/modals/premium-modal.js';
 // Optimization modules removed
 
 let uploadedFiles = [];
@@ -20,6 +21,16 @@ let visionModelCache = {
 function getLMStudioAuthHeaders() {
     const token = getLMStudioApiToken();
     return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
+/**
+ * Checks if the user has premium status
+ * @returns {boolean} - True if user is premium, false otherwise
+ */
+function isPremiumUser() {
+    return window.AndroidBilling && 
+           typeof window.AndroidBilling.checkPremiumStatus === 'function' && 
+           window.AndroidBilling.checkPremiumStatus();
 }
 
 /**
@@ -505,6 +516,13 @@ export function initializeFileUpload() {
 
             // Add click event to open file dialog
             newPaperclipButton.addEventListener('click', async () => {
+                // Check if user is premium for file attachment
+                if (!isPremiumUser()) {
+                    if (typeof openPremiumModal === 'function') {
+                        openPremiumModal('File Attachments');
+                    }
+                    return;
+                }
                 // console.log('Paperclip button clicked, triggering file input');
                 // Update accept attribute before opening dialog
                 await updateFileInputAccept();
@@ -514,6 +532,13 @@ export function initializeFileUpload() {
             // If no parent node, add event listener directly
             // console.log('Paperclip button has no parent node, adding event listener directly');
             paperclipButton.addEventListener('click', async () => {
+                // Check if user is premium for file attachment
+                if (!isPremiumUser()) {
+                    if (typeof openPremiumModal === 'function') {
+                        openPremiumModal('File Attachments');
+                    }
+                    return;
+                }
                 // console.log('Paperclip button clicked, triggering file input');
                 // Update accept attribute before opening dialog
                 await updateFileInputAccept();

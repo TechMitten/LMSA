@@ -1089,6 +1089,23 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                 });
                 controlsContainer.appendChild(speakerButton);
 
+                // Create edit button for AI messages
+                const aiEditButton = document.createElement('button');
+                aiEditButton.classList.add(
+                    'ai-edit-btn',
+                    'flex',
+                    'items-center',
+                    'hover:text-yellow-400',
+                    'transition-colors',
+                    'duration-300'
+                );
+                aiEditButton.innerHTML = '<i class="fas fa-pencil-alt"></i>';
+                aiEditButton.title = 'Edit this response';
+                aiEditButton.dataset.action = 'ai-edit';
+                aiEditButton.setAttribute('role', 'button');
+                aiEditButton.setAttribute('aria-label', 'Edit AI response');
+                controlsContainer.appendChild(aiEditButton);
+
                 // Create regenerate button for AI messages
                 const regenerateButton = document.createElement('button');
                 regenerateButton.classList.add(

@@ -66,6 +66,11 @@ export const helpModal = `
                                         <i class="fas fa-font mr-2 text-sm"></i>
                                         <span>Font & Text Size</span>
                                     </a>
+                                    <a href="#section-file-attachments"
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
+                                        <i class="fas fa-paperclip mr-2 text-sm"></i>
+                                        <span>File Attachments</span>
+                                    </a>
                                 </div>
                             </details>
                             <details class="md:col-span-2 p-2 rounded toc-group-privacy" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);">
@@ -113,6 +118,18 @@ export const helpModal = `
                         </div>
                     </div>
 
+                    <!-- Disclaimer Notice -->
+                    <div class="rounded-lg border px-4 py-3 text-sm"
+                        style="background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.22); color: var(--text-secondary); margin-bottom: 1.5rem;">
+                        <p style="margin: 0; line-height: 1.6;">
+                            <strong style="color: #fbbf24;">Important Notice:</strong> All instructions, setup steps,
+                            configuration changes, and troubleshooting actions described in this Help page are followed
+                            at your own risk. LMSA and its developers assume no responsibility or liability for any
+                            loss, data loss, device issues, network problems, misconfiguration, downtime, or other
+                            damage resulting from the use of these instructions.
+                        </p>
+                    </div>
+
                     <div class="space-y-4">
                         <section id="section-quick-start">
                             <h3 class="text-lg font-semibold mb-2 flex items-center"
@@ -134,11 +151,34 @@ export const helpModal = `
                                 <p style="color: var(--text-primary);">Enable "CORS" and "Serve on local network" in LM
                                     Studio after starting your server. Make sure your device is on the same Wi-Fi as the
                                     server computer.</p>
-                                <p style="color: var(--text-primary); margin-top: 0.5rem;"><strong>Always load models
-                                        from within LMSA, not from LM Studio directly.</strong> Loading models directly
-                                    in LM Studio can cause multiple models to stack in memory instead of being replaced,
-                                    leading to excessive resource usage on your server computer.</p>
                             </div>
+
+                            <p class="text-sm text-gray-300 mt-3" style="color: var(--text-primary); opacity: 0.9;">
+                                The demo below shows the LM Studio server workflow: start the server first, then enable
+                                <strong>CORS</strong> and <strong>Serve on Local Network</strong> before connecting LMSA.
+                            </p>
+
+                            <button type="button"
+                                class="watch-demo-button mt-6 mb-5 inline-flex w-full items-center justify-center gap-3 rounded-xl border border-blue-400/40 bg-blue-500 px-4 py-4 text-base font-bold text-white shadow-lg shadow-blue-900/30 transition hover:bg-blue-400"
+                                data-demo-button="lmstudio-demo-panel"
+                                style="min-height: 56px; letter-spacing: 0.02em;">
+                                <i class="fas fa-play-circle text-lg"></i>
+                                <span>Watch Demo</span>
+                            </button>
+
+                            <div id="lmstudio-demo-panel" data-demo-panel class="hidden mt-4 mb-4 rounded-xl overflow-hidden border border-white/10 bg-gray-900">
+                                <picture>
+                                    <source media="(max-width: 768px)" srcset="images/support-demos/lmstudiodemo-mobile-zoom.gif" />
+                                    <img src="images/support-demos/lmstudiodemo.gif"
+                                        alt="LM Studio server setup demonstration showing how to start the server, enable CORS and Serve on Local Network"
+                                        class="w-full h-auto block" />
+                                </picture>
+                            </div>
+
+                            <p style="color: var(--text-primary); margin-top: 0.25rem;"><strong>Always load models
+                                    from within LMSA, not from LM Studio directly.</strong> Loading models directly in
+                                LM Studio can cause multiple models to stack in memory instead of being replaced,
+                                leading to excessive resource usage on your server computer.</p>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #a78bfa;"><i
@@ -202,6 +242,28 @@ export const helpModal = `
                                             clicking <strong>Settings</strong>, and then enabling the option
                                             <strong>Expose Ollama to the network</strong>.
                                         </p>
+                                    </div>
+
+                                    <p class="text-sm" style="color: var(--text-primary); opacity: 0.9;">
+                                        This demo shows the Windows quick method in the Ollama UI, including the place
+                                        where you enable network exposure and the firewall prompt you may need to allow.
+                                    </p>
+
+                                    <button type="button"
+                                        class="watch-demo-button mt-6 mb-5 inline-flex w-full items-center justify-center gap-3 rounded-xl border border-blue-400/40 bg-blue-500 px-4 py-4 text-base font-bold text-white shadow-lg shadow-blue-900/30 transition hover:bg-blue-400"
+                                        data-demo-button="ollama-demo-panel"
+                                        style="min-height: 56px; letter-spacing: 0.02em;">
+                                        <i class="fas fa-play-circle text-lg"></i>
+                                        <span>Watch Demo</span>
+                                    </button>
+
+                                    <div id="ollama-demo-panel" data-demo-panel class="hidden mt-4 mb-4 rounded-xl overflow-hidden border border-white/10 bg-gray-900">
+                                        <picture>
+                                            <source media="(max-width: 768px)" srcset="images/support-demos/ollamademo-mobile-zoom.gif" />
+                                            <img src="images/support-demos/ollamademo.gif"
+                                                alt="Ollama network setup demonstration showing UI settings and firewall prompt"
+                                                class="w-full h-auto block" />
+                                        </picture>
                                     </div>
 
                                     <p class="text-xs italic font-medium text-gray-300 mb-3 ml-1">Or Manual
@@ -494,6 +556,107 @@ export const helpModal = `
                                 </p>
                             </div>
                         </section>
+                        <section id="section-file-attachments">
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #f59e0b;"><i
+                                    class="fas fa-paperclip mr-2"></i>File Attachments</h3>
+                            <p style="color: var(--text-primary); margin-bottom: 1rem;">
+                                When chatting with LMSA, you can attach files to share content with the AI. The app accepts a wide variety of file types for analysis and discussion.
+                            </p>
+
+                            <div class="mt-3 p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: #f59e0b;">
+                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                        class="fas fa-exclamation-circle mr-2"></i>Important:</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                    The types of files your AI model can process <strong>depend on the model you're using</strong>. Different models have different capabilities:
+                                </p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li><strong>Text-based models</strong> can handle text files, code, data files, and documents</li>
+                                    <li><strong>Vision models</strong> can additionally process images (JPG, PNG, WebP)</li>
+                                    <li>Some specialized models may have additional restrictions or capabilities</li>
+                                </ul>
+                                <p style="color: var(--text-primary); margin-top: 0.75rem; font-size: 0.9em;">
+                                    If a file type isn't supported by your current model, the app will show an error message explaining which file types are available.
+                                </p>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: #8b5cf6;">
+                                <p class="font-medium flex items-center" style="color: #8b5cf6;"><i
+                                        class="fas fa-crown mr-2"></i>Premium Feature:</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                    File attachments are <strong>only available to Premium users</strong>. Free users cannot attach files to chats. Upgrade to Premium to unlock this feature along with other benefits.
+                                </p>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                        class="fas fa-file-lines mr-2"></i>Text & Documentation Files:</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li><strong>.txt</strong> - Plain text files</li>
+                                    <li><strong>.md</strong> - Markdown documentation</li>
+                                    <li><strong>.pdf</strong> - PDF documents</li>
+                                    <li><strong>.doc, .docx</strong> - Microsoft Word documents</li>
+                                    <li><strong>.html</strong> - Web pages</li>
+                                    <li><strong>.log</strong> - Log files</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                        class="fas fa-code mr-2"></i>Code Files:</p>
+                                <p style="color: var(--text-primary); margin-bottom: 0.75rem;">
+                                    Source code in all popular programming languages:
+                                </p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li><strong>Web:</strong> .js, .jsx, .ts, .tsx, .html, .css</li>
+                                    <li><strong>Python:</strong> .py</li>
+                                    <li><strong>Java:</strong> .java</li>
+                                    <li><strong>C/C++:</strong> .c, .cpp, .h, .hpp</li>
+                                    <li><strong>Other languages:</strong> .go, .rs, .rb, .php, .sh, .ps1</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                        class="fas fa-database mr-2"></i>Data & Configuration Files:</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li><strong>.json</strong> - JSON data and configuration</li>
+                                    <li><strong>.csv, .tsv</strong> - Spreadsheet data (comma/tab-separated values)</li>
+                                    <li><strong>.xml</strong> - XML structured data</li>
+                                    <li><strong>.yaml, .yml</strong> - YAML configuration files</li>
+                                    <li><strong>.toml, .ini, .config</strong> - Configuration files</li>
+                                    <li><strong>.jsonl, .jsonlines</strong> - JSON lines (one JSON object per line)</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #ec4899;"><i
+                                        class="fas fa-image mr-2"></i>Image Files:</p>
+                                <p style="color: var(--text-primary); margin-bottom: 0.75rem;">
+                                    Image attachments are supported only when using a <strong>vision language model</strong> (a model capable of analyzing images):
+                                </p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li><strong>.jpg, .jpeg</strong> - JPEG images</li>
+                                    <li><strong>.png</strong> - PNG images</li>
+                                    <li><strong>.webp</strong> - WebP images</li>
+                                </ul>
+                                <p style="color: var(--text-primary); margin-top: 0.75rem; font-size: 0.9em;">
+                                    <i class="fas fa-info-circle mr-2" style="color: #f59e0b;"></i>
+                                    If your model doesn't support images, images will be visible in the file list but cannot be analyzed.
+                                </p>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: #60a5fa;">
+                                <p class="font-medium flex items-center" style="color: #60a5fa;"><i
+                                        class="fas fa-lightbulb mr-2"></i>Tips for File Attachments:</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li>Click the <strong>paperclip icon</strong> in the chat to attach files</li>
+                                    <li>You can attach <strong>multiple files</strong> at once to a single message</li>
+                                    <li>Files are included in the context sent to the AI for analysis</li>
+                                    <li>Larger files may be truncated if they exceed content limits</li>
+                                    <li>The AI will acknowledge attached files and integrate them into its response</li>
+                                </ul>
+                            </div>
+                        </section>
                         <section id="section-security-privacy">
                             <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa;">
                                 <i class="fas fa-lock mr-2"></i>Security & Privacy
@@ -576,8 +739,13 @@ export const helpModal = `
                         <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa;"><i
                                 class="fas fa-ad mr-2"></i>Ads & Privacy</h3>
                         <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                            <p class="font-medium flex items-center" style="color: var(--success-color);"><i
-                                    class="fas fa-shield-alt mr-2"></i></p>
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-full"
+                                    style="background: rgba(16, 185, 129, 0.12); color: var(--success-color); flex-shrink: 0;">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <p class="font-medium" style="color: var(--success-color); margin: 0;">Your chats stay private</p>
+                            </div>
                             <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
                                 While LMSA displays ads to support development, your chat messages remain completely
                                 private:</p>
@@ -653,6 +821,7 @@ export const helpModal = `
                                     <li><strong>OpenRouter Limit: 5 per day</strong> — Separate daily limit when using cloud models</li>
                                     <li><strong>Automatic Reset: Midnight (Local Time)</strong> — Your chat completion counts reset at midnight in your timezone, allowing you to chat freely again</li>
                                     <li><strong>Advertisements:</strong> Free users see advertisements throughout the app</li>
+                                    <li><strong>File Attachments:</strong> Not available on the Free tier; upgrade to Premium to attach files to chats</li>
                                     <li><strong>TTS (Text-to-Speech):</strong> Not available on the Free tier; upgrade to Premium to hear AI responses</li>
                                     <li><strong>Custom Templates:</strong> Not available on the Free tier; upgrade to Premium to create and use custom templates</li>
                                 </ul>
@@ -666,6 +835,7 @@ export const helpModal = `
                                     <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
                                     <li><strong>Unlimited Chat Completions</strong> — No daily limits or cooldown periods</li>
                                     <li><strong>Ad-Free Experience</strong> — No advertisements throughout the app</li>
+                                    <li><strong>File Attachments:</strong> Attach files (documents, code, data) to chats for analysis</li>
                                     <li><strong>OpenRouter Access:</strong> Full access to cloud models via OpenRouter</li>
                                     <li><strong>TTS (Text-to-Speech):</strong> Hear AI responses using high-quality voices</li>
                                     <li><strong>Custom Templates:</strong> Create, save, and reuse prompt templates</li>
@@ -816,6 +986,7 @@ export const helpModal = `
                             </div>
                         </div>
                     </section>
+
                 </div>
             </div>
 
