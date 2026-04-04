@@ -709,6 +709,7 @@ async function generateSystemPrompt() {
         ? window.AndroidBilling.checkPremiumStatus()
         : false;
     const savedUseOpenRouter = localStorage.getItem('useOpenRouter') === 'true';
+    const savedUseOllama = localStorage.getItem('useOllama') === 'true';
 
     if (savedUseOpenRouter && !isPremium) {
         if (typeof window.openPremiumModal === 'function') {
@@ -767,11 +768,60 @@ async function generateSystemPrompt() {
         }
 
         try {
+            let loadedModelInfo = null;
+
+            if (savedUseOllama) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                const modelsResponse = await fetch(`http://${serverIp}:${serverPort}/api/tags`, {
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!modelsResponse.ok) {
+                    throw new Error('Failed to fetch models from server');
+                }
+
+                const data = await modelsResponse.json();
+                const modelsList = Array.isArray(data?.models)
+                    ? data.models.map(model => ({ id: model.name || model.model })).filter(model => Boolean(model.id))
+                    : [];
+
+                const persistedModelId = window.currentLoadedModel || localStorage.getItem('localSelectedModel') || '';
+                if (persistedModelId) {
+                    loadedModelInfo = modelsList.find(model => model.id === persistedModelId) || null;
+                }
+
+                if (!loadedModelInfo) {
+                    try {
+                        const runningController = new AbortController();
+                        const runningTimeoutId = setTimeout(() => runningController.abort(), 3000);
+                        const runningResponse = await fetch(`http://${serverIp}:${serverPort}/api/ps`, {
+                            signal: runningController.signal
+                        }).catch(() => ({ ok: false }));
+                        clearTimeout(runningTimeoutId);
+
+                        if (runningResponse.ok) {
+                            const runningData = await runningResponse.json();
+                            const runningModelId = runningData?.models?.[0]?.name || runningData?.models?.[0]?.model;
+                            if (runningModelId) {
+                                loadedModelInfo = modelsList.find(model => model.id === runningModelId) || { id: runningModelId };
+                            }
+                        }
+                    } catch (_) {
+                        // Fall back to the first available Ollama model below.
+                    }
+                }
+
+                if (!loadedModelInfo && modelsList.length > 0) {
+                    loadedModelInfo = modelsList[0];
+                }
+            } else {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000);
 
             // Try the modern native v1 endpoint first (LM Studio ≥ 0.3.6)
-            let loadedModelInfo = null;
             let triedNative = false;
 
             try {
@@ -872,9 +922,12 @@ async function generateSystemPrompt() {
                     loadedModelInfo = modelsList[0];
                 }
             }
+            }
 
             if (!loadedModelInfo) {
-                showErrorModal('No models found. Please load a model in LM Studio first.');
+                showErrorModal(savedUseOllama
+                    ? 'No Ollama models found. Pull a model first, for example: ollama pull llama3.2'
+                    : 'No models found. Please load a model in LM Studio first.');
                 generateBtn.disabled = false;
                 generateBtn.innerHTML = originalBtnContent;
                 return;
@@ -884,7 +937,9 @@ async function generateSystemPrompt() {
 
         } catch (error) {
             console.error('Error fetching models:', error);
-            showErrorModal('Failed to connect to LM Studio. Please check that LM Studio is running and the server is started.');
+            showErrorModal(savedUseOllama
+                ? 'Failed to connect to Ollama. Please check that Ollama is running and reachable at the configured IP and port.'
+                : 'Failed to connect to LM Studio. Please check that LM Studio is running and the server is started.');
             generateBtn.disabled = false;
             generateBtn.innerHTML = originalBtnContent;
             return;

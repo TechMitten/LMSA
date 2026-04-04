@@ -1012,10 +1012,15 @@ function initializeSystemPromptOverlay() {
                     modelToUse = window.currentLoadedModel;
                 }
 
+                if (!modelToUse) {
+                    modelToUse = localStorage.getItem('localSelectedModel') || null;
+                }
+
                 const apiUrl = getApiUrl();
-                
-                // Use a generic model ID if none found, let the server handle fallback
-                if (!modelToUse) modelToUse = 'local-model';
+
+                if (!modelToUse) {
+                    throw new Error('No models available');
+                }
 
                 debugLog('Improving system prompt with model:', modelToUse);
 

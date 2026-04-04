@@ -118,100 +118,74 @@ export const helpModal = `
                         </div>
                     </div>
 
-                    <!-- Disclaimer Notice -->
-                    <div class="rounded-lg border px-4 py-3 text-sm"
-                        style="background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.22); color: var(--text-secondary); margin-bottom: 1.5rem;">
-                        <p style="margin: 0; line-height: 1.6;">
-                            <strong style="color: #fbbf24;">Important Notice:</strong> All instructions, setup steps,
-                            configuration changes, and troubleshooting actions described in this Help page are followed
-                            at your own risk. LMSA and its developers assume no responsibility or liability for any
-                            loss, data loss, device issues, network problems, misconfiguration, downtime, or other
-                            damage resulting from the use of these instructions.
-                        </p>
-                    </div>
-
                     <div class="space-y-4">
                         <section id="section-quick-start">
                             <h3 class="text-lg font-semibold mb-2 flex items-center"
                                 style="color: #f59e0b;"><i class="fas fa-rocket mr-2"></i>LM Studio Setup
                             </h3>
-                            <ul class="list-disc pl-5 space-y-1" style="color: var(--text-primary);">
-                                <li><strong>Start the LM Studio server</strong> on your computer (do NOT load a model
-                                    yet)</li>
-                                <li>Enter server URL in <a href="#" id="open-settings-link"
-                                        class="text-blue-400 hover:text-blue-300">Settings</a> (IP:Port)</li>
-                                <li><strong>Load models from LMSA</strong> using the <i
-                                        class="fas fa-robot text-blue-400"></i> button in the sidebar's Options menu
-                                </li>
-                                <li>Start chatting!</li>
-                            </ul>
-                            <div class="mt-2 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #ef4444;"><i
-                                        class="fas fa-exclamation-circle mr-2"></i>IMPORTANT:</p>
-                                <p style="color: var(--text-primary);">Enable "CORS" and "Serve on local network" in LM
-                                    Studio after starting your server. Make sure your device is on the same Wi-Fi as the
-                                    server computer.</p>
-                            </div>
-
-                            <p class="text-sm text-gray-300 mt-3" style="color: var(--text-primary); opacity: 0.9;">
-                                The demo below shows the LM Studio server workflow: start the server first, then enable
-                                <strong>CORS</strong> and <strong>Serve on Local Network</strong> before connecting LMSA.
+                            <p style="color: var(--text-primary); margin-bottom: 1rem;">
+                                Keep LM Studio setup simple: run the LM Studio server on your host machine,
+                                allow local network access, then connect LMSA to that host IP and port.
                             </p>
+
+                            <div class="space-y-4">
+                                <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                    <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                            class="fas fa-server mr-2"></i>LM Studio</p>
+                                    <ul class="list-disc pl-5 mt-2 space-y-1"
+                                        style="color: var(--text-primary); font-size: 0.9em;">
+                                        <li>Start the <strong>LM Studio server</strong> on the host computer.</li>
+                                        <li>Enable <strong>CORS</strong> and <strong>Serve on local network</strong>.</li>
+                                        <li>In LMSA <a href="#" id="open-settings-link"
+                                                class="text-blue-400 hover:text-blue-300">Settings</a>, enter the host IP and LM Studio server port.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                    <p class="font-medium flex items-center" style="color: #fbbf24;"><i
+                                            class="fas fa-robot mr-2"></i>Model Loading</p>
+                                    <ul class="list-disc pl-5 mt-2 space-y-1"
+                                        style="color: var(--text-primary); font-size: 0.9em;">
+                                        <li>Load and switch models from LMSA using the <i class="fas fa-robot text-blue-400"></i> Models button.</li>
+                                        <li>Do not load models directly in LM Studio while using LMSA.</li>
+                                    </ul>
+                                </div>
+                            </div>
 
                             <button type="button"
                                 class="watch-demo-button mt-6 mb-5 inline-flex w-full items-center justify-center gap-3 rounded-xl border border-blue-400/40 bg-blue-500 px-4 py-4 text-base font-bold text-white shadow-lg shadow-blue-900/30 transition hover:bg-blue-400"
                                 data-demo-button="lmstudio-demo-panel"
                                 style="min-height: 56px; letter-spacing: 0.02em;">
                                 <i class="fas fa-play-circle text-lg"></i>
-                                <span>Watch Demo</span>
+                                <span>Watch LM Studio Demo</span>
                             </button>
 
-                            <div id="lmstudio-demo-panel" data-demo-panel class="hidden mt-4 mb-4 rounded-xl overflow-hidden border border-white/10 bg-gray-900">
+                            <div id="lmstudio-demo-panel" data-demo-panel
+                                class="hidden mt-4 mb-4 rounded-xl overflow-hidden border border-white/10 bg-gray-900">
                                 <picture>
-                                    <source media="(max-width: 768px)" srcset="images/support-demos/lmstudiodemo-mobile-zoom.gif" />
+                                    <source media="(max-width: 768px)"
+                                        srcset="images/support-demos/lmstudiodemo-mobile-zoom.gif" />
                                     <img src="images/support-demos/lmstudiodemo.gif"
-                                        alt="LM Studio server setup demonstration showing how to start the server, enable CORS and Serve on Local Network"
+                                        alt="LM Studio server setup demonstration showing how to start the server and enable network options"
                                         class="w-full h-auto block" />
                                 </picture>
                             </div>
 
-                            <p style="color: var(--text-primary); margin-top: 0.25rem;"><strong>Always load models
-                                    from within LMSA, not from LM Studio directly.</strong> Loading models directly in
-                                LM Studio can cause multiple models to stack in memory instead of being replaced,
-                                leading to excessive resource usage on your server computer.</p>
-
-                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #a78bfa;"><i
-                                        class="fas fa-sync-alt mr-2"></i>Model Switching:</p>
-                                <p style="color: var(--text-primary);">You can switch between different models directly
-                                    in the app:</p>
-                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
-                                    <li>Open the sidebar and tap <strong>Options</strong></li>
-                                    <li>Tap the <i class="fas fa-robot text-blue-400"></i> <strong>Models</strong>
-                                        button</li>
-                                    <li>Browse available models on your LM Studio server</li>
-                                    <li>Tap <strong>Load</strong> next to your desired model</li>
-                                    <li>The app will automatically eject the current model and load the new one</li>
-                                </ul>
-                            </div>
-
-                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #fbbf24;"><i
-                                        class="fas fa-star mr-2"></i>Default Model:</p>
-                                <p style="color: var(--text-primary);">Save time by setting your favorite model as the
-                                    default. It will automatically load when you start the app:</p>
-                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
-                                    <li>Open the <i class="fas fa-robot text-blue-400"></i> <strong>Models</strong> menu
-                                        from the sidebar's Options</li>
-                                    <li>Find your preferred model in the list</li>
-                                    <li>Tap the <i class="fas fa-star" style="color: #9ca3af;"></i> star icon next to
-                                        the model</li>
-                                    <li>The star will turn <i class="fas fa-star" style="color: #fbbf24;"></i> yellow to
-                                        confirm it's set as default</li>
-                                    <li>Next time you open LMSA, this model will load automatically</li>
-                                    <li>To remove the default, simply tap the <i class="fas fa-star"
-                                            style="color: #fbbf24;"></i> yellow star again</li>
-                                </ul>
+                            <div class="mt-4 p-3 rounded-lg"
+                                style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(251, 191, 36, 0.1) 100%); border: 1px solid rgba(245, 158, 11, 0.45); box-shadow: 0 2px 10px rgba(245, 158, 11, 0.18);">
+                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                        class="fas fa-network-wired mr-2"></i>LMSA Connection Address</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                    Use the <strong>host machine IP address</strong> where LM Studio is running, plus
+                                    the LM Studio server port (often <strong>1234</strong>, or whatever LM Studio shows).
+                                </p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                    Example: <code>http://192.168.1.25:1234</code>
+                                </p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem; font-size: 0.9em;">
+                                    To find host IP quickly: Windows <code>ipconfig</code> (IPv4 Address), macOS/Linux
+                                    <code>ifconfig</code> or <code>ip a</code>.
+                                </p>
                             </div>
                         </section>
 
@@ -220,150 +194,68 @@ export const helpModal = `
                                 <i class="fas fa-terminal mr-2"></i>Ollama Setup
                             </h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">
-                                To connect LMSA to Ollama on your local network, you need to configure Ollama to listen
-                                on all network interfaces. Follow the instructions below for your operating system.
+                                Keep Ollama setup simple: start or expose Ollama to your network on the host machine,
+                                then connect LMSA to that host IP and port.
                             </p>
-
-
-
-
                             <div class="space-y-4">
-                                <!-- Windows Instructions -->
                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
                                     <p class="font-medium flex items-center" style="color: #3b82f6;"><i
-                                            class="fab fa-windows mr-2"></i>Windows Instructions</p>
-
-
-                                    <div class="mt-3 p-3 rounded bg-blue-500/10 border border-blue-500/20 mb-4">
-                                        <p class="text-sm font-semibold text-blue-400 mb-2"><i
-                                                class="fas fa-magic mr-2"></i>Quick Method (Recommended)</p>
-                                        <p style="color: var(--text-primary); font-size: 0.9em;">
-                                            Start the server by opening the <strong>Ollama user interface</strong>,
-                                            clicking <strong>Settings</strong>, and then enabling the option
-                                            <strong>Expose Ollama to the network</strong>.
-                                        </p>
-                                    </div>
-
-                                    <p class="text-sm" style="color: var(--text-primary); opacity: 0.9;">
-                                        This demo shows the Windows quick method in the Ollama UI, including the place
-                                        where you enable network exposure and the firewall prompt you may need to allow.
-                                    </p>
-
-                                    <button type="button"
-                                        class="watch-demo-button mt-6 mb-5 inline-flex w-full items-center justify-center gap-3 rounded-xl border border-blue-400/40 bg-blue-500 px-4 py-4 text-base font-bold text-white shadow-lg shadow-blue-900/30 transition hover:bg-blue-400"
-                                        data-demo-button="ollama-demo-panel"
-                                        style="min-height: 56px; letter-spacing: 0.02em;">
-                                        <i class="fas fa-play-circle text-lg"></i>
-                                        <span>Watch Demo</span>
-                                    </button>
-
-                                    <div id="ollama-demo-panel" data-demo-panel class="hidden mt-4 mb-4 rounded-xl overflow-hidden border border-white/10 bg-gray-900">
-                                        <picture>
-                                            <source media="(max-width: 768px)" srcset="images/support-demos/ollamademo-mobile-zoom.gif" />
-                                            <img src="images/support-demos/ollamademo.gif"
-                                                alt="Ollama network setup demonstration showing UI settings and firewall prompt"
-                                                class="w-full h-auto block" />
-                                        </picture>
-                                    </div>
-
-                                    <p class="text-xs italic font-medium text-gray-300 mb-3 ml-1">Or Manual
-                                        Configuration:</p>
-
-                                    <div class="mt-3">
-                                        <p class="text-sm font-semibold text-blue-400 mb-1">Step 1: Close Ollama</p>
-                                        <p style="color: var(--text-primary); font-size: 0.9em; margin-bottom: 0.5rem;">
-                                            If Ollama is currently running, find the little llama icon in your taskbar
-                                            (near the clock), click it, and select <strong>Quit</strong> to close the
-                                            application completely.
-                                        </p>
-                                    </div>
-
-                                    <div class="mt-3">
-                                        <p class="text-sm font-semibold text-blue-400 mb-1">Step 2: Open Environment
-                                            Variables</p>
-                                        <p style="color: var(--text-primary); font-size: 0.9em; margin-bottom: 0.5rem;">
-                                            Follow these steps to access the environment variables:
-                                        </p>
-                                        <ul class="list-disc pl-5 space-y-1"
-                                            style="color: var(--text-primary); font-size: 0.9em;">
-                                            <li>Click the <strong>Start</strong> button and type: <code>env</code></li>
-                                            <li>Click on the result that says <strong>"Edit the system environment
-                                                    variables"</strong>.</li>
-                                            <li>In the small window that pops up, click the button near the bottom
-                                                labeled <strong>Environment Variables</strong>.</li>
-                                        </ul>
-                                    </div>
-
-                                    <div class="mt-3">
-                                        <p class="text-sm font-semibold text-blue-400 mb-1">Step 3: Add the new setting
-                                        </p>
-                                        <ul class="list-disc pl-5 space-y-1"
-                                            style="color: var(--text-primary); font-size: 0.9em;">
-                                            <li>Look at the top section labeled <strong>"User variables for
-                                                    [YourName]"</strong>.</li>
-                                            <li>Click the <strong>New...</strong> button under that list.</li>
-                                            <li>In the "Variable name" box, type: <code>OLLAMA_HOST</code></li>
-                                            <li>In the "Variable value" box, type: <code>0.0.0.0</code></li>
-                                            <li>Click <strong>OK</strong> on all the open windows to save your changes.
-                                            </li>
-                                        </ul>
-                                    </div>
-
-                                    <div class="mt-3">
-                                        <p class="text-sm font-semibold text-blue-400 mb-1">Step 4: Restart</p>
-                                        <p style="color: var(--text-primary); font-size: 0.9em;">
-                                            <strong>Restart your computer</strong> for these changes to take effect.
-                                        </p>
-                                    </div>
+                                            class="fab fa-windows mr-2"></i>Windows</p>
+                                    <ul class="list-disc pl-5 mt-2 space-y-1"
+                                        style="color: var(--text-primary); font-size: 0.9em;">
+                                        <li>Open the <strong>Ollama app</strong> and go to <strong>Settings</strong>.</li>
+                                        <li>Enable <strong>Expose Ollama to the network</strong>, then make sure Ollama is running.</li>
+                                    </ul>
                                 </div>
 
-                                <!-- Linux Instructions -->
                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
                                     <p class="font-medium flex items-center" style="color: #f59e0b;"><i
-                                            class="fab fa-linux mr-2"></i>Linux Instructions</p>
-
-                                    <div class="mt-3">
-                                        <p class="text-sm font-semibold text-blue-400 mb-1">Step 1: Open the settings
-                                            file</p>
-                                        <p style="color: var(--text-primary); font-size: 0.9em; margin-bottom: 0.5rem;">
-                                            Open your terminal and paste in the following command to edit the Ollama
-                                            configuration file:</p>
-                                        <div
-                                            class="p-2 rounded bg-gray-900 text-gray-300 font-mono text-xs overflow-x-auto border border-gray-700 mb-3">
-                                            sudo nano /etc/systemd/system/ollama.service
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-3">
-                                        <p class="text-sm font-semibold text-blue-400 mb-1">Step 2: Add the network
-                                            setting</p>
-                                        <p style="color: var(--text-primary); font-size: 0.9em; margin-bottom: 0.5rem;">
-                                            Once the file opens, use your arrow keys to scroll down until you see the
-                                            section labeled <code>[Service]</code>. Inside that section, add a new line
-                                            and paste this text:
-                                        </p>
-                                        <div
-                                            class="p-2 rounded bg-gray-900 text-gray-300 font-mono text-xs overflow-x-auto border border-gray-700 mb-3">
-                                            Environment="OLLAMA_HOST=0.0.0.0"
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-3">
-                                        <p class="text-sm font-semibold text-blue-400 mb-1">Step 3: Save your changes
-                                        </p>
-                                        <p style="color: var(--text-primary); font-size: 0.9em; margin-bottom: 0.5rem;">
-                                            To save the file and exit the editor:</p>
-                                        <ul class="list-disc pl-5 space-y-1"
-                                            style="color: var(--text-primary); font-size: 0.9em;">
-                                            <li>Press <strong>Ctrl + O</strong> on your keyboard, then hit
-                                                <strong>Enter</strong> to save.
-                                            </li>
-                                            <li>Press <strong>Ctrl + X</strong> to close the file.</li>
-                                            <li><strong>Restart your computer</strong> for these changes to take effect.
-                                            </li>
-                                        </ul>
-                                    </div>
+                                            class="fab fa-apple mr-2"></i><i class="fab fa-linux mr-2"></i>Linux / macOS</p>
+                                    <ul class="list-disc pl-5 mt-2 space-y-1"
+                                        style="color: var(--text-primary); font-size: 0.9em;">
+                                        <li>Start Ollama with environment variables so it listens on the network.</li>
+                                        <li>Set <code>OLLAMA_HOST=0.0.0.0</code>, then restart/relaunch the Ollama server.</li>
+                                    </ul>
                                 </div>
+                            </div>
+
+                            <button type="button"
+                                class="watch-demo-button mt-6 mb-5 inline-flex w-full items-center justify-center gap-3 rounded-xl border border-blue-400/40 bg-blue-500 px-4 py-4 text-base font-bold text-white shadow-lg shadow-blue-900/30 transition hover:bg-blue-400"
+                                data-demo-button="ollama-demo-panel"
+                                style="min-height: 56px; letter-spacing: 0.02em;">
+                                <i class="fas fa-play-circle text-lg"></i>
+                                <span>Watch Ollama Demo</span>
+                            </button>
+
+                            <div id="ollama-demo-panel" data-demo-panel
+                                class="hidden mt-4 mb-4 rounded-xl overflow-hidden border border-white/10 bg-gray-900">
+                                <picture>
+                                    <source media="(max-width: 768px)"
+                                        srcset="images/support-demos/ollamademo-mobile-zoom.gif" />
+                                    <img src="images/support-demos/ollamademo.gif"
+                                        alt="Ollama setup demonstration showing network exposure and connection steps"
+                                        class="w-full h-auto block" />
+                                </picture>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg"
+                                style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(251, 191, 36, 0.1) 100%); border: 1px solid rgba(245, 158, 11, 0.45); box-shadow: 0 2px 10px rgba(245, 158, 11, 0.18);">
+                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                        class="fas fa-network-wired mr-2"></i>LMSA Connection Address</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                    In LMSA <strong>Settings</strong>, use the <strong>host machine IP address</strong>
+                                    where Ollama is running, plus the Ollama port.
+                                </p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                    The port is usually <strong>11434</strong>.
+                                </p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                    Example: <code>http://192.168.1.25:11434</code>
+                                </p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem; font-size: 0.9em;">
+                                    To find host IP quickly: Windows <code>ipconfig</code> (IPv4 Address), macOS/Linux
+                                    <code>ifconfig</code> or <code>ip a</code>.
+                                </p>
                             </div>
                         </section>
 
@@ -739,13 +631,8 @@ export const helpModal = `
                         <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa;"><i
                                 class="fas fa-ad mr-2"></i>Ads & Privacy</h3>
                         <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                            <div class="flex items-center gap-3 mb-3">
-                                <div class="flex h-10 w-10 items-center justify-center rounded-full"
-                                    style="background: rgba(16, 185, 129, 0.12); color: var(--success-color); flex-shrink: 0;">
-                                    <i class="fas fa-shield-alt"></i>
-                                </div>
-                                <p class="font-medium" style="color: var(--success-color); margin: 0;">Your chats stay private</p>
-                            </div>
+                            <p class="font-medium flex items-center" style="color: var(--success-color);"><i
+                                    class="fas fa-shield-alt mr-2"></i></p>
                             <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
                                 While LMSA displays ads to support development, your chat messages remain completely
                                 private:</p>
@@ -986,7 +873,6 @@ export const helpModal = `
                             </div>
                         </div>
                     </section>
-
                 </div>
             </div>
 

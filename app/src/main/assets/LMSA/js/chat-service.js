@@ -3,7 +3,7 @@ import { messagesContainer, userInput, loadedModelDisplay } from './dom-elements
 import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll, renderSmartReplies, hideSmartReplies, showSmartRepliesLoading } from './ui-manager.js';
 import { openHelpModal } from './help.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
-import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getOpenRouterApiKey, getLMStudioApiToken } from './settings-manager.js';
+import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOllama, getOpenRouterApiKey, getLMStudioApiToken } from './settings-manager.js';
 import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
 import { canSendCompletion, recordCompletion, canSendOpenRouterCompletion, recordOpenRouterCompletion } from './usage-limiter.js';
@@ -76,6 +76,62 @@ function getMaxTokens() {
     const savedMaxTokens = localStorage.getItem('maxTokens');
     // Convert to number, use 0 if not set or invalid
     return savedMaxTokens ? parseInt(savedMaxTokens, 10) || 0 : 0;
+}
+
+function getLocalConnectionErrorHtml() {
+    if (getUseOllama()) {
+        return '<div class="error-message-content">' +
+            '<div class="error-title">Unable to connect to Ollama</div>' +
+            '<div class="error-body">' +
+            'Please check that:<br>' +
+            '• Ollama is running on the server or computer you entered<br>' +
+            '• The configured IP address and port are correct in <a href="#" onclick="event.preventDefault(); window.showSettingsModal && window.showSettingsModal();">Settings</a><br>' +
+            '• Ollama is listening on the network interface you expect (default local port is 11434)' +
+            '</div>' +
+            '<div class="error-help-link">' +
+            '<a href="#" onclick="event.preventDefault(); window.openHelpModal && window.openHelpModal();">View Help Guide</a> for setup instructions' +
+            '</div>' +
+            '</div>';
+    }
+
+    return '<div class="error-message-content">' +
+        '<div class="error-title">Unable to connect to LM Studio</div>' +
+        '<div class="error-body">' +
+        'Please check that:<br>' +
+        '• LM Studio application is running<br>' +
+        '• The server is started (green toggle switch in LM Studio)<br>' +
+        '• Correct IP address and port are configured in <a href="#" onclick="event.preventDefault(); window.showSettingsModal && window.showSettingsModal();">Settings</a>' +
+        '</div>' +
+        '<div class="error-help-link">' +
+        '<a href="#" onclick="event.preventDefault(); window.openHelpModal && window.openHelpModal();">View Help Guide</a> for detailed setup instructions' +
+        '</div>' +
+        '</div>';
+}
+
+function getNoModelsErrorHtml() {
+    if (getUseOllama()) {
+        return '<div class="error-message-content">' +
+            '<div class="error-title">No Ollama model selected</div>' +
+            '<div class="error-body">' +
+            'Click the <strong>Models</strong> button in the sidebar to select a model. ' +
+            'If the list is empty, pull one first on your Ollama server, for example <code>ollama pull llama3.2</code>.' +
+            '</div>' +
+            '<div class="error-help-link">' +
+            '<a href="#" onclick="event.preventDefault(); window.openHelpModal && window.openHelpModal();">View Help Guide</a> for more information' +
+            '</div>' +
+            '</div>';
+    }
+
+    return '<div class="error-message-content">' +
+        '<div class="error-title">No models loaded</div>' +
+        '<div class="error-body">' +
+        'Click the <strong>Models</strong> button in the sidebar to load a model. ' +
+        'You need to load at least one model in LM Studio before sending messages.' +
+        '</div>' +
+        '<div class="error-help-link">' +
+        '<a href="#" onclick="event.preventDefault(); window.openHelpModal && window.openHelpModal();">View Help Guide</a> for more information' +
+        '</div>' +
+        '</div>';
 }
 
 
@@ -504,7 +560,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             requestHeaders['HTTP-Referer'] = 'https://lmsa.app';
             requestHeaders['X-Title'] = 'LMSA';
         } else {
-            const lmToken = getLMStudioApiToken();
+            const lmToken = getUseOllama() ? '' : getLMStudioApiToken();
             if (lmToken) requestHeaders['Authorization'] = `Bearer ${lmToken}`;
         }
         const fetchPromise = fetch(apiUrl, {
@@ -2819,7 +2875,7 @@ export async function generateChatTitle(userMessage) {
 
         // Create request body with a lower temperature for more predictable titles
         const requestBody = {
-            model: getAvailableModels()[0], // Use the first available model
+            model: getSelectedModel(),
             messages: messages,
             temperature: 0.2, // Lower temperature for more predictable titles
             stream: false, // No need for streaming for title generation
@@ -2835,7 +2891,7 @@ export async function generateChatTitle(userMessage) {
             requestHeaders['HTTP-Referer'] = 'https://lmsa.app';
             requestHeaders['X-Title'] = 'LMSA';
         } else {
-            const lmToken = getLMStudioApiToken();
+            const lmToken = getUseOllama() ? '' : getLMStudioApiToken();
             if (lmToken) requestHeaders['Authorization'] = `Bearer ${lmToken}`;
         }
 

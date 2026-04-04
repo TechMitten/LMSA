@@ -63,6 +63,11 @@ function isConfirmationModalVisible() {
         confirmationModal.style.display !== 'none');
 }
 
+function getSingleLineHeight(textarea) {
+    const minHeight = parseFloat(window.getComputedStyle(textarea).minHeight);
+    return Number.isFinite(minHeight) && minHeight > 0 ? Math.round(minHeight) : 52;
+}
+
 /**
  * Checks if the user has premium status
  * @returns {boolean} - True if user is premium, false otherwise
@@ -353,13 +358,13 @@ export function initializeEventHandlers() {
 
     // Add input field event listeners for cursor visibility
     if (userInput) {
-        // Define height constants
-        const singleLineHeight = 52;  // Height for single line of text (matches actual scrollHeight)
         const maxHeight = 200;
 
         // Function to auto-resize the textarea based on content
         const autoResizeTextarea = function (textarea) {
             if (!textarea) return;
+
+            const singleLineHeight = getSingleLineHeight(textarea);
 
             // Save the current scroll position
             const scrollTop = textarea.scrollTop;
@@ -393,37 +398,25 @@ export function initializeEventHandlers() {
                 textarea.style.overflowY = 'hidden';
             }
 
-            // Adjust send button width and icon size based on textarea height
+            // Keep the send/stop button sizing stable so the composer layout
+            // doesn't shift when the textarea grows to multiple lines.
             const sendButton = document.getElementById('send-button');
             const stopButton = document.getElementById('stop-button');
 
             if (sendButton || stopButton) {
-                const isMultiLine = newHeight > singleLineHeight;
-                const activeButton = sendButton && !sendButton.classList.contains('hidden') ? sendButton : stopButton;
+                [sendButton, stopButton].forEach((button) => {
+                    if (!button) return;
 
-                if (activeButton) {
-                    if (isMultiLine) {
-                        // Expand button for multi-line
-                        activeButton.style.minWidth = '120px';
-                        activeButton.style.padding = '0.75rem 1.25rem';
+                    button.style.minWidth = '';
+                    button.style.padding = '';
+                    button.style.width = '';
+                    button.style.height = '';
 
-                        // Enlarge icon
-                        const icon = activeButton.querySelector('i');
-                        if (icon) {
-                            icon.style.fontSize = '1.25rem';
-                        }
-                    } else {
-                        // Reset to default for single line
-                        activeButton.style.minWidth = '';
-                        activeButton.style.padding = '';
-
-                        // Reset icon size
-                        const icon = activeButton.querySelector('i');
-                        if (icon) {
-                            icon.style.fontSize = '';
-                        }
+                    const icon = button.querySelector('i');
+                    if (icon) {
+                        icon.style.fontSize = '';
                     }
-                }
+                });
             }
         };
 
@@ -553,6 +546,8 @@ export function initializeEventHandlers() {
         // Initialize textarea to correct single-line height on page load
         // This ensures consistent height before and after typing
         setTimeout(() => {
+            const singleLineHeight = getSingleLineHeight(userInput);
+
             // Set to minimum first
             userInput.style.height = singleLineHeight + 'px';
             // Measure what the browser thinks the scrollHeight should be for single line
@@ -1717,8 +1712,8 @@ async function handleChatFormSubmit(e) {
 
         // Clear the input field and reset height
         userInput.value = '';
-        // Reset to single line height (52px) to match the initialized state
-        const singleLineHeight = 52;
+        // Reset to the current screen's single-line composer height.
+        const singleLineHeight = getSingleLineHeight(userInput);
         userInput.style.height = singleLineHeight + 'px';
         userInput.style.overflowY = 'hidden';
 

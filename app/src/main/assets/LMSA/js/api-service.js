@@ -38,6 +38,10 @@ function getLMStudioAuthHeaders() {
     return token ? { 'Authorization': `Bearer ${token}` } : {};
 }
 
+function getLocalServerAuthHeaders() {
+    return getUseOllama() ? {} : getLMStudioAuthHeaders();
+}
+
 /**
  * Detect which API version the connected LM Studio instance supports.
  * Tries /api/v1/models (native v1, LM Studio ≥ 0.3.6) first;
@@ -313,6 +317,111 @@ export async function fetchAvailableModels(options = {}) {
             return modelInfoCache.data;
         }
 
+        if (getUseOllama()) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            try {
+                const modelsResponse = await fetch(`http://${ip}:${port}/api/tags`, {
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!modelsResponse.ok) {
+                    console.error('Failed to fetch Ollama models:', modelsResponse.status, modelsResponse.statusText);
+                    availableModels = [];
+                    if (loadedModelDisplay) loadedModelDisplay.classList.add('hidden');
+                    return [];
+                }
+
+                const data = await modelsResponse.json();
+                const rawModels = Array.isArray(data?.models) ? data.models : [];
+                const modelsList = rawModels.map(model => ({
+                    ...model,
+                    id: model.name || model.model,
+                    display_name: model.name || model.model
+                })).filter(model => Boolean(model.id));
+
+                let selectedModelInfo = null;
+
+                try {
+                    const runningController = new AbortController();
+                    const runningTimeoutId = setTimeout(() => runningController.abort(), 3000);
+                    const runningResponse = await fetch(`http://${ip}:${port}/api/ps`, {
+                        signal: runningController.signal
+                    }).catch(() => ({ ok: false }));
+                    clearTimeout(runningTimeoutId);
+
+                    if (runningResponse.ok) {
+                        const runningData = await runningResponse.json();
+                        const runningModelId = runningData?.models?.[0]?.name || runningData?.models?.[0]?.model;
+                        if (runningModelId) {
+                            selectedModelInfo = modelsList.find(model => model.id === runningModelId) || { id: runningModelId };
+                        }
+                    }
+                } catch (_) {
+                    // Ignore running-model detection errors and fall back to persisted selection.
+                }
+
+                if (!selectedModelInfo) {
+                    const persistedModelId = window.currentLoadedModel || getPersistedLocalSelectedModel();
+                    if (persistedModelId) {
+                        selectedModelInfo = modelsList.find(model => model.id === persistedModelId) || null;
+                    }
+                }
+
+                if (selectedModelInfo) {
+                    availableModels = [selectedModelInfo.id];
+                    window.currentLoadedModel = selectedModelInfo.id;
+                    setPersistedLocalSelectedModel(selectedModelInfo.id);
+
+                    try {
+                        const { updateFileUploadCapabilities } = await import('./file-upload.js');
+                        await updateFileUploadCapabilities();
+                    } catch (error) {
+                        console.error('Failed to update file upload capabilities after Ollama model detection:', error);
+                    }
+
+                    updateLoadedModelDisplay(selectedModelInfo.id);
+                    if (loadedModelDisplay) {
+                        loadedModelDisplay.classList.remove('hidden');
+                    }
+                } else {
+                    availableModels = [];
+                    window.currentLoadedModel = null;
+
+                    const persistedModel = getPersistedLocalSelectedModel();
+                    if (persistedModel && !modelsList.some(model => model.id === persistedModel)) {
+                        setPersistedLocalSelectedModel(null);
+                    }
+
+                    hideLoadedModelDisplay();
+                }
+
+                modelInfoCache.data = modelsList;
+                modelInfoCache.timestamp = Date.now();
+
+                return modelsList;
+            } catch (fetchError) {
+                clearTimeout(timeoutId);
+                const errorMessage = fetchError.message || fetchError.toString();
+                const isUnsafePortError = errorMessage.includes('ERR_UNSAFE_PORT') ||
+                    errorMessage.includes('Failed to fetch') ||
+                    errorMessage.includes('net::ERR_');
+
+                if (!isUnsafePortError) {
+                    console.error('Error fetching Ollama models:', fetchError);
+                }
+
+                availableModels = [];
+                if (loadedModelDisplay) {
+                    loadedModelDisplay.classList.add('hidden');
+                }
+                return [];
+            }
+        }
+
         // Debounce rapid calls - if a fetch is already in progress, return that promise
         if (lastFetchPromise) {
             console.log('Fetch already in progress, returning existing promise');
@@ -337,7 +446,7 @@ export async function fetchAvailableModels(options = {}) {
                     // GET /api/v1/models → { models: [ { key, display_name, loaded_instances: [...] } ] }
                     const modelsResponse = await fetch(`http://${ip}:${port}/api/v1/models`, {
                         signal: controller.signal,
-                        headers: getLMStudioAuthHeaders()
+                        headers: getLocalServerAuthHeaders()
                     });
 
                     clearTimeout(timeoutId);
@@ -396,7 +505,7 @@ export async function fetchAvailableModels(options = {}) {
                     // ── Legacy OpenAI-compat API (/v1/*) ─────────────────────────────
                     const modelsResponse = await fetch(`http://${ip}:${port}/v1/models`, {
                         signal: controller.signal,
-                        headers: getLMStudioAuthHeaders()
+                        headers: getLocalServerAuthHeaders()
                     });
 
                     clearTimeout(timeoutId);
@@ -445,7 +554,7 @@ export async function fetchAvailableModels(options = {}) {
                                 const infoTimer = setTimeout(() => infoCtrl.abort(), 2000);
                                 const infoResp = await fetch(`http://${ip}:${port}${endpoint}`, {
                                     method: 'GET',
-                                    headers: getLMStudioAuthHeaders(),
+                                    headers: getLocalServerAuthHeaders(),
                                     signal: infoCtrl.signal
                                 }).catch(() => ({ ok: false }));
                                 clearTimeout(infoTimer);
@@ -480,7 +589,7 @@ export async function fetchAvailableModels(options = {}) {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                ...getLMStudioAuthHeaders()
+                                ...getLocalServerAuthHeaders()
                             },
                             body: JSON.stringify({
                                 messages: [
@@ -730,6 +839,16 @@ export async function isServerRunning() {
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
         try {
+            if (getUseOllama()) {
+                const response = await fetch(`http://${ip}:${port}/api/tags`, {
+                    method: 'GET',
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+                return response.ok;
+            }
+
             // Try the modern native v1 endpoint first, fall back to legacy
             const apiVer = await detectApiVersion(ip, port);
             const checkUrl = apiVer === 'v1native'
@@ -739,7 +858,7 @@ export async function isServerRunning() {
             const response = await fetch(checkUrl, {
                 method: 'GET',
                 signal: controller.signal,
-                headers: getLMStudioAuthHeaders()
+                headers: getLocalServerAuthHeaders()
             });
 
             clearTimeout(timeoutId);
@@ -958,6 +1077,7 @@ export async function loadModel(modelId) {
             console.log(`Ollama mode enabled: Skipping explicit load for ${modelId}`);
             // Update the UI to show this model as loaded
             window.currentLoadedModel = modelId;
+            availableModels = [modelId];
             setPersistedLocalSelectedModel(modelId);
             updateLoadedModelDisplay(modelId);
             
@@ -1105,6 +1225,20 @@ export async function ejectModel() {
         // If using Ollama, we don't need to explicitly eject models
         if (getUseOllama()) {
             console.log('Ollama mode enabled: Skipping explicit eject');
+            availableModels = [];
+            window.currentLoadedModel = null;
+            setPersistedLocalSelectedModel(null);
+            if (loadedModelDisplay) {
+                loadedModelDisplay.classList.add('hidden');
+                loadedModelDisplay.dataset.hasLoadedModel = 'false';
+                loadedModelDisplay.textContent = 'No model loaded';
+            }
+            try {
+                const { updateFileUploadCapabilities } = await import('./file-upload.js');
+                await updateFileUploadCapabilities();
+            } catch (error) {
+                console.error('Failed to update file upload capabilities after Ollama deselect:', error);
+            }
             return true;
         }
 

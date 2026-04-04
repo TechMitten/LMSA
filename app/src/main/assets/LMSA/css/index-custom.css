@@ -2065,3 +2065,83 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     }
 }
 
+/* Stable chat composer layout */
+:root {
+    --chat-composer-control-size: 52px;
+}
+
+#chat-form {
+    display: flex !important;
+    align-items: flex-end !important;
+    gap: 8px !important;
+}
+
+body.keyboard-visible #chat-form,
+.android-webview.keyboard-visible #chat-form {
+    padding: 0 !important;
+    align-items: center !important;
+}
+
+#chat-form > .chat-input-main,
+#chat-form > .flex-grow {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: stretch !important;
+    position: relative !important;
+}
+
+body.keyboard-visible #chat-form > .chat-input-main,
+body.keyboard-visible #chat-form > .flex-grow,
+.android-webview.keyboard-visible #chat-form > .chat-input-main,
+.android-webview.keyboard-visible #chat-form > .flex-grow {
+    align-items: center !important;
+}
+
+#chat-form #user-input {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: var(--chat-composer-control-size) !important;
+    margin: 0 !important;
+    padding-right: 3.5rem !important;
+    border-radius: 0.95rem !important;
+    border-right: 1px solid var(--input-border) !important;
+}
+
+#chat-form button#send-button,
+#chat-form button#stop-button,
+#send-button,
+#stop-button {
+    flex: 0 0 auto !important;
+    align-self: center !important;
+    width: var(--chat-composer-control-size) !important;
+    min-width: var(--chat-composer-control-size) !important;
+    height: var(--chat-composer-control-size) !important;
+    min-height: var(--chat-composer-control-size) !important;
+    margin-left: 0 !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+}
+
+#chat-form button#send-button i,
+#chat-form button#stop-button i {
+    margin: 0 !important;
+}
+
+body.keyboard-visible #chat-form button#send-button,
+body.keyboard-visible #chat-form button#stop-button,
+body.keyboard-visible #send-button,
+body.keyboard-visible #stop-button,
+.android-webview.keyboard-visible #chat-form button#send-button,
+.android-webview.keyboard-visible #chat-form button#stop-button,
+.android-webview.keyboard-visible #send-button,
+.android-webview.keyboard-visible #stop-button {
+    align-self: center !important;
+}
+
+@media (max-width: 640px) {
+    :root {
+        --chat-composer-control-size: 46px;
+    }
+}
+

@@ -23,6 +23,10 @@ function getLMStudioAuthHeaders() {
     return token ? { 'Authorization': `Bearer ${token}` } : {};
 }
 
+function getLocalModelAuthHeaders() {
+    return getUseOllama() ? {} : getLMStudioAuthHeaders();
+}
+
 /**
  * Checks if the user has premium status
  * @returns {boolean} - True if user is premium, false otherwise
@@ -76,10 +80,36 @@ export async function isVisionModel() {
 
         // Method 1a: Try modern native /api/v1/models endpoint first (LM Studio ≥ 0.3.6)
         // This returns capabilities.vision: boolean directly — no heuristics needed.
+        if (getUseOllama()) {
+            try {
+                const showResponse = await fetch(`http://${serverIp}:${serverPort}/api/show`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ model: modelId }),
+                    signal: AbortSignal.timeout(3000)
+                });
+
+                if (showResponse.ok) {
+                    const showData = await showResponse.json();
+                    const isVision = hasOllamaVisionCapabilities(showData);
+                    updateVisionCache(modelId, isVision);
+                    return isVision;
+                }
+            } catch (_) {
+                // Fall back to name-based detection below.
+            }
+
+            const result = fallbackNameBasedDetection();
+            updateVisionCache(modelId, result);
+            return result;
+        }
+
         try {
             const nativeResponse = await fetch(`http://${serverIp}:${serverPort}/api/v1/models`, {
                 method: 'GET',
-                headers: getLMStudioAuthHeaders(),
+                headers: getLocalModelAuthHeaders(),
                 signal: AbortSignal.timeout(3000)
             });
 
@@ -107,7 +137,7 @@ export async function isVisionModel() {
         try {
             const modelsResponse = await fetch(`http://${serverIp}:${serverPort}/v1/models`, {
                 method: 'GET',
-                headers: getLMStudioAuthHeaders(),
+                headers: getLocalModelAuthHeaders(),
                 signal: AbortSignal.timeout(3000) // 3 second timeout
             });
 
@@ -153,7 +183,7 @@ export async function isVisionModel() {
                 try {
                     const infoResponse = await fetch(`http://${serverIp}:${serverPort}${endpoint}`, {
                         method: 'GET',
-                        headers: getLMStudioAuthHeaders(),
+                        headers: getLocalModelAuthHeaders(),
                         signal: AbortSignal.timeout(2000)
                     });
 
@@ -309,6 +339,32 @@ function hasVisionCapabilities(modelData) {
     }
 
     return false;
+}
+
+function hasOllamaVisionCapabilities(modelData) {
+    if (!modelData || typeof modelData !== 'object') {
+        return false;
+    }
+
+    if (Array.isArray(modelData.capabilities) && modelData.capabilities.some(cap =>
+        typeof cap === 'string' && cap.toLowerCase() === 'vision'
+    )) {
+        return true;
+    }
+
+    const modelInfo = modelData.model_info;
+    if (modelInfo && typeof modelInfo === 'object') {
+        const modelInfoKeys = Object.keys(modelInfo).map(key => key.toLowerCase());
+        if (modelInfoKeys.some(key =>
+            key.includes('.vision.') ||
+            key.includes('.mm.') ||
+            key.endsWith('.tokens_per_image')
+        )) {
+            return true;
+        }
+    }
+
+    return hasVisionCapabilities(modelData);
 }
 
 /**
