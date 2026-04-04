@@ -33,17 +33,6 @@ function updateUiForPremium(isPremium) {
         removeAdsBanner.style.display = isPremium ? 'none' : 'flex';
     }
 
-    // Manage Native Ad placeholder
-    const nativeAdPlaceholder = document.getElementById('native-ad-placeholder');
-    if (nativeAdPlaceholder) {
-        nativeAdPlaceholder.style.display = isPremium ? 'none' : 'block';
-    }
-    
-    // Manage Native Ad divider
-    const nativeAdDivider = document.getElementById('native-ad-divider');
-    if (nativeAdDivider) {
-        nativeAdDivider.style.display = isPremium ? 'none' : 'block';
-    }
 }
 
 /**
