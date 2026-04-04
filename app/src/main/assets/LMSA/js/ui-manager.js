@@ -842,7 +842,7 @@ export function appendMessage(sender, message, files = null, isStreaming = false
         if (!isStreaming) {
             // Create controls container
             const controlsContainer = document.createElement('div');
-            controlsContainer.classList.add('message-controls', 'mt-2', 'flex', 'justify-end', 'text-xs', 'text-gray-400', 'space-x-2');
+            controlsContainer.classList.add('message-controls', 'mt-2', 'flex', 'justify-end', 'text-xs', 'text-gray-400');
 
             if (sender === 'user') {
                 // Create edit button for user messages
@@ -1390,7 +1390,7 @@ export function refreshAllMessages() {
                 } else {
                     // Create new controls container
                     controlsContainer = document.createElement('div');
-                    controlsContainer.classList.add('message-controls', 'mt-2', 'flex', 'justify-end', 'text-xs', 'text-gray-400', 'space-x-2');
+                    controlsContainer.classList.add('message-controls', 'mt-2', 'flex', 'justify-end', 'text-xs', 'text-gray-400');
 
                     // Create copy button
                     const copyButton = document.createElement('button');
@@ -1664,7 +1664,7 @@ export function refreshAllMessages() {
             if (!controlsContainer) {
                 // Create message controls container
                 controlsContainer = document.createElement('div');
-                controlsContainer.classList.add('message-controls', 'mt-2', 'flex', 'justify-end', 'text-xs', 'text-gray-400', 'space-x-2');
+                controlsContainer.classList.add('message-controls', 'mt-2', 'flex', 'justify-end', 'text-xs', 'text-gray-400');
 
                 // Create edit button
                 const editButton = document.createElement('button');

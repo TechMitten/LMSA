@@ -4820,6 +4820,16 @@ span.visible-content {
     /* Add spacing between buttons for better touch targets */
 }
 
+/* Keep AI message action icons evenly spaced by giving each control the same box size. */
+.ai .message-controls > button {
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
+    min-height: 2rem;
+    box-sizing: border-box;
+    justify-content: center;
+}
+
 /* Model label shown at bottom of AI message bubbles */
 .model-label {
     display: none;
@@ -4888,6 +4898,13 @@ body.light-theme .copy-btn:hover {
 
 /* Make the button more touch-friendly on small screens */
 @media (max-width: 480px) {
+    .ai .message-controls > button {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
     .copy-btn {
         padding: 10px 14px;
         /* Increased padding for better touch targets */
