@@ -1143,9 +1143,12 @@ function updateOpenRouterUI(isEnabled) {
     if (wrapper) wrapper.classList.remove('key-required');
   }
 
-  // Smart Reply is incompatible with OpenRouter — disable/enable toggle accordingly
+  // Smart Reply and Generate Chat Titles are incompatible with OpenRouter — disable/enable toggles accordingly
   const smartReplyContainer = document.getElementById('smart-reply-setting');
   const smartReplyDesc = document.getElementById('smart-reply-description');
+  const autoGenerateTitlesContainer = document.getElementById('auto-generate-titles-setting');
+  const autoGenerateTitlesDesc = document.getElementById('auto-generate-titles-description');
+  
   if (isEnabled) {
     // Visually disable and uncheck Smart Reply; don't overwrite localStorage so preference is restored later
     if (autoSmartReplyCheckbox) {
@@ -1155,6 +1158,15 @@ function updateOpenRouterUI(isEnabled) {
     autoSmartReply = false;
     if (smartReplyContainer) smartReplyContainer.style.opacity = '0.4';
     if (smartReplyDesc) smartReplyDesc.textContent = 'Not available when OpenRouter is enabled. Smart Reply requires a local LLM connection.';
+    
+    // Disable Generate Chat Titles toggle when OpenRouter is enabled
+    if (autoGenerateTitlesCheckbox) {
+      autoGenerateTitlesCheckbox.checked = false;
+      autoGenerateTitlesCheckbox.disabled = true;
+    }
+    autoGenerateTitles = false;
+    if (autoGenerateTitlesContainer) autoGenerateTitlesContainer.style.opacity = '0.4';
+    if (autoGenerateTitlesDesc) autoGenerateTitlesDesc.textContent = 'Not available when OpenRouter is enabled. Chat title generation can trigger rate limits and increase token usage with cloud APIs.';
   } else {
     // Re-enable Smart Reply toggle and restore saved preference
     if (autoSmartReplyCheckbox) {
@@ -1165,6 +1177,16 @@ function updateOpenRouterUI(isEnabled) {
     }
     if (smartReplyContainer) smartReplyContainer.style.opacity = '';
     if (smartReplyDesc) smartReplyDesc.textContent = 'When enabled, the LLM will analyze the conversation and suggest interactive tap-to-reply options above the chat input.';
+    
+    // Re-enable Generate Chat Titles toggle and restore saved preference
+    if (autoGenerateTitlesCheckbox) {
+      autoGenerateTitlesCheckbox.disabled = false;
+      const savedAutoGenerateTitles = localStorage.getItem('autoGenerateTitles');
+      autoGenerateTitlesCheckbox.checked = savedAutoGenerateTitles === 'true';
+      autoGenerateTitles = savedAutoGenerateTitles === 'true';
+    }
+    if (autoGenerateTitlesContainer) autoGenerateTitlesContainer.style.opacity = '';
+    if (autoGenerateTitlesDesc) autoGenerateTitlesDesc.textContent = 'When enabled, uses the LLM to generate a short title (2-3 words) that describes what the chat is about based on your first message.';
   }
 }
 

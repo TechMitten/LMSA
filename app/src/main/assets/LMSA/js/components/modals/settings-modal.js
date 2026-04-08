@@ -180,7 +180,7 @@ export const settingsModal = `
                         <p class="text-xs text-gray-400 mt-1">When enabled, hides text between &lt;think&gt; tags in
                             model responses</p>
                     </div>
-                    <div class="mb-5">
+                    <div class="mb-5" id="auto-generate-titles-setting">
                         <div class="flex justify-between items-center mb-2">
                             <label for="auto-generate-titles" class="text-sm font-medium">
                                 <i class="fas fa-magic mr-2 text-blue-400"></i>Generate Chat Titles</label>
@@ -190,8 +190,7 @@ export const settingsModal = `
                                 <div class="toggle-dot"></div>
                             </div>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">When enabled, uses the LLM to generate a short title (2-3
-                            words) that describes what the chat is about based on your first message.</p>
+                        <p id="auto-generate-titles-description" class="text-xs text-gray-400 mt-1">When enabled, uses the LLM to generate a short title (2-3 words) that describes what the chat is about based on your first message.</p>
                     </div>
 
                     <div class="mb-5" id="smart-reply-setting">

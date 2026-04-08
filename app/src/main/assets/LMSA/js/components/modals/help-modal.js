@@ -328,6 +328,20 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg border"
+                                style="background: var(--settings-label-bg); border-color: #f59e0b;">
+                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                        class="fas fa-ban mr-2"></i>Features Disabled with OpenRouter:</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">When OpenRouter is enabled, the following features are automatically disabled to prevent unnecessary API calls that could trigger rate limits or unnecessarily increase your token usage:</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li><strong>Smart Reply</strong> — Tap-to-reply suggestions are not generated, as they would require an additional API call for each conversation</li>
+                                    <li><strong>Generate Chat Titles</strong> — Automatic chat titles are not created on first message, to avoid extra token consumption</li>
+                                </ul>
+                                <p style="color: var(--text-primary); margin-top: 0.75rem; font-size: 0.9em;">
+                                    These features remain available when using LM Studio or Ollama. If you switch back to local mode, they will re-enable automatically using your previous settings.
+                                </p>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg border"
                                 style="background: var(--settings-label-bg); border-color: #ef4444;">
                                 <p class="font-medium flex items-center" style="color: #ef4444;"><i
                                         class="fas fa-shield-alt mr-2"></i>Privacy Notice:</p>

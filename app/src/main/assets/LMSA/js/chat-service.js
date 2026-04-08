@@ -2830,6 +2830,12 @@ export async function generateChatTitle(userMessage) {
         return null;
     }
 
+    // If using OpenRouter API, skip title generation to avoid rate limits and reduce token usage
+    if (getUseOpenRouter()) {
+        debugLog('OpenRouter is enabled, skipping chat title generation to avoid rate limits');
+        return null;
+    }
+
     // If we're already generating a title, return null to prevent multiple requests
     if (isGeneratingTitle) {
         debugLog('Already generating a title, skipping request');
