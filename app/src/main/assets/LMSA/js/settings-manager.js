@@ -1098,6 +1098,8 @@ export function saveOllamaSetting() {
       localStorage.setItem("useOpenRouter", 'false');
       if (openRouterToggleCheckbox) openRouterToggleCheckbox.checked = false;
       updateOpenRouterUI(false);
+      // Restore last used local model since OpenRouter was just disabled
+      window.currentLoadedModel = localStorage.getItem('localSelectedModel') || null;
     }
   }
 }
@@ -1272,6 +1274,8 @@ export function saveOpenRouterSettings() {
           localStorage.setItem('useOllama', 'false');
           if (ollamaToggleCheckbox) ollamaToggleCheckbox.checked = false;
         }
+        // Restore last used OpenRouter model so the next message uses the correct model ID
+        window.currentLoadedModel = localStorage.getItem('openRouterSelectedModel') || null;
       },
       () => {
         // User cancelled — keep OpenRouter disabled
@@ -1287,6 +1291,8 @@ export function saveOpenRouterSettings() {
       localStorage.setItem('openRouterApiKey', openRouterApiKey);
     }
     updateOpenRouterUI(false);
+    // Restore last used local model so the next message uses the correct model ID
+    window.currentLoadedModel = localStorage.getItem('localSelectedModel') || null;
   }
 }
 
