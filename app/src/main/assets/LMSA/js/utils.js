@@ -1,4 +1,7 @@
 // Debug logging utility
+import { highlightElement as shHighlight } from './syntax-highlighter.js';
+// Expose on window for non-module scripts (e.g. external-libs-loader.js)
+window.shHighlightElement = shHighlight;
 let isDebugEnabled = false; // Debug mode disabled by default
 let reasoningPanelIdCounter = 0;
 
@@ -195,15 +198,13 @@ export function removeThinkTags(text) {
  */
 function isHtmlContent(content) {
     if (!content) return false;
-    
-    // First check if content is wrapped in code blocks
-    const codeBlockMatch = content.match(/```html?\s*\n([\s\S]*?)```/i);
-    if (codeBlockMatch) {
-        // Extract the content from the code block and check if it's HTML
-        const codeContent = codeBlockMatch[1];
-        return isHtmlContentRaw(codeContent);
+
+    // If the content contains markdown code fences (```), it's markdown,
+    // NOT raw HTML. Let the normal markdown parser handle code blocks.
+    if (/```/.test(content)) {
+        return false;
     }
-    
+
     // Check for HTML_CODE_BLOCK markers and extract content
     if (content.includes('[HTML_CODE_BLOCK_START]') && content.includes('[HTML_CODE_BLOCK_END]')) {
         const startMarker = content.indexOf('[HTML_CODE_BLOCK_START]');
@@ -214,7 +215,7 @@ function isHtmlContent(content) {
             return isHtmlContentRaw(extractedContent);
         }
     }
-    
+
     // Check raw content
     return isHtmlContentRaw(content);
 }
@@ -226,29 +227,17 @@ function isHtmlContent(content) {
  */
 function isHtmlContentRaw(content) {
     if (!content) return false;
-    
-    // Check for HTML patterns
-    const htmlPatterns = [
-        /<!DOCTYPE\s+html/i,
-        /<html[\s>]/i,
-        /<head[\s>]/i,
-        /<body[\s>]/i,
-        /<\/html>/i,
-        /<\/head>/i,
-        /<\/body>/i,
-        /<div[\s>]/i,
-        /<span[\s>]/i,
-        /<p[\s>]/i,
-        /<h[1-6][\s>]/i,
-        /<meta[\s>]/i,
-        /<title[\s>]/i,
-        /<style[\s>]/i,
-        /<script[\s>]/i,
-        /<link[\s>]/i
-    ];
-    
-    // Check if content matches HTML patterns
-    return htmlPatterns.some(pattern => pattern.test(content));
+
+    const trimmed = content.trim();
+
+    // The content should START with an HTML construct to be considered raw HTML.
+    // This prevents false positives on "Here is a calculator:\n<html>..."
+    const startsWithHtml = /^(<\!DOCTYPE\s|<html[\s>]|<head[\s>]|<body[\s>]|<div[\s>]|<meta[\s>]|<link[\s>]|<style[\s>]|<script[\s>])/i.test(trimmed);
+    if (!startsWithHtml) return false;
+
+    // Also require at least a couple of HTML tags to avoid false positives
+    const tagCount = (trimmed.match(/<\/?[a-zA-Z][a-zA-Z0-9]*[\s>]/g) || []).length;
+    return tagCount >= 3;
 }
 
 /**
@@ -258,23 +247,23 @@ function isHtmlContentRaw(content) {
  */
 function formatHtmlAsCode(htmlContent) {
     let content = htmlContent;
-    
+
     // Extract content from code blocks if present
     const codeBlockMatch = content.match(/```html?\s*\n([\s\S]*?)```/i);
     if (codeBlockMatch) {
         content = codeBlockMatch[1];
     }
-    
+
     // Remove HTML_CODE_BLOCK markers if present
     if (content.includes('[HTML_CODE_BLOCK_START]') && content.includes('[HTML_CODE_BLOCK_END]')) {
         const startMarker = content.indexOf('[HTML_CODE_BLOCK_START]');
         const endMarker = content.indexOf('[HTML_CODE_BLOCK_END]');
         if (startMarker !== -1 && endMarker !== -1) {
-            const markerLength = 22; // Length of [HTML_CODE_BLOCK_START]
+            const markerLength = 22;
             content = content.substring(startMarker + markerLength, endMarker);
         }
     }
-    
+
     // Remove other HTML markers
     content = content
         .replace(/\[HTML_CODE_BLOCK\]/g, '')
@@ -283,29 +272,15 @@ function formatHtmlAsCode(htmlContent) {
         .replace(/\[\/HTMLCODEBLOCK\]/g, '')
         .replace(/\[HTML_CODE_BLOCK_EXACT\]/g, '')
         .replace(/\[\/HTML_CODE_BLOCK_EXACT\]/g, '');
-    
-    // Escape HTML entities to prevent rendering
+
+    // Emit a proper pre>code block so Highlight.js can apply syntax colours.
+    // Escape only the minimum needed so the text is safe inside a <code> element.
     const escaped = content
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    
-    // Split into lines and format each line
-    const lines = escaped.split('\n');
-    const formattedLines = lines.map(line => {
-        const trimmed = line.trim();
-        if (!trimmed) return '';
-        
-        // Add proper indentation based on original spacing
-        const leadingSpaces = line.length - line.trimStart().length;
-        const indent = '&nbsp;'.repeat(leadingSpaces);
-        
-        return `<div class="html-code-line">${indent}${trimmed}</div>`;
-    }).filter(line => line);
-    
-    return formattedLines.join('\n');
+        .replace(/>/g, '&gt;');
+
+    return `<pre data-multiline="true" data-language="html"><code class="language-html">${escaped}</code></pre>`;
 }
 
 /**
@@ -415,19 +390,14 @@ export function basicSanitizeInput(input) {
     div.textContent = processedInput;
     let sanitized = div.innerHTML;
 
-    // Handle code blocks with language specification
+    // Handle code blocks with language specification. The whole message has
+    // already been escaped above, so code fence content is safe here and
+    // should not be entity-escaped a second time.
     sanitized = sanitized.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
-        // Preserve newlines but escape HTML in the code
-        const escapedCode = code.trim()
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;')
-            .replace(/\//g, '&#x2F;');
+        const safeCode = code.trim();
 
         // Split by newlines and join with explicit <br> tags
-        const lines = escapedCode.split('\n');
+        const lines = safeCode.split('\n');
         const formattedCode = lines.join('<br>');
 
         // Add a special data attribute to indicate this is a code block with preserved newlines
@@ -670,19 +640,13 @@ export function sanitizeInput(input) {
         }
     }
 
-    // Handle code blocks with language specification
+    // Handle code blocks with language specification. The full message has
+    // already been HTML-escaped, so preserve the code text as-is here.
     sanitized = sanitized.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
-        // Preserve newlines but escape HTML in the code
-        const escapedCode = code.trim()
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;')
-            .replace(/\//g, '&#x2F;');
+        const safeCode = code.trim();
 
         // Split by newlines and join with explicit <br> tags
-        const lines = escapedCode.split('\n');
+        const lines = safeCode.split('\n');
         const formattedCode = lines.join('<br>');
 
         // Add special data attributes to indicate this is a code block with preserved newlines
@@ -813,51 +777,13 @@ export function initializeCodeMirror(element) {
         // This avoids the issue of multiple event listeners on the same element
         if (!contentContainer.hasAttribute('data-copy-delegation-added')) {
             contentContainer.setAttribute('data-copy-delegation-added', 'true');
-            
+
             contentContainer.addEventListener('click', (e) => {
-                // Handle HTML code container clicks
+                // Handle HTML code container clicks (now rendered as pre[data-multiline])
+                // The outer .html-code-container wraps a pre; copy button is on the pre
                 const htmlContainer = e.target.closest('.html-code-container');
                 if (htmlContainer) {
-                    const rect = htmlContainer.getBoundingClientRect();
-                    const isTopRightCorner = (
-                        e.clientX >= rect.right - 100 &&
-                        e.clientX <= rect.right &&
-                        e.clientY >= rect.top &&
-                        e.clientY <= rect.top + 40
-                    );
-
-                    if (isTopRightCorner) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        debugLog('Click on HTML copy button');
-                        
-                        // Extract the original HTML content from the container
-                        const htmlLines = htmlContainer.querySelectorAll('.html-code-line');
-                        let htmlContent = '';
-                        
-                        htmlLines.forEach(line => {
-                            // Get the text content and decode HTML entities
-                            let lineText = line.textContent || '';
-                            // Remove the &nbsp; characters used for indentation
-                            lineText = lineText.replace(/\u00A0/g, ' ');
-                            htmlContent += lineText + '\n';
-                        });
-                        
-                        // Remove the last newline
-                        htmlContent = htmlContent.replace(/\n$/, '');
-                        
-                        debugLog('Copying HTML content:', htmlContent);
-                        
-                        copyToClipboard(htmlContent);
-
-                        // Visual feedback
-                        htmlContainer.setAttribute('data-copied', 'true');
-                        setTimeout(() => {
-                            htmlContainer.removeAttribute('data-copied');
-                        }, 2000);
-                        return;
-                    }
+                    // Delegate to the pre click handler below – nothing extra needed here.
                 }
 
                 // Handle pre element clicks
@@ -879,15 +805,12 @@ export function initializeCodeMirror(element) {
                     if (isTopRightCorner && buttonVisible) {
                         e.preventDefault();
                         e.stopPropagation();
-                        
-                        debugLog('Click on copy button');
-                        // Extract text content from the pre element
-                        let text = preElement.textContent || "";
 
-                        // Create a temporary div to decode HTML entities
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = text;
-                        text = tempDiv.textContent || tempDiv.innerText || "";
+                        debugLog('Click on copy button');
+                        // Copy the normalized raw code, not the rendered DOM output.
+                        let text = typeof preElement._rawCodeText === 'string'
+                            ? preElement._rawCodeText
+                            : (preElement.querySelector('code')?.textContent || "");
 
                         // Remove thinking tags from the text before copying
                         text = removeThinkTags(text);
@@ -915,7 +838,8 @@ export function initializeCodeMirror(element) {
         // Process code blocks to ensure they have proper styling and copy functionality
         codeBlocks.forEach(block => {
             const pre = block.parentNode;
-            const language = block.className.replace('language-', '') || 'plaintext';
+            const languageMatch = block.className.match(/language-([A-Za-z0-9+#_-]+)/);
+            const language = (pre.getAttribute('data-language') || (languageMatch ? languageMatch[1] : '') || 'plaintext').toLowerCase();
             
             // Add language as data attribute for styling
             pre.setAttribute('data-language', language);
@@ -966,8 +890,14 @@ export function initializeCodeMirror(element) {
                 .replace(/\[HTML_CODE_BLOCK_EXACT\]/g, '')
                 .replace(/\[\/HTML_CODE_BLOCK_EXACT\]/g, '');
 
+            pre._rawCodeText = codeContent;
+
             // Update the block content
             block.textContent = codeContent;
+
+            // Apply syntax highlighting using built-in highlighter
+            block.className = language === 'plaintext' ? 'language-plaintext' : `language-${language}`;
+            shHighlight(block, language);
         });
     }, 50);
 }
@@ -1902,19 +1832,13 @@ if (typeof window !== 'undefined') {
                 tempDiv.textContent = processedContent;
                 let sanitized = tempDiv.innerHTML;
 
-                // Handle code blocks with language specification
+                // Handle code blocks with language specification. The thinking
+                // content was already escaped via textContent above.
                 sanitized = sanitized.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
-                    // Preserve newlines but escape HTML in the code
-                    const escapedCode = code.trim()
-                        .replace(/&/g, '&amp;')
-                        .replace(/</g, '&lt;')
-                        .replace(/>/g, '&gt;')
-                        .replace(/"/g, '&quot;')
-                        .replace(/'/g, '&#39;')
-                        .replace(/\//g, '&#x2F;');
+                    const safeCode = code.trim();
 
                     // Split by newlines and join with explicit <br> tags
-                    const lines = escapedCode.split('\n');
+                    const lines = safeCode.split('\n');
                     const formattedCode = lines.join('<br>');
 
                     // Add a special data attribute to indicate this is a code block with preserved newlines

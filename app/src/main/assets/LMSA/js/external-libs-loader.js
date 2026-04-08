@@ -148,8 +148,15 @@ window.renderCodeWithFallback = function (container, code, language) {
     const codeEl = document.createElement('code');
     if (language) {
         codeEl.className = `language-${language}`;
+    } else {
+        codeEl.className = 'language-plaintext';
     }
     codeEl.textContent = code;
+    
+    // Apply syntax highlighting if the built-in highlighter is loaded
+    if (window.shHighlightElement) {
+        window.shHighlightElement(codeEl, language || '');
+    }
 
     // Add copy button
     const copyBtn = document.createElement('button');

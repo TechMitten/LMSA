@@ -39,7 +39,7 @@ export const whatsNewModal = `
                                     </div>
                                     <div class="feature-description">
                                         <p class="mb-3">Secure your chats with device biometrics! You can now require fingerprint or face unlock to open the app.</p>
-                                        <p class="mb-3">Enable this feature anytime in the Settings menu under Security.</p>
+                                        <p class="mb-3">Enable this feature anytime in the Settings menu under Security. <span class="text-yellow-400 font-semibold"><i class="fas fa-crown mr-1"></i>Premium Feature</span></p>
                                     </div>
                                 </div>
                             </div>

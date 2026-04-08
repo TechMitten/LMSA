@@ -1,0 +1,51 @@
+/* ─── Syntax Highlighter Theme (Monokai-inspired) ─── */
+/* Works with the built-in syntax-highlighter.js engine */
+
+/* Highlighted code blocks should inherit font/layout from pre code */
+pre code .sh-comment    { color: #75715e !important; font-style: italic; }
+pre code .sh-string     { color: #e6db74 !important; }
+pre code .sh-keyword    { color: #f92672 !important; font-weight: bold; }
+pre code .sh-number     { color: #ae81ff !important; }
+pre code .sh-function   { color: #a6e22e !important; }
+pre code .sh-operator   { color: #f92672 !important; }
+pre code .sh-punctuation { color: #f8f8f2 !important; }
+pre code .sh-tag        { color: #f92672 !important; }
+pre code .sh-attr       { color: #a6e22e !important; }
+pre code .sh-bracket    { color: #f8f8f2 !important; }
+pre code .sh-property   { color: #66d9ef !important; }
+pre code .sh-selector   { color: #a6e22e !important; }
+pre code .sh-color      { color: #ae81ff !important; }
+pre code .sh-regex      { color: #e6db74 !important; }
+pre code .sh-decorator  { color: #66d9ef !important; }
+pre code .sh-annotation { color: #66d9ef !important; }
+pre code .sh-variable   { color: #fd971f !important; }
+pre code .sh-symbol     { color: #ae81ff !important; }
+pre code .sh-macro      { color: #a6e22e !important; font-weight: bold; }
+pre code .sh-preprocessor { color: #f92672 !important; }
+pre code .sh-doctype    { color: #75715e !important; font-style: italic; }
+
+/* Standalone html-code-line divs (inline escaped HTML outside code blocks) */
+.html-code-line .sh-comment    { color: #75715e !important; font-style: italic; }
+.html-code-line .sh-string     { color: #e6db74 !important; }
+.html-code-line .sh-keyword    { color: #f92672 !important; font-weight: bold; }
+.html-code-line .sh-number     { color: #ae81ff !important; }
+.html-code-line .sh-function   { color: #a6e22e !important; }
+.html-code-line .sh-operator   { color: #f92672 !important; }
+.html-code-line .sh-tag        { color: #f92672 !important; }
+.html-code-line .sh-attr       { color: #a6e22e !important; }
+.html-code-line .sh-bracket    { color: #f8f8f2 !important; }
+.html-code-line .sh-property   { color: #66d9ef !important; }
+
+/* ─── Light theme overrides ─── */
+[data-theme="light"] pre code .sh-comment    { color: #6a737d !important; }
+[data-theme="light"] pre code .sh-string     { color: #032f62 !important; }
+[data-theme="light"] pre code .sh-keyword    { color: #d73a49 !important; }
+[data-theme="light"] pre code .sh-number     { color: #005cc5 !important; }
+[data-theme="light"] pre code .sh-function   { color: #6f42c1 !important; }
+[data-theme="light"] pre code .sh-operator   { color: #d73a49 !important; }
+[data-theme="light"] pre code .sh-tag        { color: #22863a !important; }
+[data-theme="light"] pre code .sh-attr       { color: #6f42c1 !important; }
+[data-theme="light"] pre code .sh-property   { color: #005cc5 !important; }
+[data-theme="light"] pre code .sh-variable   { color: #e36209 !important; }
+[data-theme="light"] pre code .sh-decorator  { color: #6f42c1 !important; }
+[data-theme="light"] pre code .sh-annotation { color: #6f42c1 !important; }

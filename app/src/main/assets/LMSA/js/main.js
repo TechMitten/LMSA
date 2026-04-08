@@ -22,7 +22,8 @@ import { initSmartReplyWarningModal } from './components/modals/smart-reply-warn
 import { initOpenRouterWarningModal } from './components/modals/openrouter-warning-modal.js';
 import { initializeTemplateIndicator } from './template-indicator.js';
 import { initializeHapticFeedback } from './haptics.js';
-import './about.js';
+import { updateConfirmationModalTheme, updateExportImportModalsTheme } from './confirmation-modal-fix.js';
+import './about.js';
 
 // Android WebView keyboard overlap fix
 let initialViewportHeight = window.innerHeight;
