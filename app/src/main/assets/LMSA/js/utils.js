@@ -762,6 +762,17 @@ export function escapeHtml(unsafe) {
         .replace(/'/g, '&#039;');
 }
 
+function extractCodeTextFromElement(codeElement) {
+    if (!codeElement) return '';
+
+    const clone = codeElement.cloneNode(true);
+    clone.querySelectorAll('br').forEach(br => {
+        br.replaceWith(document.createTextNode('\n'));
+    });
+
+    return (clone.textContent || '').replace(/\r\n?/g, '\n');
+}
+
 /**
  * Initializes basic code blocks with copy functionality
  * @param {HTMLElement} element - The element containing code blocks
@@ -810,7 +821,7 @@ export function initializeCodeMirror(element) {
                         // Copy the normalized raw code, not the rendered DOM output.
                         let text = typeof preElement._rawCodeText === 'string'
                             ? preElement._rawCodeText
-                            : (preElement.querySelector('code')?.textContent || "");
+                            : extractCodeTextFromElement(preElement.querySelector('code'));
 
                         // Remove thinking tags from the text before copying
                         text = removeThinkTags(text);
@@ -845,12 +856,8 @@ export function initializeCodeMirror(element) {
             pre.setAttribute('data-language', language);
             pre.setAttribute('data-multiline', 'true');
 
-            // Get the code content, preserving whitespace and newlines
-            let codeContent = block.innerHTML;
-
-            // Process block content
-            codeContent = codeContent.replace(/<br\s*\/?>/g, '\n');
-            codeContent = decodeHtmlEntities(codeContent);
+            // Get the code content from the DOM so line breaks survive copy/reload.
+            let codeContent = extractCodeTextFromElement(block);
 
             // Check for special HTML markers and clean them up
             const hasHtmlMarkers = codeContent.includes('[HTML_CODE_BLOCK') ||
