@@ -44,6 +44,8 @@ window.onBiometricSuccess = function() {
         window.pendingBiometricReject = null;
         return;
     }
+    // Mark as authenticated for the rest of this session
+    sessionStorage.setItem('biometric_authenticated', 'true');
     const lockOverlay = document.getElementById('app-lock-overlay');
     if (lockOverlay) {
         // fade out transition
@@ -138,7 +140,8 @@ export async function initializeApp() {
         }
     }
     
-    if (isBiometricSupported && requireBiometric && !getDebugEnabled()) {
+    const alreadyAuthenticated = sessionStorage.getItem('biometric_authenticated') === 'true';
+    if (isBiometricSupported && requireBiometric && !getDebugEnabled() && !alreadyAuthenticated) {
         const lockOverlay = document.getElementById('app-lock-overlay');
         if (lockOverlay) {
             lockOverlay.classList.remove('hidden');

@@ -842,7 +842,7 @@ export function appendMessage(sender, message, files = null, isStreaming = false
         if (!isStreaming) {
             // Create controls container
             const controlsContainer = document.createElement('div');
-            controlsContainer.classList.add('message-controls', 'mt-2', 'flex', 'justify-end', 'text-xs', 'text-gray-400');
+            controlsContainer.classList.add('message-controls', 'mt-2', 'flex', 'justify-end', 'text-xs', 'text-gray-400', 'space-x-2');
 
             if (sender === 'user') {
                 // Create edit button for user messages
@@ -1088,23 +1088,6 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                     }
                 });
                 controlsContainer.appendChild(speakerButton);
-
-                // Create edit button for AI messages
-                const aiEditButton = document.createElement('button');
-                aiEditButton.classList.add(
-                    'ai-edit-btn',
-                    'flex',
-                    'items-center',
-                    'hover:text-yellow-400',
-                    'transition-colors',
-                    'duration-300'
-                );
-                aiEditButton.innerHTML = '<i class="fas fa-pencil-alt"></i>';
-                aiEditButton.title = 'Edit this response';
-                aiEditButton.dataset.action = 'ai-edit';
-                aiEditButton.setAttribute('role', 'button');
-                aiEditButton.setAttribute('aria-label', 'Edit AI response');
-                controlsContainer.appendChild(aiEditButton);
 
                 // Create regenerate button for AI messages
                 const regenerateButton = document.createElement('button');
@@ -1390,7 +1373,7 @@ export function refreshAllMessages() {
                 } else {
                     // Create new controls container
                     controlsContainer = document.createElement('div');
-                    controlsContainer.classList.add('message-controls', 'mt-2', 'flex', 'justify-end', 'text-xs', 'text-gray-400');
+                    controlsContainer.classList.add('message-controls', 'mt-2', 'flex', 'justify-end', 'text-xs', 'text-gray-400', 'space-x-2');
 
                     // Create copy button
                     const copyButton = document.createElement('button');
@@ -1664,7 +1647,7 @@ export function refreshAllMessages() {
             if (!controlsContainer) {
                 // Create message controls container
                 controlsContainer = document.createElement('div');
-                controlsContainer.classList.add('message-controls', 'mt-2', 'flex', 'justify-end', 'text-xs', 'text-gray-400');
+                controlsContainer.classList.add('message-controls', 'mt-2', 'flex', 'justify-end', 'text-xs', 'text-gray-400', 'space-x-2');
 
                 // Create edit button
                 const editButton = document.createElement('button');
