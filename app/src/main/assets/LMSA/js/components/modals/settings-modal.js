@@ -140,6 +140,20 @@ export const settingsModal = `
                             </button>
                         </div>
                     </div>
+                    
+                    <div class="mb-5" id="biometric-setting-container">
+                        <div class="flex justify-between items-center mb-2">
+                            <label for="require-biometric" class="text-sm font-medium">
+                                <i class="fas fa-fingerprint mr-2 text-blue-400"></i>Require Biometric Unlock</label>
+                            <div class="toggle-container">
+                                <input type="checkbox" id="require-biometric">
+                                <div class="toggle-switch"></div>
+                                <div class="toggle-dot"></div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">When enabled, you must authenticate to open the app. Relies on device biometrics or credentials.</p>
+                    </div>
+
                     <div class="mb-5">
                         <div class="flex justify-between items-center mb-2">
                             <label for="ollama-toggle" class="text-sm font-medium">

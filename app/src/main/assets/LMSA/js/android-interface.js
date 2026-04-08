@@ -105,14 +105,28 @@ function keepScreenOn(enabled) {
 
 /**
  * Triggers device haptic feedback
- * @param {boolean} light - True for a light tap, false for a standard virtual key feel
+ * @param {string|boolean} type - Semantic haptic type or legacy boolean light flag
  */
-function triggerHapticFeedback(light = false) {
-    if (window.AndroidHaptics) {
-        if (light && typeof window.AndroidHaptics.triggerLightHaptic === 'function') {
-            window.AndroidHaptics.triggerLightHaptic();
-        } else if (typeof window.AndroidHaptics.triggerHapticFeedback === 'function') {
-            window.AndroidHaptics.triggerHapticFeedback();
-        }
+function triggerHapticFeedback(type = 'light') {
+    if (!window.AndroidHaptics) {
+        return;
+    }
+
+    if (typeof type === 'boolean') {
+        type = type ? 'light' : 'button';
+    }
+
+    if (typeof window.AndroidHaptics.perform === 'function') {
+        window.AndroidHaptics.perform(type);
+        return;
+    }
+
+    if (type === 'light' && typeof window.AndroidHaptics.triggerLightHaptic === 'function') {
+        window.AndroidHaptics.triggerLightHaptic();
+        return;
+    }
+
+    if (typeof window.AndroidHaptics.triggerHapticFeedback === 'function') {
+        window.AndroidHaptics.triggerHapticFeedback();
     }
 }

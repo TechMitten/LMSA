@@ -8,6 +8,10 @@ export function setDebugEnabled(enabled) {
     isDebugEnabled = enabled;
 }
 
+export function getDebugEnabled() {
+    return isDebugEnabled;
+}
+
 export function debugLog(...args) {
     if (isDebugEnabled) {
         console.log(...args);

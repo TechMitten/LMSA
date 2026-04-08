@@ -218,7 +218,7 @@ export function initializeSidebarTouchHandler() {
             const openThreshold = Math.max(SWIPE_OPEN_MIN_DISTANCE, sidebarWidth * SIDEBAR_OPEN_SWIPE_THRESHOLD);
             if (!hasLatchedHaptic && swipeDeltaX >= openThreshold) {
                 if (typeof window.triggerHapticFeedback === 'function') {
-                    window.triggerHapticFeedback(true);
+                    window.triggerHapticFeedback('selection');
                 }
                 hasLatchedHaptic = true;
             } else if (hasLatchedHaptic && swipeDeltaX < openThreshold) {
@@ -245,7 +245,7 @@ export function initializeSidebarTouchHandler() {
 
         if (shouldOpen) {
             if (typeof window.triggerHapticFeedback === 'function') {
-                window.triggerHapticFeedback(false);
+                window.triggerHapticFeedback('confirm');
             }
             // Animate to fully open after following finger
             sidebar.classList.add('active');

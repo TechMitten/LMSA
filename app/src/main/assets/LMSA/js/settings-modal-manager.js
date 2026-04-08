@@ -2,7 +2,7 @@
 // This module centralizes all settings modal functionality
 
 import { settingsModal, getStartedBtn } from './dom-elements.js';
-import { debugLog } from './utils.js';
+import { debugLog, getDebugEnabled } from './utils.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { getApiUrl, getAvailableModels, isServerRunning, validateIpPort, saveServerSettings } from './api-service.js';
 import { showOpenRouterKeyRequiredModal, initOpenRouterKeyRequiredModal } from './components/modals/openrouter-key-required-modal.js';
@@ -43,6 +43,17 @@ export async function showSettingsModal() {
             console.error('Error initializing TTS voice selection:', error);
         });
     });
+
+    // Dynamically update biometric setting visibility based on current support and debug mode
+    const biometricContainer = document.getElementById('biometric-setting-container');
+    if (biometricContainer) {
+        const isBiometricSupported = typeof AndroidBiometric !== 'undefined' && AndroidBiometric.isBiometricSupported();
+        if (isBiometricSupported || window.isDebugMode || getDebugEnabled()) {
+            biometricContainer.style.display = 'block';
+        } else {
+            biometricContainer.style.display = 'none';
+        }
+    }
 
     // Blur any active element to prevent keyboard from showing
     if (document.activeElement) {

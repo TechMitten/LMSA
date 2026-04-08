@@ -15,8 +15,8 @@ android {
         applicationId = "com.lmsa.app"
         minSdk = 23
         targetSdk = 35
-        versionCode = 262
-        versionName = "10.5"
+        versionCode = 263
+        versionName = "10.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -60,6 +60,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation("com.google.android.gms:play-services-ads:23.6.0")
     implementation("com.android.billingclient:billing-ktx:7.0.0")
+    implementation("androidx.biometric:biometric:1.1.0")
 }
 
 tasks.matching { it.name == "produceReleaseBundleIdeListingFile" }.configureEach { enabled = false }

@@ -43,6 +43,7 @@ let showScrollToBottom = true; // Show scroll to bottom button in chat
 let chatFontFamily = 'system-ui, sans-serif'; // Font family for chat message bubbles
 let chatFontSize = '16px'; // Font size for chat message bubbles
 let enableSwipeSidebar = true; // Use horizontal swipe to open sidebar
+let requireBiometric = false; // Require biometric unlock on app start
 
 const ALLOWED_CHAT_FONT_SIZES = ['12px', '14px', '16px', '20px', '24px'];
 
@@ -1544,6 +1545,7 @@ export function loadSettings() {
   loadHideThinkingSetting();
   loadAutoGenerateTitlesSetting();
   loadAutoSmartReplySetting();
+  loadBiometricSetting();
   loadAutoScrollSetting();
   loadEnterSendsNewlineSetting();
   loadThemeSetting();
@@ -1566,6 +1568,60 @@ export function loadSettings() {
  */
 export function getSystemPrompt() {
   return systemPrompt;
+}
+
+export function loadBiometricSetting() {
+  const checkbox = document.getElementById("require-biometric");
+  if (checkbox) {
+    const saved = localStorage.getItem("requireBiometric");
+    if (saved === "true") {
+      checkbox.checked = true;
+      requireBiometric = true;
+    } else {
+      checkbox.checked = false;
+      requireBiometric = false;
+    }
+    checkbox.addEventListener("change", saveBiometricSetting);
+  }
+}
+
+export async function saveBiometricSetting() {
+  const checkbox = document.getElementById("require-biometric");
+  if (checkbox) {
+    const isChecked = checkbox.checked;
+    
+    if (isChecked) {
+      const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
+      if (!isPremium) {
+        if (typeof window.openPremiumModal === 'function') {
+            window.openPremiumModal('Biometric Unlock');
+        }
+        checkbox.checked = false;
+        requireBiometric = false;
+        localStorage.setItem("requireBiometric", "false");
+        return;
+      }
+
+      try {
+        // Must successfully authenticate before enabling
+        await window.requestBiometricAuth("Confirm Biometric", "Authenticate to enable App Lock");
+        requireBiometric = true;
+        localStorage.setItem("requireBiometric", "true");
+      } catch (error) {
+        console.warn("Biometric confirmation failed, reverting to disabled", error);
+        checkbox.checked = false;
+        requireBiometric = false;
+        localStorage.setItem("requireBiometric", "false");
+      }
+    } else {
+      requireBiometric = false;
+      localStorage.setItem("requireBiometric", "false");
+    }
+  }
+}
+
+export function getRequireBiometric() {
+  return requireBiometric;
 }
 
 /**

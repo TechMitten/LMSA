@@ -15,6 +15,7 @@ import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.graphics.Rect
+import android.view.HapticFeedbackConstants
 import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -45,6 +46,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import java.util.concurrent.Executor
 
 import android.widget.Button
 import android.widget.Toast
@@ -353,6 +357,7 @@ class WebViewActivity : AppCompatActivity() {
 
         val webView: WebView = findViewById(R.id.webView)
         val webSettings: WebSettings = webView.settings
+        webView.isHapticFeedbackEnabled = true
 
         webSettings.javaScriptEnabled = true
         webSettings.domStorageEnabled = true
@@ -401,6 +406,7 @@ class WebViewActivity : AppCompatActivity() {
         webView.addJavascriptInterface(UsageLimiterInterface(), "AndroidUsageLimiter")
         webView.addJavascriptInterface(PowerManagementInterface(), "AndroidPower")
         webView.addJavascriptInterface(HapticInterface(), "AndroidHaptics")
+        webView.addJavascriptInterface(BiometricInterface(), "AndroidBiometric")
 
         webView.webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
@@ -2069,23 +2075,123 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     inner class HapticInterface {
-        @JavascriptInterface
-        fun triggerHapticFeedback() {
+        private fun performHaptic(type: String) {
             runOnUiThread {
                 val webView: WebView = findViewById(R.id.webView)
-                webView.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+                webView.isHapticFeedbackEnabled = true
+
+                val feedbackConstant = when (type.lowercase(Locale.US)) {
+                    "light" -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                            HapticFeedbackConstants.KEYBOARD_TAP
+                        } else {
+                            HapticFeedbackConstants.VIRTUAL_KEY
+                        }
+                    }
+                    "selection", "option" -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                            HapticFeedbackConstants.SEGMENT_TICK
+                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                            HapticFeedbackConstants.KEYBOARD_TAP
+                        } else {
+                            HapticFeedbackConstants.VIRTUAL_KEY
+                        }
+                    }
+                    "toggle-on", "toggle_on" -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                            HapticFeedbackConstants.TOGGLE_ON
+                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                            HapticFeedbackConstants.KEYBOARD_TAP
+                        } else {
+                            HapticFeedbackConstants.VIRTUAL_KEY
+                        }
+                    }
+                    "toggle-off", "toggle_off" -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                            HapticFeedbackConstants.TOGGLE_OFF
+                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                            HapticFeedbackConstants.KEYBOARD_TAP
+                        } else {
+                            HapticFeedbackConstants.VIRTUAL_KEY
+                        }
+                    }
+                    "confirm", "success" -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            HapticFeedbackConstants.CONFIRM
+                        } else {
+                            HapticFeedbackConstants.VIRTUAL_KEY
+                        }
+                    }
+                    "reject", "error", "warning" -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            HapticFeedbackConstants.REJECT
+                        } else {
+                            HapticFeedbackConstants.LONG_PRESS
+                        }
+                    }
+                    else -> HapticFeedbackConstants.VIRTUAL_KEY
+                }
+
+                webView.performHapticFeedback(feedbackConstant)
             }
+        }
+
+        @JavascriptInterface
+        fun triggerHapticFeedback() {
+            performHaptic("button")
         }
         
         @JavascriptInterface
         fun triggerLightHaptic() {
+            performHaptic("light")
+        }
+
+        @JavascriptInterface
+        fun perform(type: String) {
+            performHaptic(type)
+        }
+    }
+    inner class BiometricInterface {
+        @JavascriptInterface
+        fun isBiometricSupported(): Boolean {
+            val biometricManager = BiometricManager.from(this@WebViewActivity)
+            return biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK or BiometricManager.Authenticators.DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS
+        }
+
+        @JavascriptInterface
+        fun authenticate() {
             runOnUiThread {
-                val webView: WebView = findViewById(R.id.webView)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                    webView.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
-                } else {
-                    webView.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
-                }
+                val executor: Executor = ContextCompat.getMainExecutor(this@WebViewActivity)
+                val biometricPrompt = BiometricPrompt(this@WebViewActivity, executor,
+                    object : BiometricPrompt.AuthenticationCallback() {
+                        override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                            super.onAuthenticationError(errorCode, errString)
+                            Log.e(TAG, "Biometric auth error: \$errString")
+                            // You might want to notify JS here, depending on needs. Let's send a failure call
+                            val webView: WebView = findViewById(R.id.webView)
+                            webView.evaluateJavascript("if(window.onBiometricFailure) window.onBiometricFailure('\$errString');", null)
+                        }
+
+                        override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                            super.onAuthenticationSucceeded(result)
+                            Log.d(TAG, "Biometric auth succeeded")
+                            val webView: WebView = findViewById(R.id.webView)
+                            webView.evaluateJavascript("if(window.onBiometricSuccess) window.onBiometricSuccess();", null)
+                        }
+
+                        override fun onAuthenticationFailed() {
+                            super.onAuthenticationFailed()
+                            Log.w(TAG, "Biometric auth failed")
+                        }
+                    })
+
+                val promptInfo = BiometricPrompt.PromptInfo.Builder()
+                    .setTitle("App Locked")
+                    .setSubtitle("Authenticate to access LMSA")
+                    .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_WEAK or BiometricManager.Authenticators.DEVICE_CREDENTIAL)
+                    .build()
+
+                biometricPrompt.authenticate(promptInfo)
             }
         }
     }

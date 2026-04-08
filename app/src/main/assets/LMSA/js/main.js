@@ -1,6 +1,6 @@
 // Main entry point for the application
 import { loadServerSettings, fetchAvailableModels } from './api-service.js';
-import { loadSettings } from './settings-manager.js';
+import { loadSettings, getRequireBiometric } from './settings-manager.js';
 import { loadChatHistory, loadChat, chatHistoryData } from './chat-service.js';
 import { initializeFileUpload } from './file-upload.js';
 import { initializeEventHandlers } from './event-handlers.js';
@@ -10,7 +10,7 @@ import { initializeChatHistoryTouchHandler } from './chat-history-touch-handler.
 import { initializeSettingsModalTouchHandler } from './settings-modal-touch-handler.js';
 import { initializeSidebarTouchHandler } from './sidebar-touch-handler.js';
 // File preview touch handler removed
-import { handleScroll, setDebugEnabled, wasRefreshDueToCodeGeneration, getLastActiveChatId, clearRefreshDueToCodeGenerationFlag, isAndroidWebView } from './utils.js';
+import { handleScroll, setDebugEnabled, getDebugEnabled, wasRefreshDueToCodeGeneration, getLastActiveChatId, clearRefreshDueToCodeGenerationFlag, isAndroidWebView } from './utils.js';
 import { initializeExportImport } from './export-import.js';
 import { initializeModelManager } from './model-manager.js';
 import { initializeWhatsNew } from './whats-new.js';
@@ -21,17 +21,8 @@ import { initPremiumModal, openPremiumModal } from './components/modals/premium-
 import { initSmartReplyWarningModal } from './components/modals/smart-reply-warning-modal.js';
 import { initOpenRouterWarningModal } from './components/modals/openrouter-warning-modal.js';
 import { initializeTemplateIndicator } from './template-indicator.js';
-
-// Optimization modules removed
-
-
-import { updateConfirmationModalTheme, updateExportImportModalsTheme } from './confirmation-modal-fix.js';
-// Memory leak detector removed
-import { animationOptimizer } from './optimized-utils.js';
-// Import help.js to ensure help modal buttons work immediately
-import './help.js';
-// Import about.js to ensure about modal buttons work immediately
-import './about.js';
+import { initializeHapticFeedback } from './haptics.js';
+import './about.js';
 
 // Android WebView keyboard overlap fix
 let initialViewportHeight = window.innerHeight;
@@ -42,26 +33,61 @@ import { hasAcceptedCurrentTerms } from './terms-acceptance.js';
 
 let isAppInitialized = false;
 
+window.pendingBiometricResolve = null;
+window.pendingBiometricReject = null;
 
-/**
- * Initializes the application
- */
-export async function initializeApp() {
-    if (isAppInitialized) {
+window.onBiometricSuccess = function() {
+    if (window.pendingBiometricResolve) {
+        window.pendingBiometricResolve(true);
+        window.pendingBiometricResolve = null;
+        window.pendingBiometricReject = null;
         return;
     }
+    const lockOverlay = document.getElementById('app-lock-overlay');
+    if (lockOverlay) {
+        // fade out transition
+        lockOverlay.style.opacity = '0';
+        setTimeout(() => {
+            lockOverlay.classList.add('hidden');
+            lockOverlay.classList.remove('flex');
+            lockOverlay.style.display = 'none';
+        }, 300);
+    }
+};
 
+window.onBiometricFailure = function(errorMsg) {
+    console.error("Biometric failure:", errorMsg);
+    if (window.pendingBiometricReject) {
+        window.pendingBiometricReject(new Error(errorMsg || "Authentication failed"));
+        window.pendingBiometricResolve = null;
+        window.pendingBiometricReject = null;
+    }
+};
+
+window.requestBiometricAuth = function(title, subtitle) {
+    return new Promise((resolve, reject) => {
+        if (typeof AndroidBiometric !== 'undefined' && typeof AndroidBiometric.isBiometricSupported === 'function' && AndroidBiometric.isBiometricSupported()) {
+            window.pendingBiometricResolve = resolve;
+            window.pendingBiometricReject = reject;
+            AndroidBiometric.authenticate();
+        } else {
+            // Allow override in debug environments
+            resolve(true);
+        }
+    });
+};
+
+export async function initializeApp() {
+    if (isAppInitialized) return;
+    
     // Wait for terms acceptance check before proceeding
-
-
     if (!hasAcceptedCurrentTerms()) {
         console.log('Terms not accepted, skipping app initialization');
         return;
     }
-
+    
     isAppInitialized = true;
 
-    // Disable debug logging by default
     setDebugEnabled(false);
 
     // Set up math rendering (KaTeX auto-render for $...$ and $$...$$)
@@ -71,6 +97,7 @@ export async function initializeApp() {
 
     // Initialize Android WebView keyboard fix
     initializeAndroidKeyboardFix();
+    initializeHapticFeedback();
 
     // Initialize the model banner state based on localStorage
     initializeModelBannerState();
@@ -95,6 +122,42 @@ export async function initializeApp() {
     // Load critical settings first
     loadServerSettings(); // This will also fetch available models
     loadSettings();
+
+    // Check biometric requirement right after loading settings
+    const isBiometricSupported = typeof AndroidBiometric !== 'undefined' && AndroidBiometric.isBiometricSupported();
+    const requireBiometric = getRequireBiometric();
+    
+    // Check if biometric setting exists in DOM to toggle visibility based on support
+    const biometricContainer = document.getElementById('biometric-setting-container');
+    if (biometricContainer) {
+        if (!isBiometricSupported && !getDebugEnabled()) {
+            biometricContainer.style.display = 'none';
+        } else {
+            biometricContainer.style.display = 'block';
+        }
+    }
+    
+    if (isBiometricSupported && requireBiometric && !getDebugEnabled()) {
+        const lockOverlay = document.getElementById('app-lock-overlay');
+        if (lockOverlay) {
+            lockOverlay.classList.remove('hidden');
+            lockOverlay.classList.add('flex');
+            lockOverlay.style.display = 'flex';
+            lockOverlay.style.opacity = '1';
+            
+            // auto prompt
+            setTimeout(() => {
+                AndroidBiometric.authenticate();
+            }, 100);
+            
+            // Setup manual unlock button
+            const unlockBtn = document.getElementById('biometric-unlock-btn');
+            if (unlockBtn) {
+                unlockBtn.onclick = () => AndroidBiometric.authenticate();
+            }
+        }
+    }
+
     loadChatHistory();
 
     // Check if refresh was triggered by code generation
