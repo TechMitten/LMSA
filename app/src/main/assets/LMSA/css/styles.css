@@ -193,6 +193,16 @@ body.light-theme .chat-scrollbar-thumb {
         font-size: var(--chat-font-size, 16px);
         /* Font size controlled by user setting */
     }
+
+    /* AI messages with code snippets consume more width on mobile */
+    /* Using both :has() for modern browsers and .has-code-blocks class for compatibility */
+    #messages > div.ai:has(pre),
+    #messages > div.ai.has-code-blocks {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
 }
 
 #messages>div.user {
@@ -4953,6 +4963,79 @@ body.light-theme .regenerate-btn:hover {
 /* Uniform vertical spacing between all direct block children */
 .message-content>*+* {
     margin-top: 1em;
+}
+
+/* Better spacing after code blocks */
+.message-content pre+*,
+.message-content .html-code-container+* {
+    margin-top: 1.5em !important;
+}
+
+/* Paragraph styling within message content */
+.message-content p {
+    margin: 0.75em 0;
+    line-height: 1.6;
+    word-wrap: break-word;
+}
+
+/* Heading styling within message content */
+.message-content h1,
+.message-content h2,
+.message-content h3,
+.message-content h4,
+.message-content h5,
+.message-content h6 {
+    margin: 1em 0 0.5em 0;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.message-content h1 { font-size: 1.5em; }
+.message-content h2 { font-size: 1.3em; }
+.message-content h3 { font-size: 1.1em; }
+.message-content h4 { font-size: 1em; }
+.message-content h5 { font-size: 0.95em; }
+.message-content h6 { font-size: 0.9em; }
+
+/* List styling within message content */
+.message-content ul,
+.message-content ol {
+    margin: 0.75em 0;
+    padding-left: 1.5em;
+}
+
+.message-content li {
+    margin: 0.4em 0;
+    line-height: 1.6;
+}
+
+/* Inline code styling */
+.message-content code:not(pre code) {
+    background-color: rgba(255, 99, 71, 0.15);
+    border: 1px solid rgba(255, 99, 71, 0.3);
+    padding: 0.2em 0.4em;
+    border-radius: 0.3em;
+    font-size: 0.9em;
+    color: #ff6347;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Blockquote styling */
+.message-content blockquote {
+    border-left: 4px solid rgba(59, 130, 246, 0.5);
+    padding-left: 1em;
+    margin: 1em 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+}
+
+/* Strong and emphasis */
+.message-content strong {
+    font-weight: 600;
+}
+
+.message-content em {
+    font-style: italic;
 }
 
 /* Horizontal rules inside messages */

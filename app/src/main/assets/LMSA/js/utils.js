@@ -892,6 +892,9 @@ export function initializeCodeMirror(element) {
         // No code blocks found, nothing to do
         if (!codeBlocks.length) return;
 
+        // Mark the message element as having code blocks for CSS styling
+        element.classList.add('has-code-blocks');
+
         // Process code blocks to ensure they have proper styling and copy functionality
         codeBlocks.forEach(block => {
             const pre = block.closest('pre');
