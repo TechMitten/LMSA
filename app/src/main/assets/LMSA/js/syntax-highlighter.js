@@ -202,6 +202,83 @@ GRAMMARS.plaintext = GRAMMARS.text = GRAMMARS.generic = [
     R('sh-punctuation', /[{}()\[\];,.]/),
 ];
 
+var DARK_THEME = {
+    'sh-comment': { color: '#75715e', fontStyle: 'italic' },
+    'sh-string': { color: '#e6db74' },
+    'sh-keyword': { color: '#f92672', fontWeight: '700' },
+    'sh-number': { color: '#ae81ff' },
+    'sh-function': { color: '#a6e22e' },
+    'sh-operator': { color: '#f92672' },
+    'sh-punctuation': { color: '#f8f8f2' },
+    'sh-tag': { color: '#f92672' },
+    'sh-attr': { color: '#a6e22e' },
+    'sh-bracket': { color: '#f8f8f2' },
+    'sh-property': { color: '#66d9ef' },
+    'sh-selector': { color: '#a6e22e' },
+    'sh-color': { color: '#ae81ff' },
+    'sh-regex': { color: '#e6db74' },
+    'sh-decorator': { color: '#66d9ef' },
+    'sh-annotation': { color: '#66d9ef' },
+    'sh-variable': { color: '#fd971f' },
+    'sh-symbol': { color: '#ae81ff' },
+    'sh-macro': { color: '#a6e22e', fontWeight: '700' },
+    'sh-preprocessor': { color: '#f92672' },
+    'sh-doctype': { color: '#75715e', fontStyle: 'italic' }
+};
+
+var LIGHT_THEME = {
+    'sh-comment': { color: '#6a737d', fontStyle: 'italic' },
+    'sh-string': { color: '#032f62' },
+    'sh-keyword': { color: '#d73a49', fontWeight: '700' },
+    'sh-number': { color: '#005cc5' },
+    'sh-function': { color: '#6f42c1' },
+    'sh-operator': { color: '#d73a49' },
+    'sh-punctuation': { color: '#24292e' },
+    'sh-tag': { color: '#22863a' },
+    'sh-attr': { color: '#6f42c1' },
+    'sh-bracket': { color: '#24292e' },
+    'sh-property': { color: '#005cc5' },
+    'sh-selector': { color: '#22863a' },
+    'sh-color': { color: '#005cc5' },
+    'sh-regex': { color: '#032f62' },
+    'sh-decorator': { color: '#6f42c1' },
+    'sh-annotation': { color: '#6f42c1' },
+    'sh-variable': { color: '#e36209' },
+    'sh-symbol': { color: '#005cc5' },
+    'sh-macro': { color: '#22863a', fontWeight: '700' },
+    'sh-preprocessor': { color: '#d73a49' },
+    'sh-doctype': { color: '#6a737d', fontStyle: 'italic' }
+};
+
+function getActiveTheme() {
+    if (typeof document !== 'undefined' && document.body && document.body.classList.contains('light-theme')) {
+        return LIGHT_THEME;
+    }
+    return DARK_THEME;
+}
+
+function applyInlineTheme(element) {
+    if (!element || !element.querySelectorAll) return;
+
+    var theme = getActiveTheme();
+    var tokens = element.querySelectorAll('span[class^="sh-"], span[class*=" sh-"]');
+
+    for (var i = 0; i < tokens.length; i++) {
+        var token = tokens[i];
+        var classes = (token.className || '').split(/\s+/);
+
+        for (var j = 0; j < classes.length; j++) {
+            var tokenTheme = theme[classes[j]];
+            if (!tokenTheme) continue;
+
+            if (tokenTheme.color) token.style.color = tokenTheme.color;
+            if (tokenTheme.fontStyle) token.style.fontStyle = tokenTheme.fontStyle;
+            if (tokenTheme.fontWeight) token.style.fontWeight = tokenTheme.fontWeight;
+            break;
+        }
+    }
+}
+
 
 // ── Public API ──────────────────────────────────────────────────
 
@@ -250,6 +327,7 @@ export function highlightElement(element, lang) {
 
     var code = element.textContent || '';
     element.innerHTML = highlightCode(code, lang);
+    applyInlineTheme(element);
     // Mark as highlighted so we don't re-process
     element.classList.add('sh-highlighted');
 }

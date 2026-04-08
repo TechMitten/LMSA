@@ -1629,23 +1629,13 @@ export function refreshAllCodeBlocks() {
                         // Add language as data attribute for styling
                         pre.setAttribute('data-language', language);
                         pre.setAttribute('data-multiline', 'true');
-
-                        // Special handling for HTML code blocks
-                        if (language === 'html' || language === 'xml') {
-                            let codeContent = codeElement.innerHTML;
-
-                            // If content contains HTML entities but no special markers, decode them
-                            if ((codeContent.includes('&lt;') || codeContent.includes('&gt;')) &&
-                                !codeContent.includes('[HTML_CODE_BLOCK_START]') &&
-                                !codeContent.includes('[HTML_CODE_BLOCK]') &&
-                                !codeContent.includes('[HTMLCODEBLOCK]') &&
-                                !codeContent.includes('[HTML_CODE_BLOCK_EXACT]')) {
-
-                                // Decode HTML entities for display
-                                const decodedContent = decodeHtmlEntities(codeContent);
-                                codeElement.textContent = decodedContent;
-                            }
-                        }
+                        // Normalize highlighted and unhighlighted blocks back to raw text
+                        // before re-running the local highlighter. Reading from innerHTML here
+                        // can parse escaped HTML into real DOM on reload, collapsing code like
+                        // <h1>Hello</h1> into visible page text such as "Hello".
+                        const codeContent = extractCodeTextFromElement(codeElement);
+                        pre._rawCodeText = codeContent;
+                        codeElement.textContent = codeContent;
 
                         // Check if this message has thinking tags and add the attribute to the pre element
                         const messageHasThinking = messageEl.dataset && messageEl.dataset.hasThinking === 'true';

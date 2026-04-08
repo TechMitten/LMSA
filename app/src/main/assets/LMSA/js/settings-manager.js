@@ -14,7 +14,7 @@ import {
 
 import { applyThinkingVisibility, refreshAllMessages, applyModelLabelVisibility } from "./ui-manager.js";
 import { refreshChatScrollbar } from "./chat-scrollbar.js";
-import { debugLog } from "./utils.js";
+import { debugLog, refreshAllCodeBlocks } from "./utils.js";
 import { showSmartReplyWarningModal } from "./components/modals/smart-reply-warning-modal.js";
 import { showOpenRouterWarningModal } from "./components/modals/openrouter-warning-modal.js";
 
@@ -803,6 +803,8 @@ export function loadThemeSetting() {
     document.body.classList.add("custom-dark-mode"); // Ensure custom-dark-mode class is present for dark theme
   }
 
+  refreshAllCodeBlocks();
+
   // Update the settings modal toggle if it exists
   if (themeToggleCheckbox) {
     themeToggleCheckbox.checked = lightThemeEnabled;
@@ -859,6 +861,8 @@ export function saveThemeSetting() {
         themeIcon.classList.add("fa-moon");
       }
     }
+
+    refreshAllCodeBlocks();
 
     // Force refresh of sidebar styles
     const sidebar = document.getElementById("sidebar");
