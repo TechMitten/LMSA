@@ -1,6 +1,6 @@
 // Sidebar touch handler for improved touch scrolling on mobile devices
 import { debugError, debugLog } from './utils.js';
-import { closeSidebar, updateHamburgerIcon } from './ui-manager.js';
+import { updateHamburgerIcon } from './ui-manager.js';
 import { getEnableSwipeSidebar } from './settings-manager.js';
 
 /**
@@ -27,15 +27,12 @@ export function initializeSidebarTouchHandler() {
     let swipeDeltaX = 0;
     let swipeDeltaY = 0;
 
-    let isSidebarSwiping = false;
     let isEdgeSwipeOpening = false;
     let hasLatchedHaptic = false;
-    const SIDEBAR_CLOSE_SWIPE_THRESHOLD = 0.3; // close after 30% swipe
     const SIDEBAR_OPEN_SWIPE_THRESHOLD = 0.15; // open after 15% swipe
     const EDGE_SWIPE_ZONE = 40; // left gap for opening gesture (matched to native exclusion zone)
     const SWIPE_OPEN_MIN_DISTANCE = 28; // reduced to make opening easier with exclusion limit
-    const SWIPE_CLOSE_MIN_DISTANCE = 48;
-    const SWIPE_CLOSE_MAX_VERTICAL_DRIFT = 120; // increased tolerance for vertical movement
+    const SWIPE_OPEN_MAX_VERTICAL_DRIFT = 120;
 
     function setSidebarGestureState(state) {
         window.__sidebarGestureState = state;
@@ -115,39 +112,8 @@ export function initializeSidebarTouchHandler() {
             setScrollingState(true);
         }
 
-        // Handle sidebar closing gesture while in mobile/phone layout
-        if (
-            isPhoneLayout() &&
-            sidebar.classList.contains('active') &&
-            swipeDeltaX < 0 &&
-            Math.abs(swipeDeltaX) > Math.abs(swipeDeltaY)
-        ) {
-            isSidebarSwiping = true;
-            if (e.cancelable) {
-                e.preventDefault();
-            }
-            e.stopPropagation();
-
-            // Move sidebar with finger
-            const sidebarWidth = sidebar.offsetWidth || window.innerWidth;
-            const translateX = Math.max(-sidebarWidth, swipeDeltaX);
-            sidebar.style.transition = 'none';
-            sidebar.style.transform = `translateX(${translateX}px)`;
-
-            // Haptic feedback when crossing the commit threshold
-            const closeThreshold = Math.max(SWIPE_CLOSE_MIN_DISTANCE, sidebarWidth * SIDEBAR_CLOSE_SWIPE_THRESHOLD);
-            if (!hasLatchedHaptic && Math.abs(swipeDeltaX) >= closeThreshold) {
-                if (typeof window.triggerHapticFeedback === 'function') {
-                    window.triggerHapticFeedback(true);
-                }
-                hasLatchedHaptic = true;
-            } else if (hasLatchedHaptic && Math.abs(swipeDeltaX) < closeThreshold) {
-                hasLatchedHaptic = false; // Reset if they pull it back
-            }
-        } else {
-            // Stop propagation but don't prevent default scrolling for regular interactions
-            e.stopPropagation();
-        }
+        // Stop propagation but don't prevent default scrolling for regular interactions
+        e.stopPropagation();
     }, { passive: false, capture: true });
 
     sidebar.addEventListener('touchend', function(e) {
@@ -174,46 +140,6 @@ export function initializeSidebarTouchHandler() {
         // Reset dragging state
         isDragging = false;
 
-        const sidebarWidth = sidebar.offsetWidth || window.innerWidth;
-        if (isSidebarSwiping) {
-            const velocity = Math.abs(swipeDeltaX) / touchDuration; // px/ms
-            const isFlick = velocity > 0.5 && Math.abs(swipeDeltaX) > 20;
-
-            const shouldClose = (
-                (Math.abs(swipeDeltaX) >= Math.max(SWIPE_CLOSE_MIN_DISTANCE, sidebarWidth * SIDEBAR_CLOSE_SWIPE_THRESHOLD) || isFlick) &&
-                Math.abs(swipeDeltaY) <= SWIPE_CLOSE_MAX_VERTICAL_DRIFT &&
-                Math.abs(swipeDeltaX) > Math.abs(swipeDeltaY)
-            );
-
-            if (shouldClose) {
-                if (typeof window.triggerHapticFeedback === 'function') {
-                    window.triggerHapticFeedback(false);
-                }
-                closeSidebar();
-            } else {
-                // Return to original position if swipe was insufficient
-                sidebar.style.transition = 'transform 180ms ease-out';
-                sidebar.style.transform = 'translateX(0)';
-                setTimeout(() => {
-                    sidebar.style.transition = '';
-                    sidebar.style.transform = '';
-                }, 200);
-            }
-
-            isSidebarSwiping = false;
-        } else if (
-            isPhoneLayout() &&
-            sidebar.classList.contains('active') &&
-            swipeDeltaX <= -SWIPE_CLOSE_MIN_DISTANCE &&
-            Math.abs(swipeDeltaY) <= SWIPE_CLOSE_MAX_VERTICAL_DRIFT &&
-            Math.abs(swipeDeltaX) > Math.abs(swipeDeltaY)
-        ) {
-            // Fallback behavior: quick swipe without previous move
-            if (typeof window.triggerHapticFeedback === 'function') {
-                window.triggerHapticFeedback(false);
-            }
-            closeSidebar();
-        }
     }, { passive: true, capture: true });
 
 
@@ -312,7 +238,7 @@ export function initializeSidebarTouchHandler() {
         const isFlick = velocity > 0.5 && swipeDeltaX > 20;
 
         const shouldOpen = (openPercent >= 0.35 || swipeDeltaX >= openThreshold || isFlick) &&
-            Math.abs(swipeDeltaY) <= SWIPE_CLOSE_MAX_VERTICAL_DRIFT;
+            Math.abs(swipeDeltaY) <= SWIPE_OPEN_MAX_VERTICAL_DRIFT;
 
 
         const sidebarOverlay = document.getElementById('sidebar-overlay');

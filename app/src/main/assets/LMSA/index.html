@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -61,10 +61,10 @@
         <header class="p-4 flex justify-between items-center">
             <div class="flex items-center shrink-0">
                 <div
-                    class="w-10 h-10 mr-3 relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 shadow-xl flex items-center justify-center">
+                    class="w-10 h-10 mr-3 relative flex items-center justify-center">
                     <img src="icon.png" alt="LMSA Icon" class="w-7 h-7 relative z-10">
                     <div
-                        class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-50">
+                        class="hidden">
                     </div>
                 </div>
                 <h1 class="text-2xl font-bold header-title">LMSA</h1>
@@ -127,87 +127,73 @@
                 </div>
 
                 <!-- Main Menu Section -->
-                <div class="sidebar-section main-menu-section">
-                    <div class="main-menu-primary-actions">
+                <div class="sidebar-section collapsible main-menu-section">
+                    <button class="section-header w-full text-left flex items-center justify-between py-2 px-3">
+                        <div class="flex items-center">
+                            <i class="fas fa-cog w-6 mr-3" style="color: #60a5fa !important;"></i>
+                            <span style="color: #f1f5f9;">Options</span>
+                        </div>
+                        <i class="fas fa-chevron-down" style="color: #64748b;"></i>
+                    </button>
+                    <div class="collapsible-content">
+                        <!-- New Chat -->
                         <button id="new-chat" class="menu-item w-full text-left">
-                            <i class="fas fa-plus-circle w-6 mr-3" style="color: #60a5fa !important;"></i>
+                            <i class="fas fa-plus-circle"
+                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
                             <span style="color: #f1f5f9;">New Chat</span>
                         </button>
-                        <button id="sidebar-models-btn" class="menu-item w-full text-left">
-                            <i class="fas fa-robot w-6 mr-3" style="color: #60a5fa !important;"></i>
-                            <span style="color: #f1f5f9;">Models</span>
-                        </button>
-                        <button id="sidebar-settings-btn" class="menu-item w-full text-left">
-                            <i class="fas fa-cog w-6 mr-3" style="color: #60a5fa !important;"></i>
+
+                        <!-- Settings -->
+                        <button id="settings-btn" class="menu-item w-full text-left">
+                            <i class="fas fa-cog"
+                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
                             <span style="color: #f1f5f9;">Settings</span>
                         </button>
-                        <button id="sidebar-templates-btn" class="menu-item w-full text-left">
-                            <i class="fas fa-th-large w-6 mr-3" style="color: #60a5fa !important;"></i>
+
+                        <!-- Model Settings -->
+                        <button id="model-btn" class="menu-item w-full text-left">
+                            <i class="fas fa-robot"
+                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                            <span style="color: #f1f5f9;">Models</span>
+                        </button>
+
+                        <!-- Templates Button -->
+                        <button id="templates-btn" class="menu-item w-full text-left"
+                            onclick="window.location.href='templates.html'">
+                            <i class="fas fa-th-large"
+                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
                             <span style="color: #f1f5f9;">Templates</span>
                         </button>
-                    </div>
 
-                    <!-- Options Section (moved here, where Templates was) -->
-                    <div class="sidebar-section collapsible">
-                        <button class="section-header w-full text-left flex items-center justify-between py-2 px-3">
-                            <div class="flex items-center">
-                                <i class="fas fa-cog w-6 mr-3" style="color: #60a5fa !important;"></i>
-                                <span style="color: #f1f5f9;">Options</span>
-                            </div>
-                            <i class="fas fa-chevron-down" style="color: #64748b;"></i>
+                        <!-- Saved System Prompts -->
+                        <button id="saved-prompts-btn" class="menu-item w-full text-left">
+                            <i class="fas fa-save"
+                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                            <span style="color: #f1f5f9;">Saved Prompts</span>
                         </button>
-                        <div class="collapsible-content">
-                            <!-- Settings -->
-                            <button id="settings-btn" class="menu-item w-full text-left">
-                                <i class="fas fa-cog"
-                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                                <span style="color: #f1f5f9;">Settings</span>
-                            </button>
 
-                            <!-- Model Settings -->
-                            <button id="model-btn" class="menu-item w-full text-left">
-                                <i class="fas fa-robot"
+                        <!-- Import/Export -->
+                        <button id="import-export-group-btn"
+                            class="menu-item w-full text-left flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-exchange-alt"
                                     style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                                <span style="color: #f1f5f9;">Models</span>
-                            </button>
-
-                            <!-- Templates Button -->
-                            <button id="templates-btn" class="menu-item w-full text-left"
-                                onclick="window.location.href='templates.html'">
-                                <i class="fas fa-th-large"
-                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                                <span style="color: #f1f5f9;">Templates</span>
-                            </button>
-
-                            <!-- Saved System Prompts -->
-                            <button id="saved-prompts-btn" class="menu-item w-full text-left">
-                                <i class="fas fa-save"
-                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                                <span style="color: #f1f5f9;">Saved Prompts</span>
-                            </button>
-
-                            <!-- Import/Export -->
-                            <button id="import-export-group-btn"
-                                class="menu-item w-full text-left flex items-center justify-between">
-                                <div class="flex items-center">
-                                    <i class="fas fa-exchange-alt"
-                                        style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                                    <span style="color: #f1f5f9;">Import/Export</span>
-                                </div>
-                                <i class="fas fa-caret-down" style="color: #64748b;"></i>
-                            </button>
-                            <div id="import-export-container" class="hidden">
-                                <button id="import-chats-btn" class="menu-item w-full text-left">
-                                    <i class="fas fa-file-import"
-                                        style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                                    <span style="color: #f1f5f9;">Import Chats</span>
-                                </button>
-                                <button id="export-chats-btn" class="menu-item w-full text-left">
-                                    <i class="fas fa-file-export"
-                                        style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                                    <span style="color: #f1f5f9;">Export Chats</span>
-                                </button>
+                                <span style="color: #f1f5f9;">Import/Export</span>
                             </div>
+                            <i class="fas fa-caret-down" style="color: #64748b;"></i>
+                        </button>
+                        <div id="import-export-container" class="hidden">
+                            <button id="import-chats-btn" class="menu-item w-full text-left">
+                                <i class="fas fa-file-import"
+                                    style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Import Chats</span>
+                            </button>
+                            <button id="export-chats-btn" class="menu-item w-full text-left">
+                                <i class="fas fa-file-export"
+                                    style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Export Chats</span>
+                            </button>
+                        </div>
 
                             <button id="whats-new-btn" class="menu-item w-full text-left">
                                 <i class="fas fa-wand-magic-sparkles"
@@ -272,7 +258,6 @@
                                 title="Disable template">
                                 <i class="fas fa-times" style="font-size: 1rem;"></i>
                             </button>
-                        </div>
                     </div>
                 </div>
 
@@ -316,18 +301,18 @@
                     <div id="welcome-message" class="absolute inset-0 flex items-center justify-center text-center"
                         style="transform: none !important; left: 0; right: 0; color: var(--text-muted);">
                         <div class="welcome-content glass-card p-8 sm:p-10 max-w-md mx-auto">
-                            <div class="relative mx-auto mb-4 sm:mb-6 mt-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl flex items-center justify-center icon-container"
+                            <div class="relative mx-auto mb-4 sm:mb-6 mt-2 flex items-center justify-center icon-container"
                                 style="width: 5.5rem; height: 5.5rem; min-height: 5rem; min-width: 5rem; padding: 0.75rem;">
                                 <img src="icon.png" alt="LMSA Icon" class="relative z-10 object-contain"
                                     style="width: 3.5rem; height: 3.5rem; max-width: 75%; max-height: 75%;">
                                 <div
-                                    class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-50">
+                                    class="hidden">
                                 </div>
                                 <div
-                                    class="absolute -top-8 -left-8 sm:-top-10 sm:-left-10 w-16 h-16 sm:w-20 sm:h-20 bg-white/10 rounded-full blur-xl">
+                                    class="hidden">
                                 </div>
                                 <div
-                                    class="absolute -bottom-8 -right-8 sm:-bottom-10 sm:-right-10 w-16 h-16 sm:w-20 sm:h-20 bg-blue-400/10 rounded-full blur-xl">
+                                    class="hidden">
                                 </div>
                             </div>
 

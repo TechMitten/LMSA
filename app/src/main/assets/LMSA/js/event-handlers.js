@@ -614,64 +614,6 @@ export function initializeEventHandlers() {
         }, { passive: false });
     }
 
-    // Sidebar top Models button (next to New Chat)
-    const sidebarModelsButton = document.getElementById('sidebar-models-btn');
-    if (sidebarModelsButton) {
-        bindPressInFeedback(sidebarModelsButton);
-
-        const openSidebarModelsModal = () => {
-            closeSidebar();
-            showModelModal();
-        };
-
-        sidebarModelsButton.addEventListener('click', openSidebarModelsModal);
-        sidebarModelsButton.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            runAfterPressIn(sidebarModelsButton, () => {
-                openSidebarModelsModal();
-                sidebarModelsButton.blur();
-            });
-        }, { passive: false });
-    }
-
-    const sidebarTemplatesButton = document.getElementById('sidebar-templates-btn');
-    if (sidebarTemplatesButton) {
-        bindPressInFeedback(sidebarTemplatesButton);
-
-        const openTemplatesPage = () => {
-            closeSidebar();
-            window.location.href = 'templates.html';
-        };
-
-        sidebarTemplatesButton.addEventListener('click', openTemplatesPage);
-        sidebarTemplatesButton.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            runAfterPressIn(sidebarTemplatesButton, () => {
-                openTemplatesPage();
-                sidebarTemplatesButton.blur();
-            });
-        }, { passive: false });
-    }
-
-    const sidebarSettingsButton = document.getElementById('sidebar-settings-btn');
-    if (sidebarSettingsButton) {
-        bindPressInFeedback(sidebarSettingsButton);
-
-        const openSidebarSettingsModal = () => {
-            closeSidebar();
-            showSettingsModal();
-        };
-
-        sidebarSettingsButton.addEventListener('click', openSidebarSettingsModal);
-        sidebarSettingsButton.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            runAfterPressIn(sidebarSettingsButton, () => {
-                openSidebarSettingsModal();
-                sidebarSettingsButton.blur();
-            });
-        }, { passive: false });
-    }
-
     const optionsHeaderButton = document.querySelector('#sidebar .sidebar-section.collapsible .section-header');
     if (optionsHeaderButton) {
         bindPressInFeedback(optionsHeaderButton);

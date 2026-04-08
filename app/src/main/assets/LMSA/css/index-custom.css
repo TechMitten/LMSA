@@ -863,87 +863,14 @@ body.keyboard-visible #chat-form,
         border-top-color: rgba(203, 213, 225, 0.5) !important;
     }
 
-    /* Make the "New Chat" button darker / more muted on phones so it
-       doesn't appear too bright against the darker sidebar surface. */
-    #sidebar #new-chat,
-    #sidebar #sidebar-models-btn,
-    #sidebar #sidebar-settings-btn,
-    #sidebar #sidebar-templates-btn {
-        background: rgba(255, 255, 255, 0.06) !important;
-        background-image: none !important;
-        color: #dbeafe !important;
-        border: 2px solid rgba(16, 185, 129, 0.36) !important;
-        box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.12), 0 2px 4px -1px rgba(14, 165, 233, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
-        transition: box-shadow 180ms ease, transform 120ms ease, background 120ms ease;
-        min-height: 62px !important;
-        padding: 0.8rem 0.85rem !important;
-        border-radius: 0.95rem !important;
-        justify-content: flex-start !important;
-        font-weight: 600 !important;
-        letter-spacing: 0.01em !important;
-    }
-
-    #sidebar .main-menu-primary-actions {
-        gap: 0.65rem !important;
-        margin: 0.95rem 0.75rem 0.8rem !important;
-    }
-
-    #sidebar #new-chat i,
-    #sidebar #sidebar-models-btn i,
-    #sidebar #sidebar-settings-btn i,
-    #sidebar #sidebar-templates-btn i {
-        width: 1.2rem !important;
-        margin-right: 0.55rem !important;
-        font-size: 0.86rem !important;
-        opacity: 0.96 !important;
-    }
-
-    #sidebar #new-chat:hover,
-    #sidebar #sidebar-models-btn:hover,
-    #sidebar #sidebar-settings-btn:hover,
-    #sidebar #sidebar-templates-btn:hover {
-        background: rgba(255, 255, 255, 0.08) !important;
-        background-image: none !important;
-        box-shadow: 0 8px 15px -3px rgba(16, 185, 129, 0.2), 0 4px 6px -2px rgba(14, 165, 233, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
-        transform: translateY(-2px);
-    }
-
-    #sidebar #new-chat:active,
-    #sidebar #sidebar-models-btn:active,
-    #sidebar #sidebar-settings-btn:active,
-    #sidebar #sidebar-templates-btn:active,
     #sidebar .section-header:active,
-    #sidebar #new-chat.menu-press-in,
-    #sidebar #sidebar-models-btn.menu-press-in,
-    #sidebar #sidebar-settings-btn.menu-press-in,
-    #sidebar #sidebar-templates-btn.menu-press-in,
     #sidebar .section-header.menu-press-in {
         transform: translateY(1px) scale(0.982) !important;
         box-shadow: inset 0 2px 8px rgba(2, 6, 23, 0.4), 0 1px 2px rgba(2, 6, 23, 0.2) !important;
         filter: brightness(0.93) saturate(0.94) !important;
     }
 
-    /* Light-theme variant: keep the button muted but readable on light surface */
-    body.light-theme #sidebar #new-chat,
-    body.light-theme #sidebar #sidebar-models-btn,
-    body.light-theme #sidebar #sidebar-settings-btn,
-    body.light-theme #sidebar #sidebar-templates-btn {
-        background: rgba(15, 23, 42, 0.04) !important;
-        background-image: none !important;
-        color: #0f172a !important;
-        border: 2px solid rgba(14, 165, 233, 0.18) !important;
-        box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.08), inset 0 1px 0 rgba(255,255,255,0.02) !important;
-    }
-
-    body.light-theme #sidebar #new-chat:active,
-    body.light-theme #sidebar #sidebar-models-btn:active,
-    body.light-theme #sidebar #sidebar-settings-btn:active,
-    body.light-theme #sidebar #sidebar-templates-btn:active,
     body.light-theme #sidebar .section-header:active,
-    body.light-theme #sidebar #new-chat.menu-press-in,
-    body.light-theme #sidebar #sidebar-models-btn.menu-press-in,
-    body.light-theme #sidebar #sidebar-settings-btn.menu-press-in,
-    body.light-theme #sidebar #sidebar-templates-btn.menu-press-in,
     body.light-theme #sidebar .section-header.menu-press-in {
         box-shadow: inset 0 2px 7px rgba(15, 23, 42, 0.2), 0 1px 2px rgba(15, 23, 42, 0.14) !important;
         filter: brightness(0.97) saturate(0.96) !important;
@@ -1014,10 +941,6 @@ body.keyboard-visible #chat-form,
 
 /* ── Desktop / tablet sidebar buttons: match mobile styled look ── */
 @media (min-width: 768px) {
-    #sidebar #new-chat,
-    #sidebar #sidebar-models-btn,
-    #sidebar #sidebar-settings-btn,
-    #sidebar #sidebar-templates-btn,
     #sidebar .section-header {
         background: rgba(255, 255, 255, 0.06) !important;
         background-image: none !important;
@@ -1031,24 +954,6 @@ body.keyboard-visible #chat-form,
         transition: box-shadow 180ms ease, transform 120ms ease, background 120ms ease;
     }
 
-    #sidebar .main-menu-primary-actions {
-        gap: 0.375rem !important;
-        margin: 0.75rem 0.5rem !important;
-    }
-
-    #sidebar #new-chat i,
-    #sidebar #sidebar-models-btn i,
-    #sidebar #sidebar-settings-btn i,
-    #sidebar #sidebar-templates-btn i {
-        font-size: 0.75rem !important;
-        width: 1.125rem !important;
-        margin-right: 0.375rem !important;
-    }
-
-    #sidebar #new-chat:hover,
-    #sidebar #sidebar-models-btn:hover,
-    #sidebar #sidebar-settings-btn:hover,
-    #sidebar #sidebar-templates-btn:hover,
     #sidebar .section-header:hover {
         background: rgba(255, 255, 255, 0.08) !important;
         background-image: none !important;
@@ -1056,15 +961,7 @@ body.keyboard-visible #chat-form,
         transform: translateY(-2px);
     }
 
-    #sidebar #new-chat:active,
-    #sidebar #sidebar-models-btn:active,
-    #sidebar #sidebar-settings-btn:active,
-    #sidebar #sidebar-templates-btn:active,
     #sidebar .section-header:active,
-    #sidebar #new-chat.menu-press-in,
-    #sidebar #sidebar-models-btn.menu-press-in,
-    #sidebar #sidebar-settings-btn.menu-press-in,
-    #sidebar #sidebar-templates-btn.menu-press-in,
     #sidebar .section-header.menu-press-in {
         transform: translateY(1px) scale(0.985) !important;
         box-shadow: inset 0 2px 7px rgba(2, 6, 23, 0.4), 0 1px 2px rgba(2, 6, 23, 0.2) !important;
@@ -1072,10 +969,6 @@ body.keyboard-visible #chat-form,
     }
 
     /* Light-theme variant */
-    body.light-theme #sidebar #new-chat,
-    body.light-theme #sidebar #sidebar-models-btn,
-    body.light-theme #sidebar #sidebar-settings-btn,
-    body.light-theme #sidebar #sidebar-templates-btn,
     body.light-theme #sidebar .section-header {
         background: rgba(15, 23, 42, 0.04) !important;
         background-image: none !important;
@@ -1084,15 +977,7 @@ body.keyboard-visible #chat-form,
         box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.08), inset 0 1px 0 rgba(255,255,255,0.02) !important;
     }
 
-    body.light-theme #sidebar #new-chat:active,
-    body.light-theme #sidebar #sidebar-models-btn:active,
-    body.light-theme #sidebar #sidebar-settings-btn:active,
-    body.light-theme #sidebar #sidebar-templates-btn:active,
     body.light-theme #sidebar .section-header:active,
-    body.light-theme #sidebar #new-chat.menu-press-in,
-    body.light-theme #sidebar #sidebar-models-btn.menu-press-in,
-    body.light-theme #sidebar #sidebar-settings-btn.menu-press-in,
-    body.light-theme #sidebar #sidebar-templates-btn.menu-press-in,
     body.light-theme #sidebar .section-header.menu-press-in {
         box-shadow: inset 0 2px 7px rgba(15, 23, 42, 0.2), 0 1px 2px rgba(15, 23, 42, 0.14) !important;
         filter: brightness(0.97) saturate(0.96) !important;
@@ -1425,15 +1310,6 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
         padding: 1.15rem 1.1rem !important;
     }
 
-    #sidebar .main-menu-primary-actions {
-        gap: 0.7rem !important;
-        margin: 0.95rem 0.85rem 0.8rem !important;
-    }
-
-    #sidebar #new-chat,
-    #sidebar #sidebar-models-btn,
-    #sidebar #sidebar-settings-btn,
-    #sidebar #sidebar-templates-btn,
     #sidebar .section-header {
         min-height: 58px !important;
         padding: 0.85rem 0.9rem !important;

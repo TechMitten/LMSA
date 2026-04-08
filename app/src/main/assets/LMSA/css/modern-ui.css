@@ -151,25 +151,6 @@ body.light-theme #sidebar * {
   color: #0f172a !important;
 }
 
-/* Ensure New Chat button text remains white in light mode */
-body.light-theme #sidebar #new-chat,
-body.light-theme #sidebar #sidebar-models-btn,
-body.light-theme #sidebar #sidebar-settings-btn,
-body.light-theme #sidebar #sidebar-templates-btn {
-  color: white !important;
-}
-
-body.light-theme #sidebar #new-chat span,
-body.light-theme #sidebar #new-chat i,
-body.light-theme #sidebar #sidebar-models-btn span,
-body.light-theme #sidebar #sidebar-models-btn i,
-body.light-theme #sidebar #sidebar-settings-btn span,
-body.light-theme #sidebar #sidebar-settings-btn i,
-body.light-theme #sidebar #sidebar-templates-btn span,
-body.light-theme #sidebar #sidebar-templates-btn i {
-  color: white !important;
-}
-
 body.light-theme #sidebar .menu-item {
   background-color: rgba(59, 130, 246, 0.05) !important;
   color: #0f172a !important;
