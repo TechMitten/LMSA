@@ -472,15 +472,14 @@ export const settingsModal = `
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <p class="text-sm mb-4" style="color: var(--settings-help-text, #9ca3af);">Enter the IP address and port of your local AI server (e.g. LM Studio).</p>
+            <p class="text-sm mb-4" style="color: var(--settings-help-text, #9ca3af);">Enter the hostname or IP address and port of your local AI server (e.g. LM Studio).</p>
             <div class="flex gap-3 mb-5">
                 <div class="flex-1 min-w-0">
-                    <label for="server-ip" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">IP Address</label>
+                    <label for="server-ip" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Hostname / IP</label>
                     <input type="text" id="server-ip"
                         class="connection-modal-input w-full"
-                        placeholder="e.g. 192.168.1.100" pattern="^[0-9.]*$" inputmode="decimal"
-                        onkeypress="return event.charCode === 46 || (event.charCode >= 48 && event.charCode <= 57)"
-                        autocomplete="off" data-form-type="other">
+                        placeholder="e.g. 192.168.1.100 or lmstudio.local" inputmode="text"
+                        autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-form-type="other">
                 </div>
                 <div style="width: 110px; flex-shrink: 0;">
                     <label for="server-port" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Port</label>

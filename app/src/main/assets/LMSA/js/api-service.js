@@ -191,9 +191,9 @@ function showValidationError() {
     // Determine the error message
     let message = '';
     if (ip && !port) {
-        message = 'Port is required when IP address is specified';
+        message = 'Port is required when a hostname or IP address is specified';
     } else if (!ip && port) {
-        message = 'IP address is required when Port is specified';
+        message = 'A hostname or IP address is required when a port is specified';
     }
 
     // Show the error modal if there is a message
