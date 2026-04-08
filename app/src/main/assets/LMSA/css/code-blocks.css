@@ -36,7 +36,7 @@
 
 /* Standalone HTML code lines (not in container) */
 .html-code-line:not(.html-code-container .html-code-line) {
-    background-color: rgba(39, 40, 34, 0.8) !important;
+    background-color: rgba(18, 18, 18, 0.9) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 0.375rem !important;
     padding: 0.5rem 0.75rem !important;
@@ -46,7 +46,7 @@
 
 /* Dark theme specific styling */
 [data-theme="dark"] .html-code-container {
-    background-color: rgba(39, 40, 34, 0.9) !important;
+    background-color: rgba(18, 18, 18, 0.96) !important;
     border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
@@ -55,7 +55,7 @@
 }
 
 [data-theme="dark"] .html-code-line:not(.html-code-container .html-code-line) {
-    background-color: rgba(39, 40, 34, 0.9) !important;
+    background-color: rgba(18, 18, 18, 0.96) !important;
     border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
@@ -95,7 +95,7 @@
 pre {
     white-space: pre !important;
     overflow-x: auto !important;
-    background-color: #272822 !important; /* Match Monokai theme background */
+    background-color: #121212 !important;
     border-radius: 0.75rem !important;
     padding: 1rem !important;
     margin: 1.25rem 0 !important;
@@ -133,7 +133,7 @@ pre[data-multiline="true"]::before {
     position: absolute !important;
     top: 0.5rem !important;
     right: 0.5rem !important;
-    background-color: rgba(39, 40, 34, 0.9) !important;
+    background-color: rgba(18, 18, 18, 0.94) !important;
     color: #f8f8f2 !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
     border-radius: 0.375rem !important;
@@ -173,7 +173,7 @@ pre[data-multiline="true"]::after {
     position: absolute !important;
     bottom: 0.5rem !important;
     right: 0.5rem !important;
-    background-color: rgba(39, 40, 34, 0.8) !important;
+    background-color: rgba(18, 18, 18, 0.9) !important;
     color: #a6e22e !important;
     padding: 0.2rem 0.5rem !important;
     border-radius: 0.25rem !important;
