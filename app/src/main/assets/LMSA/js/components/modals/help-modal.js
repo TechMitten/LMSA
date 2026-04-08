@@ -83,6 +83,10 @@ export const helpModal = `
                                         <i class="fas fa-lock mr-2 text-sm"></i>
                                         <span>Security & Privacy</span>
                                     </a>
+                                    <a href="#section-biometric-unlock" class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
+                                        <i class="fas fa-fingerprint mr-2 text-sm"></i>
+                                        <span>Biometric Unlock</span>
+                                    </a>
                                     <a href="#section-ads-privacy" class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-ad mr-2 text-sm"></i>
                                         <span>Ads & Privacy</span>
@@ -630,6 +634,21 @@ export const helpModal = `
                             </div>
 
                     </div>
+                    </section>
+                    <section id="section-biometric-unlock">
+                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa;"><i
+                                class="fas fa-fingerprint mr-2"></i>Biometric Unlock</h3>
+                        <div class="p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: var(--border-color);">
+                            <p class="font-medium flex items-center" style="color: #8b5cf6;"><i
+                                    class="fas fa-user-lock mr-2"></i>Protect Your Chats</p>
+                            <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
+                                You can secure LMSA by requiring biometric authentication (such as fingerprint or face unlock) to open the app. This ensures your private conversations remain protected even if someone else gets hold of your unlocked device.</p>
+                            <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
+                                <li><strong>To enable:</strong> Go to Settings and toggle on "Require Biometric Unlock".</li>
+                                <li><strong>Requirement:</strong> Your device must have a biometric security method or locking mechanism already set up.</li>
+                                <li><strong>Fallback:</strong> If biometric authentication fails, you can use your device PIN or Password as a fallback.</li>
+                            </ul>
+                        </div>
                     </section>
                     <section id="section-ads-privacy">
                         <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa;"><i
