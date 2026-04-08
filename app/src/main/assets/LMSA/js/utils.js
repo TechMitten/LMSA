@@ -58,6 +58,46 @@ export function normalizeReasoningTags(text) {
     return normalized;
 }
 
+const CODE_FENCE_LANGUAGES =
+    'html|xml|css|javascript|js|typescript|ts|jsx|tsx|json|python|py|java|kotlin|kt|sql|bash|sh|shell|yaml|yml|c|cpp|plaintext|text';
+
+function normalizeOpeningFence(prefix, language, followingText) {
+    const fence = language ? '```' + language : '```';
+    if (!followingText || followingText.startsWith('\n') || followingText.startsWith('\r\n')) {
+        return prefix + fence;
+    }
+    return prefix + fence + '\n';
+}
+
+export function normalizeMalformedCodeFences(text) {
+    if (!text) return '';
+
+    let normalized = String(text);
+
+    normalized = normalized.replace(
+        new RegExp(
+            '(^|\\n)``(' + CODE_FENCE_LANGUAGES + ')(?=(?:\\r?\\n|\\s*<!DOCTYPE|\\s*<\\/?[A-Za-z!]|\\s*[\\[{(]|\\s*[#.][A-Za-z_-]|\\s*[A-Za-z_][\\w-]*\\s*[:={(\\[]))',
+            'gi'
+        ),
+        (match, prefix, language, offset, source) => {
+            const followingText = source.slice(offset + match.length);
+            return normalizeOpeningFence(prefix, language, followingText);
+        }
+    );
+
+    normalized = normalized.replace(
+        /(^|\n)``(?=(?:\r?\n|[ \t]*<!DOCTYPE|[ \t]*<\/?[A-Za-z!]|[ \t]*[\[{(]|[ \t]*[#.][A-Za-z_-]|[ \t]*[A-Za-z_][\w-]*\s*[:={(\[]))/g,
+        (match, prefix, offset, source) => {
+            const followingText = source.slice(offset + match.length);
+            return normalizeOpeningFence(prefix, '', followingText);
+        }
+    );
+
+    normalized = normalized.replace(/(^|\n)``(?=\s*(?:\r?\n|$))/g, '$1```');
+
+    return normalized;
+}
+
 /**
  * Removes normalized reasoning sections from text while preserving non-reasoning output.
  * @param {string} text - The text to process
@@ -199,25 +239,27 @@ export function removeThinkTags(text) {
 function isHtmlContent(content) {
     if (!content) return false;
 
+    const normalizedContent = normalizeMalformedCodeFences(content);
+
     // If the content contains markdown code fences (```), it's markdown,
     // NOT raw HTML. Let the normal markdown parser handle code blocks.
-    if (/```/.test(content)) {
+    if (/```/.test(normalizedContent)) {
         return false;
     }
 
     // Check for HTML_CODE_BLOCK markers and extract content
-    if (content.includes('[HTML_CODE_BLOCK_START]') && content.includes('[HTML_CODE_BLOCK_END]')) {
-        const startMarker = content.indexOf('[HTML_CODE_BLOCK_START]');
-        const endMarker = content.indexOf('[HTML_CODE_BLOCK_END]');
+    if (normalizedContent.includes('[HTML_CODE_BLOCK_START]') && normalizedContent.includes('[HTML_CODE_BLOCK_END]')) {
+        const startMarker = normalizedContent.indexOf('[HTML_CODE_BLOCK_START]');
+        const endMarker = normalizedContent.indexOf('[HTML_CODE_BLOCK_END]');
         if (startMarker !== -1 && endMarker !== -1) {
             const markerLength = 22; // Length of [HTML_CODE_BLOCK_START]
-            const extractedContent = content.substring(startMarker + markerLength, endMarker);
+            const extractedContent = normalizedContent.substring(startMarker + markerLength, endMarker);
             return isHtmlContentRaw(extractedContent);
         }
     }
 
     // Check raw content
-    return isHtmlContentRaw(content);
+    return isHtmlContentRaw(normalizedContent);
 }
 
 /**
@@ -246,7 +288,7 @@ function isHtmlContentRaw(content) {
  * @returns {string} - Formatted HTML for display
  */
 function formatHtmlAsCode(htmlContent) {
-    let content = htmlContent;
+    let content = normalizeMalformedCodeFences(htmlContent);
 
     // Extract content from code blocks if present
     const codeBlockMatch = content.match(/```html?\s*\n([\s\S]*?)```/i);
@@ -342,6 +384,29 @@ function mergeSoftLineBreaks(text) {
     return merged.join('\n');
 }
 
+function renderCodeBlockHtml(language, code, extraAttributes = '') {
+    const normalizedLanguage = language || 'plaintext';
+    const safeCode = String(code || '').replace(/\r\n?/g, '\n').replace(/\n$/, '');
+    const formattedCode = safeCode.split('\n').join('<br>');
+    const attributeSuffix = extraAttributes ? ' ' + extraAttributes : '';
+    return `<pre data-multiline="true" data-language="${normalizedLanguage}"${attributeSuffix}><code class="language-${normalizedLanguage}">${formattedCode}</code></pre>`;
+}
+
+function replaceMarkdownCodeBlocks(sanitized, extraAttributes = '') {
+    let rendered = sanitized.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
+        return renderCodeBlockHtml(language, code, extraAttributes);
+    });
+
+    // While streaming, an opening fence can arrive before the closing fence.
+    // Keep the trailing content inside a provisional code block so lines don't
+    // jump in and out of the snippet as more chunks arrive.
+    rendered = rendered.replace(/(^|\n)```(\w+)?\n([\s\S]*)$/g, (match, prefix, language, code) => {
+        return prefix + renderCodeBlockHtml(language, code, extraAttributes);
+    });
+
+    return rendered;
+}
+
 /**
  * Sanitizes input for non-reasoning models
  * @param {string} input - The input text to sanitize
@@ -349,7 +414,7 @@ function mergeSoftLineBreaks(text) {
  */
 export function basicSanitizeInput(input) {
     // First, remove any <think> tags that might be present
-    let processedInput = stripReasoningSections(input);
+    let processedInput = normalizeMalformedCodeFences(stripReasoningSections(input));
 
     // Extract math expressions before HTML escaping to prevent paragraph fragmentation
     const mathDisplayPlaceholders = [];
@@ -393,16 +458,7 @@ export function basicSanitizeInput(input) {
     // Handle code blocks with language specification. The whole message has
     // already been escaped above, so code fence content is safe here and
     // should not be entity-escaped a second time.
-    sanitized = sanitized.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
-        const safeCode = code.trim();
-
-        // Split by newlines and join with explicit <br> tags
-        const lines = safeCode.split('\n');
-        const formattedCode = lines.join('<br>');
-
-        // Add a special data attribute to indicate this is a code block with preserved newlines
-        return `<pre data-multiline="true" data-language="${language || 'plaintext'}"><code class="language-${language || 'plaintext'}">${formattedCode}</code></pre>`;
-    });
+    sanitized = replaceMarkdownCodeBlocks(sanitized);
 
     // Handle inline code
     sanitized = sanitized.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -499,7 +555,7 @@ export function basicSanitizeInput(input) {
  */
 export function sanitizeInput(input) {
     // First extract all <think> tag contents before any HTML escaping
-    let processedInput = normalizeReasoningTags(input);
+    let processedInput = normalizeMalformedCodeFences(normalizeReasoningTags(input));
 
     // Extract math expressions before anything else to prevent fragmentation
     const mathDisplayPlaceholders = [];
@@ -642,17 +698,7 @@ export function sanitizeInput(input) {
 
     // Handle code blocks with language specification. The full message has
     // already been HTML-escaped, so preserve the code text as-is here.
-    sanitized = sanitized.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
-        const safeCode = code.trim();
-
-        // Split by newlines and join with explicit <br> tags
-        const lines = safeCode.split('\n');
-        const formattedCode = lines.join('<br>');
-
-        // Add special data attributes to indicate this is a code block with preserved newlines
-        // Add a data-has-thinking attribute to help with follow-up message handling
-        return `<pre data-multiline="true" data-language="${language || 'plaintext'}" data-has-thinking="${hasThinkTag ? 'true' : 'false'}"><code class="language-${language || 'plaintext'}">${formattedCode}</code></pre>`;
-    });
+    sanitized = replaceMarkdownCodeBlocks(sanitized, `data-has-thinking="${hasThinkTag ? 'true' : 'false'}"`);
 
     // Handle inline code
     sanitized = sanitized.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -848,7 +894,8 @@ export function initializeCodeMirror(element) {
 
         // Process code blocks to ensure they have proper styling and copy functionality
         codeBlocks.forEach(block => {
-            const pre = block.parentNode;
+            const pre = block.closest('pre');
+            if (!pre) return;
             const languageMatch = block.className.match(/language-([A-Za-z0-9+#_-]+)/);
             const language = (pre.getAttribute('data-language') || (languageMatch ? languageMatch[1] : '') || 'plaintext').toLowerCase();
             
@@ -1127,6 +1174,8 @@ export function decodeHtmlEntities(html) {
  */
 export function processCodeBlocks(content, encode = false) {
     if (!content) return content;
+
+    content = normalizeMalformedCodeFences(content);
 
     // Check if the content contains code blocks
     if (!content.includes('```')) return content;
@@ -1662,6 +1711,8 @@ export function refreshAllCodeBlocks() {
 export function containsCodeBlocksOutsideThinkTags(message) {
     if (!message) return false;
 
+    message = normalizeMalformedCodeFences(message);
+
     // If no code blocks at all, return false
     if (!message.includes('```')) return false;
 
@@ -1683,6 +1734,8 @@ export function containsCodeBlocksOutsideThinkTags(message) {
  */
 export function containsCodeBlocks(message, excludeThinkTags = false) {
     if (!message) return false;
+
+    message = normalizeMalformedCodeFences(message);
 
     if (excludeThinkTags) {
         return containsCodeBlocksOutsideThinkTags(message);
@@ -1831,16 +1884,7 @@ if (typeof window !== 'undefined') {
 
                 // Handle code blocks with language specification. The thinking
                 // content was already escaped via textContent above.
-                sanitized = sanitized.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
-                    const safeCode = code.trim();
-
-                    // Split by newlines and join with explicit <br> tags
-                    const lines = safeCode.split('\n');
-                    const formattedCode = lines.join('<br>');
-
-                    // Add a special data attribute to indicate this is a code block with preserved newlines
-                    return `<pre data-multiline="true" data-language="${language || 'plaintext'}"><code class="language-${language || 'plaintext'}">${formattedCode}</code></pre>`;
-                });
+                sanitized = replaceMarkdownCodeBlocks(sanitized);
 
                 // Handle inline code
                 sanitized = sanitized.replace(/`([^`]+)`/g, '<code>$1</code>');

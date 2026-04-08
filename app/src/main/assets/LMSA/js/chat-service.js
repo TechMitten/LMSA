@@ -4,7 +4,7 @@ import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendSt
 import { openHelpModal } from './help.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
 import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOllama, getOpenRouterApiKey, getLMStudioApiToken } from './settings-manager.js';
-import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags } from './utils.js';
+import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags, normalizeMalformedCodeFences } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
 import { canSendCompletion, recordCompletion, canSendOpenRouterCompletion, recordOpenRouterCompletion } from './usage-limiter.js';
 
@@ -763,7 +763,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                     }
 
                                     aiMessage += chunkContent;
-                                    aiMessage = normalizeToolCallTags(aiMessage);
+                                    aiMessage = normalizeMalformedCodeFences(normalizeToolCallTags(aiMessage));
 
                                     const reasoningState = getReasoningStreamState(aiMessage);
                                     const hasThinkTags = reasoningState.hasThinking;
@@ -917,7 +917,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             if (incompleteChunk.length > 0) {
                 const finalChunk = decoder.decode(incompleteChunk);
                 aiMessage += finalChunk;
-                aiMessage = normalizeToolCallTags(aiMessage);
+                aiMessage = normalizeMalformedCodeFences(normalizeToolCallTags(aiMessage));
             }
         } catch (e) {
             debugLog('Final UTF-8 decoding error:', e);
@@ -938,7 +938,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         // No extraction from the main aiMessage is needed.
 
         // Apply final content processing based on thinking tags and settings
-        aiMessage = normalizeReasoningTags(aiMessage);
+        aiMessage = normalizeMalformedCodeFences(normalizeReasoningTags(aiMessage));
         const hideThinking = getHideThinking();
         const finalReasoningState = getReasoningStreamState(aiMessage);
         const hasThinkTags = finalReasoningState.hasThinking;
@@ -957,6 +957,14 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         } else if (contentContainer) {
             // No thinking tags, show content normally
             contentContainer.innerHTML = basicSanitizeInput(aiMessage);
+        }
+
+        // Match the regeneration path so newly generated code blocks are
+        // highlighted immediately instead of waiting for a reload/refresh.
+        if (aiMessageElement && containsCodeBlocksOutsideThinkTags(aiMessage)) {
+            setTimeout(() => {
+                initializeCodeMirror(aiMessageElement);
+            }, 100);
         }
 
         // Update chat history first but don't wait for UI updates if we're going to reload
@@ -3351,7 +3359,7 @@ export async function regenerateLastResponse(isRetry = false) {
                                         }
 
                                         aiMessage += delta.content;
-                                        aiMessage = normalizeToolCallTags(aiMessage);
+                                        aiMessage = normalizeMalformedCodeFences(normalizeToolCallTags(aiMessage));
 
                                         // Track thinking process for progress indication (same as initial generation)
                                         const reasoningState = getReasoningStreamState(aiMessage);
@@ -3503,7 +3511,7 @@ export async function regenerateLastResponse(isRetry = false) {
             if (incompleteChunk.length > 0) {
                 const finalChunk = decoder.decode(incompleteChunk);
                 aiMessage += finalChunk;
-                aiMessage = normalizeToolCallTags(aiMessage);
+                aiMessage = normalizeMalformedCodeFences(normalizeToolCallTags(aiMessage));
             }
 
             // Immediately terminate the connection to ensure proper cleanup
@@ -3521,7 +3529,7 @@ export async function regenerateLastResponse(isRetry = false) {
             // No extraction from the main aiMessage is needed.
 
             // Apply final content processing based on thinking tags and settings
-            aiMessage = normalizeReasoningTags(aiMessage);
+            aiMessage = normalizeMalformedCodeFences(normalizeReasoningTags(aiMessage));
             const hideThinking = getHideThinking();
             const finalReasoningState = getReasoningStreamState(aiMessage);
             const hasThinkTags = finalReasoningState.hasThinking;
