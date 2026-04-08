@@ -1145,7 +1145,8 @@ function updateOpenRouterUI(isEnabled) {
     if (wrapper) wrapper.classList.remove('key-required');
   }
 
-  // Smart Reply and Generate Chat Titles are incompatible with OpenRouter — disable/enable toggles accordingly
+  // Smart Reply still requires a separate follow-up API call, but chat titles now
+  // ride along with the first reply, so only Smart Reply needs OpenRouter gating.
   const smartReplyContainer = document.getElementById('smart-reply-setting');
   const smartReplyDesc = document.getElementById('smart-reply-description');
   const autoGenerateTitlesContainer = document.getElementById('auto-generate-titles-setting');
@@ -1161,14 +1162,15 @@ function updateOpenRouterUI(isEnabled) {
     if (smartReplyContainer) smartReplyContainer.style.opacity = '0.4';
     if (smartReplyDesc) smartReplyDesc.textContent = 'Not available when OpenRouter is enabled. Smart Reply requires a local LLM connection.';
     
-    // Disable Generate Chat Titles toggle when OpenRouter is enabled
+    // Keep Generate Chat Titles available because it no longer makes a second API call
     if (autoGenerateTitlesCheckbox) {
-      autoGenerateTitlesCheckbox.checked = false;
-      autoGenerateTitlesCheckbox.disabled = true;
+      autoGenerateTitlesCheckbox.disabled = false;
+      const savedAutoGenerateTitles = localStorage.getItem('autoGenerateTitles');
+      autoGenerateTitlesCheckbox.checked = savedAutoGenerateTitles === 'true';
+      autoGenerateTitles = savedAutoGenerateTitles === 'true';
     }
-    autoGenerateTitles = false;
-    if (autoGenerateTitlesContainer) autoGenerateTitlesContainer.style.opacity = '0.4';
-    if (autoGenerateTitlesDesc) autoGenerateTitlesDesc.textContent = 'Not available when OpenRouter is enabled. Chat title generation can trigger rate limits and increase token usage with cloud APIs.';
+    if (autoGenerateTitlesContainer) autoGenerateTitlesContainer.style.opacity = '';
+    if (autoGenerateTitlesDesc) autoGenerateTitlesDesc.textContent = 'When enabled, the first AI reply includes a hidden short title that LMSA saves to your chat list without making a second API call.';
   } else {
     // Re-enable Smart Reply toggle and restore saved preference
     if (autoSmartReplyCheckbox) {
@@ -1188,7 +1190,7 @@ function updateOpenRouterUI(isEnabled) {
       autoGenerateTitles = savedAutoGenerateTitles === 'true';
     }
     if (autoGenerateTitlesContainer) autoGenerateTitlesContainer.style.opacity = '';
-    if (autoGenerateTitlesDesc) autoGenerateTitlesDesc.textContent = 'When enabled, uses the LLM to generate a short title (2-3 words) that describes what the chat is about based on your first message.';
+    if (autoGenerateTitlesDesc) autoGenerateTitlesDesc.textContent = 'When enabled, the first AI reply includes a hidden short title that LMSA saves to your chat list without making a second API call.';
   }
 }
 

@@ -17,7 +17,6 @@ let abortController = null;
 let smartReplyAbortController = null;
 let isGenerating = false;
 let isNewTopic = false;
-let isGeneratingTitle = false;
 let chatToRename = null;
 let renameModalEscapeHandler = null;
 let suppressChatHistoryClickUntil = 0;
@@ -179,6 +178,151 @@ function normalizeToolCallTags(text) {
     return text;
 }
 
+const INLINE_CHAT_TITLE_PREFIX = '[[LMSA_CHAT_TITLE::';
+const INLINE_CHAT_TITLE_SUFFIX = '::END_LMSA_CHAT_TITLE]]';
+const INLINE_CHAT_TITLE_OPEN_TAG = '<lmsa_chat_title>';
+const INLINE_CHAT_TITLE_CLOSE_TAG = '</lmsa_chat_title>';
+const INLINE_CHAT_TITLE_REGEX = /\[\[LMSA_CHAT_TITLE::([\s\S]*?)::END_LMSA_CHAT_TITLE\]\]/gi;
+const INLINE_CHAT_TITLE_TAG_REGEX = /<lmsa_chat_title>\s*([\s\S]*?)\s*<\/lmsa_chat_title>/gi;
+const INLINE_CHAT_TITLE_INSTRUCTION =
+    'For this response only, after your normal answer, you MUST append one final line exactly in the format ' +
+    `${INLINE_CHAT_TITLE_OPEN_TAG}Short Title Here${INLINE_CHAT_TITLE_CLOSE_TAG}. ` +
+    'This final line is required for the app. The title must be plain text only, 2-4 words, describe the user request or chat topic, and contain no markdown. ' +
+    'Do not mention the tag, do not explain it, and do not omit it.';
+
+function stripTrailingPartialToken(text, token) {
+    if (!text || !token) return text;
+
+    for (let i = token.length - 1; i > 0; i--) {
+        const partialToken = token.slice(0, i);
+        if (text.endsWith(partialToken)) {
+            return text.slice(0, -i);
+        }
+    }
+
+    return text;
+}
+
+function removeInlineChatTitleMarkup(text) {
+    if (!text) return '';
+
+    let cleanedText = String(text)
+        .replace(INLINE_CHAT_TITLE_TAG_REGEX, '')
+        .replace(INLINE_CHAT_TITLE_REGEX, '');
+
+    const tagStartIndex = cleanedText.indexOf(INLINE_CHAT_TITLE_OPEN_TAG);
+    if (tagStartIndex !== -1) {
+        const tagEndIndex = cleanedText.indexOf(
+            INLINE_CHAT_TITLE_CLOSE_TAG,
+            tagStartIndex + INLINE_CHAT_TITLE_OPEN_TAG.length
+        );
+
+        if (tagEndIndex === -1) {
+            cleanedText = cleanedText.slice(0, tagStartIndex);
+        } else {
+            cleanedText = cleanedText.slice(0, tagStartIndex) +
+                cleanedText.slice(tagEndIndex + INLINE_CHAT_TITLE_CLOSE_TAG.length);
+        }
+    }
+
+    const markerStartIndex = cleanedText.indexOf(INLINE_CHAT_TITLE_PREFIX);
+
+    if (markerStartIndex !== -1) {
+        const markerEndIndex = cleanedText.indexOf(
+            INLINE_CHAT_TITLE_SUFFIX,
+            markerStartIndex + INLINE_CHAT_TITLE_PREFIX.length
+        );
+
+        if (markerEndIndex === -1) {
+            cleanedText = cleanedText.slice(0, markerStartIndex);
+        } else {
+            cleanedText = cleanedText.slice(0, markerStartIndex) +
+                cleanedText.slice(markerEndIndex + INLINE_CHAT_TITLE_SUFFIX.length);
+        }
+    }
+
+    cleanedText = stripTrailingPartialToken(cleanedText, INLINE_CHAT_TITLE_PREFIX);
+    cleanedText = stripTrailingPartialToken(cleanedText, INLINE_CHAT_TITLE_OPEN_TAG);
+    cleanedText = stripTrailingPartialToken(cleanedText, INLINE_CHAT_TITLE_CLOSE_TAG);
+
+    return cleanedText;
+}
+
+function sanitizeGeneratedChatTitle(title, fallbackSource = '') {
+    let cleanTitle = filterToEnglishCharacters(
+        removeThinkTags(removeInlineChatTitleMarkup(String(title || '')))
+    ).trim();
+
+    cleanTitle = cleanTitle.replace(/\*\*(.+?)\*\*/g, '$1');
+    cleanTitle = cleanTitle.replace(/\*(.+?)\*/g, '$1');
+    cleanTitle = cleanTitle.replace(/_(.+?)_/g, '$1');
+    cleanTitle = cleanTitle.replace(/`(.+?)`/g, '$1');
+    cleanTitle = cleanTitle.replace(/\[(.+?)\]\(.+?\)/g, '$1');
+    cleanTitle = cleanTitle.replace(/^#+\s+(.+)$/gm, '$1');
+    cleanTitle = cleanTitle.replace(/["']/g, '');
+    cleanTitle = cleanTitle.replace(/\s+/g, ' ').trim();
+
+    if (cleanTitle) {
+        const words = cleanTitle.split(/\s+/);
+        if (words.length > 3) {
+            cleanTitle = words.slice(0, 3).join(' ');
+        }
+    }
+
+    return cleanTitle || null;
+}
+
+function extractInlineChatTitle(text, fallbackSource = '') {
+    if (!text) {
+        return null;
+    }
+
+    let tagMatch = null;
+    for (const match of String(text).matchAll(INLINE_CHAT_TITLE_TAG_REGEX)) {
+        tagMatch = match;
+    }
+    if (tagMatch && typeof tagMatch[1] === 'string') {
+        return sanitizeGeneratedChatTitle(tagMatch[1], fallbackSource);
+    }
+
+    let markerMatch = null;
+    for (const match of String(text).matchAll(INLINE_CHAT_TITLE_REGEX)) {
+        markerMatch = match;
+    }
+    if (markerMatch && typeof markerMatch[1] === 'string') {
+        return sanitizeGeneratedChatTitle(markerMatch[1], fallbackSource);
+    }
+
+    return null;
+}
+
+function prepareAssistantResponseForStorage(aiMessage, userMessage, shouldExtractTitle = false) {
+    const normalizedMessage = normalizeMalformedCodeFences(normalizeReasoningTags(aiMessage));
+    const cleanMessage = removeInlineChatTitleMarkup(normalizedMessage);
+
+    return {
+        cleanMessage,
+        title: shouldExtractTitle ? extractInlineChatTitle(normalizedMessage, userMessage) : null,
+    };
+}
+
+function shouldRequestInlineChatTitle(chatMessages) {
+    return getAutoGenerateTitles()
+        && Array.isArray(chatMessages)
+        && chatMessages.length === 1
+        && chatMessages[0]?.role === 'user';
+}
+
+function appendRequestSystemPrompts(targetMessages, baseSystemPrompt, shouldInlineChatTitle) {
+    if (baseSystemPrompt && baseSystemPrompt.trim() !== '') {
+        targetMessages.push({ role: 'system', content: baseSystemPrompt.trim() });
+    }
+
+    if (shouldInlineChatTitle) {
+        targetMessages.push({ role: 'system', content: INLINE_CHAT_TITLE_INSTRUCTION });
+    }
+}
+
 /**
  * Checks if the server supports file uploads
  * @returns {boolean} - True if file uploads are supported
@@ -319,31 +463,27 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         // Create the messages array
         const messages = [];
 
-        // Add the system prompt only if one is explicitly set by the user
-        const systemPrompt = getSystemPrompt();
-
         // Note: Smart reply instructions are NOT added to the system prompt.
         // Embedding smart reply XML tags in the system prompt causes reasoning models
         // to stop mid-think on the first prompt. Smart replies are generated via a
         // separate lightweight API call after the main response completes instead.
 
-        if (systemPrompt && systemPrompt.trim() !== '') {
-            messages.push({ role: 'system', content: systemPrompt });
-        }
+        // Get the current chat history messages
+        const chatMessages = chatHistoryData[currentChatId]
+            ? (Array.isArray(chatHistoryData[currentChatId])
+                ? chatHistoryData[currentChatId]
+                : chatHistoryData[currentChatId].messages)
+            : [];
+        const shouldInlineChatTitle = shouldRequestInlineChatTitle(chatMessages);
+
+        // Add the system prompt only if one is explicitly set by the user or we need
+        // to inject the hidden title instruction for the first assistant response.
+        appendRequestSystemPrompts(messages, getSystemPrompt(), shouldInlineChatTitle);
         // Note: No default system prompt is added to allow reasoning models to behave naturally
 
-
         // Add chat history from previous messages
-        if (chatHistoryData[currentChatId]) {
-            // Get the messages from the chat history
-            const chatMessages = Array.isArray(chatHistoryData[currentChatId])
-                ? chatHistoryData[currentChatId]
-                : chatHistoryData[currentChatId].messages;
-
-            // Add each message to the messages array
-            for (const msg of chatMessages) {
-                messages.push(msg);
-            }
+        for (const msg of chatMessages) {
+            messages.push(msg);
         }
 
         // If files are attached, enhance the last user message in the messages array
@@ -817,7 +957,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
 
                                     // Check if we're in a thinking section (between <think> and </think>)
                                     // No smart_replies stripping needed during streaming since we no longer embed them.
-                                    const visibleStreamingMessage = reasoningState.normalizedText.trim();
+                                    const visibleStreamingMessage = removeInlineChatTitleMarkup(reasoningState.normalizedText).trim();
                                     const inThinkingSection = reasoningState.inThinkingSection;
                                     const contentAfterThink = reasoningState.contentAfterThink;
 
@@ -937,8 +1077,14 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         // Smart replies are now generated via a separate post-response call (see generateSmartReplies below).
         // No extraction from the main aiMessage is needed.
 
-        // Apply final content processing based on thinking tags and settings
-        aiMessage = normalizeMalformedCodeFences(normalizeReasoningTags(aiMessage));
+        // Apply final content processing based on thinking tags/settings and strip the
+        // hidden inline title marker before rendering or saving the response.
+        const responsePayload = prepareAssistantResponseForStorage(aiMessage, userMessage, shouldInlineChatTitle);
+        aiMessage = responsePayload.cleanMessage;
+        if (responsePayload.title && chatHistoryData[currentChatId]) {
+            chatHistoryData[currentChatId].title = responsePayload.title;
+        }
+
         const hideThinking = getHideThinking();
         const finalReasoningState = getReasoningStreamState(aiMessage);
         const hasThinkTags = finalReasoningState.hasThinking;
@@ -1249,40 +1395,18 @@ export async function updateChatHistory(userMessage, aiMessage, fileContents = [
         }
 
         messages.push(userMsg);
+    }
 
-        // Check if this is the first message in the chat and auto-generate title is enabled
-        // Generate title right after adding the user message, before adding AI response
-        if (messages.length === 1 && getAutoGenerateTitles()) {
-            try {
-                // Get the user's first message (which we just added)
-                const firstUserMessage = userMsg.content;
+    const shouldCaptureInlineTitle = messages.length === 1 && getAutoGenerateTitles();
+    const responsePayload = prepareAssistantResponseForStorage(aiMessage, userMessage, shouldCaptureInlineTitle);
 
-                // Log the message being used for title generation
-                debugLog('Generating title based on user message:', firstUserMessage);
-
-                // Generate a title for the chat based on the user's first message
-                // The generateChatTitle function now ensures the title is clean of <think> tags
-                const title = await generateChatTitle(firstUserMessage);
-                if (title) {
-                    // Double-check that the title is clean of <think> tags before storing
-                    const cleanTitle = removeThinkTags(title);
-                    debugLog('Storing clean title with chat:', cleanTitle);
-
-                    // Store the clean title with the chat
-                    chatHistoryData[currentChatId].title = cleanTitle;
-
-                    // Save the chat history to ensure the clean title is persisted
-                    saveChatHistory();
-                }
-            } catch (error) {
-                debugError('Error generating chat title:', error);
-                // If title generation fails, continue without a title
-            }
-        }
+    if (responsePayload.title) {
+        chatHistoryData[currentChatId].title = responsePayload.title;
+        debugLog('Stored inline-generated chat title:', responsePayload.title);
     }
 
     // Add the AI response
-    messages.push({ role: 'assistant', content: aiMessage, model: getSelectedModel() });
+    messages.push({ role: 'assistant', content: responsePayload.cleanMessage, model: getSelectedModel() });
 
     // Log the current chat history for debugging
     debugLog('Updated chat history:',
@@ -1450,17 +1574,24 @@ export function updateChatHistoryUI() {
                         chatData.title = cleanTitle;
                     }
                 } else {
-                    // Fall back to using the first message content, but remove any <think> tags
-                    const cleanContent = removeThinkTags(messages[0].content);
+                    const shouldUseNeutralFallback = getAutoGenerateTitles() && messages.length <= 2;
 
-                    // Log the fallback content for debugging
-                    debugLog('Using fallback title from first message:', cleanContent.substring(0, 30));
+                    if (shouldUseNeutralFallback) {
+                        chatTitle.textContent = 'New Chat';
+                        button.title = 'New Chat';
+                    } else {
+                        // Fall back to using the first message content, but remove any <think> tags
+                        const cleanContent = removeThinkTags(messages[0].content);
 
-                    // Set the fallback title in the UI
-                    chatTitle.textContent = cleanContent.substring(0, 30) + (cleanContent.length > 30 ? '...' : '');
+                        // Log the fallback content for debugging
+                        debugLog('Using fallback title from first message:', cleanContent.substring(0, 30));
 
-                    // Add a title attribute to show more of the message on hover
-                    button.title = cleanContent;
+                        // Set the fallback title in the UI
+                        chatTitle.textContent = cleanContent.substring(0, 30) + (cleanContent.length > 30 ? '...' : '');
+
+                        // Add a title attribute to show more of the message on hover
+                        button.title = cleanContent;
+                    }
                 }
                 titleWrapper.appendChild(chatTitle);
                 button.appendChild(titleWrapper);
@@ -2158,7 +2289,9 @@ export function lazyLoadMessages(messages, startIndex, chunkSize = 10) {
             continue; // Skip to the next message
         }
 
-        let contentDisplay = message.content;
+        let contentDisplay = message.role === 'assistant'
+            ? removeInlineChatTitleMarkup(message.content)
+            : message.content;
 
         // Add file attachment indicator if present
         if (message.has_files) {
@@ -2427,6 +2560,16 @@ export function saveChatHistory() {
             if (Array.isArray(chatData.messages)) {
                 chatData.messages.forEach(message => {
                     if (message.content && typeof message.content === 'string') {
+                        if (message.role === 'assistant') {
+                            if (!chatData.title) {
+                                const extractedTitle = extractInlineChatTitle(message.content);
+                                if (extractedTitle) {
+                                    chatData.title = extractedTitle;
+                                }
+                            }
+                            message.content = removeInlineChatTitleMarkup(message.content);
+                        }
+
                         // For messages with code blocks, use a simple but effective preservation method
                         if (message.content.includes('```')) {
                             debugLog('Saving message with code blocks - preserving format');
@@ -2818,209 +2961,6 @@ export function getChatToDelete() {
     return chatToDelete;
 }
 
-/**
- * Generates a title for a chat using the LLM
- * @param {string} userMessage - The user's first message in the chat
- * @returns {Promise<string>} - The generated title
- */
-export async function generateChatTitle(userMessage) {
-    // If auto-generate titles is disabled, return null
-    if (!getAutoGenerateTitles()) {
-        debugLog('Auto-generate titles is disabled, skipping title generation');
-        return null;
-    }
-
-    // If using OpenRouter API, skip title generation to avoid rate limits and reduce token usage
-    if (getUseOpenRouter()) {
-        debugLog('OpenRouter is enabled, skipping chat title generation to avoid rate limits');
-        return null;
-    }
-
-    // If we're already generating a title, return null to prevent multiple requests
-    if (isGeneratingTitle) {
-        debugLog('Already generating a title, skipping request');
-        return null;
-    }
-
-    // Clean the user message of any think tags before using it for title generation
-    // This ensures clean input even if the user message somehow contains think tags
-    const cleanUserMessage = removeThinkTags(userMessage);
-
-    // If the cleaned user message is empty or invalid, return null
-    if (!cleanUserMessage || typeof cleanUserMessage !== 'string' || cleanUserMessage.trim() === '') {
-        debugError('Invalid user message for title generation:', cleanUserMessage);
-        return null;
-    }
-
-    // Log the user message received for title generation
-    debugLog('generateChatTitle received user message:', userMessage);
-    debugLog('generateChatTitle using cleaned user message:', cleanUserMessage);
-
-    // Set the title generation flag to true
-    isGeneratingTitle = true;
-
-    try {
-        if (!(await isServerRunning())) {
-            throw new Error('LM_STUDIO_SERVER_NOT_RUNNING');
-        }
-
-        // Get the latest available models
-        const availableModels = getAvailableModels();
-
-        if (availableModels.length === 0) {
-            // Try to fetch models if none are available
-            await fetchAvailableModels();
-            // Get the updated list of models
-            const updatedModels = getAvailableModels();
-
-            if (updatedModels.length === 0) {
-                throw new Error('No models available');
-            }
-        }
-
-        // Create a system prompt specifically for title generation
-        const titleSystemPrompt = 'You are a helpful assistant that generates concise, descriptive titles. Create a short title (2-3 words) that describes what the chat is ABOUT, not the content itself. For example, if the user asks for a poem about Michigan, the title should be "Michigan Poem Request" not "The Great Lakes". Focus on the topic/purpose of the conversation. DO NOT use any markdown formatting (like **bold**, *italic*, or `code`) in your title - use plain text only.';
-
-        // Create the messages array with the cleaned user message
-        const messages = [
-            { role: 'system', content: titleSystemPrompt },
-            { role: 'user', content: cleanUserMessage }
-        ];
-
-        // Create request body with a lower temperature for more predictable titles
-        const requestBody = {
-            model: getSelectedModel(),
-            messages: messages,
-            temperature: 0.2, // Lower temperature for more predictable titles
-            stream: false, // No need for streaming for title generation
-        };
-
-        debugLog('Sending API request to generate chat title');
-
-        const requestHeaders = {
-            'Content-Type': 'application/json',
-        };
-        if (getUseOpenRouter()) {
-            requestHeaders['Authorization'] = `Bearer ${getOpenRouterApiKey()}`;
-            requestHeaders['HTTP-Referer'] = 'https://lmsa.app';
-            requestHeaders['X-Title'] = 'LMSA';
-        } else {
-            const lmToken = getUseOllama() ? '' : getLMStudioApiToken();
-            if (lmToken) requestHeaders['Authorization'] = `Bearer ${lmToken}`;
-        }
-
-        const response = await fetch(getApiUrl(), {
-            method: 'POST',
-            headers: requestHeaders,
-            body: JSON.stringify(requestBody),
-        });
-
-        if (!response.ok) {
-            throw new Error('API request failed');
-        }
-
-        const data = await response.json();
-        // Get the title and filter out any non-English characters
-        let title = filterToEnglishCharacters(data.choices[0].message.content.trim());
-
-        // Log the raw title for debugging
-        debugLog('Raw title before cleaning:', title);
-
-        // Remove any <think> tags and their content from the title
-        // This is critical for ensuring titles are clean regardless of hide-thinking setting
-        title = removeThinkTags(title);
-
-        // Log the cleaned title for debugging
-        debugLog('Cleaned title after removing think tags:', title);
-
-        // Remove markdown formatting from the title
-        // Remove bold formatting
-        title = title.replace(/\*\*(.+?)\*\*/g, '$1');
-        // Remove italic formatting
-        title = title.replace(/\*(.+?)\*/g, '$1');
-        title = title.replace(/_(.+?)_/g, '$1');
-        // Remove code formatting
-        title = title.replace(/`(.+?)`/g, '$1');
-        // Remove links - keep only the text part
-        title = title.replace(/\[(.+?)\]\(.+?\)/g, '$1');
-        // Remove headers
-        title = title.replace(/^#+\s+(.+)$/gm, '$1');
-
-        // Ensure the title is no more than 3 words
-        const words = title.split(/\s+/);
-        if (words.length > 3) {
-            title = words.slice(0, 3).join(' ');
-        }
-
-        // Remove any quotes that might be in the title
-        title = title.replace(/["']/g, '');
-
-        // Make sure we have a valid title
-        if (!title || typeof title !== 'string' || title.trim() === '') {
-            debugLog('Generated title is empty or invalid, using default');
-            // Return a default title based on the first few words of the cleaned user message
-            const words = cleanUserMessage.trim().split(/\s+/);
-            title = words.slice(0, 3).join(' ');
-            if (title.length > 30) {
-                title = title.substring(0, 30) + '...';
-            }
-        }
-
-        debugLog('Generated title:', title);
-
-        // Save the chat with the new title immediately to ensure it's persisted
-        if (chatHistoryData[currentChatId]) {
-            // Always ensure the title is clean of <think> tags before saving
-            // Apply the cleaning again to be absolutely certain
-            const cleanTitle = removeThinkTags(title);
-
-            // Log the final clean title that will be saved
-            debugLog('Final clean title to be saved:', cleanTitle);
-
-            // Save the clean title
-            chatHistoryData[currentChatId].title = cleanTitle;
-            saveChatHistory();
-            debugLog('Saved chat with new title (cleaned of <think> tags):', cleanTitle);
-
-            // Return the clean title
-            return cleanTitle;
-        }
-
-        // Even if we don't save it, return a clean title
-        return removeThinkTags(title);
-    } catch (error) {
-        debugError('Error generating title:', error);
-
-        // In case of error, try to generate a simple title from the cleaned user message
-        try {
-            const words = cleanUserMessage.trim().split(/\s+/);
-            let fallbackTitle = words.slice(0, 3).join(' ');
-
-            // Make sure the fallback title is also clean of <think> tags
-            // This is important even for fallback titles in case the user message contains think tags
-            fallbackTitle = removeThinkTags(fallbackTitle);
-
-            // Log the fallback title for debugging
-            debugLog('Using fallback title (cleaned of <think> tags):', fallbackTitle);
-
-            // If we have a current chat ID, save this fallback title
-            if (chatHistoryData[currentChatId]) {
-                chatHistoryData[currentChatId].title = fallbackTitle;
-                saveChatHistory();
-                debugLog('Saved chat with fallback title');
-            }
-
-            return fallbackTitle;
-        } catch (fallbackError) {
-            debugError('Error generating fallback title:', fallbackError);
-            return null;
-        }
-    } finally {
-        // Reset the title generation flag
-        isGeneratingTitle = false;
-    }
-}
-
 // Track regeneration attempts to handle browser-specific issues
 let regenerationAttemptCount = 0;
 let regenerationAttemptTimer = null;
@@ -3119,6 +3059,7 @@ export async function regenerateLastResponse(isRetry = false) {
 
         // Clear any AI messages after the last user message
         const filteredMessages = messages.slice(0, lastUserMessageIndex + 1);
+        const shouldInlineChatTitle = shouldRequestInlineChatTitle(filteredMessages);
 
         // Remove existing AI messages from the DOM after the last user message
         const messageElements = Array.from(messagesContainer.children);
@@ -3170,18 +3111,15 @@ export async function regenerateLastResponse(isRetry = false) {
             }
 
             // Get the system prompt
-            const systemPrompt = getSystemPrompt();
-
             // Note: Smart reply instructions are NOT added to the system prompt.
             // They are generated via a separate post-response call instead.
 
             // Create messages array for the API request
             const apiMessages = [];
 
-            // Add system prompt only if one is explicitly set by the user (or smart replies enabled)
-            if (systemPrompt && systemPrompt.trim() !== '') {
-                apiMessages.push({ role: 'system', content: systemPrompt });
-            }
+            // Add system prompt only if one is explicitly set by the user or we need
+            // to request the hidden inline title on the first assistant response.
+            appendRequestSystemPrompts(apiMessages, getSystemPrompt(), shouldInlineChatTitle);
             // Note: No default system prompt is added to allow reasoning models to behave naturally
 
 
@@ -3421,13 +3359,14 @@ export async function regenerateLastResponse(isRetry = false) {
                                         const hideThinking = getHideThinking();
                                         const inThinkingSection = reasoningState.inThinkingSection;
                                         const contentAfterThink = reasoningState.contentAfterThink;
+                                        const visibleStreamingMessage = removeInlineChatTitleMarkup(reasoningState.normalizedText);
 
                                         if (hasThinkTags && contentContainer) {
                                             if (hideThinking) {
                                                 // When hide thinking is enabled, always hide thinking tags and content
                                                 if (contentAfterThink !== "") {
                                                     // We have content after </think>, show ONLY that content (streaming)
-                                                    const processedContent = stripReasoningSections(reasoningState.normalizedText);
+                                                    const processedContent = stripReasoningSections(visibleStreamingMessage);
                                                     contentContainer.innerHTML = basicSanitizeInput(processedContent);
 
                                                     // Remove any thinking indicator that might exist
@@ -3472,19 +3411,19 @@ export async function regenerateLastResponse(isRetry = false) {
                                                 } else {
                                                     // Hide thinking is enabled but we're not in thinking section and no content after think
                                                     // This means thinking tags are complete but no content after them yet
-                                                    const processedContent = stripReasoningSections(reasoningState.normalizedText);
+                                                    const processedContent = stripReasoningSections(visibleStreamingMessage);
                                                     contentContainer.innerHTML = basicSanitizeInput(processedContent);
                                                 }
                                             } else {
                                                 // Hide thinking is disabled, show everything including thinking tags (streaming)
-                                                contentContainer.innerHTML = sanitizeInput(reasoningState.normalizedText);
+                                                contentContainer.innerHTML = sanitizeInput(visibleStreamingMessage);
                                             }
 
                                             // Mark this message as having thinking
                                             aiMessageElement.dataset.hasThinking = 'true';
                                         } else if (contentContainer) {
                                             // For non-reasoning models, apply basic sanitization
-                                            contentContainer.innerHTML = basicSanitizeInput(reasoningState.normalizedText);
+                                            contentContainer.innerHTML = basicSanitizeInput(visibleStreamingMessage);
                                             // Mark this message as a non-reasoning model response
                                             aiMessageElement.dataset.hasThinking = 'false';
                                         }
@@ -3534,8 +3473,14 @@ export async function regenerateLastResponse(isRetry = false) {
             // Smart replies are now generated via a separate post-response call.
             // No extraction from the main aiMessage is needed.
 
-            // Apply final content processing based on thinking tags and settings
-            aiMessage = normalizeMalformedCodeFences(normalizeReasoningTags(aiMessage));
+            // Apply final content processing based on thinking tags/settings and strip the
+            // hidden inline title marker before rendering or saving the response.
+            const responsePayload = prepareAssistantResponseForStorage(aiMessage, lastUserMessage, shouldInlineChatTitle);
+            aiMessage = responsePayload.cleanMessage;
+            if (responsePayload.title && chatHistoryData[currentChatId]) {
+                chatHistoryData[currentChatId].title = responsePayload.title;
+            }
+
             const hideThinking = getHideThinking();
             const finalReasoningState = getReasoningStreamState(aiMessage);
             const hasThinkTags = finalReasoningState.hasThinking;
@@ -4210,8 +4155,16 @@ async function fastUpdateChatHistoryBeforeReload(userMessage, aiMessage, fileCon
         messages.push(userMsg);
     }
 
+    const shouldCaptureInlineTitle = messages.length === 1 && getAutoGenerateTitles();
+    const responsePayload = prepareAssistantResponseForStorage(aiMessage, userMessage, shouldCaptureInlineTitle);
+
+    if (responsePayload.title) {
+        chatHistoryData[currentChatId].title = responsePayload.title;
+        debugLog('Stored inline-generated chat title during fast save:', responsePayload.title);
+    }
+
     // Add the AI response
-    messages.push({ role: 'assistant', content: aiMessage, model: getSelectedModel() });
+    messages.push({ role: 'assistant', content: responsePayload.cleanMessage, model: getSelectedModel() });
 
     // Just save to localStorage quickly without UI updates
     try {
@@ -4281,33 +4234,6 @@ export async function addUserMessageToHistory(userMessage, fileContents = []) {
     // This prevents duplicate user messages when regenerating responses
     if (!lastMessage || lastMessage.role !== 'user' || lastMessage.content !== userMessage) {
         messages.push(userMsg);
-
-        // Check if this is the first message in the chat and auto-generate title is enabled
-        // Generate title right after adding the user message, before adding AI response
-        if (messages.length === 1 && getAutoGenerateTitles()) {
-            try {
-                // Get the user's first message (which we just added)
-                const firstUserMessage = userMsg.content;
-
-                // Log the message being used for title generation
-                debugLog('Generating title based on user message:', firstUserMessage);
-
-                // Generate a title for the chat based on the user's first message
-                // The generateChatTitle function now ensures the title is clean of <think> tags
-                const title = await generateChatTitle(firstUserMessage);
-                if (title) {
-                    // Double-check that the title is clean of <think> tags before storing
-                    const cleanTitle = removeThinkTags(title);
-                    debugLog('Storing clean title with chat:', cleanTitle);
-
-                    // Store the clean title with the chat
-                    chatHistoryData[currentChatId].title = cleanTitle;
-                }
-            } catch (error) {
-                debugError('Error generating chat title:', error);
-                // If title generation fails, continue without a title
-            }
-        }
 
         // Save the updated chat history
         saveChatHistory();

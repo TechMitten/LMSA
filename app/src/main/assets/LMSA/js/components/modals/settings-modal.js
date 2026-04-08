@@ -190,7 +190,7 @@ export const settingsModal = `
                                 <div class="toggle-dot"></div>
                             </div>
                         </div>
-                        <p id="auto-generate-titles-description" class="text-xs text-gray-400 mt-1">When enabled, uses the LLM to generate a short title (2-3 words) that describes what the chat is about based on your first message.</p>
+                        <p id="auto-generate-titles-description" class="text-xs text-gray-400 mt-1">When enabled, the first AI reply includes a hidden short title that LMSA saves to your chat list without making a second API call.</p>
                     </div>
 
                     <div class="mb-5" id="smart-reply-setting">
