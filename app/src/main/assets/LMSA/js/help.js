@@ -47,6 +47,28 @@ export function openHelpModal() {
     }
 }
 
+function loadDemoMedia(demoPanel) {
+    if (!demoPanel || demoPanel.dataset.demoLoaded === 'true') {
+        return;
+    }
+
+    demoPanel.querySelectorAll('[data-demo-srcset]').forEach((source) => {
+        const srcset = source.getAttribute('data-demo-srcset');
+        if (srcset) {
+            source.setAttribute('srcset', srcset);
+        }
+    });
+
+    demoPanel.querySelectorAll('[data-demo-src]').forEach((image) => {
+        const src = image.getAttribute('data-demo-src');
+        if (src) {
+            image.setAttribute('src', src);
+        }
+    });
+
+    demoPanel.dataset.demoLoaded = 'true';
+}
+
 // Make available globally for onclick handlers in error messages
 window.openHelpModal = openHelpModal;
 window.showSettingsModal = showSettingsModal;
@@ -117,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            loadDemoMedia(demoPanel);
             demoPanel.classList.remove('hidden');
             demoButton.classList.add('hidden');
             demoButton.setAttribute('aria-expanded', 'true');

@@ -164,10 +164,12 @@ export const helpModal = `
                                 class="hidden mt-4 mb-4 rounded-xl overflow-hidden border border-white/10 bg-gray-900">
                                 <picture>
                                     <source media="(max-width: 768px)"
-                                        srcset="images/support-demos/lmstudiodemo-mobile-zoom.gif" />
-                                    <img src="images/support-demos/lmstudiodemo.gif"
+                                        data-demo-srcset="images/support-demos/lmstudiodemo-mobile-zoom.gif" />
+                                    <img data-demo-src="https://lmsa.app/lmstudiodemo.gif"
                                         alt="LM Studio server setup demonstration showing how to start the server and enable network options"
-                                        class="w-full h-auto block" />
+                                        class="w-full h-auto block"
+                                        loading="lazy"
+                                        decoding="async" />
                                 </picture>
                             </div>
 
@@ -231,10 +233,12 @@ export const helpModal = `
                                 class="hidden mt-4 mb-4 rounded-xl overflow-hidden border border-white/10 bg-gray-900">
                                 <picture>
                                     <source media="(max-width: 768px)"
-                                        srcset="images/support-demos/ollamademo-mobile-zoom.gif" />
-                                    <img src="images/support-demos/ollamademo.gif"
+                                        data-demo-srcset="images/support-demos/ollamademo-mobile-zoom.gif" />
+                                    <img data-demo-src="https://lmsa.app/ollamademo.gif"
                                         alt="Ollama setup demonstration showing network exposure and connection steps"
-                                        class="w-full h-auto block" />
+                                        class="w-full h-auto block"
+                                        loading="lazy"
+                                        decoding="async" />
                                 </picture>
                             </div>
 
