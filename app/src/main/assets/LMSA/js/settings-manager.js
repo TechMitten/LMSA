@@ -37,6 +37,7 @@ let selectedTTSVoice = null; // Selected TTS voice name
 let useOpenRouter = false; // Use OpenRouter cloud API
 let openRouterApiKey = ''; // OpenRouter API key
 let lmStudioApiToken = ''; // Optional LM Studio API token for authenticated servers
+let lmStudioMcpIntegrations = []; // Optional LM Studio native chat integrations payload
 let showModelLabel = true; // Show model name on AI message bubbles
 let showChatScrollbar = false; // Show scrollbar in chat message area
 let showScrollToBottom = true; // Show scroll to bottom button in chat
@@ -465,6 +466,8 @@ export function loadAutoGenerateTitlesSetting() {
       "change",
       saveAutoGenerateTitlesSetting
     );
+
+    syncAutoGenerateTitlesUI();
   }
 }
 
@@ -571,6 +574,23 @@ export function saveAutoGenerateTitlesSetting() {
   if (autoGenerateTitlesCheckbox) {
     autoGenerateTitles = autoGenerateTitlesCheckbox.checked;
     localStorage.setItem("autoGenerateTitles", autoGenerateTitles);
+  }
+}
+
+function syncAutoGenerateTitlesUI() {
+  const autoGenerateTitlesContainer = document.getElementById('auto-generate-titles-setting');
+  const autoGenerateTitlesDesc = document.getElementById('auto-generate-titles-description');
+
+  if (autoGenerateTitlesCheckbox) {
+    const savedAutoGenerateTitles = localStorage.getItem('autoGenerateTitles');
+    autoGenerateTitlesCheckbox.disabled = false;
+    autoGenerateTitlesCheckbox.checked = savedAutoGenerateTitles === 'true';
+    autoGenerateTitles = savedAutoGenerateTitles === 'true';
+  }
+
+  if (autoGenerateTitlesContainer) autoGenerateTitlesContainer.style.opacity = '';
+  if (autoGenerateTitlesDesc) {
+    autoGenerateTitlesDesc.textContent = 'When enabled, the first AI reply includes a hidden short title that LMSA saves to your chat list without making a second API call.';
   }
 }
 
@@ -1149,9 +1169,6 @@ function updateOpenRouterUI(isEnabled) {
   // ride along with the first reply, so only Smart Reply needs OpenRouter gating.
   const smartReplyContainer = document.getElementById('smart-reply-setting');
   const smartReplyDesc = document.getElementById('smart-reply-description');
-  const autoGenerateTitlesContainer = document.getElementById('auto-generate-titles-setting');
-  const autoGenerateTitlesDesc = document.getElementById('auto-generate-titles-description');
-  
   if (isEnabled) {
     // Visually disable and uncheck Smart Reply; don't overwrite localStorage so preference is restored later
     if (autoSmartReplyCheckbox) {
@@ -1162,15 +1179,9 @@ function updateOpenRouterUI(isEnabled) {
     if (smartReplyContainer) smartReplyContainer.style.opacity = '0.4';
     if (smartReplyDesc) smartReplyDesc.textContent = 'Not available when OpenRouter is enabled. Smart Reply requires a local LLM connection.';
     
-    // Keep Generate Chat Titles available because it no longer makes a second API call
-    if (autoGenerateTitlesCheckbox) {
-      autoGenerateTitlesCheckbox.disabled = false;
-      const savedAutoGenerateTitles = localStorage.getItem('autoGenerateTitles');
-      autoGenerateTitlesCheckbox.checked = savedAutoGenerateTitles === 'true';
-      autoGenerateTitles = savedAutoGenerateTitles === 'true';
-    }
-    if (autoGenerateTitlesContainer) autoGenerateTitlesContainer.style.opacity = '';
-    if (autoGenerateTitlesDesc) autoGenerateTitlesDesc.textContent = 'When enabled, the first AI reply includes a hidden short title that LMSA saves to your chat list without making a second API call.';
+    // Generate Chat Titles stays available with OpenRouter because it no longer
+    // requires a separate title-only request.
+    syncAutoGenerateTitlesUI();
   } else {
     // Re-enable Smart Reply toggle and restore saved preference
     if (autoSmartReplyCheckbox) {
@@ -1182,15 +1193,7 @@ function updateOpenRouterUI(isEnabled) {
     if (smartReplyContainer) smartReplyContainer.style.opacity = '';
     if (smartReplyDesc) smartReplyDesc.textContent = 'When enabled, the LLM will analyze the conversation and suggest interactive tap-to-reply options above the chat input.';
     
-    // Re-enable Generate Chat Titles toggle and restore saved preference
-    if (autoGenerateTitlesCheckbox) {
-      autoGenerateTitlesCheckbox.disabled = false;
-      const savedAutoGenerateTitles = localStorage.getItem('autoGenerateTitles');
-      autoGenerateTitlesCheckbox.checked = savedAutoGenerateTitles === 'true';
-      autoGenerateTitles = savedAutoGenerateTitles === 'true';
-    }
-    if (autoGenerateTitlesContainer) autoGenerateTitlesContainer.style.opacity = '';
-    if (autoGenerateTitlesDesc) autoGenerateTitlesDesc.textContent = 'When enabled, the first AI reply includes a hidden short title that LMSA saves to your chat list without making a second API call.';
+    syncAutoGenerateTitlesUI();
   }
 }
 
@@ -1361,6 +1364,97 @@ export function setLMStudioApiToken(token) {
 export function clearLMStudioApiToken() {
   lmStudioApiToken = '';
   localStorage.removeItem('lmStudioApiToken');
+}
+
+function normalizeLMStudioMcpIntegrations(value) {
+  const integrations = Array.isArray(value)
+    ? value
+    : value
+      ? [value]
+      : [];
+
+  return integrations.filter(entry =>
+    typeof entry === 'string' ||
+    (entry && typeof entry === 'object' && !Array.isArray(entry))
+  );
+}
+
+function parseLMStudioMcpIntegrations(rawValue) {
+  if (!rawValue || !rawValue.trim()) {
+    return [];
+  }
+
+  try {
+    return normalizeLMStudioMcpIntegrations(JSON.parse(rawValue));
+  } catch (error) {
+    console.warn('Failed to parse LM Studio MCP integrations from storage:', error);
+    return [];
+  }
+}
+
+/**
+ * Loads LM Studio MCP integrations from localStorage.
+ * Stored as a JSON array matching LM Studio's native integrations payload.
+ */
+export function loadLMStudioMcpIntegrationsSetting() {
+  lmStudioMcpIntegrations = parseLMStudioMcpIntegrations(
+    localStorage.getItem('lmStudioMcpIntegrations') || ''
+  );
+}
+
+/**
+ * Gets the current LM Studio MCP integrations payload.
+ * @returns {Array<string|Object>}
+ */
+export function getLMStudioMcpIntegrations() {
+  return JSON.parse(JSON.stringify(lmStudioMcpIntegrations));
+}
+
+/**
+ * Returns the raw JSON string used to configure LM Studio MCP integrations.
+ * @returns {string}
+ */
+export function getLMStudioMcpIntegrationsRaw() {
+  return localStorage.getItem('lmStudioMcpIntegrations') || '';
+}
+
+/**
+ * Checks whether LM Studio native MCP integrations are configured.
+ * @returns {boolean}
+ */
+export function hasLMStudioMcpIntegrations() {
+  return lmStudioMcpIntegrations.length > 0;
+}
+
+/**
+ * Sets and persists LM Studio MCP integrations.
+ * Accepts a JSON string, array, or single integration object/string.
+ * @param {string|Array|Object} value
+ */
+export function setLMStudioMcpIntegrations(value) {
+  let integrations = [];
+
+  if (typeof value === 'string') {
+    integrations = parseLMStudioMcpIntegrations(value);
+  } else {
+    integrations = normalizeLMStudioMcpIntegrations(value);
+  }
+
+  lmStudioMcpIntegrations = integrations;
+
+  if (integrations.length > 0) {
+    localStorage.setItem('lmStudioMcpIntegrations', JSON.stringify(integrations, null, 2));
+  } else {
+    localStorage.removeItem('lmStudioMcpIntegrations');
+  }
+}
+
+/**
+ * Clears LM Studio MCP integrations from memory and localStorage.
+ */
+export function clearLMStudioMcpIntegrations() {
+  lmStudioMcpIntegrations = [];
+  localStorage.removeItem('lmStudioMcpIntegrations');
 }
 
 /**
@@ -1588,6 +1682,7 @@ export function loadSettings() {
   loadOllamaSetting();
   loadOpenRouterSettings();
   loadLMStudioApiTokenSetting();
+  loadLMStudioMcpIntegrationsSetting();
   loadShowModelLabelSetting();
   loadShowChatScrollbarSetting();
   loadShowScrollToBottomSetting();

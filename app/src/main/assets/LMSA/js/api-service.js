@@ -1348,16 +1348,24 @@ export async function ejectModel() {
 
 /**
  * Gets the API URL
+ * @param {{ preferNativeLmStudio?: boolean }} options
  * @returns {string} - The current API URL
  */
-export function getApiUrl() {
+export function getApiUrl(options = {}) {
+    const { preferNativeLmStudio = false } = options;
+
     if (getUseOpenRouter()) {
         return 'https://openrouter.ai/api/v1/chat/completions';
     }
-    if (!API_URL && serverIpInput && serverPortInput) {
-        const ip = serverIpInput.value.trim();
-        const port = serverPortInput.value.trim();
 
+    const ip = serverIpInput ? serverIpInput.value.trim() : '';
+    const port = serverPortInput ? serverPortInput.value.trim() : '';
+
+    if (preferNativeLmStudio && !getUseOllama() && ip && port) {
+        return `http://${ip}:${port}/api/v1/chat`;
+    }
+
+    if (!API_URL && serverIpInput && serverPortInput) {
         if (ip && port) {
             API_URL = `http://${ip}:${port}/v1/chat/completions`;
             console.log('API URL was not set, creating from inputs:', API_URL);

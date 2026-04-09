@@ -1333,6 +1333,7 @@ export function updateConnectionStatusDisplays() {
     const localStatusEl = document.getElementById('local-server-status-text');
     const orKeyStatusEl = document.getElementById('openrouter-key-status-text');
     const lmTokenStatusEl = document.getElementById('lmstudio-token-status-text');
+    const lmMcpStatusEl = document.getElementById('lmstudio-mcp-status-text');
 
     if (localStatusEl) {
         const ip = localStorage.getItem('serverIp') || '';
@@ -1373,6 +1374,29 @@ export function updateConnectionStatusDisplays() {
             lmTokenStatusEl.style.color = '';
         }
     }
+
+    if (lmMcpStatusEl) {
+        const rawIntegrations = localStorage.getItem('lmStudioMcpIntegrations') || '';
+        if (!rawIntegrations.trim()) {
+            lmMcpStatusEl.textContent = 'No MCP integrations configured';
+            lmMcpStatusEl.style.color = '';
+        } else {
+            try {
+                const parsed = JSON.parse(rawIntegrations);
+                const entries = Array.isArray(parsed) ? parsed : [parsed];
+                const validEntries = entries.filter(entry =>
+                    typeof entry === 'string' ||
+                    (entry && typeof entry === 'object' && !Array.isArray(entry))
+                );
+                const label = validEntries.length === 1 ? 'integration' : 'integrations';
+                lmMcpStatusEl.textContent = `${validEntries.length} MCP ${label} configured`;
+                lmMcpStatusEl.style.color = 'var(--accent-green, #10b981)';
+            } catch (_) {
+                lmMcpStatusEl.textContent = 'Invalid MCP JSON';
+                lmMcpStatusEl.style.color = 'var(--accent-red, #ef4444)';
+            }
+        }
+    }
 }
 
 /**
@@ -1384,6 +1408,7 @@ function initializeConnectionInputModals() {
     const ipPortModal = document.getElementById('ip-port-input-modal');
     const orKeyModal = document.getElementById('openrouter-key-input-modal');
     const lmTokenModal = document.getElementById('lmstudio-token-input-modal');
+    const lmMcpModal = document.getElementById('lmstudio-mcp-input-modal');
 
     if (!ipPortModal || !orKeyModal) {
         debugLog('Connection input modals not found');
@@ -1406,6 +1431,7 @@ function initializeConnectionInputModals() {
         setTimeout(() => {
             let firstInput = modal.querySelector('input[type="text"]') || 
                            modal.querySelector('input[type="password"]') ||
+                           modal.querySelector('textarea') ||
                            modal.querySelector('input');
             if (firstInput) {
                 firstInput.focus();
@@ -1633,6 +1659,729 @@ function initializeConnectionInputModals() {
                 if (box) lmTokenInput.scrollIntoView({ behavior: 'auto', block: 'center' });
             });
         }
+    }
+
+    if (lmMcpModal) {
+        const configLmMcpBtn = document.getElementById('configure-lmstudio-mcp-btn');
+        const mcpError = document.getElementById('lmstudio-mcp-input-error');
+        const mcpListSummary = document.getElementById('lmstudio-mcp-list-summary');
+        const mcpEmptyState = document.getElementById('lmstudio-mcp-empty-state');
+        const mcpIntegrationsList = document.getElementById('lmstudio-mcp-integrations-list');
+        const addMcpIntegrationBtn = document.getElementById('add-lmstudio-mcp-integration-btn');
+        const mcpBuilderPanel = document.getElementById('lmstudio-mcp-builder-panel');
+        const mcpBuilderTitle = document.getElementById('lmstudio-mcp-builder-title');
+        const mcpTypeSelect = document.getElementById('lmstudio-mcp-type');
+        const mcpTargetLabel = document.getElementById('lmstudio-mcp-target-label');
+        const mcpTargetInput = document.getElementById('lmstudio-mcp-target');
+        const mcpTargetHelp = document.getElementById('lmstudio-mcp-target-help');
+        const mcpLabelInput = document.getElementById('lmstudio-mcp-label');
+        const mcpToolInput = document.getElementById('lmstudio-mcp-tool-input');
+        const addMcpToolBtn = document.getElementById('add-lmstudio-mcp-tool-btn');
+        const mcpSelectedTools = document.getElementById('lmstudio-mcp-selected-tools');
+        const closeMcpBuilderBtn = document.getElementById('close-lmstudio-mcp-builder-btn');
+        const cancelMcpBuilderBtn = document.getElementById('cancel-lmstudio-mcp-builder-btn');
+        const saveMcpBuilderBtn = document.getElementById('save-lmstudio-mcp-builder-btn');
+        const mcpTemplateButtons = Array.from(lmMcpModal.querySelectorAll('[data-mcp-template]'));
+        const mcpToolSuggestionButtons = Array.from(lmMcpModal.querySelectorAll('[data-mcp-tool-suggestion]'));
+
+        let workingMcpIntegrations = [];
+        let editingMcpIndex = null;
+        let selectedMcpTools = [];
+        let originalMcpEntry = null;
+
+        const clearMcpError = () => {
+            if (mcpError) {
+                mcpError.textContent = '';
+                mcpError.classList.add('hidden');
+            }
+        };
+
+        const showMcpError = (message) => {
+            if (mcpError) {
+                mcpError.textContent = message;
+                mcpError.classList.remove('hidden');
+            }
+        };
+
+        const cloneMcpValue = (value, fallback = []) => {
+            if (value === null || typeof value === 'undefined') {
+                return fallback;
+            }
+
+            try {
+                return JSON.parse(JSON.stringify(value));
+            } catch (_) {
+                return fallback;
+            }
+        };
+
+        const normalizeMcpTools = (tools) => {
+            if (!Array.isArray(tools)) {
+                return [];
+            }
+
+            return [...new Set(tools
+                .map(tool => typeof tool === 'string' ? tool.trim() : '')
+                .filter(Boolean))];
+        };
+
+        const readSavedMcpIntegrations = () => {
+            const rawValue = localStorage.getItem('lmStudioMcpIntegrations') || '';
+            if (!rawValue.trim()) {
+                return [];
+            }
+
+            try {
+                const parsedValue = JSON.parse(rawValue);
+                const normalized = Array.isArray(parsedValue) ? parsedValue : [parsedValue];
+                return normalized.filter(entry =>
+                    typeof entry === 'string' ||
+                    (entry && typeof entry === 'object' && !Array.isArray(entry))
+                );
+            } catch (_) {
+                return [];
+            }
+        };
+
+        const getMcpEntryType = (entry) => {
+            if (typeof entry === 'string') {
+                return 'plugin';
+            }
+
+            if (entry?.type === 'ephemeral_mcp' || entry?.server_url) {
+                return 'ephemeral_mcp';
+            }
+
+            if (entry?.type === 'plugin' || entry?.id || entry?.plugin_id) {
+                return 'plugin';
+            }
+
+            return 'ephemeral_mcp';
+        };
+
+        const deriveDefaultMcpLabel = (type, target) => {
+            const trimmedTarget = (target || '').trim();
+            if (!trimmedTarget) {
+                return '';
+            }
+
+            if (type === 'ephemeral_mcp') {
+                try {
+                    return new URL(trimmedTarget).hostname.replace(/^www\./i, '');
+                } catch (_) {
+                    return trimmedTarget
+                        .replace(/^https?:\/\//i, '')
+                        .split('/')[0]
+                        .trim();
+                }
+            }
+
+            const pluginTail = trimmedTarget.split('/').filter(Boolean).pop();
+            return pluginTail || trimmedTarget;
+        };
+
+        const getMcpEditorModel = (entry) => {
+            const type = getMcpEntryType(entry);
+
+            if (typeof entry === 'string') {
+                return {
+                    type,
+                    target: entry,
+                    label: '',
+                    allowedTools: [],
+                    original: entry
+                };
+            }
+
+            if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+                return {
+                    type: 'ephemeral_mcp',
+                    target: '',
+                    label: '',
+                    allowedTools: [],
+                    original: null
+                };
+            }
+
+            if (type === 'plugin') {
+                return {
+                    type,
+                    target: entry.id || entry.plugin_id || '',
+                    label: entry._lmsaLabel || '',
+                    allowedTools: normalizeMcpTools(entry.allowed_tools),
+                    original: cloneMcpValue(entry, null)
+                };
+            }
+
+            return {
+                type: 'ephemeral_mcp',
+                target: entry.server_url || '',
+                label: entry.server_label || '',
+                allowedTools: normalizeMcpTools(entry.allowed_tools),
+                original: cloneMcpValue(entry, null)
+            };
+        };
+
+        const updateMcpTargetCopy = () => {
+            const isPlugin = mcpTypeSelect?.value === 'plugin';
+
+            if (mcpTargetLabel) {
+                mcpTargetLabel.textContent = isPlugin ? 'Server ID' : 'Server URL';
+            }
+
+            if (mcpTargetInput) {
+                mcpTargetInput.placeholder = isPlugin ? 'mcp/playwright' : 'https://huggingface.co/mcp';
+            }
+
+            if (mcpTargetHelp) {
+                mcpTargetHelp.textContent = isPlugin
+                    ? 'Use the MCP server id from LM Studio mcp.json, for example mcp/playwright.'
+                    : 'Use the remote MCP server URL for ephemeral integrations.';
+            }
+        };
+
+        const renderSelectedMcpTools = () => {
+            if (!mcpSelectedTools) {
+                return;
+            }
+
+            mcpSelectedTools.innerHTML = '';
+            selectedMcpTools = normalizeMcpTools(selectedMcpTools);
+
+            if (selectedMcpTools.length === 0) {
+                mcpSelectedTools.classList.add('hidden');
+                return;
+            }
+
+            selectedMcpTools.forEach(tool => {
+                const chip = document.createElement('span');
+                chip.className = 'inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-3 py-1 text-xs';
+                chip.style.color = 'var(--settings-title-color, #f1f5f9)';
+
+                const chipLabel = document.createElement('span');
+                chipLabel.textContent = tool;
+                chip.appendChild(chipLabel);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'text-[11px] opacity-80 hover:opacity-100';
+                removeBtn.dataset.removeMcpTool = tool;
+                removeBtn.setAttribute('aria-label', `Remove ${tool}`);
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                chip.appendChild(removeBtn);
+
+                mcpSelectedTools.appendChild(chip);
+            });
+
+            mcpSelectedTools.classList.remove('hidden');
+        };
+
+        const getMcpCardTitle = (entryModel) => {
+            if (entryModel.type === 'ephemeral_mcp') {
+                return entryModel.label || deriveDefaultMcpLabel(entryModel.type, entryModel.target) || 'Ephemeral MCP';
+            }
+
+            return entryModel.label || deriveDefaultMcpLabel(entryModel.type, entryModel.target) || 'Plugin MCP';
+        };
+
+        const renderMcpIntegrationsList = () => {
+            if (!mcpIntegrationsList) {
+                return;
+            }
+
+            mcpIntegrationsList.innerHTML = '';
+            const count = workingMcpIntegrations.length;
+
+            if (mcpListSummary) {
+                mcpListSummary.textContent = count === 0
+                    ? 'No integrations added yet.'
+                    : `${count} integration${count === 1 ? '' : 's'} ready for LM Studio.`;
+            }
+
+            if (mcpEmptyState) {
+                mcpEmptyState.classList.toggle('hidden', count > 0);
+            }
+            mcpIntegrationsList.classList.toggle('hidden', count === 0);
+
+            workingMcpIntegrations.forEach((entry, index) => {
+                const entryModel = getMcpEditorModel(entry);
+                const card = document.createElement('div');
+                card.className = 'rounded-xl border border-white/10 bg-white/5 p-3';
+
+                const topRow = document.createElement('div');
+                topRow.className = 'flex items-start justify-between gap-3';
+
+                const textWrap = document.createElement('div');
+                textWrap.className = 'min-w-0';
+
+                const title = document.createElement('p');
+                title.className = 'text-sm font-semibold truncate';
+                title.style.color = 'var(--settings-title-color, #f1f5f9)';
+                title.textContent = getMcpCardTitle(entryModel);
+                textWrap.appendChild(title);
+
+                const subtitle = document.createElement('p');
+                subtitle.className = 'text-xs mt-1 break-all';
+                subtitle.style.color = 'var(--settings-help-text, #9ca3af)';
+                subtitle.textContent = entryModel.target || 'Missing target';
+                textWrap.appendChild(subtitle);
+
+                const badge = document.createElement('span');
+                badge.className = 'shrink-0 rounded-full border border-white/10 px-2 py-1 text-[11px] uppercase tracking-[0.18em]';
+                badge.style.color = 'var(--settings-help-text, #9ca3af)';
+                badge.textContent = entryModel.type === 'plugin' ? 'Plugin' : 'Ephemeral';
+
+                topRow.appendChild(textWrap);
+                topRow.appendChild(badge);
+                card.appendChild(topRow);
+
+                const toolsMeta = document.createElement('p');
+                toolsMeta.className = 'text-xs mt-3';
+                toolsMeta.style.color = 'var(--settings-help-text, #6b7280)';
+                toolsMeta.textContent = entryModel.allowedTools.length > 0
+                    ? `Allowed tools: ${entryModel.allowedTools.join(', ')}`
+                    : 'Allowed tools: All tools';
+                card.appendChild(toolsMeta);
+
+                const actionRow = document.createElement('div');
+                actionRow.className = 'flex gap-2 mt-3';
+
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.className = 'professional-button flex-1 h-[38px]';
+                editBtn.dataset.mcpAction = 'edit';
+                editBtn.dataset.mcpIndex = String(index);
+                editBtn.innerHTML = '<i class="fas fa-pen mr-2"></i>Edit';
+                actionRow.appendChild(editBtn);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'professional-button flex-1 h-[38px]';
+                removeBtn.dataset.mcpAction = 'remove';
+                removeBtn.dataset.mcpIndex = String(index);
+                removeBtn.innerHTML = '<i class="fas fa-trash-alt mr-2"></i>Remove';
+                actionRow.appendChild(removeBtn);
+
+                card.appendChild(actionRow);
+                mcpIntegrationsList.appendChild(card);
+            });
+        };
+
+        const resetMcpBuilderState = () => {
+            editingMcpIndex = null;
+            originalMcpEntry = null;
+            selectedMcpTools = [];
+
+            if (mcpTypeSelect) {
+                mcpTypeSelect.value = 'ephemeral_mcp';
+            }
+            if (mcpTargetInput) {
+                mcpTargetInput.value = '';
+            }
+            if (mcpLabelInput) {
+                mcpLabelInput.value = '';
+            }
+            if (mcpToolInput) {
+                mcpToolInput.value = '';
+            }
+            if (mcpBuilderTitle) {
+                mcpBuilderTitle.textContent = 'Add MCP Integration';
+            }
+
+            updateMcpTargetCopy();
+            renderSelectedMcpTools();
+            clearMcpError();
+        };
+
+        const closeMcpBuilder = () => {
+            resetMcpBuilderState();
+            if (mcpBuilderPanel) {
+                mcpBuilderPanel.classList.add('hidden');
+            }
+        };
+
+        const isMcpBuilderOpen = () => !!(mcpBuilderPanel && !mcpBuilderPanel.classList.contains('hidden'));
+
+        const focusMcpBuilder = () => {
+            setTimeout(() => {
+                if (mcpBuilderPanel && !mcpBuilderPanel.classList.contains('hidden') && mcpTargetInput) {
+                    mcpTargetInput.focus();
+                    mcpTargetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 80);
+        };
+
+        const openMcpBuilder = (entryModel = null, index = null) => {
+            const model = entryModel || {
+                type: 'ephemeral_mcp',
+                target: '',
+                label: '',
+                allowedTools: [],
+                original: null
+            };
+
+            editingMcpIndex = Number.isInteger(index) ? index : null;
+            originalMcpEntry = cloneMcpValue(model.original, null);
+            selectedMcpTools = normalizeMcpTools(model.allowedTools);
+
+            if (mcpTypeSelect) {
+                mcpTypeSelect.value = model.type === 'plugin' ? 'plugin' : 'ephemeral_mcp';
+            }
+            updateMcpTargetCopy();
+
+            if (mcpTargetInput) {
+                mcpTargetInput.value = model.target || '';
+            }
+            if (mcpLabelInput) {
+                mcpLabelInput.value = model.label || '';
+            }
+            if (mcpToolInput) {
+                mcpToolInput.value = '';
+            }
+            if (mcpBuilderTitle) {
+                mcpBuilderTitle.textContent = editingMcpIndex === null ? 'Add MCP Integration' : 'Edit MCP Integration';
+            }
+
+            renderSelectedMcpTools();
+            clearMcpError();
+            if (mcpBuilderPanel) {
+                mcpBuilderPanel.classList.remove('hidden');
+            }
+            focusMcpBuilder();
+        };
+
+        const getPreservedMcpFields = (entry) => {
+            if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+                return {};
+            }
+
+            const preserved = {};
+            Object.entries(entry).forEach(([key, value]) => {
+                if (key.startsWith('_')) {
+                    return;
+                }
+                if (['type', 'server_url', 'server_label', 'allowed_tools', 'id', 'plugin_id'].includes(key)) {
+                    return;
+                }
+                preserved[key] = cloneMcpValue(value, value);
+            });
+
+            return preserved;
+        };
+
+        const buildMcpIntegrationFromForm = () => {
+            const type = mcpTypeSelect?.value === 'plugin' ? 'plugin' : 'ephemeral_mcp';
+            const target = (mcpTargetInput?.value || '').trim();
+            const label = (mcpLabelInput?.value || '').trim();
+            const allowedTools = normalizeMcpTools(selectedMcpTools);
+            const preserved = getPreservedMcpFields(originalMcpEntry);
+
+            if (!target) {
+                showMcpError(type === 'plugin' ? 'Enter a server id, for example mcp/playwright.' : 'Enter a valid server URL.');
+                return null;
+            }
+
+            if (type === 'ephemeral_mcp') {
+                try {
+                    const parsedUrl = new URL(target);
+                    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+                        showMcpError('Server URL must start with http:// or https://.');
+                        return null;
+                    }
+                } catch (_) {
+                    showMcpError('Enter a valid server URL, for example https://huggingface.co/mcp.');
+                    return null;
+                }
+            }
+
+            if (type === 'plugin') {
+                if (!label && allowedTools.length === 0 && Object.keys(preserved).length === 0) {
+                    return target;
+                }
+
+                const integration = {
+                    ...preserved,
+                    type: 'plugin',
+                    id: target
+                };
+
+                if (allowedTools.length > 0) {
+                    integration.allowed_tools = allowedTools;
+                }
+                if (label) {
+                    integration._lmsaLabel = label;
+                }
+
+                return integration;
+            }
+
+            const integration = {
+                ...preserved,
+                type: 'ephemeral_mcp',
+                server_url: target,
+                server_label: label || deriveDefaultMcpLabel(type, target) || 'mcp-server'
+            };
+
+            if (allowedTools.length > 0) {
+                integration.allowed_tools = allowedTools;
+            } else {
+                delete integration.allowed_tools;
+            }
+
+            return integration;
+        };
+
+        const loadWorkingMcpIntegrations = () => {
+            workingMcpIntegrations = cloneMcpValue(readSavedMcpIntegrations(), []);
+            closeMcpBuilder();
+            renderMcpIntegrationsList();
+        };
+
+        const persistMcpIntegrations = async (integrations) => {
+            try {
+                const settingsManager = await import('./settings-manager.js');
+                if (integrations.length === 0 && typeof settingsManager.clearLMStudioMcpIntegrations === 'function') {
+                    settingsManager.clearLMStudioMcpIntegrations();
+                    return;
+                }
+
+                if (typeof settingsManager.setLMStudioMcpIntegrations === 'function') {
+                    settingsManager.setLMStudioMcpIntegrations(integrations);
+                    return;
+                }
+            } catch (_) {
+                // Fall back to direct localStorage persistence below.
+            }
+
+            if (integrations.length > 0) {
+                localStorage.setItem('lmStudioMcpIntegrations', JSON.stringify(integrations, null, 2));
+            } else {
+                localStorage.removeItem('lmStudioMcpIntegrations');
+            }
+        };
+
+        const addMcpToolFromInput = (value = '') => {
+            const normalizedTool = value.trim();
+            if (!normalizedTool) {
+                return;
+            }
+
+            selectedMcpTools = normalizeMcpTools([...selectedMcpTools, normalizedTool]);
+            renderSelectedMcpTools();
+            clearMcpError();
+
+            if (mcpToolInput) {
+                mcpToolInput.value = '';
+                mcpToolInput.focus();
+            }
+        };
+
+        const applyMcpTemplate = (templateName) => {
+            const templates = {
+                huggingface: {
+                    type: 'ephemeral_mcp',
+                    target: 'https://huggingface.co/mcp',
+                    label: 'huggingface',
+                    allowedTools: ['model_search']
+                },
+                brave: {
+                    type: 'ephemeral_mcp',
+                    target: 'https://api.search.brave.com/res/v1/mcp?key=YOUR_BRAVE_API_KEY',
+                    label: 'brave-search',
+                    allowedTools: ['search']
+                },
+                serpapi: {
+                    type: 'ephemeral_mcp',
+                    target: 'https://mcp.serpapi.com/YOUR_SERPAPI_API_KEY/mcp',
+                    label: 'serpapi',
+                    allowedTools: ['search']
+                },
+                playwright: {
+                    type: 'plugin',
+                    target: 'mcp/playwright',
+                    label: 'Playwright',
+                    allowedTools: ['browser_navigate']
+                }
+            };
+
+            const template = templates[templateName];
+            if (!template) {
+                return;
+            }
+
+            openMcpBuilder(template, null);
+        };
+
+        if (configLmMcpBtn) {
+            configLmMcpBtn.addEventListener('click', () => {
+                loadWorkingMcpIntegrations();
+                showInputModal(lmMcpModal);
+                setTimeout(() => {
+                    addMcpIntegrationBtn?.focus();
+                }, 150);
+            });
+        }
+
+        const closeLmMcpBtnX = document.getElementById('close-lmstudio-mcp-input-modal');
+        const cancelLmMcpBtn = document.getElementById('cancel-lmstudio-mcp-input-modal');
+        const clearLmMcpBtn = document.getElementById('clear-lmstudio-mcp-input-modal');
+        const saveLmMcpBtn = document.getElementById('save-lmstudio-mcp-input-modal');
+
+        const dismissLmMcpModal = () => {
+            loadWorkingMcpIntegrations();
+            hideInputModal(lmMcpModal);
+        };
+
+        if (closeLmMcpBtnX) closeLmMcpBtnX.addEventListener('click', dismissLmMcpModal);
+        if (cancelLmMcpBtn) cancelLmMcpBtn.addEventListener('click', dismissLmMcpModal);
+
+        if (mcpTypeSelect) {
+            mcpTypeSelect.addEventListener('change', () => {
+                updateMcpTargetCopy();
+                clearMcpError();
+            });
+        }
+
+        if (addMcpIntegrationBtn) {
+            addMcpIntegrationBtn.addEventListener('click', () => {
+                if (isMcpBuilderOpen()) {
+                    showMcpError('Save or cancel the current integration before starting another one.');
+                    return;
+                }
+
+                openMcpBuilder();
+            });
+        }
+
+        mcpTemplateButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                if (isMcpBuilderOpen()) {
+                    showMcpError('Save or cancel the current integration before applying a preset.');
+                    return;
+                }
+
+                applyMcpTemplate(button.dataset.mcpTemplate || '');
+            });
+        });
+
+        if (addMcpToolBtn && mcpToolInput) {
+            addMcpToolBtn.addEventListener('click', () => addMcpToolFromInput(mcpToolInput.value));
+            mcpToolInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    addMcpToolFromInput(mcpToolInput.value);
+                }
+            });
+        }
+
+        mcpToolSuggestionButtons.forEach(button => {
+            button.addEventListener('click', () => addMcpToolFromInput(button.dataset.mcpToolSuggestion || ''));
+        });
+
+        if (mcpSelectedTools) {
+            mcpSelectedTools.addEventListener('click', (event) => {
+                const removeBtn = event.target.closest('[data-remove-mcp-tool]');
+                if (!removeBtn) {
+                    return;
+                }
+
+                const toolToRemove = removeBtn.dataset.removeMcpTool || '';
+                selectedMcpTools = selectedMcpTools.filter(tool => tool !== toolToRemove);
+                renderSelectedMcpTools();
+            });
+        }
+
+        if (mcpIntegrationsList) {
+            mcpIntegrationsList.addEventListener('click', (event) => {
+                const actionBtn = event.target.closest('[data-mcp-action]');
+                if (!actionBtn) {
+                    return;
+                }
+
+                const action = actionBtn.dataset.mcpAction;
+                const index = Number.parseInt(actionBtn.dataset.mcpIndex || '', 10);
+                if (!Number.isInteger(index) || index < 0 || index >= workingMcpIntegrations.length) {
+                    return;
+                }
+
+                if (isMcpBuilderOpen()) {
+                    showMcpError('Save or cancel the current integration before editing the list.');
+                    return;
+                }
+
+                if (action === 'remove') {
+                    workingMcpIntegrations.splice(index, 1);
+                    renderMcpIntegrationsList();
+                    return;
+                }
+
+                if (action === 'edit') {
+                    openMcpBuilder(getMcpEditorModel(workingMcpIntegrations[index]), index);
+                }
+            });
+        }
+
+        if (closeMcpBuilderBtn) closeMcpBuilderBtn.addEventListener('click', closeMcpBuilder);
+        if (cancelMcpBuilderBtn) cancelMcpBuilderBtn.addEventListener('click', closeMcpBuilder);
+
+        if (saveMcpBuilderBtn) {
+            saveMcpBuilderBtn.addEventListener('click', () => {
+                clearMcpError();
+                const integration = buildMcpIntegrationFromForm();
+                if (!integration) {
+                    return;
+                }
+
+                if (editingMcpIndex === null) {
+                    workingMcpIntegrations.push(integration);
+                } else {
+                    workingMcpIntegrations[editingMcpIndex] = integration;
+                }
+
+                renderMcpIntegrationsList();
+                closeMcpBuilder();
+            });
+        }
+
+        [mcpTargetInput, mcpLabelInput, mcpToolInput].forEach(input => {
+            if (input) {
+                input.addEventListener('input', clearMcpError);
+            }
+        });
+
+        if (clearLmMcpBtn) {
+            clearLmMcpBtn.addEventListener('click', async () => {
+                workingMcpIntegrations = [];
+                closeMcpBuilder();
+                renderMcpIntegrationsList();
+                await persistMcpIntegrations([]);
+                updateConnectionStatusDisplays();
+                hideInputModal(lmMcpModal);
+            });
+        }
+
+        if (saveLmMcpBtn) {
+            saveLmMcpBtn.addEventListener('click', async () => {
+                clearMcpError();
+
+                if (mcpBuilderPanel && !mcpBuilderPanel.classList.contains('hidden')) {
+                    showMcpError('Save or cancel the current integration before closing.');
+                    return;
+                }
+
+                await persistMcpIntegrations(workingMcpIntegrations);
+                updateConnectionStatusDisplays();
+                hideInputModal(lmMcpModal);
+            });
+        }
+
+        lmMcpModal.addEventListener('click', e => {
+            if (e.target === lmMcpModal) dismissLmMcpModal();
+        });
+
+        updateMcpTargetCopy();
+        renderSelectedMcpTools();
+        renderMcpIntegrationsList();
     }
 }
 

@@ -3,7 +3,7 @@ import { messagesContainer, userInput, loadedModelDisplay } from './dom-elements
 import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll, renderSmartReplies, hideSmartReplies, showSmartRepliesLoading } from './ui-manager.js';
 import { openHelpModal } from './help.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
-import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOllama, getOpenRouterApiKey, getLMStudioApiToken } from './settings-manager.js';
+import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOllama, getOpenRouterApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations } from './settings-manager.js';
 import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags, normalizeMalformedCodeFences } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
 import { canSendCompletion, recordCompletion, canSendOpenRouterCompletion, recordOpenRouterCompletion } from './usage-limiter.js';
@@ -321,6 +321,302 @@ function appendRequestSystemPrompts(targetMessages, baseSystemPrompt, shouldInli
     if (shouldInlineChatTitle) {
         targetMessages.push({ role: 'system', content: INLINE_CHAT_TITLE_INSTRUCTION });
     }
+}
+
+function shouldUseLmStudioNativeMcpChat() {
+    return !getUseOpenRouter() && !getUseOllama() && hasLMStudioMcpIntegrations();
+}
+
+function buildNativeSystemPrompt(shouldInlineChatTitle) {
+    const promptParts = [];
+
+    if (getSystemPrompt() && getSystemPrompt().trim() !== '') {
+        promptParts.push(getSystemPrompt().trim());
+    }
+
+    if (shouldInlineChatTitle) {
+        promptParts.push(INLINE_CHAT_TITLE_INSTRUCTION);
+    }
+
+    return promptParts.join('\n\n').trim();
+}
+
+function getMessageTextForNativeInput(content, role = 'user') {
+    if (Array.isArray(content)) {
+        return content.map(part => {
+            if (part?.type === 'text') {
+                return part.text || '';
+            }
+            if (part?.type === 'image_url') {
+                return '[Image attachment]';
+            }
+            return '';
+        }).filter(Boolean).join('\n');
+    }
+
+    const rawText = typeof content === 'string' ? content : String(content || '');
+
+    if (role === 'assistant') {
+        return stripReasoningSections(removeInlineChatTitleMarkup(normalizeReasoningTags(rawText))).trim();
+    }
+
+    return rawText;
+}
+
+function buildNativeTranscriptPrefix(messages, lastUserMessageIndex) {
+    const earlierMessages = messages.slice(0, lastUserMessageIndex).filter(msg => !msg?.isTopicBoundary);
+    if (earlierMessages.length === 0) {
+        return '';
+    }
+
+    const transcriptLines = ['Conversation so far:'];
+
+    earlierMessages.forEach(msg => {
+        if (!msg || typeof msg !== 'object') {
+            return;
+        }
+
+        const label = msg.role === 'assistant'
+            ? 'Assistant'
+            : msg.role === 'system'
+                ? 'System'
+                : 'User';
+        const text = getMessageTextForNativeInput(msg.content, msg.role);
+        if (text) {
+            transcriptLines.push(`${label}: ${text}`);
+        }
+    });
+
+    transcriptLines.push('', 'Continue the same conversation using the new user message below.', '');
+    return transcriptLines.join('\n');
+}
+
+function buildNativeInputFromContent(content, transcriptPrefix = '') {
+    if (Array.isArray(content)) {
+        const items = [];
+        let hasTextItem = false;
+
+        content.forEach(part => {
+            if (part?.type === 'text') {
+                const textValue = part.text || '';
+                if (textValue || transcriptPrefix) {
+                    items.push({
+                        type: 'message',
+                        content: hasTextItem || !transcriptPrefix
+                            ? textValue
+                            : `${transcriptPrefix}${textValue ? `\n${textValue}` : ''}`.trim()
+                    });
+                    hasTextItem = true;
+                }
+            } else if (part?.type === 'image_url' && part.image_url?.url) {
+                items.push({
+                    type: 'image',
+                    data_url: part.image_url.url
+                });
+            }
+        });
+
+        if (!hasTextItem && transcriptPrefix) {
+            items.unshift({
+                type: 'message',
+                content: transcriptPrefix.trim()
+            });
+        }
+
+        return items;
+    }
+
+    const messageText = typeof content === 'string' ? content : String(content || '');
+    if (!transcriptPrefix) {
+        return messageText;
+    }
+
+    return `${transcriptPrefix}${messageText ? `\n${messageText}` : ''}`.trim();
+}
+
+function getLatestLmStudioResponseId(messages, upToIndex = messages.length - 1) {
+    for (let i = Math.min(upToIndex, messages.length - 1); i >= 0; i--) {
+        const message = messages[i];
+        if (message?.role === 'assistant' && message.lmStudioResponseId) {
+            return message.lmStudioResponseId;
+        }
+    }
+
+    return null;
+}
+
+function sanitizeLmStudioMcpIntegration(entry) {
+    if (typeof entry === 'string') {
+        return entry;
+    }
+
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+        return null;
+    }
+
+    const sanitizedEntry = {};
+
+    Object.entries(entry).forEach(([key, value]) => {
+        if (key.startsWith('_')) {
+            return;
+        }
+
+        sanitizedEntry[key] = value;
+    });
+
+    return sanitizedEntry;
+}
+
+function sanitizeLmStudioMcpIntegrations(entries) {
+    if (!Array.isArray(entries)) {
+        return [];
+    }
+
+    return entries
+        .map(sanitizeLmStudioMcpIntegration)
+        .filter(entry => typeof entry === 'string' || (entry && typeof entry === 'object' && !Array.isArray(entry)));
+}
+
+function buildLmStudioMcpRequest(messages, shouldInlineChatTitle) {
+    const lastUserMessageIndex = messages.length - 1;
+    const lastUserMessage = messages[lastUserMessageIndex];
+    const previousResponseId = getLatestLmStudioResponseId(messages, lastUserMessageIndex - 1);
+    const transcriptPrefix = previousResponseId ? '' : buildNativeTranscriptPrefix(messages, lastUserMessageIndex);
+    const requestBody = {
+        model: getSelectedModel(),
+        input: buildNativeInputFromContent(lastUserMessage?.content, transcriptPrefix),
+        integrations: sanitizeLmStudioMcpIntegrations(getLMStudioMcpIntegrations()),
+        temperature: getTemperature(),
+        stream: false,
+        store: true,
+        context_length: 8000
+    };
+
+    const systemPrompt = buildNativeSystemPrompt(shouldInlineChatTitle);
+    if (systemPrompt) {
+        requestBody.system_prompt = systemPrompt;
+    }
+
+    if (previousResponseId) {
+        requestBody.previous_response_id = previousResponseId;
+    }
+
+    const maxTokens = getMaxTokens();
+    if (maxTokens > 0) {
+        requestBody.max_output_tokens = maxTokens;
+    }
+
+    return requestBody;
+}
+
+function formatLmStudioMcpProvider(providerInfo) {
+    if (!providerInfo || typeof providerInfo !== 'object') {
+        return 'LM Studio MCP';
+    }
+
+    if (providerInfo.type === 'plugin' && providerInfo.plugin_id) {
+        return providerInfo.plugin_id;
+    }
+
+    if (providerInfo.type === 'ephemeral_mcp' && providerInfo.server_label) {
+        return providerInfo.server_label;
+    }
+
+    return 'LM Studio MCP';
+}
+
+function buildLmStudioMcpDisplayMessage(outputItems = []) {
+    const reasoningSections = [];
+    const messageSections = [];
+
+    outputItems.forEach(item => {
+        if (!item || typeof item !== 'object') {
+            return;
+        }
+
+        if (item.type === 'reasoning' && item.content) {
+            reasoningSections.push(item.content.trim());
+            return;
+        }
+
+        if (item.type === 'tool_call') {
+            const providerLabel = formatLmStudioMcpProvider(item.provider_info);
+            let toolSummary = `Used MCP tool: ${item.tool || 'unknown'} (${providerLabel})`;
+            if (item.arguments && Object.keys(item.arguments).length > 0) {
+                try {
+                    toolSummary += `\nArguments: ${JSON.stringify(item.arguments)}`;
+                } catch (_) {
+                    // Ignore JSON stringification issues and keep the summary concise.
+                }
+            }
+            reasoningSections.push(toolSummary);
+            return;
+        }
+
+        if (item.type === 'invalid_tool_call') {
+            reasoningSections.push(`MCP tool call failed: ${item.reason || 'Unknown tool-call error'}`);
+            return;
+        }
+
+        if (item.type === 'message' && item.content) {
+            messageSections.push(item.content);
+        }
+    });
+
+    const outputParts = [];
+
+    if (reasoningSections.length > 0) {
+        outputParts.push(`<think>\n${reasoningSections.join('\n\n')}\n</think>`);
+    }
+
+    if (messageSections.length > 0) {
+        outputParts.push(messageSections.join('\n\n'));
+    }
+
+    return outputParts.join('\n\n').trim();
+}
+
+async function sendLmStudioMcpRequest(requestBody, signal) {
+    const requestHeaders = {
+        'Content-Type': 'application/json',
+    };
+
+    const lmToken = getLMStudioApiToken();
+    if (lmToken) {
+        requestHeaders['Authorization'] = `Bearer ${lmToken}`;
+    }
+
+    const response = await fetch(getApiUrl({ preferNativeLmStudio: true }), {
+        method: 'POST',
+        headers: requestHeaders,
+        body: JSON.stringify(requestBody),
+        signal
+    });
+
+    if (!response.ok) {
+        let errorText = `HTTP Error: ${response.status} ${response.statusText}`;
+
+        try {
+            const errorData = await response.json();
+            const rawError = errorData?.error || errorData?.message;
+            if (rawError && typeof rawError === 'object') {
+                errorText = rawError.message || errorText;
+            } else if (typeof rawError === 'string' && rawError.trim()) {
+                errorText = rawError;
+            }
+        } catch (_) {
+            // Fall back to the HTTP status text when the body is not JSON.
+        }
+
+        throw new Error(errorText);
+    }
+
+    const result = await response.json();
+    return {
+        responseId: result?.response_id || null,
+        aiMessage: buildLmStudioMcpDisplayMessage(result?.output || []),
+        rawResult: result
+    };
 }
 
 /**
@@ -641,6 +937,96 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                     messages[lastUserMessageIndex].content += fileContent;
                 }
             }
+        }
+
+        if (shouldUseLmStudioNativeMcpChat()) {
+            const requestBody = buildLmStudioMcpRequest(messages, shouldInlineChatTitle);
+            const nativeTimeoutMs = getReasoningTimeout() * 1000;
+            const timeoutPromise = new Promise((_, reject) => {
+                streamingTimeoutId = setTimeout(() => {
+                    if (abortController) {
+                        abortController.abort();
+                    }
+                    reject(new Error('LM Studio MCP request timed out. Please try again.'));
+                }, nativeTimeoutMs);
+            });
+
+            debugLog('Sending LM Studio native MCP request:', requestBody);
+
+            const nativeResult = await Promise.race([
+                sendLmStudioMcpRequest(requestBody, signal),
+                timeoutPromise
+            ]);
+
+            if (streamingTimeoutId) {
+                clearTimeout(streamingTimeoutId);
+            }
+
+            aiMessage = nativeResult.aiMessage || 'LM Studio completed the MCP request but returned no visible text.';
+
+            if (!aiMessageElement) {
+                hideLoadingIndicator();
+                aiMessageElement = appendMessage('ai', '');
+                contentContainer = aiMessageElement.querySelector('.message-content');
+
+                if (!contentContainer) {
+                    debugError('Could not find message content container for LM Studio MCP response');
+                    isGenerating = false;
+                    return;
+                }
+            }
+
+            const responsePayload = prepareAssistantResponseForStorage(aiMessage, userMessage, shouldInlineChatTitle);
+            aiMessage = responsePayload.cleanMessage;
+            if (responsePayload.title && chatHistoryData[currentChatId]) {
+                chatHistoryData[currentChatId].title = responsePayload.title;
+            }
+
+            const hideThinking = getHideThinking();
+            const finalReasoningState = getReasoningStreamState(aiMessage);
+
+            if (finalReasoningState.hasThinking) {
+                if (hideThinking) {
+                    contentContainer.innerHTML = basicSanitizeInput(stripReasoningSections(aiMessage));
+                } else {
+                    contentContainer.innerHTML = sanitizeInput(aiMessage);
+                }
+            } else {
+                contentContainer.innerHTML = basicSanitizeInput(aiMessage);
+            }
+
+            if (aiMessageElement && containsCodeBlocksOutsideThinkTags(aiMessage)) {
+                setTimeout(() => {
+                    initializeCodeMirror(aiMessageElement);
+                }, 100);
+            }
+
+            if (containsCodeBlocksOutsideThinkTags(aiMessage)) {
+                await fastUpdateChatHistoryBeforeReload(userMessage, aiMessage, fileContents, {
+                    lmStudioResponseId: nativeResult.responseId
+                });
+            } else {
+                await updateChatHistory(userMessage, aiMessage, fileContents, {
+                    lmStudioResponseId: nativeResult.responseId
+                });
+            }
+
+            if (getAutoSmartReply()) {
+                showSmartRepliesLoading();
+                generateSmartReplies(userMessage, aiMessage).catch(err => {
+                    debugLog('Smart reply generation failed (non-critical):', err);
+                });
+            } else {
+                hideSmartReplies();
+            }
+
+            if (isFirstMessage) {
+                debugLog('First LM Studio MCP message processed successfully, updating isFirstMessage flag');
+                setIsFirstMessage(false);
+            }
+
+            scrollToBottom(messagesContainer, true);
+            return;
         }
 
         // Create request body
@@ -1340,7 +1726,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
  * @param {string} aiMessage - The AI's response
  * @param {Array} fileContents - Optional array of file contents (for validation)
  */
-export async function updateChatHistory(userMessage, aiMessage, fileContents = []) {
+export async function updateChatHistory(userMessage, aiMessage, fileContents = [], options = {}) {
     // Ensure chatHistoryData is initialized
     if (!chatHistoryData) {
         chatHistoryData = {};
@@ -1405,8 +1791,13 @@ export async function updateChatHistory(userMessage, aiMessage, fileContents = [
         debugLog('Stored inline-generated chat title:', responsePayload.title);
     }
 
+    const assistantMessage = { role: 'assistant', content: responsePayload.cleanMessage, model: getSelectedModel() };
+    if (options.lmStudioResponseId) {
+        assistantMessage.lmStudioResponseId = options.lmStudioResponseId;
+    }
+
     // Add the AI response
-    messages.push({ role: 'assistant', content: responsePayload.cleanMessage, model: getSelectedModel() });
+    messages.push(assistantMessage);
 
     // Log the current chat history for debugging
     debugLog('Updated chat history:',
@@ -3128,6 +3519,120 @@ export async function regenerateLastResponse(isRetry = false) {
                 apiMessages.push(msg);
             }
 
+            if (shouldUseLmStudioNativeMcpChat()) {
+                const nativeRequestBody = buildLmStudioMcpRequest(apiMessages, shouldInlineChatTitle);
+                const nativeTimeoutMs = getReasoningTimeout() * 1000;
+                const timeoutPromise = new Promise((_, reject) => {
+                    streamingTimeoutId = setTimeout(() => {
+                        if (abortController) {
+                            abortController.abort();
+                        }
+                        reject(new Error('LM Studio MCP regeneration timed out. Please try again.'));
+                    }, nativeTimeoutMs);
+                });
+
+                debugLog('Regenerating via LM Studio native MCP request:', nativeRequestBody);
+
+                const nativeResult = await Promise.race([
+                    sendLmStudioMcpRequest(nativeRequestBody, signal),
+                    timeoutPromise
+                ]);
+
+                if (streamingTimeoutId) {
+                    clearTimeout(streamingTimeoutId);
+                }
+
+                aiMessage = nativeResult.aiMessage || 'LM Studio completed the MCP request but returned no visible text.';
+
+                hideLoadingIndicator();
+                aiMessageElement = appendMessage('ai', '');
+                contentContainer = aiMessageElement.querySelector('.message-content');
+
+                if (!contentContainer) {
+                    debugError('Could not find message content container for regenerated LM Studio MCP response');
+                    isGenerating = false;
+                    return;
+                }
+
+                const responsePayload = prepareAssistantResponseForStorage(aiMessage, lastUserMessage, shouldInlineChatTitle);
+                aiMessage = responsePayload.cleanMessage;
+                if (responsePayload.title && chatHistoryData[currentChatId]) {
+                    chatHistoryData[currentChatId].title = responsePayload.title;
+                }
+
+                const hideThinking = getHideThinking();
+                const finalReasoningState = getReasoningStreamState(aiMessage);
+
+                if (finalReasoningState.hasThinking) {
+                    if (hideThinking) {
+                        contentContainer.innerHTML = basicSanitizeInput(stripReasoningSections(aiMessage));
+                    } else {
+                        contentContainer.innerHTML = sanitizeInput(aiMessage);
+                    }
+                } else {
+                    contentContainer.innerHTML = basicSanitizeInput(aiMessage);
+                }
+
+                if (containsCodeBlocksOutsideThinkTags(aiMessage)) {
+                    setTimeout(() => {
+                        initializeCodeMirror(aiMessageElement);
+                    }, 100);
+                }
+
+                scrollToBottom(messagesContainer, true);
+
+                if (Array.isArray(chatHistoryData[currentChatId])) {
+                    chatHistoryData[currentChatId] = {
+                        messages: chatHistoryData[currentChatId].slice(0, lastUserMessageIndex + 1),
+                        title: chatHistoryData[currentChatId].title || null,
+                    };
+                } else {
+                    chatHistoryData[currentChatId].messages = chatHistoryData[currentChatId].messages.slice(0, lastUserMessageIndex + 1);
+                }
+
+                const assistantMessage = { role: 'assistant', content: aiMessage, model: getSelectedModel() };
+                if (nativeResult.responseId) {
+                    assistantMessage.lmStudioResponseId = nativeResult.responseId;
+                }
+                chatHistoryData[currentChatId].messages.push(assistantMessage);
+
+                saveChatHistory();
+
+                if (isFirstMessage) {
+                    debugLog('Setting isFirstMessage to false during LM Studio MCP regeneration');
+                    setIsFirstMessage(false);
+                }
+
+                updateChatHistoryUI();
+
+                if (getAutoSmartReply()) {
+                    showSmartRepliesLoading();
+                    generateSmartReplies(lastUserMessage, aiMessage).catch(err => {
+                        debugLog('Smart reply generation failed (non-critical):', err);
+                    });
+                } else {
+                    hideSmartReplies();
+                }
+
+                if (getHideThinking()) {
+                    const thinkingIndicators = document.querySelectorAll('.thinking-indicator');
+                    thinkingIndicators.forEach(indicator => {
+                        indicator.remove();
+                    });
+
+                    import('./settings-manager.js').then(module => {
+                        module.removeVisibleThinkTags();
+                    });
+
+                    import('./ui-manager.js').then(module => {
+                        module.applyThinkingVisibility();
+                    });
+                }
+
+                debugLog('LM Studio MCP regeneration completed successfully');
+                return;
+            }
+
             // Create request body
             const requestBody = {
                 model: getSelectedModel(),
@@ -3172,6 +3677,11 @@ export async function regenerateLastResponse(isRetry = false) {
                 regenHeaders['Authorization'] = `Bearer ${getOpenRouterApiKey()}`;
                 regenHeaders['HTTP-Referer'] = 'https://lmsa.app';
                 regenHeaders['X-Title'] = 'LMSA';
+            } else if (!getUseOllama()) {
+                const lmToken = getLMStudioApiToken();
+                if (lmToken) {
+                    regenHeaders['Authorization'] = `Bearer ${lmToken}`;
+                }
             }
             const fetchPromise = fetch(getApiUrl(), {
                 method: 'POST',
@@ -3895,9 +4405,17 @@ async function generateSmartReplies(userMessage, aiMessage) {
             max_tokens: 500,
         };
 
+        const requestHeaders = { 'Content-Type': 'application/json' };
+        if (!getUseOpenRouter() && !getUseOllama()) {
+            const lmToken = getLMStudioApiToken();
+            if (lmToken) {
+                requestHeaders['Authorization'] = `Bearer ${lmToken}`;
+            }
+        }
+
         const response = await fetch(getApiUrl(), {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: requestHeaders,
             body: JSON.stringify(requestBody),
         });
 
@@ -4008,9 +4526,17 @@ async function generateSmartRepliesAPI(userMessage, contextSnippet, model) {
 
         smartReplyAbortController = new AbortController();
 
+        const requestHeaders = { 'Content-Type': 'application/json' };
+        if (!getUseOpenRouter() && !getUseOllama()) {
+            const lmToken = getLMStudioApiToken();
+            if (lmToken) {
+                requestHeaders['Authorization'] = `Bearer ${lmToken}`;
+            }
+        }
+
         const response = await fetch(getApiUrl(), {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: requestHeaders,
             body: JSON.stringify(requestBody),
             signal: smartReplyAbortController.signal
         });
@@ -4099,7 +4625,7 @@ async function generateSmartRepliesAPI(userMessage, contextSnippet, model) {
  * @param {string} aiMessage - The AI's response
  * @param {Array} fileContents - Optional array of file contents
  */
-async function fastUpdateChatHistoryBeforeReload(userMessage, aiMessage, fileContents = []) {
+async function fastUpdateChatHistoryBeforeReload(userMessage, aiMessage, fileContents = [], options = {}) {
     debugLog('Fast update of chat history before reload');
 
     // Ensure chatHistoryData is initialized
@@ -4163,8 +4689,13 @@ async function fastUpdateChatHistoryBeforeReload(userMessage, aiMessage, fileCon
         debugLog('Stored inline-generated chat title during fast save:', responsePayload.title);
     }
 
+    const assistantMessage = { role: 'assistant', content: responsePayload.cleanMessage, model: getSelectedModel() };
+    if (options.lmStudioResponseId) {
+        assistantMessage.lmStudioResponseId = options.lmStudioResponseId;
+    }
+
     // Add the AI response
-    messages.push({ role: 'assistant', content: responsePayload.cleanMessage, model: getSelectedModel() });
+    messages.push(assistantMessage);
 
     // Just save to localStorage quickly without UI updates
     try {

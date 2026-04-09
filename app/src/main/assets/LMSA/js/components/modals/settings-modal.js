@@ -71,6 +71,17 @@ export const settingsModal = `
                                 <span>Token</span>
                             </button>
                         </div>
+                        <div class="connection-status-row mt-3">
+                            <div class="connection-status-info">
+                                <i class="fas fa-plug connection-status-icon"></i>
+                                <span id="lmstudio-mcp-status-text" class="connection-status-text">No MCP integrations configured</span>
+                            </div>
+                            <button id="configure-lmstudio-mcp-btn" type="button"
+                                class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
+                                <i class="fas fa-pencil-alt text-xs"></i>
+                                <span>MCP</span>
+                            </button>
+                        </div>
                         <p class="text-xs text-gray-300 mt-2">Need help? Visit the <a href="#" id="open-help-from-settings-link" class="text-blue-400 hover:text-blue-300 underline">LMSA Help section</a>.</p>
                     </div>
 
@@ -578,6 +589,152 @@ export const settingsModal = `
                 <button id="save-lmstudio-token-input-modal" type="button"
                     class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
                     <i class="fas fa-check mr-2"></i>Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LM Studio MCP Integrations Input Modal -->
+    <div id="lmstudio-mcp-input-modal"
+        class="fixed inset-0 items-center justify-center hidden modal-container"
+        style="z-index: 2500; background: rgba(0,0,0,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);"
+        role="dialog" aria-modal="true" aria-labelledby="lmstudio-mcp-input-title">
+        <div class="connection-input-modal-box animate-modal-in">
+            <div class="connection-input-modal-accent connection-input-modal-accent--blue"></div>
+            <div class="flex justify-between items-center mb-5">
+                <h3 id="lmstudio-mcp-input-title" class="text-lg font-bold flex items-center" style="color: var(--settings-title-color, #f1f5f9);">
+                    <i class="fas fa-plug text-blue-400 mr-2"></i>LM Studio MCP Integrations
+                </h3>
+                <button id="close-lmstudio-mcp-input-modal" type="button" class="conn-modal-close-btn" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <p class="text-sm mb-4" style="color: var(--settings-help-text, #9ca3af);">Build LM Studio MCP integrations with a simple form. LMSA will generate the <code>integrations</code> JSON behind the scenes so users do not have to type it manually.</p>
+
+            <div class="mb-5 p-3 rounded-xl border border-white/10 bg-white/5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em]" style="color: var(--settings-help-text, #9ca3af);">Template Gallery</p>
+                        <p class="text-xs mt-1" style="color: var(--settings-help-text, #6b7280);">Tap a preset to pre-fill the form.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 gap-2">
+                    <button type="button" class="professional-button justify-start px-4 h-[44px] text-left" data-mcp-template="huggingface">
+                        <i class="fas fa-fire text-yellow-300"></i>
+                        <span>Hugging Face Search</span>
+                    </button>
+                    <button type="button" class="professional-button justify-start px-4 h-[44px] text-left" data-mcp-template="brave">
+                        <i class="fas fa-compass text-orange-300"></i>
+                        <span>Google Search (Brave)</span>
+                    </button>
+                    <button type="button" class="professional-button justify-start px-4 h-[44px] text-left" data-mcp-template="serpapi">
+                        <i class="fas fa-search text-emerald-300"></i>
+                        <span>Google Search (SerpApi)</span>
+                    </button>
+                    <button type="button" class="professional-button justify-start px-4 h-[44px] text-left" data-mcp-template="playwright">
+                        <i class="fas fa-globe text-blue-300"></i>
+                        <span>Playwright (Plugin)</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-5 p-3 rounded-xl border border-white/10 bg-white/5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em]" style="color: var(--settings-help-text, #9ca3af);">Configured Integrations</p>
+                        <p id="lmstudio-mcp-list-summary" class="text-xs mt-1" style="color: var(--settings-help-text, #6b7280);">No integrations added yet.</p>
+                    </div>
+                    <button id="add-lmstudio-mcp-integration-btn" type="button"
+                        class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
+                        <i class="fas fa-plus text-xs"></i>
+                        <span>Add</span>
+                    </button>
+                </div>
+                <div id="lmstudio-mcp-empty-state" class="rounded-xl border border-dashed border-white/10 px-4 py-4 text-sm text-center" style="color: var(--settings-help-text, #9ca3af);">
+                    No MCP integrations configured yet.
+                </div>
+                <div id="lmstudio-mcp-integrations-list" class="space-y-3 hidden"></div>
+            </div>
+
+            <div id="lmstudio-mcp-builder-panel" class="mb-5 p-4 rounded-xl border border-blue-400/20 bg-blue-500/5 hidden">
+                <div class="flex items-start justify-between gap-3 mb-4">
+                    <div>
+                        <h4 id="lmstudio-mcp-builder-title" class="text-sm font-semibold" style="color: var(--settings-title-color, #f1f5f9);">Add MCP Integration</h4>
+                        <p class="text-xs mt-1" style="color: var(--settings-help-text, #6b7280);">Fill in the fields below and LMSA will build the JSON automatically.</p>
+                    </div>
+                    <button id="close-lmstudio-mcp-builder-btn" type="button" class="conn-modal-close-btn" aria-label="Close MCP builder">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="mb-4">
+                    <label for="lmstudio-mcp-type" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Type</label>
+                    <select id="lmstudio-mcp-type" class="connection-modal-input w-full">
+                        <option value="ephemeral_mcp">Ephemeral</option>
+                        <option value="plugin">Plugin ID</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label for="lmstudio-mcp-target" id="lmstudio-mcp-target-label" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Server URL</label>
+                    <input type="text" id="lmstudio-mcp-target" class="connection-modal-input w-full"
+                        placeholder="https://huggingface.co/mcp" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-form-type="other">
+                    <p id="lmstudio-mcp-target-help" class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);">Use the remote MCP server URL for ephemeral integrations.</p>
+                </div>
+
+                <div class="mb-4">
+                    <label for="lmstudio-mcp-label" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Label</label>
+                    <input type="text" id="lmstudio-mcp-label" class="connection-modal-input w-full"
+                        placeholder="Hugging Face" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-form-type="other">
+                    <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);">For ephemeral integrations this becomes the LM Studio <code>server_label</code>. For plugins it is saved only as an LMSA display label.</p>
+                </div>
+
+                <div class="mb-4">
+                    <label for="lmstudio-mcp-tool-input" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Allowed Tools</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="lmstudio-mcp-tool-input" class="connection-modal-input w-full"
+                            placeholder="model_search" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-form-type="other">
+                        <button id="add-lmstudio-mcp-tool-btn" type="button"
+                            class="professional-button flex items-center justify-center gap-2 px-4 h-[40px] shrink-0">
+                            <i class="fas fa-plus text-xs"></i>
+                            <span>Tool</span>
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <button type="button" class="professional-button px-3 h-[36px] text-xs" data-mcp-tool-suggestion="model_search">model_search</button>
+                        <button type="button" class="professional-button px-3 h-[36px] text-xs" data-mcp-tool-suggestion="browser_navigate">browser_navigate</button>
+                        <button type="button" class="professional-button px-3 h-[36px] text-xs" data-mcp-tool-suggestion="search">search</button>
+                    </div>
+                    <div id="lmstudio-mcp-selected-tools" class="flex flex-wrap gap-2 mt-3 hidden"></div>
+                    <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);">Optional. Leave empty to allow every tool exposed by that server.</p>
+                </div>
+
+                <p id="lmstudio-mcp-input-error" class="text-xs mt-2 hidden" style="color: #f87171;"></p>
+
+                <div class="flex gap-3 mt-4">
+                    <button id="cancel-lmstudio-mcp-builder-btn" type="button"
+                        class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                        Cancel
+                    </button>
+                    <button id="save-lmstudio-mcp-builder-btn" type="button"
+                        class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
+                        <i class="fas fa-check mr-2"></i>Save Integration
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button id="cancel-lmstudio-mcp-input-modal" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    Cancel
+                </button>
+                <button id="clear-lmstudio-mcp-input-modal" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    <i class="fas fa-trash-alt mr-2"></i>Clear All
+                </button>
+                <button id="save-lmstudio-mcp-input-modal" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
+                    <i class="fas fa-check mr-2"></i>Done
                 </button>
             </div>
         </div>
