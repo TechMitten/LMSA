@@ -271,19 +271,6 @@ export const settingsModal = `
                         <p class="text-xs text-gray-400 mt-1">When enabled, shows a scrollbar on the side of the chat message area.</p>
                     </div>
 
-                    <div class="mb-5">
-                        <div class="flex justify-between items-center mb-2">
-                            <label for="enable-swipe-sidebar" class="text-sm font-medium">
-                                <i class="fas fa-arrows-alt-h mr-2 text-blue-400"></i>Swipe to Open Sidebar</label>
-                            <div class="toggle-container">
-                                <input type="checkbox" id="enable-swipe-sidebar">
-                                <div class="toggle-switch"></div>
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">When enabled, you can swipe from the left edge of the screen to open the side menu. On by default.</p>
-                    </div>
-
                     <div class="mb-5 hidden">
                         <div class="flex justify-between items-center mb-2">
                             <label for="theme-toggle" class="text-sm font-medium">

@@ -858,14 +858,6 @@ export function initializeEventHandlers() {
 
     // Also handle touch events for mobile and tablets
     document.addEventListener('touchend', function (e) {
-        // Ignore tap-to-close logic while an edge-open gesture is in progress
-        // or immediately after it ends, to avoid accidental immediate close.
-        const sidebarGestureState = window.__sidebarGestureState;
-        const sidebarGestureReleaseAt = window.__sidebarGestureReleaseAt || 0;
-        if (sidebarGestureState === 'opening' || (Date.now() - sidebarGestureReleaseAt) < 250) {
-            return;
-        }
-
         // Prevent rapid-fire touch events
         const now = Date.now();
         if (now - lastTouchTime < 100) {

@@ -61,6 +61,32 @@ function setCollapsibleSectionExpanded(header, shouldExpand) {
     content.style.maxHeight = '0px';
 }
 
+function createAIEditButton() {
+    const editButton = document.createElement('button');
+    editButton.classList.add('ai-edit-btn', 'edit-btn', 'flex', 'items-center', 'hover:text-blue-400', 'transition-colors', 'duration-300');
+    editButton.innerHTML = '<i class="fas fa-edit"></i>';
+    editButton.title = 'Edit this response';
+    editButton.dataset.action = 'ai-edit';
+    editButton.setAttribute('role', 'button');
+    editButton.setAttribute('aria-label', 'Edit AI response');
+    return editButton;
+}
+
+function ensureAIEditButton(controlsContainer) {
+    if (!controlsContainer || controlsContainer.querySelector('.ai-edit-btn')) {
+        return;
+    }
+
+    const aiEditButton = createAIEditButton();
+    const copyButton = controlsContainer.querySelector('.copy-btn');
+
+    if (copyButton) {
+        controlsContainer.insertBefore(aiEditButton, copyButton);
+    } else {
+        controlsContainer.appendChild(aiEditButton);
+    }
+}
+
 /**
  * Shows the welcome message and hides the messages container
  */
@@ -865,6 +891,8 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                 deleteButton.setAttribute('aria-label', 'Delete message');
                 controlsContainer.appendChild(deleteButton);
             } else if (sender === 'ai') {
+                ensureAIEditButton(controlsContainer);
+
                 // Create copy button for AI messages
                 const copyButton = document.createElement('button');
                 copyButton.classList.add('copy-btn', 'flex', 'items-center', 'hover:text-blue-400', 'transition-colors', 'duration-300');
@@ -1619,6 +1647,8 @@ export function refreshAllMessages() {
                     messageEl.appendChild(controlsContainer);
                 }
             }
+
+            ensureAIEditButton(controlsContainer);
         }
     });
 
@@ -2297,6 +2327,10 @@ export function addSpeakerButtonsToExistingMessages() {
     const aiMessages = messagesContainer.querySelectorAll('.ai');
     aiMessages.forEach(messageEl => {
         const controlsContainer = messageEl.querySelector('.message-controls');
+        if (controlsContainer) {
+            ensureAIEditButton(controlsContainer);
+        }
+
         if (controlsContainer && !controlsContainer.querySelector('.speaker-btn')) {
             // Create speaker button for existing AI messages
             const speakerButton = document.createElement('button');
