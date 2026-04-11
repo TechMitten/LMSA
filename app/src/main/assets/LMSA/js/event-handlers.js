@@ -48,6 +48,7 @@ import { setActionToPerform, getActionToPerform } from './shared-state.js';
 import { closeSidebarExport } from './export-import.js';
 import { showModelModal } from './model-manager.js';
 import { showWhatsNewModal } from './whats-new.js';
+import { openOnboarding } from './intro-screen.js';
 
 import { showExternalSiteModal } from './external-site-confirmation-modal.js';
 import { debugLog, debugError, formatDate, closeApplication, copyToClipboard, sanitizeInput, initializeCodeMirror, stripReasoningSections, scrollToBottom, scrollToBottomManual, handleScroll, ensureCursorVisible } from './utils.js';
@@ -778,6 +779,26 @@ export function initializeEventHandlers() {
     // Settings button
     if (settingsButton) {
         settingsButton.addEventListener('click', handleSettingsButtonClick);
+    }
+
+    const gettingStartedButton = document.getElementById('getting-started-btn');
+    if (gettingStartedButton) {
+        bindPressInFeedback(gettingStartedButton);
+
+        const openGettingStarted = () => {
+            closeSidebar();
+            openOnboarding(true);
+        };
+
+        gettingStartedButton.addEventListener('click', openGettingStarted);
+        gettingStartedButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            runAfterPressIn(gettingStartedButton, () => {
+                openGettingStarted();
+                gettingStartedButton.blur();
+            });
+        }, { passive: false });
     }
 
     // Close settings button

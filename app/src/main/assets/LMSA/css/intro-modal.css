@@ -1,0 +1,292 @@
+.intro-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 3100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.intro-modal.hidden {
+    display: none;
+}
+
+.intro-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.24), transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.2), transparent 55%),
+        rgba(2, 6, 23, 0.75);
+    backdrop-filter: blur(9px);
+}
+
+.intro-modal-card {
+    position: relative;
+    width: min(720px, 100%);
+    max-height: min(92vh, 860px);
+    overflow-y: auto;
+    border-radius: 1.25rem;
+    padding: 1.2rem;
+    background: linear-gradient(160deg, rgba(15, 23, 42, 0.97), rgba(30, 41, 59, 0.97));
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    box-shadow: 0 30px 60px rgba(2, 6, 23, 0.6);
+    animation: introSlideIn 280ms ease;
+}
+
+.intro-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.intro-modal-kicker {
+    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    color: #38bdf8;
+    font-weight: 700;
+}
+
+.intro-modal-title {
+    margin: 0.3rem 0 0;
+    color: #e2e8f0;
+    font-size: clamp(1.35rem, 3vw, 2rem);
+    line-height: 1.2;
+}
+
+.intro-modal-subtitle {
+    margin: 0.5rem 0 0;
+    color: #cbd5e1;
+    font-size: 0.95rem;
+}
+
+.intro-close-btn {
+    height: 2.25rem;
+    width: 2.25rem;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.66);
+    color: #cbd5e1;
+}
+
+.intro-progress {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.45rem;
+}
+
+.intro-progress-dot {
+    flex: 1;
+    height: 0.35rem;
+    border-radius: 999px;
+    background: rgba(100, 116, 139, 0.45);
+    transition: background 180ms ease;
+}
+
+.intro-progress-dot.active {
+    background: linear-gradient(90deg, #38bdf8, #22c55e);
+}
+
+.intro-step-content {
+    margin-top: 1rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    background: rgba(15, 23, 42, 0.52);
+    padding: 1rem;
+}
+
+.intro-step-content.intro-step-transitioning {
+    pointer-events: none;
+}
+
+.intro-step-content.intro-step-exit-left {
+    animation: introStepExitLeft 220ms ease forwards;
+}
+
+.intro-step-content.intro-step-exit-right {
+    animation: introStepExitRight 220ms ease forwards;
+}
+
+.intro-step-content.intro-step-enter-right {
+    animation: introStepEnterRight 220ms ease forwards;
+}
+
+.intro-step-content.intro-step-enter-left {
+    animation: introStepEnterLeft 220ms ease forwards;
+}
+
+.intro-step-icon {
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #f8fafc;
+    background: linear-gradient(140deg, #0284c7, #16a34a);
+}
+
+.intro-step-title {
+    margin: 0.9rem 0 0;
+    color: #f8fafc;
+    font-size: 1.25rem;
+}
+
+.intro-step-description {
+    margin: 0.55rem 0 0;
+    color: #cbd5e1;
+    line-height: 1.55;
+}
+
+.intro-checklist {
+    margin-top: 1rem;
+    display: grid;
+    gap: 0.45rem;
+}
+
+.intro-checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    color: #e2e8f0;
+    font-size: 0.92rem;
+}
+
+.intro-checklist-item i {
+    color: #34d399;
+    margin-top: 0.2rem;
+}
+
+.intro-actions {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+}
+
+.intro-action-btn {
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    background: rgba(14, 116, 144, 0.25);
+    color: #e0f2fe;
+    padding: 0.55rem 0.85rem;
+    border-radius: 0.65rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+}
+
+.intro-modal-footer {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.intro-footer-main-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.intro-btn {
+    min-width: 88px;
+    border-radius: 0.7rem;
+    border: 1px solid transparent;
+    padding: 0.55rem 0.9rem;
+    font-weight: 700;
+}
+
+.intro-btn-ghost {
+    color: #cbd5e1;
+    background: transparent;
+}
+
+.intro-btn-secondary {
+    color: #e2e8f0;
+    background: rgba(51, 65, 85, 0.72);
+    border-color: rgba(148, 163, 184, 0.28);
+}
+
+.intro-btn-primary {
+    color: #f8fafc;
+    background: linear-gradient(135deg, #0284c7, #16a34a);
+}
+
+@keyframes introSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes introStepExitLeft {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-22px);
+    }
+}
+
+@keyframes introStepExitRight {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(22px);
+    }
+}
+
+@keyframes introStepEnterRight {
+    from {
+        opacity: 0;
+        transform: translateX(22px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes introStepEnterLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-22px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 640px) {
+    .intro-modal-card {
+        padding: 1rem;
+    }
+
+    .intro-modal-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .intro-footer-main-actions {
+        width: 100%;
+    }
+
+    .intro-footer-main-actions .intro-btn {
+        flex: 1;
+    }
+
+    .intro-btn-ghost {
+        width: 100%;
+    }
+}

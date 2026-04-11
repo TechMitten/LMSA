@@ -119,6 +119,9 @@ class WebViewActivity : AppCompatActivity() {
     // Billing Client
     private lateinit var billingClient: BillingClient
     private val PRODUCT_ID = "ad_removal"
+    private val PREFS_NAME = "LMSA_PREFS"
+    private val PREF_IS_PREMIUM = "is_premium"
+    private val PREF_ONBOARDING_COMPLETED = "onboarding_completed"
     private var isPremium = false
     private var isDebugMode = false
 
@@ -188,8 +191,8 @@ class WebViewActivity : AppCompatActivity() {
         startBillingConnection()
         
         // Check if premium before loading ads
-        val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
-        isPremium = prefs.getBoolean("is_premium", false)
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        isPremium = prefs.getBoolean(PREF_IS_PREMIUM, false)
         
         updatePremiumUiState()
 
@@ -421,6 +424,7 @@ class WebViewActivity : AppCompatActivity() {
                 super.onPageFinished(view, url)
                 // Now that the page is loaded, update the UI with the persisted premium status
                 updatePremiumUiState()
+                updateOnboardingUiState()
             }
 
             // Handle renderer crashes (e.g., from ad errors)
@@ -547,6 +551,26 @@ class WebViewActivity : AppCompatActivity() {
             val webView: WebView = findViewById(R.id.webView)
 
             val jsCommand = "if(typeof updateUiForPremium === 'function') { updateUiForPremium($effectivePremium); }"
+            webView.evaluateJavascript(jsCommand, null)
+        }
+    }
+
+    private fun isOnboardingCompleted(): Boolean {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        return prefs.getBoolean(PREF_ONBOARDING_COMPLETED, false)
+    }
+
+    private fun setOnboardingCompleted(completed: Boolean) {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        prefs.edit().putBoolean(PREF_ONBOARDING_COMPLETED, completed).apply()
+        updateOnboardingUiState()
+    }
+
+    private fun updateOnboardingUiState() {
+        runOnUiThread {
+            val webView: WebView = findViewById(R.id.webView)
+            val completed = isOnboardingCompleted()
+            val jsCommand = "if(typeof window.updateOnboardingStateFromNative === 'function') { window.updateOnboardingStateFromNative($completed); }"
             webView.evaluateJavascript(jsCommand, null)
         }
     }
@@ -1186,8 +1210,8 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun setPremiumStatus(premium: Boolean) {
         isPremium = premium
-        val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
-        prefs.edit().putBoolean("is_premium", isPremium).apply()
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        prefs.edit().putBoolean(PREF_IS_PREMIUM, isPremium).apply()
         
         updatePremiumUiState()
     }
@@ -1249,6 +1273,16 @@ class WebViewActivity : AppCompatActivity() {
         @JavascriptInterface
         fun checkPremiumStatus(): Boolean {
             return isPremium && !isDebugMode
+        }
+
+        @JavascriptInterface
+        fun isOnboardingCompleted(): Boolean {
+            return this@WebViewActivity.isOnboardingCompleted()
+        }
+
+        @JavascriptInterface
+        fun setOnboardingCompleted(completed: Boolean) {
+            this@WebViewActivity.setOnboardingCompleted(completed)
         }
 
         @JavascriptInterface

@@ -23,6 +23,7 @@ import { initOpenRouterWarningModal } from './components/modals/openrouter-warni
 import { initializeTemplateIndicator } from './template-indicator.js';
 import { initializeHapticFeedback } from './haptics.js';
 import { updateConfirmationModalTheme, updateExportImportModalsTheme } from './confirmation-modal-fix.js';
+import { ensureOnboardingCompleted, openOnboarding } from './intro-screen.js';
 import './about.js';
 
 // Android WebView keyboard overlap fix
@@ -88,7 +89,7 @@ export async function initializeApp() {
         console.log('Terms not accepted, skipping app initialization');
         return;
     }
-    
+
     isAppInitialized = true;
 
     setDebugEnabled(false);
@@ -231,6 +232,12 @@ export async function initializeApp() {
     initSmartReplyWarningModal();
     initOpenRouterWarningModal();
     initializeTemplateIndicator();
+
+    const onboardingCompleted = await ensureOnboardingCompleted();
+    if (!onboardingCompleted) {
+        console.log('Onboarding not completed, app initialization paused');
+        return;
+    }
 
     // Pre-initialize TTS service to prevent double-tap issues
     try {
@@ -406,6 +413,7 @@ function initializeAndroidKeyboardFix() {
 document.addEventListener('DOMContentLoaded', function () {
     // Make initializeApp globally available
     window.initializeApp = initializeApp;
+    window.openOnboarding = () => openOnboarding(true);
 
     // Check terms acceptance first, then initialize app if passed
     if (hasAcceptedCurrentTerms()) {
