@@ -13,7 +13,7 @@ export const whatsNewModal = `
                     <div class="flex flex-col">
                         <span class="text-blue-400 font-extrabold">What's New</span>
                         <span class="text-xs text-blue-300/80 font-medium">v<span
-                            id="whats-new-version">10.8</span></span>
+                            id="whats-new-version">10.9</span></span>
                     </div>
                 </h2>
                 <button id="close-whats-new"
@@ -24,6 +24,24 @@ export const whatsNewModal = `
 
                     <div class="features-container overflow-y-auto grow px-1 py-2">
                 <div class="space-y-3">
+                    <div class="feature-item">
+                        <div class="relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-blue-500/10 to-sky-700/5 rounded-full blur-xl"></div>
+                            <div class="flex items-start relative z-10">
+                                <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-blue-600/20 w-10 h-10 shadow-sm">
+                                    <i class="fas fa-flag text-blue-300"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <h3 class="feature-title">New onboarding screens</h3>
+                                    </div>
+                                    <div class="feature-description">
+                                        <p class="mb-3 text-sm">A guided first-run onboarding now helps you choose model providers (Local Server or OpenRouter), configure API keys, and set up your local server. Open them anytime from the Getting Started sidebar.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <!-- (Premium feature removed) -->
                     <div class="feature-item">
                         <div class="relative overflow-hidden">
@@ -59,7 +77,7 @@ export const whatsNewModal = `
                                     </div>
                                     <div class="feature-description">
                                         <p class="mb-3">Secure your chats with device biometrics! You can now require fingerprint or face unlock to open the app.</p>
-                                        <p class="mb-3">Enable this feature anytime in the Settings menu under Security. <span class="text-yellow-400 font-semibold"><i class="fas fa-crown mr-1"></i>Premium Feature</span></p>
+                                        <p class="mb-3">Enable this feature anytime in the Settings menu under Security.</p>
                                     </div>
                                 </div>
                             </div>
@@ -240,7 +258,12 @@ export const whatsNewModal = `
 
                 <!-- Footer content -->
                 <div
-                    class="flex justify-end items-center pt-3 pb-2 mt-auto bg-gradient-to-b from-[#0a192f]/95 to-[#0c1e36]/95 sticky bottom-0 px-2">
+                    class="flex justify-between items-center pt-3 pb-2 mt-auto bg-gradient-to-b from-[#0a192f]/95 to-[#0c1e36]/95 sticky bottom-0 px-2">
+                    <!-- Never show again checkbox on the left -->
+                    <label class="flex items-center cursor-pointer text-xs text-gray-400 hover:text-gray-300">
+                        <input type="checkbox" id="never-show-whats-new" class="w-4 h-4 rounded border border-gray-600 bg-gray-900 cursor-pointer accent-blue-600" />
+                        <span class="ml-2">Never show this again</span>
+                    </label>
                     <button id="got-it-whats-new"
                         class="relative overflow-hidden text-white rounded-lg focus:outline-none text-sm px-4 py-2"
                         style="background: linear-gradient(135deg, #1e40af, #3b82f6); box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -1px rgba(37, 99, 235, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15); border: none; font-weight: 600; letter-spacing: 0.02em; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);"

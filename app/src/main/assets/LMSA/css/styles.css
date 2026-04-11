@@ -5798,7 +5798,7 @@ body.light-theme #whats-new-modal.fade-out {
         /* Full border radius for mobile */
         height: auto;
         /* Optimal height for mobile viewing */
-        max-height: 80vh;
+        max-height: calc(100vh - 1rem);
         min-height: 60vh;
         /* Center positioning */
         margin-bottom: 0;
@@ -5809,7 +5809,7 @@ body.light-theme #whats-new-modal.fade-out {
     }
 
     #whats-new-modal .features-container {
-        max-height: calc(80vh - 12rem);
+        max-height: calc(100vh - 13rem);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }

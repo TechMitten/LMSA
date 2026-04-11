@@ -37,6 +37,8 @@ export function resetApp() {
             'whatsNewDontShow',
             'whatsNewSeen',
             'whatsNewSeenVersion',
+            'whatsNewNeverShow',
+            'whatsNewAutoShownVersion',
             'whatsNewDismissedVersion',
             'reasoningTimeout',
             'useOpenRouter',

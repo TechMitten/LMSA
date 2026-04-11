@@ -7,9 +7,12 @@ let whatsNewModal;
 let closeWhatsNewButton;
 let gotItButton;
 let versionElement;
+let neverShowCheckbox;
 
 // Local storage keys
-const WHATS_NEW_VERSION = '10.7'; // Updated to version 10.7
+const WHATS_NEW_VERSION = '10.9'; // Updated to version 10.9
+const WHATS_NEW_NEVER_SHOW_KEY = 'whatsNewNeverShow'; // Flag to never show modal again
+const WHATS_NEW_AUTO_SHOWN_VERSION_KEY = 'whatsNewAutoShownVersion'; // Tracks auto-display per version
 
 // Flag to track if the modal has been shown in the current session
 let modalShownInCurrentSession = false;
@@ -19,6 +22,29 @@ let modalShownInCurrentSession = false;
  * @param {boolean} forceShow - If true, shows the modal regardless of user preferences
  */
 export function showWhatsNewModal(forceShow = false) {
+    // If forceShow is true, skip all checks (manual menu open)
+    if (!forceShow) {
+        try {
+            // If the user has checked "Never show this again", skip unless forced
+            const neverShow = localStorage.getItem(WHATS_NEW_NEVER_SHOW_KEY) === 'true';
+            if (neverShow) {
+                return;
+            }
+            // If this version has already auto-opened once, don't auto-open again
+            const autoShownVersion = localStorage.getItem(WHATS_NEW_AUTO_SHOWN_VERSION_KEY);
+            if (autoShownVersion === WHATS_NEW_VERSION) {
+                return;
+            }
+            // If the user has already seen this version (persisted), don't show it again
+            const seenVersion = localStorage.getItem('whatsNewSeenVersion');
+            if (seenVersion === WHATS_NEW_VERSION) {
+                return;
+            }
+        } catch (e) {
+            // ignore localStorage errors and continue to safe behavior
+        }
+    }
+
     // If the modal has already been shown in this session and we're not forcing it, don't show it again
     if (modalShownInCurrentSession && !forceShow) {
         return;
@@ -28,6 +54,16 @@ export function showWhatsNewModal(forceShow = false) {
     if (!whatsNewModal) initializeElements();
 
     if (whatsNewModal) {
+        // Record auto-launch immediately so it is shown only once per version,
+        // even if the app closes before the user dismisses the modal.
+        if (!forceShow) {
+            try {
+                localStorage.setItem(WHATS_NEW_AUTO_SHOWN_VERSION_KEY, WHATS_NEW_VERSION);
+            } catch (e) {
+                // ignore localStorage errors and continue to safe behavior
+            }
+        }
+
         // Set the version number in the UI
         if (versionElement) {
             versionElement.textContent = WHATS_NEW_VERSION;
@@ -193,20 +229,23 @@ function adjustModalHeight() {
 
         // Get the header and footer heights - use more robust selectors
         const header = modalContent.querySelector('#whats-new-title')?.closest('.flex.justify-between');
-        const footer = modalContent.querySelector('#got-it-whats-new')?.closest('.flex.justify-end');
+        const footer = modalContent.querySelector('#got-it-whats-new')?.closest('div.flex.justify-between, div.flex.justify-end');
 
         const headerHeight = header ? header.offsetHeight : 0;
         const footerHeight = footer ? footer.offsetHeight : 0;
 
         // Calculate modal padding
-        const modalPadding = 24; // 3rem (p-3 class)
+        const modalPadding = 32; // Account for modal inner spacing and borders
+
+        // Reserve outer safe space so the modal never gets pushed under the top edge.
+        // This keeps behavior consistent between local browser dev and Android WebView.
+        const reservedViewportMargin = Math.max(24, Math.round(viewportHeight * 0.08));
 
         // Calculate the maximum available height for the features container
-        // Leave some space (10% of viewport) for padding and margins
-        const maxAvailableHeight = viewportHeight * 0.9 - headerHeight - footerHeight - modalPadding;
+        const maxAvailableHeight = viewportHeight - reservedViewportMargin - headerHeight - footerHeight - modalPadding;
 
         // Set the height to either the content height or the max available height, whichever is smaller
-        const finalHeight = Math.min(contentHeight, maxAvailableHeight);
+        const finalHeight = Math.max(160, Math.min(contentHeight, maxAvailableHeight));
 
         // Apply the calculated height
         featuresContainer.style.height = finalHeight + 'px';
@@ -301,6 +340,7 @@ function initializeElements() {
     closeWhatsNewButton = document.getElementById('close-whats-new');
     gotItButton = document.getElementById('got-it-whats-new');
     versionElement = document.getElementById('whats-new-version');
+    neverShowCheckbox = document.getElementById('never-show-whats-new');
 }
 
 /**
@@ -337,15 +377,29 @@ export function initializeWhatsNew() {
         }
     });
 
+    // Handle Never Show Again checkbox
+    if (neverShowCheckbox) {
+        neverShowCheckbox.addEventListener('change', (e) => {
+            try {
+                localStorage.setItem(WHATS_NEW_NEVER_SHOW_KEY, e.target.checked ? 'true' : 'false');
+            } catch (err) {
+                console.error('Error saving never show preference:', err);
+            }
+        });
+        // Load and restore checkbox state
+        try {
+            const neverShow = localStorage.getItem(WHATS_NEW_NEVER_SHOW_KEY) === 'true';
+            neverShowCheckbox.checked = neverShow;
+        } catch (err) {
+            console.error('Error loading never show preference:', err);
+        }
+    }
+
     // Add window resize listener to adjust modal height when window size changes
     window.addEventListener('resize', adjustModalHeight);
 
-    // Check if user has seen this specific version
-    const seenVersion = localStorage.getItem('whatsNewSeenVersion');
-    if (seenVersion !== WHATS_NEW_VERSION) {
-        // Show the modal after a brief delay to allow app to finish loading
-        setTimeout(() => {
-            showWhatsNewModal();
-        }, 1500); // 1.5 second delay
-    }
+    // Attempt auto-show after app load; showWhatsNewModal handles gating logic.
+    setTimeout(() => {
+        showWhatsNewModal();
+    }, 1500); // 1.5 second delay
 }

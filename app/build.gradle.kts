@@ -15,8 +15,8 @@ android {
         applicationId = "com.lmsa.app"
         minSdk = 23
         targetSdk = 35
-        versionCode = 269
-        versionName = "10.8"
+        versionCode = 270
+        versionName = "10.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

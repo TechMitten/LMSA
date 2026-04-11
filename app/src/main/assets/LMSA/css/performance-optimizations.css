@@ -24,8 +24,7 @@ button {
 /* Optimized Modal Animations */
 .modal,
 #settings-modal,
-#character-gallery,
-#whats-new-modal {
+#character-gallery {
     /* Use transform for show/hide instead of display changes */
     transform: translateY(-50px) scale(0.95);
     opacity: 0;
@@ -35,8 +34,7 @@ button {
 
 .modal.show,
 #settings-modal.show,
-#character-gallery.show,
-#whats-new-modal.show {
+#character-gallery.show {
     transform: translateY(0) scale(1);
     opacity: 1;
     visibility: visible;
