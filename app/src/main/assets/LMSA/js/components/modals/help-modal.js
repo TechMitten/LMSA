@@ -41,16 +41,21 @@ export const helpModal = `
                                 </summary>
                                 <div class="mt-2 pl-2 space-y-1"
                                     style="border-left: 1px solid rgba(255, 255, 255, 0.12);">
-                                    <a href="#section-quick-start"
-                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
-                                        <i class="fas fa-rocket mr-2 text-sm"></i>
-                                        <span>LM Studio Setup</span>
-                                    </a>
-                                    <a href="#section-ollama-setup"
-                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
-                                        <i class="fas fa-terminal mr-2 text-sm"></i>
-                                        <span>Ollama Setup</span>
-                                    </a>
+                                     <a href="#section-quick-start"
+                                         class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
+                                         <i class="fas fa-rocket mr-2 text-sm"></i>
+                                         <span>LM Studio Setup</span>
+                                     </a>
+                                     <a href="#section-lmstudio-mcp"
+                                         class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
+                                         <i class="fas fa-plug mr-2 text-sm"></i>
+                                         <span>LM Studio MCP</span>
+                                     </a>
+                                     <a href="#section-ollama-setup"
+                                         class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
+                                         <i class="fas fa-terminal mr-2 text-sm"></i>
+                                         <span>Ollama Setup</span>
+                                     </a>
                                     <a href="#section-openrouter"
                                         class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-cloud mr-2 text-sm"></i>
@@ -177,10 +182,10 @@ export const helpModal = `
                                 </picture>
                             </div>
 
-                            <div class="mt-4 p-3 rounded-lg"
-                                style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(251, 191, 36, 0.1) 100%); border: 1px solid rgba(245, 158, 11, 0.45); box-shadow: 0 2px 10px rgba(245, 158, 11, 0.18);">
-                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i
-                                        class="fas fa-network-wired mr-2"></i>LMSA Connection Address</p>
+                             <div class="mt-4 p-3 rounded-lg"
+                                 style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(251, 191, 36, 0.1) 100%); border: 1px solid rgba(245, 158, 11, 0.45); box-shadow: 0 2px 10px rgba(245, 158, 11, 0.18);">
+                                 <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                         class="fas fa-network-wired mr-2"></i>LMSA Connection Address</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">
                                     Use the <strong>host machine IP address</strong> where LM Studio is running, plus
                                     the LM Studio server port (often <strong>1234</strong>, or whatever LM Studio shows).
@@ -190,15 +195,72 @@ export const helpModal = `
                                 </p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem; font-size: 0.9em;">
                                     To find host IP quickly: Windows <code>ipconfig</code> (IPv4 Address), macOS/Linux
-                                    <code>ifconfig</code> or <code>ip a</code>.
-                                </p>
-                            </div>
-                        </section>
+                                     <code>ifconfig</code> or <code>ip a</code>.
+                                 </p>
+                             </div>
+                         </section>
 
-                        <section id="section-ollama-setup">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #f59e0b;">
-                                <i class="fas fa-terminal mr-2"></i>Ollama Setup
-                            </h3>
+                         <section id="section-lmstudio-mcp">
+                             <h3 class="text-lg font-semibold mb-2 flex items-center"
+                                 style="color: #38bdf8;"><i class="fas fa-plug mr-2"></i>LM Studio MCP
+                             </h3>
+                             <p style="color: var(--text-primary); margin-bottom: 1rem;">
+                                 LMSA can use LM Studio's MCP integrations so the model can call supported tools during chat.
+                                 You add those integrations in LMSA, and the app sends them to LM Studio in the format LM Studio expects.
+                             </p>
+
+                             <div class="space-y-4">
+                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                     <p class="font-medium flex items-center" style="color: #38bdf8;"><i
+                                             class="fas fa-sliders-h mr-2"></i>Where to Configure It</p>
+                                     <ul class="list-disc pl-5 mt-2 space-y-1"
+                                         style="color: var(--text-primary); font-size: 0.9em;">
+                                         <li>Open LMSA <a href="#" id="open-settings-link-mcp"
+                                                 class="text-blue-400 hover:text-blue-300">Settings</a>.</li>
+                                         <li>Stay on <strong>Local Server</strong> and tap the <strong>MCP</strong> button.</li>
+                                         <li>Add one or more integrations, then tap <strong>Done</strong> to save them.</li>
+                                     </ul>
+                                 </div>
+
+                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                     <p class="font-medium flex items-center" style="color: #22c55e;"><i
+                                             class="fas fa-wand-magic-sparkles mr-2"></i>How It Works in Chat</p>
+                                     <ul class="list-disc pl-5 mt-2 space-y-1"
+                                         style="color: var(--text-primary); font-size: 0.9em;">
+                                         <li>Once at least one MCP integration is saved, LMSA uses LM Studio's native MCP chat flow automatically.</li>
+                                         <li>You do <strong>not</strong> put MCP server URLs in the Hostname / IP field. Keep that field for the LM Studio server running on your computer.</li>
+                                         <li>If the model decides to use a tool, LMSA will show a tool-use summary in the response.</li>
+                                     </ul>
+                                 </div>
+
+                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                     <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                             class="fas fa-shuffle mr-2"></i>Ephemeral vs Plugin</p>
+                                     <ul class="list-disc pl-5 mt-2 space-y-1"
+                                         style="color: var(--text-primary); font-size: 0.9em;">
+                                         <li><strong>Ephemeral</strong>: use a remote MCP server URL such as <code>https://example.com/mcp</code>.</li>
+                                         <li><strong>Plugin ID</strong>: use the MCP server id from LM Studio's <code>mcp.json</code>, for example <code>mcp/playwright</code>.</li>
+                                         <li><strong>Allowed Tools</strong> is optional. Leave it empty to allow every tool from that integration, or add tool names to limit what the model can call.</li>
+                                     </ul>
+                                 </div>
+
+                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                     <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                             class="fas fa-lightbulb mr-2"></i>Good to Know</p>
+                                     <ul class="list-disc pl-5 mt-2 space-y-1"
+                                         style="color: var(--text-primary); font-size: 0.9em;">
+                                         <li>The MCP builder in LMSA creates the <code>integrations</code> JSON for you, so you usually do not need to type JSON manually.</li>
+                                         <li>Your normal LM Studio server connection still needs to work first before MCP integrations can be used.</li>
+                                         <li>If a tool-enabled request behaves strangely, double-check the server URL or plugin id, and make sure the target integration is available in LM Studio.</li>
+                                     </ul>
+                                 </div>
+                             </div>
+                         </section>
+ 
+                         <section id="section-ollama-setup">
+                             <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #f59e0b;">
+                                 <i class="fas fa-terminal mr-2"></i>Ollama Setup
+                             </h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">
                                 Keep Ollama setup simple: start or expose Ollama to your network on the host machine,
                                 then connect LMSA to that host IP and port.

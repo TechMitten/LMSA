@@ -81,7 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const sidebarElement = document.getElementById('sidebar');
     const modalContent = helpModal ? helpModal.querySelector('.modal-content') : null;
-    const openSettingsLink = document.getElementById('open-settings-link');
+    const openSettingsLinks = helpModal
+        ? helpModal.querySelectorAll('#open-settings-link, #open-settings-link-mcp')
+        : [];
     const settingsModal = document.getElementById('settings-modal');
 
     // Function to close help modal
@@ -149,8 +151,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         // Settings link event listener
-        if (openSettingsLink && settingsModal) {
-            openSettingsLink.addEventListener('click', (e) => {
+        if (openSettingsLinks.length > 0 && settingsModal) {
+            openSettingsLinks.forEach((openSettingsLink) => openSettingsLink.addEventListener('click', (e) => {
                 e.preventDefault();
                 // Close help modal
                 closeHelpModal();
@@ -170,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         settingsModalContent.classList.remove('animate-modal-in');
                     }, 300);
                 }
-            });
+            }));
         }
 
         // Close modal when clicking outside - REMOVED
