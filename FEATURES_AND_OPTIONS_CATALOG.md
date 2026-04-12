@@ -191,7 +191,7 @@
 ## 6. PREMIUM (PAID) VS FREE TIERS
 
 ### Free User Limits
-- **Local Chat Limit: 20 completions/day** — Soft reset at midnight local time
+- **Local Chat Limit: 15 completions/day** — Soft reset at midnight local time
 - **OpenRouter Limit: 5 completions/day** — Separate daily counter
 - **Advertisements:** Interstitial ads shown between messages or app actions
 - **No File Attachments** — Cannot attach files to chats
@@ -434,7 +434,7 @@
 ### Usage Limiting (Native)
 - **Daily Quota Enforcement** — Track completions per day
 - **Midnight Reset** — Reset counters at user's local midnight
-- **Local Chat Quota: 20/day** — Free tier limit (local models)
+- **Local Chat Quota: 15/day** — Free tier limit (local models)
 - **OpenRouter Quota: 5/day** — Cloud models limit
 - **Premium Override** — Unlimited for premium users
 - **SharedPreferences Storage** — Persist counts across app restarts
@@ -567,7 +567,7 @@
 - Fallback help links to documentation
 
 ### Rate Limiting
-- Free tier message: "20 chats/day limit reached, resets at midnight"
+- Free tier message: "15 chats/day limit reached, resets at midnight"
 - OpenRouter: "5 completions/day on cloud models"
 - Premium: No limiting
 - UI shows remaining count or "Unlimited" badge

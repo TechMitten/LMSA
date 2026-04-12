@@ -192,7 +192,7 @@ Quick-suggestion buttons may appear below messages:
 - **Archive** — Some chat managers let you archive old conversations
 
 ### Chat Limits
-- **Free Users** — 20 responses per day (local AI) or 5 responses per day (cloud AI)
+- **Free Users** — 15 responses per day (local AI) or 5 responses per day (cloud AI)
 - **Premium Users** — Unlimited responses per day
 - Daily limits reset at midnight (your device time)
 

@@ -1576,7 +1576,7 @@ class WebViewActivity : AppCompatActivity() {
                     .apply()
                 return true
             }
-            return count < 20
+            return count < 15
         }
 
         @JavascriptInterface
