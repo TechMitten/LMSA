@@ -1181,8 +1181,29 @@ body {
 @media (max-width: 640px) {
     .template-main-container {
         min-height: 100vh;
-        height: 100vh;
-        max-height: 100vh;
+        height: auto;
+        max-height: none;
+    }
+
+    main {
+        flex: 0 1 auto;
+        padding-bottom: 1.25rem;
+    }
+
+    .template-footer {
+        position: sticky;
+        bottom: 0;
+        left: auto;
+        width: auto;
+        margin-top: auto;
+        flex-shrink: 0;
+        padding: 0.35rem 1.25rem 0.8rem;
+        background: linear-gradient(to top,
+                rgba(15, 23, 42, 0.98) 0%,
+                rgba(15, 23, 42, 0.92) 72%,
+                rgba(15, 23, 42, 0) 100%);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
     }
 }
 
@@ -1934,8 +1955,8 @@ textarea {
         padding-top: env(safe-area-inset-top);
     }
 
-    .absolute.bottom-0 {
-        padding-bottom: calc(2.5rem + env(safe-area-inset-bottom));
+    .template-footer {
+        padding-bottom: calc(0.8rem + env(safe-area-inset-bottom));
     }
 }
 

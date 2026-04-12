@@ -7,6 +7,7 @@ const INTRO_STEPS = [
         title: 'What LMSA Does',
         subtitle: 'LMSA connects your Android app to local or hosted AI providers.',
         icon: 'fas fa-wand-magic-sparkles',
+        theme: 'aurora',
         checklist: [
             'Use Local Server or OpenRouter for your provider.',
             'Keep your chats in one workspace on mobile.',
@@ -17,6 +18,7 @@ const INTRO_STEPS = [
         title: 'Pick Your Model Provider',
         subtitle: 'Choose where your responses should come from, then fetch available models.',
         icon: 'fas fa-robot',
+        theme: 'control-room',
         checklist: [
             'Tap Settings, then stay on Connection step.',
             'Select Local Server or OpenRouter.',
@@ -27,6 +29,7 @@ const INTRO_STEPS = [
         title: 'Configure API Key',
         subtitle: 'Set credentials for hosted providers before your first request.',
         icon: 'fas fa-key',
+        theme: 'vault',
         checklist: [
             'OpenRouter needs an API key.',
             'LM Studio can optionally use a token.',
@@ -37,6 +40,7 @@ const INTRO_STEPS = [
         title: 'Set IP and Port',
         subtitle: 'Point LMSA to your local server endpoint so model calls can connect.',
         icon: 'fas fa-network-wired',
+        theme: 'network',
         checklist: [
             'Use your server machine IP or hostname.',
             'Use the exact listening port from your server.',
@@ -47,6 +51,7 @@ const INTRO_STEPS = [
         title: 'You Are Ready',
         subtitle: 'Finish onboarding and start your first chat. You can reopen this guide from Getting Started in the sidebar.',
         icon: 'fas fa-circle-check',
+        theme: 'launch',
         checklist: [
             'Open a new chat and send your first prompt.',
             'If connection fails, revisit Settings and verify host/port.',
@@ -146,6 +151,7 @@ function getStepElements() {
     return {
         subtitle: document.getElementById('intro-modal-subtitle'),
         progress: document.getElementById('intro-progress'),
+        card: document.querySelector('.intro-modal-card'),
         icon: document.getElementById('intro-step-icon'),
         title: document.getElementById('intro-step-title'),
         description: document.getElementById('intro-step-description'),
@@ -160,6 +166,10 @@ function renderStep() {
     const step = INTRO_STEPS[currentStepIndex];
     const elements = getStepElements();
     if (!step || !elements.title) return;
+
+    if (elements.card) {
+        elements.card.dataset.introTheme = step.theme || 'aurora';
+    }
 
     elements.subtitle.textContent = step.subtitle;
     elements.title.textContent = step.title;
