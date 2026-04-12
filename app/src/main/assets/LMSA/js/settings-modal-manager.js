@@ -740,6 +740,7 @@ function initializeManualInputFocus() {
 function initializeSystemPromptOverlay() {
     // Get all elements
     const overlay = document.getElementById('system-prompt-overlay');
+    const modalContent = overlay?.querySelector('.modal-content');
     const editButton = document.getElementById('edit-system-prompt-btn');
     const cancelButton = document.getElementById('cancel-system-prompt-edit');
     const saveButton = document.getElementById('save-system-prompt-edit');
@@ -749,6 +750,8 @@ function initializeSystemPromptOverlay() {
     const previewDiv = document.getElementById('system-prompt-preview');
     const placeholderSpan = document.getElementById('prompt-placeholder');
     const improveButton = document.getElementById('improve-system-prompt-btn');
+    const editorSection = editor?.closest('.mb-6.flex-1.flex.flex-col');
+    const footerSection = saveButton?.closest('.flex.justify-between');
 
 
     if (!overlay || !editButton || !cancelButton || !saveButton || !editor || !hiddenTextarea || !previewDiv) {
@@ -762,10 +765,93 @@ function initializeSystemPromptOverlay() {
 
 
 
+    function getVisibleOverlayViewportHeight() {
+        const visualViewportHeight = window.visualViewport?.height;
+        if (typeof visualViewportHeight === 'number' && visualViewportHeight > 0) {
+            return Math.round(Math.min(window.innerHeight, visualViewportHeight));
+        }
+
+        return window.innerHeight;
+    }
+
+    function applyOverlayKeyboardLayout(keyboardVisible, currentHeight = getVisibleOverlayViewportHeight()) {
+        if (!overlay || !modalContent || !editor) {
+            return;
+        }
+
+        if (keyboardVisible) {
+            const verticalPadding = 24;
+            const modalHeight = Math.max(220, currentHeight - verticalPadding);
+
+            overlay.classList.add('keyboard-visible');
+            overlay.style.height = `${currentHeight}px`;
+            overlay.style.maxHeight = `${currentHeight}px`;
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.right = '0';
+            overlay.style.bottom = 'auto';
+            overlay.style.alignItems = 'stretch';
+            overlay.style.justifyContent = 'flex-start';
+
+            modalContent.style.height = `${modalHeight}px`;
+            modalContent.style.maxHeight = `${modalHeight}px`;
+            modalContent.style.margin = '0 auto';
+            modalContent.style.flex = '0 1 auto';
+
+            if (editorSection) {
+                editorSection.style.minHeight = '0';
+                editorSection.style.flex = '1 1 auto';
+                editorSection.style.overflow = 'hidden';
+            }
+
+            if (footerSection) {
+                footerSection.style.flexShrink = '0';
+            }
+
+            editor.style.flex = '1 1 auto';
+            editor.style.height = 'auto';
+            editor.style.minHeight = '96px';
+            editor.style.maxHeight = 'none';
+            editor.style.overflowY = 'auto';
+        } else {
+            overlay.classList.remove('keyboard-visible');
+            overlay.style.height = '';
+            overlay.style.maxHeight = '';
+            overlay.style.position = '';
+            overlay.style.top = '';
+            overlay.style.left = '';
+            overlay.style.right = '';
+            overlay.style.bottom = '';
+            overlay.style.alignItems = '';
+            overlay.style.justifyContent = '';
+
+            modalContent.style.height = '';
+            modalContent.style.maxHeight = '';
+            modalContent.style.margin = '';
+            modalContent.style.flex = '';
+
+            if (editorSection) {
+                editorSection.style.minHeight = '';
+                editorSection.style.flex = '';
+                editorSection.style.overflow = '';
+            }
+
+            if (footerSection) {
+                footerSection.style.flexShrink = '';
+            }
+
+            editor.style.flex = '';
+            editor.style.minHeight = '';
+            editor.style.maxHeight = '';
+            editor.style.overflowY = '';
+        }
+    }
+
     // Function to detect mobile keyboard visibility with improved handling
     function setupMobileKeyboardDetection() {
-        if (!window.matchMedia('(max-width: 480px)').matches) {
-            return; // Only apply on mobile devices
+        if (!isAndroidWebView() && !window.matchMedia('(max-width: 767px)').matches) {
+            return; // Only apply on mobile-sized layouts or Android WebView
         }
 
         let keyboardVisible = false;
@@ -780,7 +866,7 @@ function initializeSystemPromptOverlay() {
 
             // Add a small delay to ensure we get the final viewport size
             resizeTimeout = setTimeout(() => {
-                const currentHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+                const currentHeight = getVisibleOverlayViewportHeight();
                 const heightDifference = initialViewportHeight - currentHeight;
 
                 // Consider keyboard visible if viewport height decreased by more than 150px
@@ -790,25 +876,15 @@ function initializeSystemPromptOverlay() {
                     keyboardVisible = shouldShowKeyboard;
 
                     if (keyboardVisible) {
-                        overlay.classList.add('keyboard-visible');
-                        // Use the full available height without gaps
-                        overlay.style.height = `${currentHeight}px`;
-                        overlay.style.position = 'fixed';
-                        overlay.style.top = '0';
-                        overlay.style.left = '0';
-                        overlay.style.right = '0';
-                        overlay.style.bottom = 'auto';
+                        applyOverlayKeyboardLayout(true, currentHeight);
                     } else {
-                        overlay.classList.remove('keyboard-visible');
-                        // Reset to default positioning
-                        overlay.style.height = '';
-                        overlay.style.position = '';
-                        overlay.style.top = '';
-                        overlay.style.left = '';
-                        overlay.style.right = '';
-                        overlay.style.bottom = '';
+                        applyOverlayKeyboardLayout(false, currentHeight);
                     }
+                } else if (keyboardVisible) {
+                    applyOverlayKeyboardLayout(true, currentHeight);
                 }
+
+                adjustTextareaHeight();
             }, 100);
         }
 
@@ -870,32 +946,34 @@ function initializeSystemPromptOverlay() {
 
     // Function to adjust textarea height based on content and screen size
     function adjustTextareaHeight() {
-        // Set a minimum height based on screen size
-        const viewportHeight = window.innerHeight;
+        const viewportHeight = getVisibleOverlayViewportHeight();
         const isSmallScreen = viewportHeight < 600;
+        const keyboardVisible = overlay.classList.contains('keyboard-visible') || window.androidKeyboardVisible === true;
 
-        // Calculate appropriate height (smaller on small screens)
-        const baseHeight = isSmallScreen ? 120 : 200;
-
-        // Set initial height
-        editor.style.height = baseHeight + 'px';
-
-        // Adjust based on content if needed (for when there's a lot of text)
-        const contentHeight = editor.scrollHeight;
-        const maxHeight = viewportHeight * 0.5; // Max 50% of viewport
-
-        if (contentHeight > baseHeight && contentHeight < maxHeight) {
-            editor.style.height = contentHeight + 'px';
-        } else if (contentHeight > maxHeight) {
-            editor.style.height = maxHeight + 'px';
+        if (keyboardVisible) {
+            editor.style.height = 'auto';
+            editor.style.maxHeight = 'none';
+            editor.style.flex = '1 1 auto';
+            return;
         }
+
+        // Reserve space for the overlay header, labels and footer buttons.
+        const reservedHeight = keyboardVisible ? 220 : 180;
+        const baseHeight = keyboardVisible ? 96 : (isSmallScreen ? 120 : 200);
+        const maxHeight = Math.max(baseHeight, viewportHeight - reservedHeight);
+
+        const contentHeight = editor.scrollHeight;
+        const desiredHeight = Math.max(baseHeight, Math.min(contentHeight, maxHeight));
+
+        editor.style.height = `${desiredHeight}px`;
+        editor.style.maxHeight = `${maxHeight}px`;
     }
 
     // Function to hide the overlay
     function hideOverlay() {
         // Remove active class first (for animations if needed)
         overlay.classList.remove('active');
-        overlay.classList.remove('keyboard-visible');
+        applyOverlayKeyboardLayout(false);
 
         // Clean up keyboard detection
         if (overlay._keyboardCleanup) {

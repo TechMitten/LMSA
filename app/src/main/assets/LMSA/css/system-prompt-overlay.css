@@ -32,6 +32,9 @@
     margin: auto;
     position: relative;
     padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 /* Header styling */
@@ -71,6 +74,11 @@
     padding: 1rem;
     resize: none;
     min-height: 200px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -85,6 +93,12 @@
 /* Button container */
 #system-prompt-overlay .flex.justify-between:last-child {
     margin-top: 0.5rem;
+    flex-shrink: 0;
+}
+
+#system-prompt-overlay .mb-6.flex-1.flex.flex-col {
+    min-height: 0;
+    overflow: hidden;
 }
 
 /* Button styling */
@@ -609,54 +623,50 @@
 }
 
 /* Keyboard visible state adjustments */
+#system-prompt-overlay.keyboard-visible {
+    padding: max(0.75rem, env(safe-area-inset-top)) 0.75rem max(0.75rem, env(safe-area-inset-bottom));
+    align-items: stretch;
+    justify-content: flex-start;
+    margin: 0;
+}
+
+#system-prompt-overlay.keyboard-visible .modal-content {
+    height: auto;
+    max-height: calc(100% - 1.5rem);
+    margin: 0 auto;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    flex: 1 1 auto;
+}
+
+#system-prompt-overlay.keyboard-visible .mb-6.flex-1.flex.flex-col {
+    min-height: 0;
+}
+
+#system-prompt-overlay.keyboard-visible #system-prompt-editor {
+    min-height: 96px;
+    max-height: none;
+    margin-bottom: 0;
+}
+
+/* Ensure buttons remain visible and accessible */
+#system-prompt-overlay.keyboard-visible .flex.justify-between:last-child {
+    flex-shrink: 0;
+    margin-top: 0;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Header adjustments for keyboard visible state */
+#system-prompt-overlay.keyboard-visible .flex.justify-between:first-child {
+    flex-shrink: 0;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+}
+
 @media (max-width: 480px) {
-    #system-prompt-overlay.keyboard-visible {
-        /* Height and positioning will be set dynamically by JavaScript */
-        padding: 0.75rem;
-        align-items: stretch;
-        justify-content: flex-start;
-        padding-top: max(0.75rem, env(safe-area-inset-top));
-        padding-bottom: 0.75rem;
-        /* Ensure no gaps */
-        margin: 0;
-    }
-
     #system-prompt-overlay.keyboard-visible .modal-content {
-        height: calc(100% - 1.5rem);
-        max-height: none;
         margin: 0;
-        padding: 1rem;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        border-radius: 0.75rem;
-        /* Ensure it takes full available space */
-        flex: 1;
-    }
-
-    #system-prompt-overlay.keyboard-visible #system-prompt-editor {
-        flex: 1;
-        min-height: 150px;
-        max-height: none;
-        resize: none;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        margin-bottom: 1rem;
-    }
-
-    /* Ensure buttons remain visible and accessible */
-    #system-prompt-overlay.keyboard-visible .flex.justify-between:last-child {
-        flex-shrink: 0;
-        margin-top: 0;
-        padding-top: 0.75rem;
-        border-top: 1px solid var(--border-color);
-    }
-
-    /* Header adjustments for keyboard visible state */
-    #system-prompt-overlay.keyboard-visible .flex.justify-between:first-child {
-        flex-shrink: 0;
-        margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
     }
 }
 
