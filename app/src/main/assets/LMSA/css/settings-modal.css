@@ -2330,7 +2330,8 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
 }
 
 .modal-container.input-modal-keyboard-visible {
-  justify-content: flex-end;
+  justify-content: center !important;
+  align-items: flex-start !important;
   padding:
     max(12px, env(safe-area-inset-top))
     12px
@@ -2522,7 +2523,8 @@ body.light-theme .openrouter-key-input-wrapper input {
   }
 
   .modal-container.input-modal-keyboard-visible {
-    justify-content: flex-end;
+    justify-content: center !important;
+    align-items: flex-start !important;
     padding: max(8px, env(safe-area-inset-top)) 8px 8px !important;
   }
 

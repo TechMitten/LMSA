@@ -1465,33 +1465,75 @@ function initializeConnectionInputModals() {
 
         let resizeTimeout = null;
         // Capture baseline before any keyboard opens
-        let baselineHeight = window.innerHeight;
+        const getViewportMetrics = () => {
+            if (window.visualViewport) {
+                return {
+                    height: Math.round(window.visualViewport.height),
+                    top: Math.round(window.visualViewport.offsetTop || 0)
+                };
+            }
+
+            return {
+                height: window.innerHeight,
+                top: 0
+            };
+        };
+        let baselineHeight = getViewportMetrics().height;
 
         const applyKeyboardLayout = () => {
-            const currentHeight = window.innerHeight;
+            const viewport = getViewportMetrics();
+            const currentHeight = viewport.height;
             const dropped = baselineHeight - currentHeight;
 
             if (dropped > 100) {
                 // Keyboard is open. Constrain the box so it stays above the keyboard.
                 // The overlay (position:fixed; inset:0) already resizes with adjustResize,
                 // but vh units on the box do not — so we override with a pixel value.
-                const safeBoxHeight = Math.max(currentHeight - 48, 200);
+                const viewportPadding = 8;
+                const safeBoxHeight = Math.max(currentHeight - (viewportPadding * 2), 200);
                 box.style.maxHeight = `${safeBoxHeight}px`;
                 box.style.overflowY = 'auto';
                 modal.style.height = `${currentHeight}px`;
-                modal.style.top = '0';
+                modal.style.top = `${viewport.top}px`;
                 modal.style.bottom = 'auto';
+                modal.style.justifyContent = 'center';
+                modal.style.alignItems = 'flex-start';
+                modal.style.paddingTop = `${viewportPadding}px`;
+                modal.style.paddingRight = `${viewportPadding}px`;
+                modal.style.paddingBottom = `${viewportPadding}px`;
+                modal.style.paddingLeft = `${viewportPadding}px`;
                 modal.classList.add('input-modal-keyboard-visible');
+                requestAnimationFrame(() => {
+                    const boxRect = box.getBoundingClientRect();
+                    const visibleBottom = viewport.top + currentHeight - viewportPadding;
+                    const overlap = boxRect.bottom - visibleBottom;
+
+                    if (overlap > 0) {
+                        box.style.marginTop = '0';
+                        box.style.transform = `translateY(-${Math.ceil(overlap)}px)`;
+                    } else {
+                        box.style.removeProperty('transform');
+                        box.style.removeProperty('margin-top');
+                    }
+                });
             } else {
                 // Keyboard closed — restore.
                 box.style.removeProperty('max-height');
                 box.style.removeProperty('overflow-y');
+                box.style.removeProperty('transform');
+                box.style.removeProperty('margin-top');
                 modal.style.removeProperty('height');
                 modal.style.removeProperty('top');
                 modal.style.removeProperty('bottom');
+                modal.style.removeProperty('justify-content');
+                modal.style.removeProperty('align-items');
+                modal.style.removeProperty('padding-top');
+                modal.style.removeProperty('padding-right');
+                modal.style.removeProperty('padding-bottom');
+                modal.style.removeProperty('padding-left');
                 modal.classList.remove('input-modal-keyboard-visible');
                 // Keep baseline up to date (handles rotation / initial load).
-                baselineHeight = Math.max(baselineHeight, currentHeight);
+                baselineHeight = currentHeight;
             }
         };
 
@@ -1517,9 +1559,17 @@ function initializeConnectionInputModals() {
             }
             box.style.removeProperty('max-height');
             box.style.removeProperty('overflow-y');
+            box.style.removeProperty('transform');
+            box.style.removeProperty('margin-top');
             modal.style.removeProperty('height');
             modal.style.removeProperty('top');
             modal.style.removeProperty('bottom');
+            modal.style.removeProperty('justify-content');
+            modal.style.removeProperty('align-items');
+            modal.style.removeProperty('padding-top');
+            modal.style.removeProperty('padding-right');
+            modal.style.removeProperty('padding-bottom');
+            modal.style.removeProperty('padding-left');
             modal.classList.remove('input-modal-keyboard-visible');
         };
     }
