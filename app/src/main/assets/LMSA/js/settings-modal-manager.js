@@ -1432,6 +1432,27 @@ function initializeConnectionInputModals() {
         }) || null;
     }
 
+    function keepModalInputVisible(modal, input) {
+        if (!modal || !input) {
+            return;
+        }
+
+        const box = modal.querySelector('.connection-input-modal-box');
+        if (!box) {
+            return;
+        }
+
+        const boxRect = box.getBoundingClientRect();
+        const inputRect = input.getBoundingClientRect();
+        const padding = 16;
+
+        if (inputRect.bottom > boxRect.bottom - padding) {
+            box.scrollTop += inputRect.bottom - boxRect.bottom + padding;
+        } else if (inputRect.top < boxRect.top + padding) {
+            box.scrollTop -= boxRect.top + padding - inputRect.top;
+        }
+    }
+
     function setupInputModalKeyboardHandling(modal) {
         if (!modal || !isAndroidWebView()) {
             return null;
@@ -1457,11 +1478,17 @@ function initializeConnectionInputModals() {
                 const safeBoxHeight = Math.max(currentHeight - 48, 200);
                 box.style.maxHeight = `${safeBoxHeight}px`;
                 box.style.overflowY = 'auto';
+                modal.style.height = `${currentHeight}px`;
+                modal.style.top = '0';
+                modal.style.bottom = 'auto';
                 modal.classList.add('input-modal-keyboard-visible');
             } else {
                 // Keyboard closed — restore.
                 box.style.removeProperty('max-height');
                 box.style.removeProperty('overflow-y');
+                modal.style.removeProperty('height');
+                modal.style.removeProperty('top');
+                modal.style.removeProperty('bottom');
                 modal.classList.remove('input-modal-keyboard-visible');
                 // Keep baseline up to date (handles rotation / initial load).
                 baselineHeight = Math.max(baselineHeight, currentHeight);
@@ -1490,6 +1517,9 @@ function initializeConnectionInputModals() {
             }
             box.style.removeProperty('max-height');
             box.style.removeProperty('overflow-y');
+            modal.style.removeProperty('height');
+            modal.style.removeProperty('top');
+            modal.style.removeProperty('bottom');
             modal.classList.remove('input-modal-keyboard-visible');
         };
     }
@@ -1514,8 +1544,7 @@ function initializeConnectionInputModals() {
             const firstInput = findFirstVisibleModalInput(modal);
             if (firstInput) {
                 firstInput.focus();
-                // Ensure focused input is visible by scrolling to it
-                firstInput.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+                keepModalInputVisible(modal, firstInput);
             }
         }, 100);
     }
@@ -1591,10 +1620,7 @@ function initializeConnectionInputModals() {
     const ipPortInputs = ipPortModal.querySelectorAll('input');
     ipPortInputs.forEach(input => {
         input.addEventListener('focus', () => {
-            const box = ipPortModal.querySelector('.connection-input-modal-box');
-            if (box) {
-                input.scrollIntoView({ behavior: 'auto', block: 'center' });
-            }
+            setTimeout(() => keepModalInputVisible(ipPortModal, input), 50);
         });
     });
 
@@ -1649,10 +1675,7 @@ function initializeConnectionInputModals() {
                        orKeyModal.querySelector('input[type="text"]');
     if (orKeyInput) {
         orKeyInput.addEventListener('focus', () => {
-            const box = orKeyModal.querySelector('.connection-input-modal-box');
-            if (box) {
-                orKeyInput.scrollIntoView({ behavior: 'auto', block: 'center' });
-            }
+            setTimeout(() => keepModalInputVisible(orKeyModal, orKeyInput), 50);
         });
     }
 
@@ -1739,8 +1762,7 @@ function initializeConnectionInputModals() {
                              lmTokenModal.querySelector('input[type="text"]');
         if (lmTokenInput) {
             lmTokenInput.addEventListener('focus', () => {
-                const box = lmTokenModal.querySelector('.connection-input-modal-box');
-                if (box) lmTokenInput.scrollIntoView({ behavior: 'auto', block: 'center' });
+                setTimeout(() => keepModalInputVisible(lmTokenModal, lmTokenInput), 50);
             });
         }
     }

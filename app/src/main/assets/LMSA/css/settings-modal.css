@@ -2329,6 +2329,14 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
   -webkit-overflow-scrolling: touch;
 }
 
+.modal-container.input-modal-keyboard-visible {
+  justify-content: flex-end;
+  padding:
+    max(12px, env(safe-area-inset-top))
+    12px
+    max(12px, env(safe-area-inset-bottom));
+}
+
 /* Coloured accent bar along the top edge */
 .connection-input-modal-accent {
   position: absolute;
@@ -2514,6 +2522,7 @@ body.light-theme .openrouter-key-input-wrapper input {
   }
 
   .modal-container.input-modal-keyboard-visible {
+    justify-content: flex-end;
     padding: max(8px, env(safe-area-inset-top)) 8px 8px !important;
   }
 

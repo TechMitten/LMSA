@@ -543,7 +543,8 @@ function initializeAndroidKeyboardFix() {
 
             // Scroll to input field
             const userInput = document.getElementById('user-input');
-            if (userInput) {
+            const visibleModal = document.querySelector('.modal-container:not(.hidden)');
+            if (userInput && !visibleModal) {
                 setTimeout(() => {
                     userInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 100);
