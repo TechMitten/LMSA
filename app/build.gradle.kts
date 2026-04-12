@@ -15,11 +15,11 @@ android {
     defaultConfig {
         applicationId = "com.lmsa.app"
         // Keep this at 23 so your app still runs on older Android versions
-        minSdk = 26
+        minSdk = 23
         // Target 36 to stay current with Play Store 2026 requirements
         targetSdk = 36
-        versionCode = 271
-        versionName = "10.9"
+        versionCode = 275
+        versionName = "10.10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
