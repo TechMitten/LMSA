@@ -83,6 +83,8 @@ function isPremiumUser() {
  * Initializes all event handlers
  */
 export function initializeEventHandlers() {
+    const TOUCH_TAP_SLOP = 12;
+
     const setPressedState = (element, isPressed) => {
         if (!element) return;
         element.classList.toggle('menu-press-in', isPressed);
@@ -806,6 +808,9 @@ export function initializeEventHandlers() {
     const gettingStartedButton = document.getElementById('getting-started-btn');
     if (gettingStartedButton) {
         bindPressInFeedback(gettingStartedButton);
+        let gettingStartedTouchStartX = 0;
+        let gettingStartedTouchStartY = 0;
+        let gettingStartedTouchMoved = false;
 
         const openGettingStarted = () => {
             closeSidebar();
@@ -813,7 +818,38 @@ export function initializeEventHandlers() {
         };
 
         gettingStartedButton.addEventListener('click', openGettingStarted);
+        gettingStartedButton.addEventListener('touchstart', (e) => {
+            const touch = e.touches && e.touches[0];
+            if (!touch) {
+                gettingStartedTouchMoved = false;
+                return;
+            }
+
+            gettingStartedTouchStartX = touch.clientX;
+            gettingStartedTouchStartY = touch.clientY;
+            gettingStartedTouchMoved = false;
+        }, { passive: true });
+        gettingStartedButton.addEventListener('touchmove', (e) => {
+            const touch = e.touches && e.touches[0];
+            if (!touch || gettingStartedTouchMoved) {
+                return;
+            }
+
+            const deltaX = Math.abs(touch.clientX - gettingStartedTouchStartX);
+            const deltaY = Math.abs(touch.clientY - gettingStartedTouchStartY);
+
+            if (deltaX > TOUCH_TAP_SLOP || deltaY > TOUCH_TAP_SLOP) {
+                gettingStartedTouchMoved = true;
+                gettingStartedButton.blur();
+            }
+        }, { passive: true });
         gettingStartedButton.addEventListener('touchend', (e) => {
+            if (gettingStartedTouchMoved) {
+                gettingStartedTouchMoved = false;
+                gettingStartedButton.blur();
+                return;
+            }
+
             e.preventDefault();
             e.stopPropagation();
             runAfterPressIn(gettingStartedButton, () => {
@@ -821,6 +857,10 @@ export function initializeEventHandlers() {
                 gettingStartedButton.blur();
             });
         }, { passive: false });
+        gettingStartedButton.addEventListener('touchcancel', () => {
+            gettingStartedTouchMoved = false;
+            gettingStartedButton.blur();
+        }, { passive: true });
     }
 
     // Close settings button

@@ -758,6 +758,21 @@ export const helpModal = `
                                     from the app forever.</p>
                             </div>
 
+                            <div class="mt-4 p-2 rounded" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #60a5fa;"><i
+                                        class="fas fa-play-circle mr-2"></i>Rewarded Ads</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                                    LMSA may also offer optional rewarded ads. When available, you can choose to watch
+                                    one to temporarily unlock Premium access without making a purchase.
+                                </p>
+                                <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
+                                    <li><strong>Optional:</strong> Rewarded ads are never required to use LMSA</li>
+                                    <li><strong>Temporary Premium access:</strong> Completing a rewarded ad grants a limited Premium session</li>
+                                    <li><strong>Availability can vary:</strong> Rewarded ads may not always be available depending on ad inventory, region, connectivity, or device state</li>
+                                    <li><strong>Best effort delivery:</strong> Premium access is only applied after the ad is fully completed and confirmed by the ad provider</li>
+                                </ul>
+                            </div>
+
                             <div id="section-legacy-access" class="mt-4 p-2 rounded"
                                 style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #22c55e;"><i
