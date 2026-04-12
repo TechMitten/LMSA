@@ -2323,22 +2323,10 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
   box-sizing: border-box;
 }
 
-.modal-container.input-modal-keyboard-visible {
-  justify-content: center !important;
-  align-items: flex-end !important;
-  padding: max(8px, env(safe-area-inset-top)) 12px 8px !important;
-  overflow: hidden;
-}
-
 .modal-container.input-modal-keyboard-visible .connection-input-modal-box {
-  width: min(420px, calc(100vw - 24px));
-  max-width: 100%;
-  max-height: calc(100% - 16px) !important;
-  margin: 0 auto !important;
-}
-
-.modal-container.input-modal-focused .connection-input-modal-box {
-  scroll-margin-top: 12px;
+  /* max-height is set in px by JS — this is just a fallback */
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Coloured accent bar along the top edge */

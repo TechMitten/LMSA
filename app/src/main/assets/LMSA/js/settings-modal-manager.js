@@ -1442,156 +1442,55 @@ function initializeConnectionInputModals() {
             return null;
         }
 
-        let keyboardVisible = false;
         let resizeTimeout = null;
-        let focusTimeout = null;
-        let baselineHeight = 0;
+        // Capture baseline before any keyboard opens
+        let baselineHeight = window.innerHeight;
 
-        const getViewportMetrics = () => {
-            if (window.visualViewport) {
-                return {
-                    height: window.visualViewport.height,
-                    offsetTop: window.visualViewport.offsetTop || 0
-                };
+        const applyKeyboardLayout = () => {
+            const currentHeight = window.innerHeight;
+            const dropped = baselineHeight - currentHeight;
+
+            if (dropped > 100) {
+                // Keyboard is open. Constrain the box so it stays above the keyboard.
+                // The overlay (position:fixed; inset:0) already resizes with adjustResize,
+                // but vh units on the box do not — so we override with a pixel value.
+                const safeBoxHeight = Math.max(currentHeight - 48, 200);
+                box.style.maxHeight = `${safeBoxHeight}px`;
+                box.style.overflowY = 'auto';
+                modal.classList.add('input-modal-keyboard-visible');
+            } else {
+                // Keyboard closed — restore.
+                box.style.removeProperty('max-height');
+                box.style.removeProperty('overflow-y');
+                modal.classList.remove('input-modal-keyboard-visible');
+                // Keep baseline up to date (handles rotation / initial load).
+                baselineHeight = Math.max(baselineHeight, currentHeight);
             }
-
-            return {
-                height: window.innerHeight,
-                offsetTop: 0
-            };
         };
 
-        const updateBaselineHeight = () => {
-            const { height } = getViewportMetrics();
-            baselineHeight = Math.max(baselineHeight, height);
-        };
-
-        updateBaselineHeight();
-
-        const resetKeyboardLayout = () => {
-            keyboardVisible = false;
-            modal.classList.remove('input-modal-keyboard-visible');
-            modal.classList.remove('input-modal-focused');
-            modal.style.removeProperty('justify-content');
-            modal.style.removeProperty('align-items');
-            modal.style.removeProperty('top');
-            modal.style.removeProperty('bottom');
-            modal.style.removeProperty('height');
-            modal.style.removeProperty('padding-top');
-            modal.style.removeProperty('padding-bottom');
-            modal.style.removeProperty('overflow-y');
-            box.style.removeProperty('max-height');
-            box.style.removeProperty('margin-top');
-            box.style.removeProperty('margin-bottom');
-        };
-
-        const syncFocusedInputIntoView = () => {
-            const activeElement = document.activeElement;
-            if (!(activeElement instanceof HTMLElement) || !modal.contains(activeElement)) {
-                return;
-            }
-
-            if (focusTimeout) {
-                clearTimeout(focusTimeout);
-            }
-
-            focusTimeout = setTimeout(() => {
-                activeElement.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
-            }, 90);
-        };
-
-        const handleViewportChange = () => {
+        const handleResize = () => {
             if (resizeTimeout) {
                 clearTimeout(resizeTimeout);
             }
-
-            resizeTimeout = setTimeout(() => {
-                const { height: currentHeight, offsetTop } = getViewportMetrics();
-                const visibleBottom = offsetTop + currentHeight;
-                const keyboardHeight = Math.max(0, baselineHeight - visibleBottom);
-                const hasFocusedInput = modal.contains(document.activeElement);
-                const shouldShowKeyboardLayout = keyboardHeight > 80 || (hasFocusedInput && currentHeight < baselineHeight - 40);
-
-                if (shouldShowKeyboardLayout) {
-                    keyboardVisible = true;
-                    modal.classList.add('input-modal-keyboard-visible');
-                    if (hasFocusedInput) {
-                        modal.classList.add('input-modal-focused');
-                    }
-
-                    modal.style.justifyContent = 'center';
-                    modal.style.alignItems = 'flex-end';
-                    modal.style.top = `${Math.max(offsetTop, 0)}px`;
-                    modal.style.bottom = 'auto';
-                    modal.style.height = `${Math.max(currentHeight, 220)}px`;
-                    modal.style.paddingTop = '8px';
-                    modal.style.paddingBottom = '8px';
-                    modal.style.overflowY = 'hidden';
-                    box.style.marginTop = '0';
-                    box.style.marginBottom = '0';
-                    box.style.maxHeight = `${Math.max(currentHeight - 16, 220)}px`;
-                    syncFocusedInputIntoView();
-                    return;
-                }
-
-                if (keyboardVisible) {
-                    resetKeyboardLayout();
-                }
-
-                updateBaselineHeight();
-            }, 60);
+            resizeTimeout = setTimeout(applyKeyboardLayout, 60);
         };
 
-        const handleFocusIn = (event) => {
-            if (!(event.target instanceof HTMLElement) || !modal.contains(event.target)) {
-                return;
-            }
-
-            modal.classList.add('input-modal-focused');
-            handleViewportChange();
-            syncFocusedInputIntoView();
-        };
-
-        const handleFocusOut = () => {
-            const nextActive = document.activeElement;
-            if (nextActive instanceof HTMLElement && modal.contains(nextActive)) {
-                return;
-            }
-
-            modal.classList.remove('input-modal-focused');
-            handleViewportChange();
-        };
-
+        window.addEventListener('resize', handleResize, { passive: true });
         if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', handleViewportChange);
-            window.visualViewport.addEventListener('scroll', handleViewportChange);
-        } else {
-            window.addEventListener('resize', handleViewportChange);
+            window.visualViewport.addEventListener('resize', handleResize, { passive: true });
         }
-
-        modal.addEventListener('focusin', handleFocusIn);
-        modal.addEventListener('focusout', handleFocusOut);
 
         return () => {
             if (resizeTimeout) {
                 clearTimeout(resizeTimeout);
             }
-
-            if (focusTimeout) {
-                clearTimeout(focusTimeout);
-            }
-
+            window.removeEventListener('resize', handleResize);
             if (window.visualViewport) {
-                window.visualViewport.removeEventListener('resize', handleViewportChange);
-                window.visualViewport.removeEventListener('scroll', handleViewportChange);
-            } else {
-                window.removeEventListener('resize', handleViewportChange);
+                window.visualViewport.removeEventListener('resize', handleResize);
             }
-
-            modal.removeEventListener('focusin', handleFocusIn);
-            modal.removeEventListener('focusout', handleFocusOut);
-
-            resetKeyboardLayout();
+            box.style.removeProperty('max-height');
+            box.style.removeProperty('overflow-y');
+            modal.classList.remove('input-modal-keyboard-visible');
         };
     }
 
