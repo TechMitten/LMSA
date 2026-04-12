@@ -61,6 +61,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.google.android.play.core.review.ReviewManagerFactory
+import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
@@ -71,6 +72,8 @@ import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.nativead.NativeAdView
 import com.google.android.gms.ads.nativead.MediaView
+import com.google.android.gms.ads.rewarded.RewardedAd
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import android.widget.ImageView
 import android.widget.TextView
 
@@ -89,9 +92,15 @@ class WebViewActivity : AppCompatActivity() {
     private var isImageFile: Boolean = false
     
     private var nativeAd: NativeAd? = null
+    private var rewardedAd: RewardedAd? = null
     private var lastAdLoadTime: Long = 0L
+    private var rewardedPremiumExpiresAt: Long = 0L
+    private var isRewardedAdLoading = false
+    private var rewardedAdEarnedReward = false
     private val NATIVE_AD_UNIT_ID = "ca-app-pub-1388425042154340/5848689323"
     private val TEST_NATIVE_AD_UNIT_ID = "ca-app-pub-3940256099942544/2247696110"
+    private val REWARDED_AD_UNIT_ID = "ca-app-pub-1388425042154340/9302110299"
+    private val TEST_REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
 
 
 
@@ -126,11 +135,15 @@ class WebViewActivity : AppCompatActivity() {
     private val PRODUCT_ID = "ad_removal"
     private val PREFS_NAME = "LMSA_PREFS"
     private val PREF_IS_PREMIUM = "is_premium"
+    private val PREF_REWARDED_PREMIUM_EXPIRES_AT = "rewarded_premium_expires_at"
     private val PREF_ONBOARDING_COMPLETED = "onboarding_completed"
+    private val REWARDED_PREMIUM_DURATION_MS = 5 * 60 * 1000L
     private var isPremium = false
     private var isDebugMode = false
     private var biometricPromptShowing = false
     private var shouldRequireBiometricReentryOnResume = false
+    private val premiumExpiryHandler = Handler(Looper.getMainLooper())
+    private var premiumExpiryRunnable: Runnable? = null
 
     private val purchasesUpdatedListener = PurchasesUpdatedListener { billingResult, purchases ->
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
@@ -203,8 +216,11 @@ class WebViewActivity : AppCompatActivity() {
         // Check if premium before loading ads
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         isPremium = prefs.getBoolean(PREF_IS_PREMIUM, false)
+        rewardedPremiumExpiresAt = getStoredRewardedPremiumExpiry()
+        scheduleRewardedPremiumExpiryCheck()
         
         updatePremiumUiState()
+        loadRewardedAd()
 
 
 
@@ -472,7 +488,7 @@ class WebViewActivity : AppCompatActivity() {
                 filePathCallbackIn: ValueCallback<Array<Uri>>?,
                 fileChooserParams: FileChooserParams?
             ): Boolean {
-                val effectivePremium = isPremium && !isDebugMode
+                val effectivePremium = hasEffectivePremium()
                 if (!effectivePremium) {
                     filePathCallbackIn?.onReceiveValue(null)
                     webView?.post {
@@ -569,11 +585,161 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun updatePremiumUiState() {
         runOnUiThread {
-            val effectivePremium = isPremium && !isDebugMode
+            val effectivePremium = hasEffectivePremium()
+            val hasRewardedPremium = hasActiveRewardedPremium()
+            val rewardedPremiumRemainingMs =
+                if (hasRewardedPremium) (rewardedPremiumExpiresAt - System.currentTimeMillis()).coerceAtLeast(0L) else 0L
             val webView: WebView = findViewById(R.id.webView)
 
-            val jsCommand = "if(typeof updateUiForPremium === 'function') { updateUiForPremium($effectivePremium); }"
+            if (effectivePremium) {
+                hideNativeAd()
+            } else {
+                loadRewardedAd()
+            }
+
+            val jsCommand = "if(typeof updateUiForPremium === 'function') { updateUiForPremium($effectivePremium, $hasRewardedPremium, $rewardedPremiumRemainingMs); }"
             webView.evaluateJavascript(jsCommand, null)
+        }
+    }
+
+    private fun hasActiveRewardedPremium(now: Long = System.currentTimeMillis()): Boolean {
+        return rewardedPremiumExpiresAt > now
+    }
+
+    private fun hasEffectivePremium(now: Long = System.currentTimeMillis()): Boolean {
+        if (isDebugMode) return false
+        return isPremium || hasActiveRewardedPremium(now)
+    }
+
+    private fun getStoredRewardedPremiumExpiry(): Long {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val storedExpiry = prefs.getLong(PREF_REWARDED_PREMIUM_EXPIRES_AT, 0L)
+        if (storedExpiry <= 0L) {
+            return 0L
+        }
+
+        val now = System.currentTimeMillis()
+        if (storedExpiry <= now) {
+            prefs.edit().remove(PREF_REWARDED_PREMIUM_EXPIRES_AT).apply()
+            return 0L
+        }
+
+        return storedExpiry
+    }
+
+    private fun scheduleRewardedPremiumExpiryCheck() {
+        premiumExpiryRunnable?.let { premiumExpiryHandler.removeCallbacks(it) }
+        premiumExpiryRunnable = null
+
+        if (!hasActiveRewardedPremium()) {
+            return
+        }
+
+        val delayMs = (rewardedPremiumExpiresAt - System.currentTimeMillis()).coerceAtLeast(0L)
+        premiumExpiryRunnable = Runnable {
+            if (!hasActiveRewardedPremium()) {
+                clearRewardedPremiumSession(updateUi = true)
+            } else {
+                scheduleRewardedPremiumExpiryCheck()
+            }
+        }
+        premiumExpiryHandler.postDelayed(premiumExpiryRunnable!!, delayMs)
+    }
+
+    private fun clearRewardedPremiumSession(updateUi: Boolean) {
+        rewardedPremiumExpiresAt = 0L
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        prefs.edit().remove(PREF_REWARDED_PREMIUM_EXPIRES_AT).apply()
+        premiumExpiryRunnable?.let { premiumExpiryHandler.removeCallbacks(it) }
+        premiumExpiryRunnable = null
+
+        if (updateUi) {
+            updatePremiumUiState()
+        }
+    }
+
+    private fun grantRewardedPremiumSession() {
+        val now = System.currentTimeMillis()
+        rewardedPremiumExpiresAt = maxOf(now, rewardedPremiumExpiresAt) + REWARDED_PREMIUM_DURATION_MS
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        prefs.edit().putLong(PREF_REWARDED_PREMIUM_EXPIRES_AT, rewardedPremiumExpiresAt).apply()
+        scheduleRewardedPremiumExpiryCheck()
+        updatePremiumUiState()
+    }
+
+    private fun loadRewardedAd() {
+        if (hasEffectivePremium() || rewardedAd != null || isRewardedAdLoading) return
+
+        val adUnitId = if (isDebugMode || BuildConfig.DEBUG) TEST_REWARDED_AD_UNIT_ID else REWARDED_AD_UNIT_ID
+        isRewardedAdLoading = true
+
+        RewardedAd.load(
+            this,
+            adUnitId,
+            AdRequest.Builder().build(),
+            object : RewardedAdLoadCallback() {
+                override fun onAdLoaded(ad: RewardedAd) {
+                    isRewardedAdLoading = false
+                    rewardedAd = ad
+                    Log.d(TAG, "Rewarded ad loaded")
+                }
+
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    isRewardedAdLoading = false
+                    rewardedAd = null
+                    Log.e(TAG, "Rewarded ad failed to load: ${adError.message}")
+                }
+            }
+        )
+    }
+
+    private fun showRewardedPremiumAd() {
+        if (hasEffectivePremium()) {
+            val message = if (isPremium) {
+                "You already have Premium!"
+            } else {
+                "Your 5-minute Premium access is already active."
+            }
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val ad = rewardedAd
+        if (ad == null) {
+            loadRewardedAd()
+            Toast.makeText(this, "Rewarded ad is loading. Please try again in a moment.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        rewardedAd = null
+        rewardedAdEarnedReward = false
+        ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdDismissedFullScreenContent() {
+                if (rewardedAdEarnedReward) {
+                    Toast.makeText(
+                        this@WebViewActivity,
+                        "Premium unlocked for 5 minutes.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                loadRewardedAd()
+            }
+
+            override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                Log.e(TAG, "Rewarded ad failed to show: ${adError.message}")
+                Toast.makeText(
+                    this@WebViewActivity,
+                    "Unable to show rewarded ad right now.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                rewardedAd = null
+                loadRewardedAd()
+            }
+        }
+
+        ad.show(this) { _ ->
+            rewardedAdEarnedReward = true
+            grantRewardedPremiumSession()
         }
     }
 
@@ -641,7 +807,7 @@ class WebViewActivity : AppCompatActivity() {
 
 
     private fun loadNativeAd() {
-        val effectivePremium = isPremium && !isDebugMode
+        val effectivePremium = hasEffectivePremium()
         if (effectivePremium) return
 
         val adUnitId = if (isDebugMode || BuildConfig.DEBUG) TEST_NATIVE_AD_UNIT_ID else NATIVE_AD_UNIT_ID
@@ -730,6 +896,11 @@ class WebViewActivity : AppCompatActivity() {
         val adContainer = findViewById<FrameLayout>(R.id.nativeAdContainer)
         adContainer.removeAllViews()
         adContainer.addView(adView)
+    }
+
+    private fun hideNativeAd() {
+        val adContainer = findViewById<FrameLayout>(R.id.nativeAdContainer)
+        adContainer.visibility = View.GONE
     }
 
     private fun checkAndRequestStoragePermissions() {
@@ -824,6 +995,9 @@ class WebViewActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         hideSystemBars()
+        rewardedPremiumExpiresAt = getStoredRewardedPremiumExpiry()
+        scheduleRewardedPremiumExpiryCheck()
+        updatePremiumUiState()
         val webView: WebView = findViewById(R.id.webView)
         webView.onResume()
         // Android may kill the TTS engine service while the app is in the background.
@@ -849,6 +1023,8 @@ class WebViewActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         nativeAd?.destroy()
+        premiumExpiryRunnable?.let { premiumExpiryHandler.removeCallbacks(it) }
+        rewardedAd = null
 
         textToSpeech?.shutdown()
         textToSpeech = null
@@ -1309,10 +1485,17 @@ class WebViewActivity : AppCompatActivity() {
             }
             queryPurchases()
         }
+
+        @JavascriptInterface
+        fun showRewardedPremiumAd() {
+            runOnUiThread {
+                this@WebViewActivity.showRewardedPremiumAd()
+            }
+        }
         
         @JavascriptInterface
         fun checkPremiumStatus(): Boolean {
-            return isPremium && !isDebugMode
+            return hasEffectivePremium()
         }
 
         @JavascriptInterface
@@ -1332,13 +1515,16 @@ class WebViewActivity : AppCompatActivity() {
                 Toast.makeText(this@WebViewActivity, "Debug Mode: ${if(enable) "Enabled" else "Disabled"}", Toast.LENGTH_SHORT).show()
             }
             updatePremiumUiState()
+            if (!enable) {
+                loadRewardedAd()
+            }
         }
 
         
 @JavascriptInterface
         fun updateNativeAdPosition(left: Int, top: Int, width: Int, height: Int) {
             runOnUiThread {
-                val effectivePremium = isPremium && !isDebugMode
+                val effectivePremium = hasEffectivePremium()
                 if (effectivePremium) {
                     hideNativeAd()
                     return@runOnUiThread
@@ -1367,8 +1553,7 @@ class WebViewActivity : AppCompatActivity() {
         @JavascriptInterface
         fun hideNativeAd() {
             runOnUiThread {
-                val adContainer = findViewById<FrameLayout>(R.id.nativeAdContainer)
-                adContainer.visibility = View.GONE
+                this@WebViewActivity.hideNativeAd()
             }
         }
     }
@@ -1379,7 +1564,7 @@ class WebViewActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun canSendCompletion(): Boolean {
-            if (isPremium && !isDebugMode) return true
+            if (hasEffectivePremium()) return true
             val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
             val storedDate = prefs.getString("lmsa_completion_date", "") ?: ""
             val count = prefs.getInt("lmsa_completion_count", 0)
@@ -1396,6 +1581,7 @@ class WebViewActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun recordCompletion() {
+            if (hasEffectivePremium()) return
             val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
             val todayStr = today()
             val storedDate = prefs.getString("lmsa_completion_date", "") ?: ""
@@ -1410,7 +1596,7 @@ class WebViewActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun canSendOpenRouterCompletion(): Boolean {
-            if (isPremium && !isDebugMode) return true
+            if (hasEffectivePremium()) return true
             val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
             val storedDate = prefs.getString("lmsa_openrouter_date", "") ?: ""
             val count = prefs.getInt("lmsa_openrouter_count", 0)
@@ -1427,6 +1613,7 @@ class WebViewActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun recordOpenRouterCompletion() {
+            if (hasEffectivePremium()) return
             val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
             val todayStr = today()
             val storedDate = prefs.getString("lmsa_openrouter_date", "") ?: ""

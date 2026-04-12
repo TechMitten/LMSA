@@ -6,6 +6,15 @@ function removeAds() {
     }
 }
 
+function watchRewardedPremiumAd() {
+    if (window.AndroidBilling && typeof window.AndroidBilling.showRewardedPremiumAd === 'function') {
+        window.AndroidBilling.showRewardedPremiumAd();
+    } else {
+        console.log('Rewarded ad interface not available.');
+        alert('Rewarded ads are only available in the Android app.');
+    }
+}
+
 function restorePurchases() {
     // Check if the AndroidBilling interface is available
     if (window.AndroidBilling && typeof window.AndroidBilling.restorePurchases === 'function') {
@@ -20,11 +29,25 @@ function restorePurchases() {
 }
 
 // Updated UI function to manage premium status
-function updateUiForPremium(isPremium) {
+function formatRewardedPremiumRemaining(ms) {
+    const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
+}
+
+function stopRewardedPremiumCountdown() {
+    if (window._rewardedPremiumCountdownInterval) {
+        clearInterval(window._rewardedPremiumCountdownInterval);
+        window._rewardedPremiumCountdownInterval = null;
+    }
+}
+
+function updateUiForPremium(isPremium, hasRewardedPremium = false, rewardedPremiumRemainingMs = 0) {
     console.log('Premium status updated:', isPremium);
     const removeAdsBtn = document.getElementById('remove-ads-button');
     if (removeAdsBtn) {
-        removeAdsBtn.style.display = isPremium ? 'none' : 'block';
+        removeAdsBtn.style.display = isPremium && !hasRewardedPremium ? 'none' : 'block';
     }
 
     // Hide the Remove Ads banner for premium users
@@ -33,6 +56,40 @@ function updateUiForPremium(isPremium) {
         removeAdsBanner.style.display = isPremium ? 'none' : 'flex';
     }
 
+    const rewardedPremiumButton = document.getElementById('rewarded-premium-button');
+    if (rewardedPremiumButton) {
+        rewardedPremiumButton.style.display = isPremium ? 'none' : 'block';
+    }
+
+    const rewardedPremiumStatus = document.getElementById('rewarded-premium-status');
+    const rewardedPremiumStatusText = document.getElementById('rewarded-premium-status-text');
+    stopRewardedPremiumCountdown();
+
+    if (rewardedPremiumStatus && rewardedPremiumStatusText) {
+        if (hasRewardedPremium && rewardedPremiumRemainingMs > 0) {
+            const rewardEndsAt = Date.now() + rewardedPremiumRemainingMs;
+            rewardedPremiumStatus.classList.remove('hidden');
+
+            const renderRemaining = () => {
+                const remainingMs = rewardEndsAt - Date.now();
+                if (remainingMs <= 0) {
+                    rewardedPremiumStatus.classList.add('hidden');
+                    if (rewardedPremiumButton) {
+                        rewardedPremiumButton.style.display = 'block';
+                    }
+                    stopRewardedPremiumCountdown();
+                    return;
+                }
+
+                rewardedPremiumStatusText.textContent = `Premium active: ${formatRewardedPremiumRemaining(remainingMs)} left`;
+            };
+
+            renderRemaining();
+            window._rewardedPremiumCountdownInterval = setInterval(renderRemaining, 1000);
+        } else {
+            rewardedPremiumStatus.classList.add('hidden');
+        }
+    }
 }
 
 /**

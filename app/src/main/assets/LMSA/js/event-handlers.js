@@ -279,6 +279,28 @@ export function initializeEventHandlers() {
         }, { passive: false });
     }
 
+    const rewardedPremiumButton = document.getElementById('rewarded-premium-button');
+    if (rewardedPremiumButton) {
+        bindPressInFeedback(rewardedPremiumButton);
+
+        const openRewardedPremiumFlow = () => {
+            closeSidebar();
+            if (typeof window.watchRewardedPremiumAd === 'function') {
+                window.watchRewardedPremiumAd();
+            }
+        };
+
+        rewardedPremiumButton.addEventListener('click', openRewardedPremiumFlow);
+        rewardedPremiumButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            runAfterPressIn(rewardedPremiumButton, () => {
+                openRewardedPremiumFlow();
+                rewardedPremiumButton.blur();
+            });
+        }, { passive: false });
+    }
+
     // Welcome "Saved" button (previously used inline onclick)
     const welcomeNewChatBtn = document.getElementById('welcome-new-chat-btn');
     if (welcomeNewChatBtn) {
