@@ -313,69 +313,68 @@
                     <div id="welcome-message" class="absolute inset-0 flex items-center justify-center text-center"
                         style="transform: none !important; left: 0; right: 0; color: var(--text-muted);">
                         <div class="welcome-content glass-card p-8 sm:p-10 max-w-md mx-auto">
-                            <div class="relative mx-auto mb-4 sm:mb-6 mt-2 flex items-center justify-center icon-container"
-                                style="width: 5.5rem; height: 5.5rem; min-height: 5rem; min-width: 5rem; padding: 0.75rem;">
-                                <img src="icon.png" alt="LMSA Icon" class="relative z-10 object-contain"
-                                    style="width: 3.5rem; height: 3.5rem; max-width: 75%; max-height: 75%;">
-                                <div
-                                    class="hidden">
+                            <div class="welcome-content-inner">
+                                <div class="relative mx-auto mb-4 sm:mb-6 mt-2 flex items-center justify-center icon-container"
+                                    style="width: 5.5rem; height: 5.5rem; min-height: 5rem; min-width: 5rem; padding: 0.75rem;">
+                                    <img src="icon.png" alt="LMSA Icon" class="relative z-10 object-contain"
+                                        style="width: 3.5rem; height: 3.5rem; max-width: 75%; max-height: 75%;">
+                                    <div
+                                        class="hidden">
+                                    </div>
+                                    <div
+                                        class="hidden">
+                                    </div>
+                                    <div
+                                        class="hidden">
+                                    </div>
                                 </div>
-                                <div
-                                    class="hidden">
-                                </div>
-                                <div
-                                    class="hidden">
+
+                                <h1 class="text-xl sm:text-2xl font-bold mb-2 tracking-tight header-title">Local Model
+                                    Server Access</h1>
+                                <p class="mb-5 sm:mb-7 opacity-90 leading-relaxed text-sm sm:text-base">
+                                    Ollama & LM Studio Android Remote
+                                </p>
+
+                                <div class="mb-8">
+                                    <div class="grid grid-cols-2 gap-3 w-full mb-3">
+                                        <!-- Settings Button - Professional styling -->
+                                        <button id="get-started-btn"
+                                            class="professional-button flex items-center justify-center gap-3 w-full h-12"
+                                            style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
+                                            <span>Settings</span>
+                                        </button>
+                                        <!-- Models Button - Professional styling -->
+                                        <button id="welcome-models-btn"
+                                            class="professional-button flex items-center justify-center gap-3 w-full h-12"
+                                            style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
+                                            <span>Models</span>
+                                        </button>
+                                        <!-- Templates Button - Professional styling -->
+                                        <button id="welcome-templates-btn"
+                                            class="professional-button flex items-center justify-center gap-3 w-full h-12"
+                                            style="border: 2px solid rgba(16, 185, 129, 0.45) !important;"
+                                            onclick="window.location.href='templates.html'">
+                                            <span>Templates</span>
+                                        </button>
+                                        <!-- Help Button - Professional styling -->
+                                        <button id="welcome-help-btn"
+                                            class="professional-button flex items-center justify-center gap-2 w-full h-12"
+                                            style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
+                                            <span>Help</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Premium Button - Professional styling -->
+                                    <div id="remove-ads-banner" class="w-full">
+                                        <button id="remove-ads-banner-button"
+                                            class="professional-button flex items-center justify-center gap-2 w-full h-12"
+                                            style="border: 2px solid rgba(59, 130, 246, 0.45) !important;">
+                                            <i class="fas fa-crown" style="color: #fbbf24;"></i>
+                                            <span>Premium</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-
-                            <h1 class="text-xl sm:text-2xl font-bold mb-2 tracking-tight header-title">Local Model
-                                Server Access</h1>
-                            <p class="mb-5 sm:mb-7 opacity-90 leading-relaxed text-sm sm:text-base">
-                                Ollama & LM Studio Android Remote
-                            </p>
-
-                            <div class="mb-8">
-                                <div class="grid grid-cols-2 gap-3 w-full mb-3">
-                                    <!-- Settings Button - Professional styling -->
-                                    <button id="get-started-btn"
-                                        class="professional-button flex items-center justify-center gap-3 w-full h-12"
-                                        style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
-                                        <span>Settings</span>
-                                    </button>
-                                    <!-- Models Button - Professional styling -->
-                                    <button id="welcome-models-btn"
-                                        class="professional-button flex items-center justify-center gap-3 w-full h-12"
-                                        style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
-                                        <span>Models</span>
-                                    </button>
-                                    <!-- Templates Button - Professional styling -->
-                                    <button id="welcome-templates-btn"
-                                        class="professional-button flex items-center justify-center gap-3 w-full h-12"
-                                        style="border: 2px solid rgba(16, 185, 129, 0.45) !important;"
-                                        onclick="window.location.href='templates.html'">
-                                        <span>Templates</span>
-                                    </button>
-                                    <!-- Help Button - Professional styling -->
-                                    <button id="welcome-help-btn"
-                                        class="professional-button flex items-center justify-center gap-2 w-full h-12"
-                                        style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
-                                        <span>Help</span>
-                                    </button>
-                                </div>
-
-                                <!-- Premium Button - Professional styling -->
-                                <div id="remove-ads-banner" class="w-full">
-                                    <button id="remove-ads-banner-button"
-                                        class="professional-button flex items-center justify-center gap-2 w-full h-12"
-                                        style="border: 2px solid rgba(59, 130, 246, 0.45) !important;">
-                                        <i class="fas fa-crown" style="color: #fbbf24;"></i>
-                                        <span>Premium</span>
-                                    </button>
-                                </div>
-                                
-                            </div>
-
-
                         </div>
                     </div>
                     <div id="messages" class="flex-1"></div>

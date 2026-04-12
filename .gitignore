@@ -24,3 +24,6 @@ app/build/
 
 # JDK setup directory (large binary files)
 jdk_setup/
+
+# Local Gradle user home and caches
+.gradle-user-home/

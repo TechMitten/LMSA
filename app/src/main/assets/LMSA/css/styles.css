@@ -4565,7 +4565,7 @@ span.visible-content {
 
 /* Message controls container */
 .message-controls {
-    opacity: 0;
+    opacity: 0.6;
     display: flex;
     justify-content: flex-end;
     margin-top: 8px;
@@ -5185,8 +5185,11 @@ body.light-theme .regenerate-btn:hover {
     }
 }
 
-/* User message show controls on hover */
-.user:hover .message-controls {
+/* Reveal bubble controls on desktop hover/focus for both user and AI messages */
+.user:hover .message-controls,
+.ai:hover .message-controls,
+.user:focus-within .message-controls,
+.ai:focus-within .message-controls {
     opacity: 1;
 }
 

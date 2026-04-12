@@ -2,20 +2,21 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
+    android:background="@android:color/black"
     tools:context=".WebViewActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@android:color/black">
 
         <WebView
             android:id="@+id/webView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:fitsSystemWindows="true"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toTopOf="@+id/bottomSpacer"
             app:layout_constraintStart_toStartOf="parent"
@@ -33,6 +34,7 @@
             android:id="@+id/bottomSpacer"
             android:layout_width="match_parent"
             android:layout_height="1dp"
+            android:background="@android:color/black"
             android:visibility="invisible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"

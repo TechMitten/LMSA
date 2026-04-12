@@ -15,6 +15,7 @@ import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.graphics.Rect
+import android.graphics.Color
 import android.view.HapticFeedbackConstants
 import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
@@ -45,6 +46,10 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
@@ -146,7 +151,10 @@ class WebViewActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        window.statusBarColor = Color.TRANSPARENT
+        hideSystemBars()
         setContentView(R.layout.activity_webview)
+        applySystemBarInsets()
 
         // Set up global exception handler to catch ad-related crashes
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
@@ -462,6 +470,18 @@ class WebViewActivity : AppCompatActivity() {
                 filePathCallbackIn: ValueCallback<Array<Uri>>?,
                 fileChooserParams: FileChooserParams?
             ): Boolean {
+                val effectivePremium = isPremium && !isDebugMode
+                if (!effectivePremium) {
+                    filePathCallbackIn?.onReceiveValue(null)
+                    webView?.post {
+                        webView.evaluateJavascript(
+                            "if (typeof window.openPremiumModal === 'function') { window.openPremiumModal('File Attachments'); }",
+                            null
+                        )
+                    }
+                    return false
+                }
+
                 if (filePathCallback != null) {
                     filePathCallback!!.onReceiveValue(null)
                     filePathCallback = null
@@ -577,56 +597,44 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun hideSystemBars() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-            window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // For Android 11 (API level 30) and above
-            window.setDecorFitsSystemWindows(false)
-            window.insetsController?.let { controller ->
-                // Hide all system bar types for maximum full screen
-                controller.hide(android.view.WindowInsets.Type.systemBars())
-                controller.hide(android.view.WindowInsets.Type.statusBars())
-                controller.hide(android.view.WindowInsets.Type.navigationBars())
-                // Set behavior to show transient bars on swipe
-                controller.systemBarsBehavior = android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            window.attributes = window.attributes.apply {
+                layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
-        } else {
-            // For Android 10 (API level 29) and below
-            @Suppress("DEPRECATION")
-            val decorView = window.decorView
-            @Suppress("DEPRECATION")
-            decorView.systemUiVisibility = (
-                android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
-                or android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                or android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                or android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                or android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-            )
         }
+
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.hide(WindowInsetsCompat.Type.statusBars())
     }
 
     private fun showSystemBars() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.setDecorFitsSystemWindows(true)
-            window.insetsController?.let { controller ->
-                controller.show(android.view.WindowInsets.Type.systemBars())
-                controller.show(android.view.WindowInsets.Type.statusBars())
-                controller.show(android.view.WindowInsets.Type.navigationBars())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes = window.attributes.apply {
+                layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
             }
-        } else {
-            @Suppress("DEPRECATION")
-            val decorView = window.decorView
-            @Suppress("DEPRECATION")
-            decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         }
 
-        // Clear fullscreen flags
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
-            window.clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+        WindowCompat.getInsetsController(window, window.decorView)
+            .show(WindowInsetsCompat.Type.statusBars())
+    }
+
+    private fun applySystemBarInsets() {
+        val rootContainer = findViewById<View>(R.id.rootContainer)
+        val bottomSpacer = findViewById<View>(R.id.bottomSpacer)
+
+        ViewCompat.setOnApplyWindowInsetsListener(rootContainer) { _, insets ->
+            val navigationInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            val targetHeight = navigationInsets.bottom.coerceAtLeast(1)
+
+            if (bottomSpacer.layoutParams.height != targetHeight) {
+                bottomSpacer.layoutParams = bottomSpacer.layoutParams.apply {
+                    height = targetHeight
+                }
+            }
+
+            insets
         }
+        ViewCompat.requestApplyInsets(rootContainer)
     }
 
 
@@ -805,6 +813,7 @@ class WebViewActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        hideSystemBars()
         val webView: WebView = findViewById(R.id.webView)
         webView.onResume()
         // Android may kill the TTS engine service while the app is in the background.
@@ -835,7 +844,9 @@ class WebViewActivity : AppCompatActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        // No longer using immersive mode, so don't hide system bars
+        if (hasFocus) {
+            hideSystemBars()
+        }
     }
 
     private fun isNetworkAvailable(): Boolean {

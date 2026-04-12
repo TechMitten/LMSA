@@ -1427,11 +1427,24 @@ export function initializeEventHandlers() {
     const paperclipButton = document.getElementById('paperclip-button');
     const fileUploadInput = document.getElementById('file-upload-input');
     if (paperclipButton && fileUploadInput) {
+        const openFileSelectorIfPremium = () => {
+            if (!isPremiumUser()) {
+                openPremiumModal('File Attachments');
+                return false;
+            }
+
+            fileUploadInput.click();
+            return true;
+        };
+
         // Click handler for desktop
         paperclipButton.addEventListener('click', (e) => {
             e.stopPropagation(); // Prevent event bubbling
-            fileUploadInput.click();
-            debugLog('Paperclip button clicked, opening file selector');
+            if (openFileSelectorIfPremium()) {
+                debugLog('Paperclip button clicked, opening file selector');
+            } else {
+                debugLog('Paperclip button clicked by non-premium user, opening premium modal');
+            }
 
             // Remove auto-scroll when clicking paperclip button
         });
@@ -1457,8 +1470,11 @@ export function initializeEventHandlers() {
 
             // Only trigger if we're still on the paperclip button or its children
             if (elementAtTouch === paperclipButton || paperclipButton.contains(elementAtTouch)) {
-                fileUploadInput.click();
-                debugLog('Paperclip button touched, opening file selector');
+                if (openFileSelectorIfPremium()) {
+                    debugLog('Paperclip button touched, opening file selector');
+                } else {
+                    debugLog('Paperclip button touched by non-premium user, opening premium modal');
+                }
             }
         }, { passive: false });
 
@@ -2918,7 +2934,8 @@ function deleteMessage(messageElement, messageElements, messageIndex) {
 
 /**
  * Handles click on the edit button for AI messages.
- * Allows the user to directly modify the AI response in-place (like LM Studio).
+ * Premium users can directly modify the AI response in-place (like LM Studio).
+ * Free users are shown the premium modal when they try to edit.
  * The edited content is saved to chat history without triggering regeneration.
  * @param {Event} e - The click event
  */
@@ -2938,6 +2955,11 @@ function handleAIEditButtonClick(e) {
 
     // Prevent editing while a generation is in progress
     if (isGeneratingText()) return;
+
+    if (!isPremiumUser()) {
+        openPremiumModal('AI Response Editing');
+        return;
+    }
 
     // Hide controls during editing
     controlsContainer.style.display = 'none';

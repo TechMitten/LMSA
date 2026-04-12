@@ -2316,6 +2316,21 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
   box-shadow:
     0 25px 50px -12px rgba(0, 0, 0, 0.55),
     0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  box-sizing: border-box;
+}
+
+.modal-container.input-modal-keyboard-visible {
+  justify-content: flex-end !important;
+  align-items: center !important;
+  padding: max(8px, env(safe-area-inset-top)) 12px 8px !important;
+  overflow-y: auto;
+}
+
+.modal-container.input-modal-keyboard-visible .connection-input-modal-box {
+  width: min(420px, 100%);
+  max-width: 100%;
+  max-height: calc(100% - 16px) !important;
+  margin: 0 !important;
 }
 
 /* Coloured accent bar along the top edge */
@@ -2500,6 +2515,14 @@ body.light-theme .openrouter-key-input-wrapper input {
     max-width: 96vw;
     max-height: 75vh;
     max-height: 75dvh;
+  }
+
+  .modal-container.input-modal-keyboard-visible {
+    padding: max(8px, env(safe-area-inset-top)) 8px 8px !important;
+  }
+
+  .modal-container.input-modal-keyboard-visible .connection-input-modal-box {
+    max-height: calc(100% - 16px) !important;
   }
 
   /* Increase button sizes slightly for easier tapping on mobile */

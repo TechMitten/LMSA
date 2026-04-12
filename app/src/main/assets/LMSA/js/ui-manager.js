@@ -1938,42 +1938,34 @@ export function ensureWelcomeMessagePosition() {
         welcomeMessage.style.bottom = '0';
         welcomeMessage.style.width = '100%';
         welcomeMessage.style.height = '100%';
+        welcomeMessage.style.boxSizing = 'border-box';
 
-        // Ensure proper alignment
+        // Center the welcome card within the chat container. Let CSS handle any
+        // responsive padding so edge-to-edge changes do not leave stale offsets.
         welcomeMessage.style.alignItems = 'center';
-        welcomeMessage.style.justifyContent = 'flex-start';
+        welcomeMessage.style.justifyContent = 'center';
         welcomeMessage.style.overflowY = 'auto';
         welcomeMessage.style.webkitOverflowScrolling = 'touch';
-
-        // Prevent unwanted scrolling but allow content to be visible
         welcomeMessage.style.overflowX = 'hidden';
-        welcomeMessage.style.paddingTop = '72px';
-        welcomeMessage.style.paddingBottom = '140px';
+        welcomeMessage.style.paddingTop = '';
+        welcomeMessage.style.paddingBottom = '';
 
-        // Handle dynamic top padding for the model banner (if visible)
-        const modelWrapper = document.getElementById('loaded-model-wrapper');
-        const isModelVisible = modelWrapper && modelWrapper.style.display !== 'none' && !modelWrapper.classList.contains('hidden');
-        if (isModelVisible) {
-            const modelHeight = modelWrapper.offsetHeight || 44;
-            welcomeMessage.style.paddingTop = `${modelHeight + 72}px`;
-        } else {
-            welcomeMessage.style.paddingTop = '72px';
-        }
-
-        // Apply robust layout to the content container
+        // Keep the card centered while still allowing it to size naturally.
         const welcomeContent = welcomeMessage.querySelector('.welcome-content');
         if (welcomeContent) {
-            // Using auto margin with flex-start parent is the most robust way to center content
-            // while allowing it to flow correctly when it exceeds the viewport height.
-            welcomeContent.style.margin = 'auto';
+            welcomeContent.style.margin = '';
             welcomeContent.style.position = 'relative';
             welcomeContent.style.zIndex = '5';
+            welcomeContent.style.alignItems = '';
+            welcomeContent.style.justifyContent = '';
+            welcomeContent.style.paddingTop = '';
+            welcomeContent.style.paddingBottom = '';
+            welcomeContent.style.transform = '';
 
-            // Ensure consistent icon spacing regardless of screen-specific hacks
             const iconContainer = welcomeContent.querySelector('.icon-container');
             if (iconContainer) {
-                iconContainer.style.marginTop = '1.5rem';
-                iconContainer.style.marginBottom = '1.25rem';
+                iconContainer.style.marginTop = '';
+                iconContainer.style.marginBottom = '';
                 iconContainer.style.position = 'relative';
                 iconContainer.style.zIndex = '10';
             }

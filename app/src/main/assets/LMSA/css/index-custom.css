@@ -1311,6 +1311,14 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
         font-size: 1rem !important;
     }
 
+    .welcome-content-inner {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transform: translateY(-1.75rem);
+    }
+
     #welcome-footer {
         margin-top: 1.75rem !important;
         padding-top: 1rem !important;
@@ -1443,8 +1451,18 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
         max-width: min(680px, calc(100vw - 40px)) !important;
     }
 
+    .welcome-content-inner {
+        transform: translateY(-1.5rem);
+    }
+
     .welcome-content > .grid.grid-cols-1 > #welcome-models-btn {
         grid-column: span 2 / span 2;
+    }
+}
+
+@media (max-width: 640px) {
+    .welcome-content-inner {
+        transform: translateY(-2.25rem);
     }
 }
 

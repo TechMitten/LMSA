@@ -2,7 +2,7 @@
 // This module centralizes all settings modal functionality
 
 import { settingsModal, getStartedBtn } from './dom-elements.js';
-import { debugLog, getDebugEnabled } from './utils.js';
+import { debugLog, getDebugEnabled, isAndroidWebView } from './utils.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { getApiUrl, getAvailableModels, isServerRunning, validateIpPort, saveServerSettings } from './api-service.js';
 import { showOpenRouterKeyRequiredModal, initOpenRouterKeyRequiredModal } from './components/modals/openrouter-key-required-modal.js';
@@ -1417,6 +1417,101 @@ function initializeConnectionInputModals() {
 
     // ----- helpers -----
 
+    function findFirstVisibleModalInput(modal) {
+        const candidates = modal.querySelectorAll('input[type="text"], input[type="password"], textarea, input');
+        return Array.from(candidates).find((input) => {
+            if (!input || input.disabled) {
+                return false;
+            }
+
+            if (input.closest('.hidden')) {
+                return false;
+            }
+
+            return input.offsetParent !== null;
+        }) || null;
+    }
+
+    function setupInputModalKeyboardHandling(modal) {
+        if (!modal || !isAndroidWebView()) {
+            return null;
+        }
+
+        const box = modal.querySelector('.connection-input-modal-box');
+        if (!box) {
+            return null;
+        }
+
+        let keyboardVisible = false;
+        let resizeTimeout = null;
+        let baselineHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+
+        const resetKeyboardLayout = () => {
+            keyboardVisible = false;
+            modal.classList.remove('input-modal-keyboard-visible');
+            modal.style.removeProperty('justify-content');
+            modal.style.removeProperty('align-items');
+            modal.style.removeProperty('padding-top');
+            modal.style.removeProperty('padding-bottom');
+            modal.style.removeProperty('overflow-y');
+            box.style.removeProperty('max-height');
+            box.style.removeProperty('margin-top');
+            box.style.removeProperty('margin-bottom');
+        };
+
+        const handleViewportChange = () => {
+            if (resizeTimeout) {
+                clearTimeout(resizeTimeout);
+            }
+
+            resizeTimeout = setTimeout(() => {
+                const currentHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+                const keyboardHeight = baselineHeight - currentHeight;
+                const shouldShowKeyboardLayout = keyboardHeight > 150;
+
+                if (shouldShowKeyboardLayout) {
+                    keyboardVisible = true;
+                    modal.classList.add('input-modal-keyboard-visible');
+                    modal.style.justifyContent = 'flex-end';
+                    modal.style.alignItems = 'center';
+                    modal.style.paddingTop = '8px';
+                    modal.style.paddingBottom = '8px';
+                    modal.style.overflowY = 'auto';
+                    box.style.marginTop = 'auto';
+                    box.style.marginBottom = '0';
+                    box.style.maxHeight = `${Math.max(currentHeight - 16, 220)}px`;
+                    return;
+                }
+
+                if (keyboardVisible) {
+                    resetKeyboardLayout();
+                }
+
+                baselineHeight = Math.max(baselineHeight, currentHeight);
+            }, 60);
+        };
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', handleViewportChange);
+        } else {
+            window.addEventListener('resize', handleViewportChange);
+        }
+
+        return () => {
+            if (resizeTimeout) {
+                clearTimeout(resizeTimeout);
+            }
+
+            if (window.visualViewport) {
+                window.visualViewport.removeEventListener('resize', handleViewportChange);
+            } else {
+                window.removeEventListener('resize', handleViewportChange);
+            }
+
+            resetKeyboardLayout();
+        };
+    }
+
     function showInputModal(modal) {
         modal.classList.remove('hidden');
         modal.style.display = 'flex';
@@ -1425,18 +1520,20 @@ function initializeConnectionInputModals() {
             box.classList.remove('animate-modal-out');
             box.classList.add('animate-modal-in');
         }
-        
+
+        if (typeof modal._keyboardCleanup === 'function') {
+            modal._keyboardCleanup();
+        }
+        modal._keyboardCleanup = setupInputModalKeyboardHandling(modal);
+
         // On Android, when the keyboard appears, focus events may be delayed.
         // Use a small timeout to allow the modal to render, then focus the first input
         setTimeout(() => {
-            let firstInput = modal.querySelector('input[type="text"]') || 
-                           modal.querySelector('input[type="password"]') ||
-                           modal.querySelector('textarea') ||
-                           modal.querySelector('input');
+            const firstInput = findFirstVisibleModalInput(modal);
             if (firstInput) {
                 firstInput.focus();
                 // Ensure focused input is visible by scrolling to it
-                firstInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInput.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
             }
         }, 100);
     }
@@ -1458,6 +1555,11 @@ function initializeConnectionInputModals() {
         // Blur any focused input so the keyboard dismisses
         if (document.activeElement && document.activeElement.blur) {
             document.activeElement.blur();
+        }
+
+        if (typeof modal._keyboardCleanup === 'function') {
+            modal._keyboardCleanup();
+            delete modal._keyboardCleanup;
         }
     }
 
@@ -2006,7 +2108,7 @@ function initializeConnectionInputModals() {
             setTimeout(() => {
                 if (mcpBuilderPanel && !mcpBuilderPanel.classList.contains('hidden') && mcpTargetInput) {
                     mcpTargetInput.focus();
-                    mcpTargetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    mcpTargetInput.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
                 }
             }, 80);
         };
