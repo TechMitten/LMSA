@@ -15,7 +15,7 @@ android {
     defaultConfig {
         applicationId = "com.lmsa.app"
         // Keep this at 23 so your app still runs on older Android versions
-        minSdk = 23
+        minSdk = 26
         // Target 36 to stay current with Play Store 2026 requirements
         targetSdk = 36
         versionCode = 271

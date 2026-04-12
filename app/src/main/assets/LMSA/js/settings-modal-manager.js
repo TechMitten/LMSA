@@ -1453,6 +1453,16 @@ function initializeConnectionInputModals() {
         }
     }
 
+    /**
+     * Sets up keyboard handling for connection input modals on Android.
+     *
+     * The CSS now uses percentage-based max-height (relative to the fixed-inset-0
+     * modal container) instead of vh/dvh units.  With adjustResize the container
+     * shrinks when the keyboard opens, so the box shrinks automatically.
+     *
+     * This JS helper only needs to scroll the focused input into view inside the
+     * box — no viewport measurement or layout rewriting required.
+     */
     function setupInputModalKeyboardHandling(modal) {
         if (!modal || !isAndroidWebView()) {
             return null;
@@ -1463,114 +1473,30 @@ function initializeConnectionInputModals() {
             return null;
         }
 
-        let resizeTimeout = null;
-        // Capture baseline before any keyboard opens
-        const getViewportMetrics = () => {
-            if (window.visualViewport) {
-                return {
-                    height: Math.round(window.visualViewport.height),
-                    top: Math.round(window.visualViewport.offsetTop || 0)
-                };
-            }
-
-            return {
-                height: window.innerHeight,
-                top: 0
-            };
-        };
-        let baselineHeight = getViewportMetrics().height;
-
-        const applyKeyboardLayout = () => {
-            const viewport = getViewportMetrics();
-            const currentHeight = viewport.height;
-            const dropped = baselineHeight - currentHeight;
-
-            if (dropped > 100) {
-                // Keyboard is open. Constrain the box so it stays above the keyboard.
-                // The overlay (position:fixed; inset:0) already resizes with adjustResize,
-                // but vh units on the box do not — so we override with a pixel value.
-                const viewportPadding = 8;
-                const safeBoxHeight = Math.max(currentHeight - (viewportPadding * 2), 200);
-                box.style.maxHeight = `${safeBoxHeight}px`;
-                box.style.overflowY = 'auto';
-                modal.style.height = `${currentHeight}px`;
-                modal.style.top = `${viewport.top}px`;
-                modal.style.bottom = 'auto';
-                modal.style.justifyContent = 'center';
-                modal.style.alignItems = 'flex-start';
-                modal.style.paddingTop = `${viewportPadding}px`;
-                modal.style.paddingRight = `${viewportPadding}px`;
-                modal.style.paddingBottom = `${viewportPadding}px`;
-                modal.style.paddingLeft = `${viewportPadding}px`;
-                modal.classList.add('input-modal-keyboard-visible');
-                requestAnimationFrame(() => {
-                    const boxRect = box.getBoundingClientRect();
-                    const visibleBottom = viewport.top + currentHeight - viewportPadding;
-                    const overlap = boxRect.bottom - visibleBottom;
-
-                    if (overlap > 0) {
-                        box.style.marginTop = '0';
-                        box.style.transform = `translateY(-${Math.ceil(overlap)}px)`;
-                    } else {
-                        box.style.removeProperty('transform');
-                        box.style.removeProperty('margin-top');
-                    }
-                });
-            } else {
-                // Keyboard closed — restore.
-                box.style.removeProperty('max-height');
-                box.style.removeProperty('overflow-y');
-                box.style.removeProperty('transform');
-                box.style.removeProperty('margin-top');
-                modal.style.removeProperty('height');
-                modal.style.removeProperty('top');
-                modal.style.removeProperty('bottom');
-                modal.style.removeProperty('justify-content');
-                modal.style.removeProperty('align-items');
-                modal.style.removeProperty('padding-top');
-                modal.style.removeProperty('padding-right');
-                modal.style.removeProperty('padding-bottom');
-                modal.style.removeProperty('padding-left');
-                modal.classList.remove('input-modal-keyboard-visible');
-                // Keep baseline up to date (handles rotation / initial load).
-                baselineHeight = currentHeight;
-            }
+        const scrollFocusedInputIntoView = () => {
+            const active = document.activeElement;
+            if (!active || !box.contains(active)) return;
+            // Small delay lets the viewport finish resizing
+            setTimeout(() => {
+                active.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 120);
         };
 
-        const handleResize = () => {
-            if (resizeTimeout) {
-                clearTimeout(resizeTimeout);
-            }
-            resizeTimeout = setTimeout(applyKeyboardLayout, 60);
-        };
+        const onFocusIn = () => scrollFocusedInputIntoView();
+        const onResize = () => scrollFocusedInputIntoView();
 
-        window.addEventListener('resize', handleResize, { passive: true });
+        modal.addEventListener('focusin', onFocusIn);
+        window.addEventListener('resize', onResize, { passive: true });
         if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', handleResize, { passive: true });
+            window.visualViewport.addEventListener('resize', onResize, { passive: true });
         }
 
         return () => {
-            if (resizeTimeout) {
-                clearTimeout(resizeTimeout);
-            }
-            window.removeEventListener('resize', handleResize);
+            modal.removeEventListener('focusin', onFocusIn);
+            window.removeEventListener('resize', onResize);
             if (window.visualViewport) {
-                window.visualViewport.removeEventListener('resize', handleResize);
+                window.visualViewport.removeEventListener('resize', onResize);
             }
-            box.style.removeProperty('max-height');
-            box.style.removeProperty('overflow-y');
-            box.style.removeProperty('transform');
-            box.style.removeProperty('margin-top');
-            modal.style.removeProperty('height');
-            modal.style.removeProperty('top');
-            modal.style.removeProperty('bottom');
-            modal.style.removeProperty('justify-content');
-            modal.style.removeProperty('align-items');
-            modal.style.removeProperty('padding-top');
-            modal.style.removeProperty('padding-right');
-            modal.style.removeProperty('padding-bottom');
-            modal.style.removeProperty('padding-left');
-            modal.classList.remove('input-modal-keyboard-visible');
         };
     }
 

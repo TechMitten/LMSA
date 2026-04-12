@@ -2305,14 +2305,16 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
   border-radius: 1.25rem;
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
+  flex-shrink: 1;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
   width: 420px;
   max-width: 92vw;
-  max-height: 85vh;
-  max-height: 85dvh;
+  /* Use % of the fixed-inset-0 parent so the box shrinks automatically
+     when Android adjustResize reduces the layout viewport for the keyboard.
+     vh / dvh units are unreliable in Android WebView and cause keyboard overlap. */
+  max-height: calc(100% - 16px);
   /* Ensure content scrolls when keyboard appears */
   -webkit-overflow-scrolling: touch;
   background: var(--modal-bg);
@@ -2321,21 +2323,8 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
     0 25px 50px -12px rgba(0, 0, 0, 0.55),
     0 0 0 1px rgba(255, 255, 255, 0.04) inset;
   box-sizing: border-box;
-}
-
-.modal-container.input-modal-keyboard-visible .connection-input-modal-box {
-  /* max-height is set in px by JS — this is just a fallback */
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch;
-}
-
-.modal-container.input-modal-keyboard-visible {
-  justify-content: center !important;
-  align-items: flex-start !important;
-  padding:
-    max(12px, env(safe-area-inset-top))
-    12px
-    max(12px, env(safe-area-inset-bottom));
+  /* Push to top so bottom buttons don't get clipped by the keyboard */
+  margin: 8px auto 0;
 }
 
 /* Coloured accent bar along the top edge */
@@ -2507,8 +2496,7 @@ body.light-theme .openrouter-key-input-wrapper input {
 /* Tablet adjustments */
 @media (max-width: 768px) {
   .connection-input-modal-box {
-    max-height: 80vh;
-    max-height: 80dvh;
+    max-height: calc(100% - 16px);
   }
 }
 
@@ -2518,19 +2506,7 @@ body.light-theme .openrouter-key-input-wrapper input {
     padding: 1.125rem;
     border-radius: 1rem;
     max-width: 96vw;
-    max-height: 75vh;
-    max-height: 75dvh;
-  }
-
-  .modal-container.input-modal-keyboard-visible {
-    justify-content: center !important;
-    align-items: flex-start !important;
-    padding: max(8px, env(safe-area-inset-top)) 8px 8px !important;
-  }
-
-  .modal-container.input-modal-keyboard-visible .connection-input-modal-box {
-    width: 100%;
-    max-height: calc(100% - 16px) !important;
+    max-height: calc(100% - 16px);
   }
 
   /* Increase button sizes slightly for easier tapping on mobile */
@@ -2544,8 +2520,7 @@ body.light-theme .openrouter-key-input-wrapper input {
   .connection-input-modal-box {
     padding: 1rem;
     max-width: 98vw;
-    max-height: 70vh;
-    max-height: 70dvh;
+    max-height: calc(100% - 16px);
   }
 
   .connection-input-modal-box h3 {
