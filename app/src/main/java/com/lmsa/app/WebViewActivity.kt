@@ -129,6 +129,8 @@ class WebViewActivity : AppCompatActivity() {
     private val PREF_ONBOARDING_COMPLETED = "onboarding_completed"
     private var isPremium = false
     private var isDebugMode = false
+    private var biometricPromptShowing = false
+    private var shouldRequireBiometricReentryOnResume = false
 
     private val purchasesUpdatedListener = PurchasesUpdatedListener { billingResult, purchases ->
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
@@ -811,6 +813,14 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStop() {
+        if (!isChangingConfigurations && !biometricPromptShowing) {
+            shouldRequireBiometricReentryOnResume = true
+            notifyAppBackgrounded()
+        }
+        super.onStop()
+    }
+
     override fun onResume() {
         super.onResume()
         hideSystemBars()
@@ -831,6 +841,10 @@ class WebViewActivity : AppCompatActivity() {
         // TTSService.initialized back to true without requiring a JS-side trigger.
         startTTSEngine()
         Log.d(TAG, "TTS reset and re-initialization started on resume")
+        if (shouldRequireBiometricReentryOnResume && !biometricPromptShowing) {
+            shouldRequireBiometricReentryOnResume = false
+            notifyAppForegrounded()
+        }
     }
 
     override fun onDestroy() {
@@ -927,6 +941,21 @@ class WebViewActivity : AppCompatActivity() {
         webView.post {
             webView.evaluateJavascript(script, null)
         }
+    }
+
+    private fun runLifecycleJavascript(script: String) {
+        val webView: WebView = findViewById(R.id.webView)
+        webView.post {
+            webView.evaluateJavascript(script, null)
+        }
+    }
+
+    private fun notifyAppBackgrounded() {
+        runLifecycleJavascript("if (window.onAppBackgrounded) window.onAppBackgrounded();")
+    }
+
+    private fun notifyAppForegrounded() {
+        runLifecycleJavascript("if (window.onAppForegrounded) window.onAppForegrounded();")
     }
 
     private fun notifyTTSInitialized(success: Boolean) {
@@ -2206,11 +2235,13 @@ class WebViewActivity : AppCompatActivity() {
         @JavascriptInterface
         fun authenticate() {
             runOnUiThread {
+                biometricPromptShowing = true
                 val executor: Executor = ContextCompat.getMainExecutor(this@WebViewActivity)
                 val biometricPrompt = BiometricPrompt(this@WebViewActivity, executor,
                     object : BiometricPrompt.AuthenticationCallback() {
                         override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                             super.onAuthenticationError(errorCode, errString)
+                            biometricPromptShowing = false
                             Log.e(TAG, "Biometric auth error: \$errString")
                             // You might want to notify JS here, depending on needs. Let's send a failure call
                             val webView: WebView = findViewById(R.id.webView)
@@ -2219,6 +2250,7 @@ class WebViewActivity : AppCompatActivity() {
 
                         override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                             super.onAuthenticationSucceeded(result)
+                            biometricPromptShowing = false
                             Log.d(TAG, "Biometric auth succeeded")
                             val webView: WebView = findViewById(R.id.webView)
                             webView.evaluateJavascript("if(window.onBiometricSuccess) window.onBiometricSuccess();", null)

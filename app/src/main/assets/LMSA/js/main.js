@@ -37,48 +37,218 @@ let isAppInitialized = false;
 
 window.pendingBiometricResolve = null;
 window.pendingBiometricReject = null;
+window.activeBiometricRequest = null;
 
-window.onBiometricSuccess = function() {
-    if (window.pendingBiometricResolve) {
-        window.pendingBiometricResolve(true);
-        window.pendingBiometricResolve = null;
-        window.pendingBiometricReject = null;
+const BIOMETRIC_AUTH_SESSION_KEY = 'biometric_authenticated';
+let shouldAutoPromptForBiometricUnlock = false;
+let biometricLockHideTimeout = null;
+
+function isBiometricSupported() {
+    return typeof AndroidBiometric !== 'undefined' &&
+        typeof AndroidBiometric.isBiometricSupported === 'function' &&
+        AndroidBiometric.isBiometricSupported();
+}
+
+function shouldRequireBiometricUnlock() {
+    return isBiometricSupported() && getRequireBiometric() && !getDebugEnabled();
+}
+
+function isBiometricAuthenticated() {
+    return sessionStorage.getItem(BIOMETRIC_AUTH_SESSION_KEY) === 'true';
+}
+
+function setBiometricAuthenticated(isAuthenticated) {
+    if (isAuthenticated) {
+        sessionStorage.setItem(BIOMETRIC_AUTH_SESSION_KEY, 'true');
+    } else {
+        sessionStorage.removeItem(BIOMETRIC_AUTH_SESSION_KEY);
+    }
+}
+
+function getBiometricLockOverlay() {
+    return document.getElementById('app-lock-overlay');
+}
+
+function setBiometricOverlayPresentation(mode = 'manual') {
+    const lockPanel = document.getElementById('app-lock-panel');
+    if (!lockPanel) {
         return;
     }
-    // Mark as authenticated for the rest of this session
-    sessionStorage.setItem('biometric_authenticated', 'true');
-    const lockOverlay = document.getElementById('app-lock-overlay');
-    if (lockOverlay) {
-        // fade out transition
+
+    if (mode === 'auto') {
+        lockPanel.style.opacity = '0';
+        lockPanel.style.pointerEvents = 'none';
+        lockPanel.style.visibility = 'hidden';
+    } else {
+        lockPanel.style.opacity = '1';
+        lockPanel.style.pointerEvents = '';
+        lockPanel.style.visibility = 'visible';
+    }
+}
+
+function showBiometricLockOverlay(mode = 'manual') {
+    const lockOverlay = getBiometricLockOverlay();
+    if (!lockOverlay) {
+        return;
+    }
+
+    if (biometricLockHideTimeout) {
+        clearTimeout(biometricLockHideTimeout);
+        biometricLockHideTimeout = null;
+    }
+
+    lockOverlay.classList.remove('hidden');
+    lockOverlay.classList.add('flex');
+    lockOverlay.style.display = 'flex';
+    lockOverlay.style.opacity = '1';
+    setBiometricOverlayPresentation(mode);
+}
+
+function hideBiometricLockOverlay(immediate = false) {
+    const lockOverlay = getBiometricLockOverlay();
+    if (!lockOverlay) {
+        return;
+    }
+
+    if (biometricLockHideTimeout) {
+        clearTimeout(biometricLockHideTimeout);
+        biometricLockHideTimeout = null;
+    }
+
+    if (immediate) {
         lockOverlay.style.opacity = '0';
-        setTimeout(() => {
-            lockOverlay.classList.add('hidden');
-            lockOverlay.classList.remove('flex');
-            lockOverlay.style.display = 'none';
-        }, 300);
+        lockOverlay.classList.add('hidden');
+        lockOverlay.classList.remove('flex');
+        lockOverlay.style.display = 'none';
+        setBiometricOverlayPresentation('manual');
+        return;
+    }
+
+    lockOverlay.style.opacity = '0';
+    biometricLockHideTimeout = setTimeout(() => {
+        lockOverlay.classList.add('hidden');
+        lockOverlay.classList.remove('flex');
+        lockOverlay.style.display = 'none';
+        setBiometricOverlayPresentation('manual');
+        biometricLockHideTimeout = null;
+    }, 300);
+}
+
+function ensureBiometricUnlockButton() {
+    const unlockBtn = document.getElementById('biometric-unlock-btn');
+    if (!unlockBtn || unlockBtn.dataset.biometricBound === 'true') {
+        return;
+    }
+
+    unlockBtn.dataset.biometricBound = 'true';
+    unlockBtn.addEventListener('click', () => {
+        void promptForBiometricUnlock();
+    });
+}
+
+function lockAppForBiometricReentry() {
+    if (!shouldRequireBiometricUnlock()) {
+        hideBiometricLockOverlay();
+        return;
+    }
+
+    setBiometricAuthenticated(false);
+    shouldAutoPromptForBiometricUnlock = true;
+    showBiometricLockOverlay('auto');
+}
+
+async function promptForBiometricUnlock(autoPrompt = false) {
+    if (!shouldRequireBiometricUnlock()) {
+        hideBiometricLockOverlay();
+        return true;
+    }
+
+    if (isBiometricAuthenticated()) {
+        hideBiometricLockOverlay();
+        return true;
+    }
+
+    showBiometricLockOverlay(autoPrompt ? 'auto' : 'manual');
+    shouldAutoPromptForBiometricUnlock = false;
+
+    try {
+        await window.requestBiometricAuth('App Locked', 'Authenticate to access LMSA');
+        return true;
+    } catch (error) {
+        setBiometricOverlayPresentation('manual');
+        if (!autoPrompt) {
+            console.warn('Biometric unlock failed', error);
+        }
+        return false;
+    }
+}
+
+window.onAppBackgrounded = function() {
+    lockAppForBiometricReentry();
+};
+
+window.onAppForegrounded = function() {
+    if (!shouldRequireBiometricUnlock()) {
+        hideBiometricLockOverlay();
+        return;
+    }
+
+    if (!isBiometricAuthenticated()) {
+        showBiometricLockOverlay(shouldAutoPromptForBiometricUnlock ? 'auto' : 'manual');
+        if (shouldAutoPromptForBiometricUnlock) {
+            void promptForBiometricUnlock(true);
+        }
+    }
+};
+
+window.onBiometricSuccess = function() {
+    setBiometricAuthenticated(true);
+    hideBiometricLockOverlay(true);
+
+    if (window.pendingBiometricResolve) {
+        const resolve = window.pendingBiometricResolve;
+        window.pendingBiometricResolve = null;
+        window.pendingBiometricReject = null;
+        resolve(true);
     }
 };
 
 window.onBiometricFailure = function(errorMsg) {
     console.error("Biometric failure:", errorMsg);
     if (window.pendingBiometricReject) {
-        window.pendingBiometricReject(new Error(errorMsg || "Authentication failed"));
+        const reject = window.pendingBiometricReject;
         window.pendingBiometricResolve = null;
         window.pendingBiometricReject = null;
+        reject(new Error(errorMsg || "Authentication failed"));
     }
 };
 
 window.requestBiometricAuth = function(title, subtitle) {
-    return new Promise((resolve, reject) => {
-        if (typeof AndroidBiometric !== 'undefined' && typeof AndroidBiometric.isBiometricSupported === 'function' && AndroidBiometric.isBiometricSupported()) {
+    if (!isBiometricSupported()) {
+        return Promise.resolve(true);
+    }
+
+    if (window.activeBiometricRequest) {
+        return window.activeBiometricRequest;
+    }
+
+    window.activeBiometricRequest = new Promise((resolve, reject) => {
+        try {
             window.pendingBiometricResolve = resolve;
             window.pendingBiometricReject = reject;
             AndroidBiometric.authenticate();
-        } else {
-            // Allow override in debug environments
-            resolve(true);
+        } catch (error) {
+            window.pendingBiometricResolve = null;
+            window.pendingBiometricReject = null;
+            reject(error);
         }
+    }).finally(() => {
+        window.activeBiometricRequest = null;
+        window.pendingBiometricResolve = null;
+        window.pendingBiometricReject = null;
     });
+
+    return window.activeBiometricRequest;
 };
 
 export async function initializeApp() {
@@ -126,41 +296,30 @@ export async function initializeApp() {
     // Load critical settings first
     loadServerSettings(); // This will also fetch available models
     loadSettings();
+    ensureBiometricUnlockButton();
 
     // Check biometric requirement right after loading settings
-    const isBiometricSupported = typeof AndroidBiometric !== 'undefined' && AndroidBiometric.isBiometricSupported();
+    const biometricSupported = isBiometricSupported();
     const requireBiometric = getRequireBiometric();
     
     // Check if biometric setting exists in DOM to toggle visibility based on support
     const biometricContainer = document.getElementById('biometric-setting-container');
     if (biometricContainer) {
-        if (!isBiometricSupported && !getDebugEnabled()) {
+        if (!biometricSupported && !getDebugEnabled()) {
             biometricContainer.style.display = 'none';
         } else {
             biometricContainer.style.display = 'block';
         }
     }
     
-    const alreadyAuthenticated = sessionStorage.getItem('biometric_authenticated') === 'true';
-    if (isBiometricSupported && requireBiometric && !getDebugEnabled() && !alreadyAuthenticated) {
-        const lockOverlay = document.getElementById('app-lock-overlay');
-        if (lockOverlay) {
-            lockOverlay.classList.remove('hidden');
-            lockOverlay.classList.add('flex');
-            lockOverlay.style.display = 'flex';
-            lockOverlay.style.opacity = '1';
-            
-            // auto prompt
-            setTimeout(() => {
-                AndroidBiometric.authenticate();
-            }, 100);
-            
-            // Setup manual unlock button
-            const unlockBtn = document.getElementById('biometric-unlock-btn');
-            if (unlockBtn) {
-                unlockBtn.onclick = () => AndroidBiometric.authenticate();
-            }
-        }
+    const alreadyAuthenticated = isBiometricAuthenticated();
+    if (biometricSupported && requireBiometric && !getDebugEnabled() && !alreadyAuthenticated) {
+        lockAppForBiometricReentry();
+        setTimeout(() => {
+            void promptForBiometricUnlock(true);
+        }, 100);
+    } else if (!shouldRequireBiometricUnlock()) {
+        hideBiometricLockOverlay();
     }
 
     loadChatHistory();
