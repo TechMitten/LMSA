@@ -1444,13 +1444,39 @@ function initializeConnectionInputModals() {
 
         let keyboardVisible = false;
         let resizeTimeout = null;
-        let baselineHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        let focusTimeout = null;
+        let baselineHeight = 0;
+
+        const getViewportMetrics = () => {
+            if (window.visualViewport) {
+                return {
+                    height: window.visualViewport.height,
+                    offsetTop: window.visualViewport.offsetTop || 0
+                };
+            }
+
+            return {
+                height: window.innerHeight,
+                offsetTop: 0
+            };
+        };
+
+        const updateBaselineHeight = () => {
+            const { height } = getViewportMetrics();
+            baselineHeight = Math.max(baselineHeight, height);
+        };
+
+        updateBaselineHeight();
 
         const resetKeyboardLayout = () => {
             keyboardVisible = false;
             modal.classList.remove('input-modal-keyboard-visible');
+            modal.classList.remove('input-modal-focused');
             modal.style.removeProperty('justify-content');
             modal.style.removeProperty('align-items');
+            modal.style.removeProperty('top');
+            modal.style.removeProperty('bottom');
+            modal.style.removeProperty('height');
             modal.style.removeProperty('padding-top');
             modal.style.removeProperty('padding-bottom');
             modal.style.removeProperty('overflow-y');
@@ -1459,27 +1485,52 @@ function initializeConnectionInputModals() {
             box.style.removeProperty('margin-bottom');
         };
 
+        const syncFocusedInputIntoView = () => {
+            const activeElement = document.activeElement;
+            if (!(activeElement instanceof HTMLElement) || !modal.contains(activeElement)) {
+                return;
+            }
+
+            if (focusTimeout) {
+                clearTimeout(focusTimeout);
+            }
+
+            focusTimeout = setTimeout(() => {
+                activeElement.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+            }, 90);
+        };
+
         const handleViewportChange = () => {
             if (resizeTimeout) {
                 clearTimeout(resizeTimeout);
             }
 
             resizeTimeout = setTimeout(() => {
-                const currentHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-                const keyboardHeight = baselineHeight - currentHeight;
-                const shouldShowKeyboardLayout = keyboardHeight > 150;
+                const { height: currentHeight, offsetTop } = getViewportMetrics();
+                const visibleBottom = offsetTop + currentHeight;
+                const keyboardHeight = Math.max(0, baselineHeight - visibleBottom);
+                const hasFocusedInput = modal.contains(document.activeElement);
+                const shouldShowKeyboardLayout = keyboardHeight > 80 || (hasFocusedInput && currentHeight < baselineHeight - 40);
 
                 if (shouldShowKeyboardLayout) {
                     keyboardVisible = true;
                     modal.classList.add('input-modal-keyboard-visible');
-                    modal.style.justifyContent = 'flex-end';
-                    modal.style.alignItems = 'center';
+                    if (hasFocusedInput) {
+                        modal.classList.add('input-modal-focused');
+                    }
+
+                    modal.style.justifyContent = 'center';
+                    modal.style.alignItems = 'flex-end';
+                    modal.style.top = `${Math.max(offsetTop, 0)}px`;
+                    modal.style.bottom = 'auto';
+                    modal.style.height = `${Math.max(currentHeight, 220)}px`;
                     modal.style.paddingTop = '8px';
                     modal.style.paddingBottom = '8px';
-                    modal.style.overflowY = 'auto';
-                    box.style.marginTop = 'auto';
+                    modal.style.overflowY = 'hidden';
+                    box.style.marginTop = '0';
                     box.style.marginBottom = '0';
                     box.style.maxHeight = `${Math.max(currentHeight - 16, 220)}px`;
+                    syncFocusedInputIntoView();
                     return;
                 }
 
@@ -1487,26 +1538,58 @@ function initializeConnectionInputModals() {
                     resetKeyboardLayout();
                 }
 
-                baselineHeight = Math.max(baselineHeight, currentHeight);
+                updateBaselineHeight();
             }, 60);
+        };
+
+        const handleFocusIn = (event) => {
+            if (!(event.target instanceof HTMLElement) || !modal.contains(event.target)) {
+                return;
+            }
+
+            modal.classList.add('input-modal-focused');
+            handleViewportChange();
+            syncFocusedInputIntoView();
+        };
+
+        const handleFocusOut = () => {
+            const nextActive = document.activeElement;
+            if (nextActive instanceof HTMLElement && modal.contains(nextActive)) {
+                return;
+            }
+
+            modal.classList.remove('input-modal-focused');
+            handleViewportChange();
         };
 
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', handleViewportChange);
+            window.visualViewport.addEventListener('scroll', handleViewportChange);
         } else {
             window.addEventListener('resize', handleViewportChange);
         }
+
+        modal.addEventListener('focusin', handleFocusIn);
+        modal.addEventListener('focusout', handleFocusOut);
 
         return () => {
             if (resizeTimeout) {
                 clearTimeout(resizeTimeout);
             }
 
+            if (focusTimeout) {
+                clearTimeout(focusTimeout);
+            }
+
             if (window.visualViewport) {
                 window.visualViewport.removeEventListener('resize', handleViewportChange);
+                window.visualViewport.removeEventListener('scroll', handleViewportChange);
             } else {
                 window.removeEventListener('resize', handleViewportChange);
             }
+
+            modal.removeEventListener('focusin', handleFocusIn);
+            modal.removeEventListener('focusout', handleFocusOut);
 
             resetKeyboardLayout();
         };
@@ -1533,7 +1616,7 @@ function initializeConnectionInputModals() {
             if (firstInput) {
                 firstInput.focus();
                 // Ensure focused input is visible by scrolling to it
-                firstInput.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+                firstInput.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
             }
         }, 100);
     }
