@@ -1456,12 +1456,9 @@ function initializeConnectionInputModals() {
     /**
      * Sets up keyboard handling for connection input modals on Android.
      *
-     * The CSS now uses percentage-based max-height (relative to the fixed-inset-0
-     * modal container) instead of vh/dvh units.  With adjustResize the container
-     * shrinks when the keyboard opens, so the box shrinks automatically.
-     *
-     * This JS helper only needs to scroll the focused input into view inside the
-     * box — no viewport measurement or layout rewriting required.
+     * The global Android keyboard fix now resizes any visible modal container to
+     * the actual viewport height. This helper keeps the focused field visible
+     * within the modal box after that relayout completes.
      */
     function setupInputModalKeyboardHandling(modal) {
         if (!modal || !isAndroidWebView()) {
@@ -1478,7 +1475,8 @@ function initializeConnectionInputModals() {
             if (!active || !box.contains(active)) return;
             // Small delay lets the viewport finish resizing
             setTimeout(() => {
-                active.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                keepModalInputVisible(modal, active);
+                active.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 120);
         };
 

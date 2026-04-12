@@ -2299,6 +2299,11 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
    Connection Input Modals — IP/Port and OpenRouter Key
    ============================================================ */
 
+/* Nudge the LM Studio token modal upward so it clears the Android keyboard */
+#lmstudio-token-input-modal {
+  padding-bottom: 28px;
+}
+
 .connection-input-modal-box {
   position: relative;
   padding: 1.5rem;

@@ -527,8 +527,49 @@ function initializeAndroidKeyboardFix() {
         }, 500);
     });
 
+    function getVisibleViewportHeight() {
+        const visualViewportHeight = window.visualViewport?.height;
+        if (typeof visualViewportHeight === 'number' && visualViewportHeight > 0) {
+            return Math.round(Math.min(window.innerHeight, visualViewportHeight));
+        }
+
+        return window.innerHeight;
+    }
+
+    function syncVisibleModalContainers(keyboardOpen) {
+        const visibleModalContainers = document.querySelectorAll('.modal-container:not(.hidden)');
+        const visibleViewportHeight = getVisibleViewportHeight();
+
+        visibleModalContainers.forEach((modal) => {
+            if (!(modal instanceof HTMLElement)) {
+                return;
+            }
+
+            if (keyboardOpen) {
+                modal.classList.add('keyboard-visible');
+                modal.style.height = `${visibleViewportHeight}px`;
+                modal.style.maxHeight = `${visibleViewportHeight}px`;
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.right = '0';
+                modal.style.bottom = 'auto';
+            } else {
+                modal.classList.remove('keyboard-visible');
+                modal.style.height = '';
+                modal.style.maxHeight = '';
+                modal.style.position = '';
+                modal.style.top = '';
+                modal.style.left = '';
+                modal.style.right = '';
+                modal.style.bottom = '';
+            }
+        });
+    }
+
     function applyKeyboardState(keyboardOpen) {
         window.androidKeyboardVisible = keyboardOpen;
+        syncVisibleModalContainers(keyboardOpen);
         if (keyboardOpen) {
             document.body.classList.add('keyboard-visible');
 
@@ -558,6 +599,7 @@ function initializeAndroidKeyboardFix() {
     window.addEventListener('resize', function () {
         const currentHeight = window.innerHeight;
         const keyboardHeight = baselineHeight - currentHeight;
+        androidKeyboardHeight = Math.max(0, keyboardHeight);
 
         if (keyboardHeight > 150) {
             applyKeyboardState(true);

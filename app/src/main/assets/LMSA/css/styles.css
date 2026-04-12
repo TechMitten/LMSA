@@ -4087,6 +4087,24 @@ body.light-theme #clear-system-prompt-modal #close-clear-system-prompt-modal:hov
     /* Center vertically */
 }
 
+.modal-container.keyboard-visible {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    padding: max(8px, env(safe-area-inset-top)) 8px 8px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modal-container.keyboard-visible .modal-content {
+    max-height: calc(100% - 16px) !important;
+    margin: 0 auto !important;
+}
+
+.modal-container.keyboard-visible .connection-input-modal-box {
+    max-height: calc(100% - 16px) !important;
+    margin: 0 auto !important;
+}
+
 .modal-container.hidden {
     background-color: transparent !important;
     visibility: hidden !important;
