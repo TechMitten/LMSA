@@ -4,6 +4,7 @@
 import { debugLog } from './utils.js';
 import { closeSidebarExport } from './export-import.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
+import { requireSystemPromptPremiumAccess } from './settings-manager.js';
 
 // Local storage key for saved system prompts
 const SAVED_PROMPTS_KEY = 'savedSystemPrompts';
@@ -258,6 +259,10 @@ function addPromptItemEventListeners() {
  * @param {string} id - The ID of the prompt to restore
  */
 function restorePrompt(id) {
+    if (!requireSystemPromptPremiumAccess()) {
+        return;
+    }
+
     const savedPrompts = getSavedSystemPrompts();
     const prompt = savedPrompts.find(p => p.id === id);
     

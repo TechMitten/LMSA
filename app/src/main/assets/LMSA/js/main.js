@@ -527,37 +527,57 @@ function initializeAndroidKeyboardFix() {
         }, 500);
     });
 
-    function getVisibleViewportHeight() {
-        const visualViewportHeight = window.visualViewport?.height;
-        if (typeof visualViewportHeight === 'number' && visualViewportHeight > 0) {
-            return Math.round(Math.min(window.innerHeight, visualViewportHeight));
+    function getVisibleViewportMetrics() {
+        const visualViewport = window.visualViewport;
+        if (visualViewport && typeof visualViewport.height === 'number' && visualViewport.height > 0) {
+            return {
+                height: Math.round(Math.min(window.innerHeight, visualViewport.height)),
+                width: Math.round(Math.min(window.innerWidth, visualViewport.width || window.innerWidth)),
+                offsetTop: Math.max(0, Math.round(visualViewport.offsetTop || 0)),
+                offsetLeft: Math.max(0, Math.round(visualViewport.offsetLeft || 0))
+            };
         }
 
-        return window.innerHeight;
+        return {
+            height: window.innerHeight,
+            width: window.innerWidth,
+            offsetTop: 0,
+            offsetLeft: 0
+        };
     }
 
     function syncVisibleModalContainers(keyboardOpen) {
         const visibleModalContainers = document.querySelectorAll('.modal-container:not(.hidden)');
-        const visibleViewportHeight = getVisibleViewportHeight();
+        const visibleViewportMetrics = getVisibleViewportMetrics();
 
         visibleModalContainers.forEach((modal) => {
             if (!(modal instanceof HTMLElement)) {
                 return;
             }
 
+            // The system prompt overlay already manages its own keyboard layout
+            // using visual viewport offsets, so skip the generic modal resize path.
+            if (modal.id === 'system-prompt-overlay') {
+                return;
+            }
+
             if (keyboardOpen) {
                 modal.classList.add('keyboard-visible');
-                modal.style.height = `${visibleViewportHeight}px`;
-                modal.style.maxHeight = `${visibleViewportHeight}px`;
+                modal.style.height = `${visibleViewportMetrics.height}px`;
+                modal.style.maxHeight = `${visibleViewportMetrics.height}px`;
+                modal.style.width = `${visibleViewportMetrics.width}px`;
+                modal.style.maxWidth = `${visibleViewportMetrics.width}px`;
                 modal.style.position = 'fixed';
-                modal.style.top = '0';
-                modal.style.left = '0';
-                modal.style.right = '0';
+                modal.style.top = `${visibleViewportMetrics.offsetTop}px`;
+                modal.style.left = `${visibleViewportMetrics.offsetLeft}px`;
+                modal.style.right = 'auto';
                 modal.style.bottom = 'auto';
             } else {
                 modal.classList.remove('keyboard-visible');
                 modal.style.height = '';
                 modal.style.maxHeight = '';
+                modal.style.width = '';
+                modal.style.maxWidth = '';
                 modal.style.position = '';
                 modal.style.top = '';
                 modal.style.left = '';

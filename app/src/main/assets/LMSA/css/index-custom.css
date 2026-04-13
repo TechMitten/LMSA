@@ -938,7 +938,7 @@ body.keyboard-visible #chat-form,
 
     #sidebar .sidebar-footer {
         margin: 0.4rem 0.55rem 0 !important;
-        padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+        padding-bottom: 0.25rem !important;
         border-radius: 0.85rem !important;
         background: rgba(15, 23, 42, 0.4) !important;
         border: 1px solid rgba(148, 163, 184, 0.12) !important;
@@ -1375,7 +1375,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 
     #sidebar .sidebar-footer {
         margin: 0.6rem 0.75rem 0 !important;
-        padding: 1rem 1.15rem calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+        padding: 1rem 1.15rem 0.25rem !important;
         border-radius: 1rem !important;
     }
 

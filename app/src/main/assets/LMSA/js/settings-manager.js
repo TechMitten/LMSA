@@ -226,6 +226,34 @@ export function initializeSystemPrompt() {
 
     // Set up event listeners for both the original textarea and the display element
     systemPromptInput.addEventListener("change", () => {
+      if (!canEditSystemPrompt()) {
+        systemPromptInput.value = systemPrompt;
+
+        if (systemPromptDisplay) {
+          systemPromptDisplay.textContent = systemPrompt;
+        }
+
+        const systemPromptPreview = document.getElementById("system-prompt-preview");
+        const placeholderSpan = document.getElementById("prompt-placeholder");
+        if (systemPromptPreview) {
+          if (systemPrompt && systemPrompt.trim()) {
+            systemPromptPreview.textContent = systemPrompt;
+            if (placeholderSpan) {
+              placeholderSpan.style.display = "none";
+            }
+          } else if (placeholderSpan) {
+            systemPromptPreview.innerHTML = "";
+            systemPromptPreview.appendChild(placeholderSpan);
+            placeholderSpan.style.display = "";
+          } else {
+            systemPromptPreview.textContent = "";
+          }
+        }
+
+        requestSystemPromptPremiumAccess();
+        return;
+      }
+
       systemPrompt = systemPromptInput.value;
 
       // Mark the system prompt as user-created when explicitly set
@@ -307,6 +335,65 @@ export function initializeSystemPrompt() {
       typeof window.systemPromptEditor.setValue === "function"
     ) {
       window.systemPromptEditor.setValue(systemPrompt);
+    }
+
+    updateSystemPromptPremiumState();
+  }
+}
+
+function isPremiumUser() {
+  return !!(
+    window.AndroidBilling &&
+    typeof window.AndroidBilling.checkPremiumStatus === "function" &&
+    window.AndroidBilling.checkPremiumStatus()
+  );
+}
+
+export function canEditSystemPrompt() {
+  return isPremiumUser();
+}
+
+export function requestSystemPromptPremiumAccess() {
+  if (typeof window.openPremiumModal === "function") {
+    window.openPremiumModal("System Prompt");
+  } else {
+    alert("System prompt changes are reserved for premium users.");
+  }
+}
+
+export function requireSystemPromptPremiumAccess() {
+  if (canEditSystemPrompt()) {
+    return true;
+  }
+
+  requestSystemPromptPremiumAccess();
+  return false;
+}
+
+export function updateSystemPromptPremiumState() {
+  const isPremium = canEditSystemPrompt();
+  const editButton = document.getElementById("edit-system-prompt-btn");
+  const preview = document.getElementById("system-prompt-preview");
+
+  if (editButton) {
+    editButton.dataset.premiumLocked = isPremium ? "false" : "true";
+    editButton.title = isPremium
+      ? "Edit your system prompt"
+      : "Premium required to edit the system prompt";
+  }
+
+  if (preview) {
+    preview.dataset.premiumLocked = isPremium ? "false" : "true";
+    preview.title = isPremium
+      ? ""
+      : "Premium required to change the system prompt";
+  }
+
+  if (systemPromptInput) {
+    if (isPremium) {
+      systemPromptInput.removeAttribute("readonly");
+    } else {
+      systemPromptInput.setAttribute("readonly", "true");
     }
   }
 }

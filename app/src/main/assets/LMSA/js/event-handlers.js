@@ -3185,6 +3185,37 @@ function syncSidebarCollapsibleHeight(element) {
     }, 320);
 }
 
+function nudgeSidebarForExpandedGroup(groupButton, groupContainer) {
+    const sidebarScrollContent = document.getElementById('sidebar-scroll-content');
+    if (!sidebarScrollContent || !(groupButton instanceof HTMLElement) || !(groupContainer instanceof HTMLElement)) {
+        return;
+    }
+
+    const scrollContentRect = sidebarScrollContent.getBoundingClientRect();
+    const buttonRect = groupButton.getBoundingClientRect();
+    const buttonTopWithinScroller = buttonRect.top - scrollContentRect.top + sidebarScrollContent.scrollTop;
+    const desiredTopPadding = 24;
+    const preferredButtonOffset = Math.max(desiredTopPadding, Math.round(sidebarScrollContent.clientHeight * 0.3));
+
+    // Keep the Premium Settings row comfortably above the newly revealed items.
+    let targetTop = sidebarScrollContent.scrollTop;
+    if (buttonTopWithinScroller > sidebarScrollContent.scrollTop + preferredButtonOffset) {
+        targetTop = buttonTopWithinScroller - preferredButtonOffset;
+    }
+
+    const expandedBottom = buttonTopWithinScroller + groupButton.offsetHeight + groupContainer.scrollHeight + 16;
+    const visibleBottom = targetTop + sidebarScrollContent.clientHeight;
+    if (expandedBottom > visibleBottom) {
+        targetTop = Math.max(targetTop, expandedBottom - sidebarScrollContent.clientHeight);
+    }
+
+    const maxScrollTop = Math.max(0, sidebarScrollContent.scrollHeight - sidebarScrollContent.clientHeight);
+    sidebarScrollContent.scrollTo({
+        top: Math.min(Math.max(0, targetTop), maxScrollTop),
+        behavior: 'smooth'
+    });
+}
+
 function toggleSidebarGroupContainer(groupButtonId, containerId) {
     const groupButton = document.getElementById(groupButtonId);
     const groupContainer = document.getElementById(containerId);
@@ -3209,20 +3240,9 @@ function toggleSidebarGroupContainer(groupButtonId, containerId) {
         }
 
         if (containerId === 'premium-container') {
-            const sidebarScrollContent = document.getElementById('sidebar-scroll-content');
             setTimeout(() => {
                 syncSidebarCollapsibleHeight(groupContainer);
-                const scrollTarget = groupContainer.lastElementChild || groupContainer;
-                if (sidebarScrollContent && scrollTarget instanceof HTMLElement) {
-                    const targetBottom = scrollTarget.offsetTop + scrollTarget.offsetHeight + 16;
-                    const visibleBottom = sidebarScrollContent.scrollTop + sidebarScrollContent.clientHeight;
-                    if (targetBottom > visibleBottom) {
-                        sidebarScrollContent.scrollTo({
-                            top: targetBottom - sidebarScrollContent.clientHeight,
-                            behavior: 'smooth'
-                        });
-                    }
-                }
+                nudgeSidebarForExpandedGroup(groupButton, groupContainer);
             }, 80);
         }
     } else {

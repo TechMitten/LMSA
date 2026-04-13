@@ -624,16 +624,21 @@
 
 /* Keyboard visible state adjustments */
 #system-prompt-overlay.keyboard-visible {
-    padding: max(0.75rem, env(safe-area-inset-top)) 0.75rem max(0.75rem, env(safe-area-inset-bottom));
+    padding:
+        max(0.5rem, env(safe-area-inset-top))
+        max(0.5rem, env(safe-area-inset-right))
+        max(0.35rem, env(safe-area-inset-bottom))
+        max(0.5rem, env(safe-area-inset-left));
     align-items: stretch;
     justify-content: flex-start;
     margin: 0;
+    overflow: hidden;
 }
 
 #system-prompt-overlay.keyboard-visible .modal-content {
     height: auto;
-    max-height: calc(100% - 1.5rem);
-    margin: 0 auto;
+    max-height: calc(100% - 0.85rem);
+    margin: 0 auto auto;
     padding: 1rem;
     border-radius: 0.75rem;
     flex: 1 1 auto;

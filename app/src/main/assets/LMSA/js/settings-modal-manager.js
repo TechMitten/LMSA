@@ -6,7 +6,7 @@ import { debugLog, getDebugEnabled, isAndroidWebView } from './utils.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { getApiUrl, getAvailableModels, isServerRunning, validateIpPort, saveServerSettings } from './api-service.js';
 import { showOpenRouterKeyRequiredModal, initOpenRouterKeyRequiredModal } from './components/modals/openrouter-key-required-modal.js';
-import { getUseOpenRouter, getOpenRouterApiKey } from './settings-manager.js';
+import { getUseOpenRouter, getOpenRouterApiKey, requireSystemPromptPremiumAccess, updateSystemPromptPremiumState } from './settings-manager.js';
 import { interceptIpPortChanges } from './ip-port-confirmation-modal.js';
 
 const WELCOME_SETTINGS_TAPPED_KEY = 'welcomeSettingsTapped';
@@ -69,6 +69,7 @@ export async function showSettingsModal() {
 
     // Initialize step indicators for the first step
     updateStepIndicators('connection');
+    updateSystemPromptPremiumState();
 
     // Ensure any previous hide animation is canceled
     settingsModal.classList.remove('hide');
@@ -765,38 +766,61 @@ function initializeSystemPromptOverlay() {
 
 
 
-    function getVisibleOverlayViewportHeight() {
-        const visualViewportHeight = window.visualViewport?.height;
-        if (typeof visualViewportHeight === 'number' && visualViewportHeight > 0) {
-            return Math.round(Math.min(window.innerHeight, visualViewportHeight));
+    function getVisibleOverlayViewportMetrics() {
+        const visualViewport = window.visualViewport;
+        if (visualViewport && typeof visualViewport.height === 'number' && visualViewport.height > 0) {
+            return {
+                height: Math.round(Math.min(window.innerHeight, visualViewport.height)),
+                width: Math.round(Math.min(window.innerWidth, visualViewport.width || window.innerWidth)),
+                offsetTop: Math.max(0, Math.round(visualViewport.offsetTop || 0)),
+                offsetLeft: Math.max(0, Math.round(visualViewport.offsetLeft || 0))
+            };
         }
 
-        return window.innerHeight;
+        return {
+            height: window.innerHeight,
+            width: window.innerWidth,
+            offsetTop: 0,
+            offsetLeft: 0
+        };
     }
 
-    function applyOverlayKeyboardLayout(keyboardVisible, currentHeight = getVisibleOverlayViewportHeight()) {
+    function getVisibleOverlayViewportHeight() {
+        return getVisibleOverlayViewportMetrics().height;
+    }
+
+    function applyOverlayKeyboardLayout(keyboardVisible, viewportMetrics = getVisibleOverlayViewportMetrics()) {
         if (!overlay || !modalContent || !editor) {
             return;
         }
 
+        const {
+            height: currentHeight,
+            width: currentWidth,
+            offsetTop,
+            offsetLeft
+        } = viewportMetrics;
+
         if (keyboardVisible) {
-            const verticalPadding = 24;
+            const verticalPadding = currentHeight < 520 ? 12 : 16;
             const modalHeight = Math.max(220, currentHeight - verticalPadding);
 
             overlay.classList.add('keyboard-visible');
             overlay.style.height = `${currentHeight}px`;
             overlay.style.maxHeight = `${currentHeight}px`;
+            overlay.style.width = `${currentWidth}px`;
+            overlay.style.maxWidth = `${currentWidth}px`;
             overlay.style.position = 'fixed';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.right = '0';
+            overlay.style.top = `${offsetTop}px`;
+            overlay.style.left = `${offsetLeft}px`;
+            overlay.style.right = 'auto';
             overlay.style.bottom = 'auto';
             overlay.style.alignItems = 'stretch';
             overlay.style.justifyContent = 'flex-start';
 
             modalContent.style.height = `${modalHeight}px`;
             modalContent.style.maxHeight = `${modalHeight}px`;
-            modalContent.style.margin = '0 auto';
+            modalContent.style.margin = '0 auto auto';
             modalContent.style.flex = '0 1 auto';
 
             if (editorSection) {
@@ -818,6 +842,8 @@ function initializeSystemPromptOverlay() {
             overlay.classList.remove('keyboard-visible');
             overlay.style.height = '';
             overlay.style.maxHeight = '';
+            overlay.style.width = '';
+            overlay.style.maxWidth = '';
             overlay.style.position = '';
             overlay.style.top = '';
             overlay.style.left = '';
@@ -866,7 +892,8 @@ function initializeSystemPromptOverlay() {
 
             // Add a small delay to ensure we get the final viewport size
             resizeTimeout = setTimeout(() => {
-                const currentHeight = getVisibleOverlayViewportHeight();
+                const viewportMetrics = getVisibleOverlayViewportMetrics();
+                const currentHeight = viewportMetrics.height;
                 const heightDifference = initialViewportHeight - currentHeight;
 
                 // Consider keyboard visible if viewport height decreased by more than 150px
@@ -876,12 +903,12 @@ function initializeSystemPromptOverlay() {
                     keyboardVisible = shouldShowKeyboard;
 
                     if (keyboardVisible) {
-                        applyOverlayKeyboardLayout(true, currentHeight);
+                        applyOverlayKeyboardLayout(true, viewportMetrics);
                     } else {
-                        applyOverlayKeyboardLayout(false, currentHeight);
+                        applyOverlayKeyboardLayout(false, viewportMetrics);
                     }
                 } else if (keyboardVisible) {
-                    applyOverlayKeyboardLayout(true, currentHeight);
+                    applyOverlayKeyboardLayout(true, viewportMetrics);
                 }
 
                 adjustTextareaHeight();
@@ -891,6 +918,7 @@ function initializeSystemPromptOverlay() {
         // Use Visual Viewport API if available (better for mobile)
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', handleViewportChange);
+            window.visualViewport.addEventListener('scroll', handleViewportChange);
         } else {
             // Fallback to window resize
             window.addEventListener('resize', handleViewportChange);
@@ -903,6 +931,7 @@ function initializeSystemPromptOverlay() {
             }
             if (window.visualViewport) {
                 window.visualViewport.removeEventListener('resize', handleViewportChange);
+                window.visualViewport.removeEventListener('scroll', handleViewportChange);
             } else {
                 window.removeEventListener('resize', handleViewportChange);
             }
@@ -911,6 +940,10 @@ function initializeSystemPromptOverlay() {
 
     // Function to show the overlay
     function showOverlay() {
+        if (!requireSystemPromptPremiumAccess()) {
+            return;
+        }
+
         // Copy content from hidden textarea to editor
         editor.value = hiddenTextarea.value || '';
 
@@ -924,6 +957,12 @@ function initializeSystemPromptOverlay() {
 
             // Store cleanup function for later use
             overlay._keyboardCleanup = cleanupKeyboardDetection;
+
+        if (window.androidKeyboardVisible === true) {
+            applyOverlayKeyboardLayout(true);
+        } else {
+            applyOverlayKeyboardLayout(false);
+        }
 
         // Add a small delay to ensure smooth animation
         setTimeout(() => {
@@ -1005,6 +1044,10 @@ function initializeSystemPromptOverlay() {
 
     // Function to save the edited content
     function saveChanges() {
+        if (!requireSystemPromptPremiumAccess()) {
+            return;
+        }
+
         // Save to hidden textarea
         hiddenTextarea.value = editor.value;
 
@@ -1063,6 +1106,10 @@ function initializeSystemPromptOverlay() {
     if (improveButton) {
         improveButton.addEventListener('click', async function(e) {
             e.preventDefault();
+
+            if (!requireSystemPromptPremiumAccess()) {
+                return;
+            }
 
             const currentPrompt = editor.value.trim();
             if (!currentPrompt) {
@@ -1226,6 +1273,9 @@ function initializeSystemPromptOverlay() {
     if (clearButton) {
         clearButton.addEventListener('click', function(e) {
             e.preventDefault();
+            if (!requireSystemPromptPremiumAccess()) {
+                return;
+            }
             showClearSystemPromptModal();
         });
     }
@@ -1267,6 +1317,10 @@ function initializeSystemPromptOverlay() {
  * Show the clear system prompt confirmation modal
  */
 function showClearSystemPromptModal() {
+    if (!requireSystemPromptPremiumAccess()) {
+        return;
+    }
+
     const modal = document.getElementById('clear-system-prompt-modal');
     if (modal) {
         modal.classList.remove('hidden');
@@ -1296,6 +1350,10 @@ function hideClearSystemPromptModal() {
  * Clear the system prompt
  */
 function clearSystemPrompt() {
+    if (!requireSystemPromptPremiumAccess()) {
+        return;
+    }
+
     // Import the settings manager to use the setSystemPrompt function
     import('./settings-manager.js').then(module => {
         // Clear the system prompt by setting it to empty string
