@@ -18,6 +18,28 @@ body {
     /* Allow touch manipulation but prevent page scrolling */
 }
 
+/* Keep general UI text from being highlighted; opt back in for editable fields and chat content. */
+body,
+body * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+input,
+textarea,
+select,
+[contenteditable="true"],
+.edit-textarea,
+.message-content,
+.message-content * {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
 /* Ensure body doesn't shift when sidebar is open */
 body.sidebar-open {
     transform: none !important;
@@ -2950,16 +2972,16 @@ body.light-theme #send-context-menu .menu-header {
     /* Increased z-index to be above modal background */
 }
 
-/* Prevent automatic focus on input fields in settings modal to avoid mobile keyboard popup */
+/* Keep settings inputs selectable while still preserving the modal's mobile touch behavior. */
 #settings-modal input:not([type="checkbox"]),
 #settings-modal textarea,
 #settings-modal select {
-    -webkit-user-select: none;
+    -webkit-user-select: text;
     /* Safari */
-    user-select: none;
-    -webkit-touch-callout: none;
+    user-select: text;
+    -webkit-touch-callout: default;
     /* iOS Safari */
-    touch-action: manipulation;
+    touch-action: auto;
 }
 
 /* Add a special class to enable input focus only when explicitly needed */

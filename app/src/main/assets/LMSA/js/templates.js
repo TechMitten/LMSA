@@ -255,7 +255,9 @@ function selectAvatar(url, btnElement) {
 function openCreateModal(editMode = false) {
     // Check premium status for custom templates (both create and edit)
     // Paid users bypass this, free users get the premium modal
-    const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
+    const isPremium = typeof window.hasPremiumAccess === 'function'
+        ? window.hasPremiumAccess()
+        : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
     if (!isPremium) {
         if (typeof window.openPremiumModal === 'function') {
             window.openPremiumModal('Custom Templates');
@@ -705,9 +707,11 @@ async function generateSystemPrompt() {
     }
 
     // Detect connection mode from localStorage and check premium status
-    const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function'
-        ? window.AndroidBilling.checkPremiumStatus()
-        : false;
+    const isPremium = typeof window.hasPremiumAccess === 'function'
+        ? window.hasPremiumAccess()
+        : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function'
+            ? window.AndroidBilling.checkPremiumStatus()
+            : false;
     const savedUseOpenRouter = localStorage.getItem('useOpenRouter') === 'true';
     const savedUseOllama = localStorage.getItem('useOllama') === 'true';
 

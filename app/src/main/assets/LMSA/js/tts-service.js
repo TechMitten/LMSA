@@ -174,9 +174,11 @@ class TTSService {
      */
     async speak(text, options = {}) {
         // Check if user is premium for TTS functionality
-        const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' 
-            ? window.AndroidBilling.checkPremiumStatus() 
-            : false;
+        const isPremium = typeof window.hasPremiumAccess === 'function'
+            ? window.hasPremiumAccess()
+            : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function'
+                ? window.AndroidBilling.checkPremiumStatus()
+                : false;
 
         if (!isPremium) {
             console.warn('TTS is a premium feature');

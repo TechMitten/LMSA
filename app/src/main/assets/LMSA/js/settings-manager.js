@@ -342,6 +342,10 @@ export function initializeSystemPrompt() {
 }
 
 function isPremiumUser() {
+  if (typeof window.hasPremiumAccess === "function") {
+    return window.hasPremiumAccess();
+  }
+
   return !!(
     window.AndroidBilling &&
     typeof window.AndroidBilling.checkPremiumStatus === "function" &&
@@ -397,6 +401,10 @@ export function updateSystemPromptPremiumState() {
     }
   }
 }
+
+document.addEventListener("premium-status-changed", () => {
+  updateSystemPromptPremiumState();
+});
 
 /**
  * Loads the hide thinking setting from localStorage
@@ -1767,7 +1775,9 @@ export async function saveBiometricSetting() {
     const isChecked = checkbox.checked;
     
     if (isChecked) {
-      const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
+      const isPremium = typeof window.hasPremiumAccess === 'function'
+        ? window.hasPremiumAccess()
+        : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
       if (!isPremium) {
         if (typeof window.openPremiumModal === 'function') {
             window.openPremiumModal('Biometric Unlock');

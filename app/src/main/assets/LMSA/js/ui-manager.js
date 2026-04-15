@@ -120,7 +120,9 @@ export function showWelcomeMessage() {
         const removeAdsBanner = document.getElementById('remove-ads-banner');
         if (removeAdsBanner) {
             // Only show if user is not premium
-            const isPremium = window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
+            const isPremium = typeof window.hasPremiumAccess === 'function'
+                ? window.hasPremiumAccess()
+                : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
             if (!isPremium) {
                 removeAdsBanner.style.display = 'flex';
             }

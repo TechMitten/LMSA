@@ -607,8 +607,10 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun hasEffectivePremium(now: Long = System.currentTimeMillis()): Boolean {
-        if (isDebugMode) return false
-        return isPremium || hasActiveRewardedPremium(now)
+        // In debug mode we still want rewarded sessions to unlock premium features
+        // so the test-ad flow can be validated end-to-end.
+        if (hasActiveRewardedPremium(now)) return true
+        return isPremium && !isDebugMode
     }
 
     private fun getStoredRewardedPremiumExpiry(): Long {

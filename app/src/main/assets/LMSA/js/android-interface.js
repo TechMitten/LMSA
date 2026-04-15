@@ -28,6 +28,55 @@ function restorePurchases() {
     }
 }
 
+function getPremiumStateSnapshot() {
+    return window.LMSAPremiumState || {
+        isPremium: false,
+        hasRewardedPremium: false,
+        rewardedPremiumRemainingMs: 0,
+        updatedAt: 0
+    };
+}
+
+function setPremiumState(isPremium, hasRewardedPremium = false, rewardedPremiumRemainingMs = 0) {
+    const nextState = {
+        isPremium: !!isPremium,
+        hasRewardedPremium: !!hasRewardedPremium,
+        rewardedPremiumRemainingMs: Math.max(0, Number(rewardedPremiumRemainingMs) || 0),
+        updatedAt: Date.now()
+    };
+
+    const previousState = getPremiumStateSnapshot();
+    const changed =
+        previousState.isPremium !== nextState.isPremium ||
+        previousState.hasRewardedPremium !== nextState.hasRewardedPremium ||
+        previousState.rewardedPremiumRemainingMs !== nextState.rewardedPremiumRemainingMs;
+
+    window.LMSAPremiumState = nextState;
+
+    if (changed) {
+        document.dispatchEvent(new CustomEvent('premium-status-changed', {
+            detail: nextState
+        }));
+    }
+
+    return nextState;
+}
+
+function hasPremiumAccess() {
+    const knownState = getPremiumStateSnapshot();
+    if (knownState.updatedAt > 0) {
+        return knownState.isPremium;
+    }
+
+    if (window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function') {
+        return !!window.AndroidBilling.checkPremiumStatus();
+    }
+
+    return false;
+}
+
+window.hasPremiumAccess = hasPremiumAccess;
+
 // Updated UI function to manage premium status
 function formatRewardedPremiumRemaining(ms) {
     const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
@@ -44,6 +93,10 @@ function stopRewardedPremiumCountdown() {
 }
 
 function updateUiForPremium(isPremium, hasRewardedPremium = false, rewardedPremiumRemainingMs = 0) {
+    const premiumState = setPremiumState(isPremium, hasRewardedPremium, rewardedPremiumRemainingMs);
+    isPremium = premiumState.isPremium;
+    hasRewardedPremium = premiumState.hasRewardedPremium;
+    rewardedPremiumRemainingMs = premiumState.rewardedPremiumRemainingMs;
     console.log('Premium status updated:', isPremium);
     const removeAdsBtn = document.getElementById('remove-ads-button');
     if (removeAdsBtn) {
@@ -131,10 +184,8 @@ function createNewChatAfterAd() {
  */
 function shouldShowAds() {
     // First check: Premium users never see ads
-    if (window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function') {
-        if (window.AndroidBilling.checkPremiumStatus()) {
-            return false; // Premium user, no ads
-        }
+    if (hasPremiumAccess()) {
+        return false; // Premium user, no ads
     }
 
     // All checks passed - show ads

@@ -74,8 +74,12 @@ function getSingleLineHeight(textarea) {
  * @returns {boolean} - True if user is premium, false otherwise
  */
 function isPremiumUser() {
-    return window.AndroidBilling && 
-           typeof window.AndroidBilling.checkPremiumStatus === 'function' && 
+    if (typeof window.hasPremiumAccess === 'function') {
+        return window.hasPremiumAccess();
+    }
+
+    return window.AndroidBilling &&
+           typeof window.AndroidBilling.checkPremiumStatus === 'function' &&
            window.AndroidBilling.checkPremiumStatus();
 }
 
