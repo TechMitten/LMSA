@@ -13,7 +13,7 @@ export const whatsNewModal = `
                     <div class="flex flex-col">
                         <span class="text-blue-400 font-extrabold">What's New</span>
                         <span class="text-xs text-blue-300/80 font-medium">v<span
-                            id="whats-new-version">10.10</span></span>
+                            id="whats-new-version">10.12</span></span>
                     </div>
                 </h2>
                 <button id="close-whats-new"
@@ -32,9 +32,8 @@ export const whatsNewModal = `
                                     <i class="fas fa-globe text-green-300"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <div class="flex items-center">
+                                        <div class="flex items-center">
                                         <h3 class="feature-title underline decoration-green-500/30 underline-offset-4">Real-Time Web Search</h3>
-                                        <span class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-green-500/20 text-green-300 uppercase tracking-wider">New</span>
                                     </div>
                                     <div class="feature-description">
                                         <p class="mb-3 text-sm">Augment AI responses with real-time data from the web! Toggle it effortlessly via the <span class="text-green-400 font-semibold">globe icon</span> in the header or in Settings.</p>

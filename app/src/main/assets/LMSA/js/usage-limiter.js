@@ -30,20 +30,15 @@ export function recordCompletion() {
 
 /**
  * Returns true if the user is allowed to send an OpenRouter completion request.
- * Free users are limited to 5 per day.
+ * OpenRouter completions are not tier-limited in the app.
  */
 export function canSendOpenRouterCompletion() {
-    if (window.AndroidUsageLimiter && typeof window.AndroidUsageLimiter.canSendOpenRouterCompletion === 'function') {
-        return window.AndroidUsageLimiter.canSendOpenRouterCompletion();
-    }
-    return true; // permissive fallback for non-Android environments
+    return true;
 }
 
 /**
- * Records one OpenRouter completion attempt against today's quota.
+ * No-op: OpenRouter completions are not quota-tracked by app tier.
  */
 export function recordOpenRouterCompletion() {
-    if (window.AndroidUsageLimiter && typeof window.AndroidUsageLimiter.recordOpenRouterCompletion === 'function') {
-        window.AndroidUsageLimiter.recordOpenRouterCompletion();
-    }
+    // Intentionally empty.
 }

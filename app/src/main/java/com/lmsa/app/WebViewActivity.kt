@@ -1602,34 +1602,12 @@ class WebViewActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun canSendOpenRouterCompletion(): Boolean {
-            if (hasEffectivePremium()) return true
-            val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
-            val storedDate = prefs.getString("lmsa_openrouter_date", "") ?: ""
-            val count = prefs.getInt("lmsa_openrouter_count", 0)
-            val todayStr = today()
-            if (storedDate.isEmpty() || storedDate != todayStr) {
-                prefs.edit()
-                    .putString("lmsa_openrouter_date", todayStr)
-                    .putInt("lmsa_openrouter_count", 0)
-                    .apply()
-                return true
-            }
-            return count < 5
+            return true
         }
 
         @JavascriptInterface
         fun recordOpenRouterCompletion() {
-            if (hasEffectivePremium()) return
-            val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
-            val todayStr = today()
-            val storedDate = prefs.getString("lmsa_openrouter_date", "") ?: ""
-            val count = prefs.getInt("lmsa_openrouter_count", 0)
-            val editor = prefs.edit()
-            if (storedDate.isEmpty() || storedDate != todayStr) {
-                editor.putString("lmsa_openrouter_date", todayStr)
-                editor.putInt("lmsa_openrouter_count", 0) // Reset count for the new day
-            }
-            editor.putInt("lmsa_openrouter_count", count + 1).apply()
+            // OpenRouter completions are no longer quota-limited by app tier.
         }
     }
 

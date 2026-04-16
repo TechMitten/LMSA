@@ -706,23 +706,11 @@ async function generateSystemPrompt() {
         return;
     }
 
-    // Detect connection mode from localStorage and check premium status
-    const isPremium = typeof window.hasPremiumAccess === 'function'
-        ? window.hasPremiumAccess()
-        : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function'
-            ? window.AndroidBilling.checkPremiumStatus()
-            : false;
+    // Detect connection mode from localStorage
     const savedUseOpenRouter = localStorage.getItem('useOpenRouter') === 'true';
     const savedUseOllama = localStorage.getItem('useOllama') === 'true';
 
-    if (savedUseOpenRouter && !isPremium) {
-        if (typeof window.openPremiumModal === 'function') {
-            window.openPremiumModal('Custom Templates');
-        }
-        return;
-    }
-
-    const useOpenRouter = savedUseOpenRouter && isPremium;
+    const useOpenRouter = savedUseOpenRouter;
 
     // Set loading state immediately
     const originalBtnContent = generateBtn.innerHTML;

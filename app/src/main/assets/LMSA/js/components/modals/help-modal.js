@@ -858,7 +858,7 @@ export const helpModal = `
                                     Free users have the following limits and features:</p>
                                 <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
                                     <li><strong>Local Chat Limit: 15 per day</strong> — After reaching this limit, you'll enter a cooldown period</li>
-                                    <li><strong>OpenRouter Limit: 5 per day</strong> — Separate daily limit when using cloud models</li>
+                                    <li><strong>OpenRouter Usage:</strong> Available for both Free and Premium users (requires your own OpenRouter API key)</li>
                                     <li><strong>Automatic Reset: Midnight (Local Time)</strong> — Your chat completion counts reset at midnight in your timezone, allowing you to chat freely again</li>
                                     <li><strong>Advertisements:</strong> Free users see advertisements throughout the app</li>
                                     <li><strong>File Attachments:</strong> Not available on the Free tier; upgrade to Premium to attach files to chats</li>
