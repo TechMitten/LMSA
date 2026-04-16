@@ -217,6 +217,19 @@ export const settingsModal = `
                         <p id="smart-reply-description" class="text-xs text-gray-400 mt-1">When enabled, the LLM will analyze the conversation and suggest interactive tap-to-reply options above the chat input.</p>
                     </div>
 
+                    <div class="mb-5" id="web-search-setting">
+                        <div class="flex justify-between items-center mb-2">
+                            <label for="web-search-toggle" class="text-sm font-medium">
+                                <i class="fas fa-globe mr-2 text-blue-400"></i>Enable Web Search</label>
+                            <div class="toggle-container">
+                                <input type="checkbox" id="web-search-toggle">
+                                <div class="toggle-switch"></div>
+                                <div class="toggle-dot"></div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">When enabled, the LLM will search the web using Serper.dev before answering to augment its knowledge.</p>
+                    </div>
+
                     <div class="mb-5">
                         <div class="flex justify-between items-center mb-2">
                             <label for="auto-scroll" class="text-sm font-medium">

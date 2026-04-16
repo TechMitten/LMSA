@@ -16,6 +16,7 @@ import { refreshChatScrollbar } from "./chat-scrollbar.js";
 import { debugLog, refreshAllCodeBlocks } from "./utils.js";
 import { showSmartReplyWarningModal } from "./components/modals/smart-reply-warning-modal.js";
 import { showOpenRouterWarningModal } from "./components/modals/openrouter-warning-modal.js";
+import { showWebSearchWarningModal } from "./components/modals/web-search-warning-modal.js";
 
 // Default system prompt is empty unless user explicitly sets one
 const DEFAULT_SYSTEM_PROMPT = "";
@@ -43,6 +44,7 @@ let showScrollToBottom = true; // Show scroll to bottom button in chat
 let chatFontFamily = 'system-ui, sans-serif'; // Font family for chat message bubbles
 let chatFontSize = '16px'; // Font size for chat message bubbles
 let requireBiometric = false; // Require biometric unlock on app start
+let webSearchEnabled = false;
 
 const ALLOWED_CHAT_FONT_SIZES = ['12px', '14px', '16px', '20px', '24px'];
 
@@ -561,6 +563,70 @@ export function loadAutoGenerateTitlesSetting() {
     );
 
     syncAutoGenerateTitlesUI();
+  }
+}
+
+/**
+ * Loads the web search setting from localStorage
+ */
+export function loadWebSearchSetting() {
+  const webSearchToggle = document.getElementById("web-search-toggle");
+  if (webSearchToggle) {
+    const savedWebSearch = localStorage.getItem("webSearchEnabled");
+    if (savedWebSearch === "true") {
+      webSearchToggle.checked = true;
+      webSearchEnabled = true;
+    } else {
+      webSearchToggle.checked = false;
+      webSearchEnabled = false;
+    }
+
+    // Add event listener for the checkbox with warning modal
+    webSearchToggle.addEventListener("change", handleWebSearchToggle);
+  }
+}
+
+/**
+ * Saves the web search setting to localStorage
+ */
+export function saveWebSearchSetting() {
+  const webSearchToggle = document.getElementById("web-search-toggle");
+  if (webSearchToggle) {
+    webSearchEnabled = webSearchToggle.checked;
+    localStorage.setItem("webSearchEnabled", webSearchEnabled);
+  }
+}
+
+/**
+ * Gets the current Web Search setting
+ * @returns {boolean} - The current web search setting
+ */
+export function getWebSearchEnabled() {
+  return webSearchEnabled;
+}
+
+/**
+ * Handles the Web Search toggle change event
+ * Shows warning modal when enabling the feature
+ * @param {Event} event - The change event from the checkbox
+ */
+function handleWebSearchToggle(event) {
+  const isChecked = event.target.checked;
+
+  if (isChecked) {
+    // Prevent checkbox from staying checked until user confirms
+    event.target.checked = false;
+
+    // Show warning modal with callback
+    showWebSearchWarningModal(() => {
+      // User confirmed - enable the feature
+      const webSearchToggle = document.getElementById("web-search-toggle");
+      if (webSearchToggle) webSearchToggle.checked = true;
+      saveWebSearchSetting();
+    });
+  } else {
+    // User is disabling - no warning needed, save directly
+    saveWebSearchSetting();
   }
 }
 
@@ -1728,6 +1794,7 @@ export function loadSettings() {
   initializeTemperature();
   loadHideThinkingSetting();
   loadAutoGenerateTitlesSetting();
+  loadWebSearchSetting();
   loadAutoSmartReplySetting();
   loadBiometricSetting();
   loadAutoScrollSetting();

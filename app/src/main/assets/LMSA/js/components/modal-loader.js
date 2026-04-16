@@ -16,6 +16,7 @@ import { introModal } from './modals/intro-modal.js';
 import { smartReplyWarningModal } from './modals/smart-reply-warning-modal.js';
 import { openRouterWarningModal } from './modals/openrouter-warning-modal.js';
 import { openRouterKeyRequiredModal } from './modals/openrouter-key-required-modal.js';
+import { webSearchWarningModal } from './modals/web-search-warning-modal.js';
 
 /**
  * Loads all modal components into the DOM
@@ -30,7 +31,7 @@ export function loadModals() {
     // We insert them at the beginning of the body or a specific container
     // The previous location was directly inside body, before #main-app-container
 
-    tempDiv.innerHTML = termsModal + privacyPolicyModal + helpModal + contactModal + aboutModal + whatsNewModal + contextMenus + importModals + exportModals + modelModals + confirmationModals + promptModals + settingsModal + premiumModal + introModal + smartReplyWarningModal + openRouterWarningModal + openRouterKeyRequiredModal;
+    tempDiv.innerHTML = termsModal + privacyPolicyModal + helpModal + contactModal + aboutModal + whatsNewModal + contextMenus + importModals + exportModals + modelModals + confirmationModals + promptModals + settingsModal + premiumModal + introModal + smartReplyWarningModal + openRouterWarningModal + openRouterKeyRequiredModal + webSearchWarningModal;
 
     while (tempDiv.firstChild) {
         modalContainer.appendChild(tempDiv.firstChild);

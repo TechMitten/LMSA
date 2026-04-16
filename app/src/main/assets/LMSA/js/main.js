@@ -20,6 +20,7 @@ import { initializeChatScrollbar, refreshChatScrollbar } from './chat-scrollbar.
 import { initPremiumModal, openPremiumModal } from './components/modals/premium-modal.js';
 import { initSmartReplyWarningModal } from './components/modals/smart-reply-warning-modal.js';
 import { initOpenRouterWarningModal } from './components/modals/openrouter-warning-modal.js';
+import { initWebSearchWarningModal } from './components/modals/web-search-warning-modal.js';
 import { initializeTemplateIndicator } from './template-indicator.js';
 import { initializeHapticFeedback } from './haptics.js';
 import { updateConfirmationModalTheme, updateExportImportModalsTheme } from './confirmation-modal-fix.js';
@@ -390,6 +391,7 @@ export async function initializeApp() {
     document.addEventListener('openRouterLimitReached', () => openPremiumModal('OpenRouter Messages'));
     initSmartReplyWarningModal();
     initOpenRouterWarningModal();
+    initWebSearchWarningModal();
     initializeTemplateIndicator();
 
     const onboardingCompleted = await ensureOnboardingCompleted();

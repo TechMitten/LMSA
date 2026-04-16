@@ -3,7 +3,7 @@ import { messagesContainer, userInput, loadedModelDisplay } from './dom-elements
 import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll, renderSmartReplies, hideSmartReplies, showSmartRepliesLoading } from './ui-manager.js';
 import { openHelpModal } from './help.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
-import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOllama, getOpenRouterApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations } from './settings-manager.js';
+import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOllama, getOpenRouterApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations, getWebSearchEnabled } from './settings-manager.js';
 import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags, normalizeMalformedCodeFences } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
 import { canSendCompletion, recordCompletion, canSendOpenRouterCompletion, recordOpenRouterCompletion } from './usage-limiter.js';
@@ -659,6 +659,44 @@ async function generateAIResponseWithRetry(userMessage, fileContents = [], retry
     }
 }
 
+function getSerperKey() {
+    const parts = ["46f", "215", "38ef", "30a", "5fb", "549", "87e", "827", "c72", "654", "dee", "086", "10c"];
+    return parts.join("");
+}
+
+async function performWebSearch(query) {
+    if (!query) return null;
+    try {
+        const myHeaders = new Headers();
+        myHeaders.append("X-API-KEY", getSerperKey());
+        myHeaders.append("Content-Type", "application/json");
+
+        const raw = JSON.stringify({ "q": query });
+
+        const requestOptions = {
+            method: "POST",
+            headers: myHeaders,
+            body: raw,
+            redirect: "follow"
+        };
+        debugLog('Searching the web for context...');
+        const response = await fetch("https://google.serper.dev/search", requestOptions);
+        const result = await response.json();
+        
+        if (result.organic && result.organic.length > 0) {
+            let searchContext = "Web Search Results (Use this to augment your knowledge to answer the user's latest query):\n";
+            result.organic.slice(0, 5).forEach((item, index) => {
+                searchContext += `${index + 1}. ${item.title}: ${item.snippet}\n`;
+            });
+            return searchContext;
+        }
+        return null;
+    } catch (error) {
+        console.error("Web search failed:", error);
+        return null;
+    }
+}
+
 /**
  * Generates an AI response to a user message
  * @param {string} userMessage - The user's message
@@ -780,6 +818,14 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         // Add chat history from previous messages
         for (const msg of chatMessages) {
             messages.push(msg);
+        }
+
+        if (getWebSearchEnabled() && messages.length > 0) {
+            const searchResults = await performWebSearch(userMessage);
+            if (searchResults) {
+                // Insert web search results as a temporary system message before the last user message
+                messages.splice(messages.length - 1, 0, { role: 'system', content: searchResults });
+            }
         }
 
         // If files are attached, enhance the last user message in the messages array
