@@ -699,6 +699,21 @@ async function performWebSearch(query) {
     }
 }
 
+const WEB_SEARCH_CONTEXT_HEADER = "Web Search Results (Use this to augment your knowledge to answer the user's latest query):\n";
+
+function stripInjectedWebSearchContext(content) {
+    if (typeof content !== 'string' || !content.startsWith(WEB_SEARCH_CONTEXT_HEADER)) {
+        return content;
+    }
+
+    const separatorIndex = content.indexOf('\n\n', WEB_SEARCH_CONTEXT_HEADER.length);
+    if (separatorIndex === -1) {
+        return content;
+    }
+
+    return content.slice(separatorIndex + 2).replace(/^\n+/, '');
+}
+
 /**
  * Generates an AI response to a user message
  * @param {string} userMessage - The user's message
@@ -831,7 +846,10 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                     // Prepend the search context directly into the last user message instead.
                     const lastMsg = messages[messages.length - 1];
                     if (lastMsg && lastMsg.role === 'user') {
-                        lastMsg.content = searchResults + '\n\n' + lastMsg.content;
+                        messages[messages.length - 1] = {
+                            ...lastMsg,
+                            content: searchResults + '\n\n' + lastMsg.content
+                        };
                     }
                 } else {
                     // Local LM Studio / Ollama: inject as a system message before the last user message
@@ -3496,7 +3514,8 @@ export async function regenerateLastResponse(isRetry = false) {
         }
 
         // Get the last user message
-        const lastUserMessage = messages[lastUserMessageIndex].content;
+        const storedLastUserMessage = messages[lastUserMessageIndex].content;
+        const lastUserMessage = stripInjectedWebSearchContext(storedLastUserMessage);
         let fileContents = messages[lastUserMessageIndex].files || [];
 
         // Set the generation flag
@@ -3575,6 +3594,33 @@ export async function regenerateLastResponse(isRetry = false) {
             // Add all messages up to and including the last user message
             for (const msg of filteredMessages) {
                 apiMessages.push(msg);
+            }
+
+            // Ensure regenerated requests always start from a clean user prompt,
+            // then apply the CURRENT web search toggle state.
+            const apiLastUserMessageIndex = apiMessages.length - 1;
+            if (apiLastUserMessageIndex >= 0 && apiMessages[apiLastUserMessageIndex]?.role === 'user') {
+                apiMessages[apiLastUserMessageIndex] = {
+                    ...apiMessages[apiLastUserMessageIndex],
+                    content: lastUserMessage
+                };
+            }
+
+            if (getWebSearchEnabled() && apiMessages.length > 0) {
+                const searchResults = await performWebSearch(lastUserMessage);
+                if (searchResults) {
+                    if (getUseOpenRouter()) {
+                        const lastMsg = apiMessages[apiLastUserMessageIndex];
+                        if (lastMsg && lastMsg.role === 'user') {
+                            apiMessages[apiLastUserMessageIndex] = {
+                                ...lastMsg,
+                                content: searchResults + '\n\n' + lastMsg.content
+                            };
+                        }
+                    } else {
+                        apiMessages.splice(apiLastUserMessageIndex, 0, { role: 'system', content: searchResults });
+                    }
+                }
             }
 
             if (shouldUseLmStudioNativeMcpChat()) {
