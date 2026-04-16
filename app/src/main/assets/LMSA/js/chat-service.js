@@ -659,40 +659,42 @@ async function generateAIResponseWithRetry(userMessage, fileContents = [], retry
     }
 }
 
-function getSerperKey() {
-    const parts = ["46f", "215", "38ef", "30a", "5fb", "549", "87e", "827", "c72", "654", "dee", "086", "10c"];
-    return parts.join("");
-}
-
 async function performWebSearch(query) {
     if (!query) return null;
     try {
-        const myHeaders = new Headers();
-        myHeaders.append("X-API-KEY", getSerperKey());
-        myHeaders.append("Content-Type", "application/json");
+        const searxngUrl = new URL('https://searxng.techmitten.com/search');
+        searxngUrl.searchParams.set('q', query);
+        searxngUrl.searchParams.set('format', 'json');
+        searxngUrl.searchParams.set('categories', 'general');
 
-        const raw = JSON.stringify({ "q": query });
+        debugLog('Searching the web for context via SearXNG...');
 
-        const requestOptions = {
-            method: "POST",
-            headers: myHeaders,
-            body: raw,
-            redirect: "follow"
-        };
-        debugLog('Searching the web for context...');
-        const response = await fetch("https://google.serper.dev/search", requestOptions);
+        // Note: No custom headers are set here to avoid triggering a CORS preflight.
+        // SearXNG's JSON endpoint works with a simple GET request.
+        const response = await fetch(searxngUrl.toString());
+
+        if (!response.ok) {
+            console.error(`Web search HTTP error: ${response.status} ${response.statusText}`);
+            return null;
+        }
+
         const result = await response.json();
-        
-        if (result.organic && result.organic.length > 0) {
+        debugLog('SearXNG raw result:', JSON.stringify(result).substring(0, 300));
+
+        if (result.results && result.results.length > 0) {
             let searchContext = "Web Search Results (Use this to augment your knowledge to answer the user's latest query):\n";
-            result.organic.slice(0, 5).forEach((item, index) => {
-                searchContext += `${index + 1}. ${item.title}: ${item.snippet}\n`;
+            result.results.slice(0, 5).forEach((item, index) => {
+                const snippet = item.content || item.url || '';
+                searchContext += `${index + 1}. ${item.title}: ${snippet}\n`;
             });
+            debugLog('Injecting search context:', searchContext.substring(0, 200));
             return searchContext;
         }
+
+        console.warn('SearXNG returned no results for query:', query);
         return null;
     } catch (error) {
-        console.error("Web search failed:", error);
+        console.error("Web search failed (likely CORS or network error):", error.name, error.message);
         return null;
     }
 }
@@ -823,8 +825,18 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         if (getWebSearchEnabled() && messages.length > 0) {
             const searchResults = await performWebSearch(userMessage);
             if (searchResults) {
-                // Insert web search results as a temporary system message before the last user message
-                messages.splice(messages.length - 1, 0, { role: 'system', content: searchResults });
+                if (getUseOpenRouter()) {
+                    // OpenRouter (and most cloud models) do not support system-role messages
+                    // injected mid-conversation — only the first message can be system role.
+                    // Prepend the search context directly into the last user message instead.
+                    const lastMsg = messages[messages.length - 1];
+                    if (lastMsg && lastMsg.role === 'user') {
+                        lastMsg.content = searchResults + '\n\n' + lastMsg.content;
+                    }
+                } else {
+                    // Local LM Studio / Ollama: inject as a system message before the last user message
+                    messages.splice(messages.length - 1, 0, { role: 'system', content: searchResults });
+                }
             }
         }
 

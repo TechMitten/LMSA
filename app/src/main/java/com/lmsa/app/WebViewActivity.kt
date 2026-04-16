@@ -394,6 +394,10 @@ class WebViewActivity : AppCompatActivity() {
         webSettings.allowContentAccess = true
         @Suppress("DEPRECATION")
         webSettings.allowFileAccessFromFileURLs = true
+        // Required so that file:// pages can make cross-origin fetch() calls (e.g. to SearXNG).
+        // Without this, WebView CORS blocks all network requests from file:// origin.
+        @Suppress("DEPRECATION")
+        webSettings.allowUniversalAccessFromFileURLs = true
         // This app uses a responsive layout with a viewport meta tag, so avoid
         // overview scaling that can shrink text on some Android devices.
         webSettings.useWideViewPort = false
