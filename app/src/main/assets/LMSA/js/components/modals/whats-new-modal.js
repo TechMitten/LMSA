@@ -26,6 +26,26 @@ export const whatsNewModal = `
                 <div class="space-y-3">
                     <div class="feature-item">
                         <div class="relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-green-500/10 to-emerald-700/5 rounded-full blur-xl"></div>
+                            <div class="flex items-start relative z-10">
+                                <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-green-500/20 w-10 h-10 shadow-sm">
+                                    <i class="fas fa-globe text-green-300"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <h3 class="feature-title underline decoration-green-500/30 underline-offset-4">Real-Time Web Search</h3>
+                                        <span class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-green-500/20 text-green-300 uppercase tracking-wider">New</span>
+                                    </div>
+                                    <div class="feature-description">
+                                        <p class="mb-3 text-sm">Augment AI responses with real-time data from the web! Toggle it effortlessly via the <span class="text-green-400 font-semibold">globe icon</span> in the header or in Settings.</p>
+                                        <p class="mb-3 text-sm">When enabled, the AI performs a live search to provide up-to-date answers on recent events, news, or complex facts.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-blue-500/10 to-sky-700/5 rounded-full blur-xl"></div>
                             <div class="flex items-start relative z-10">
                                 <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-blue-600/20 w-10 h-10 shadow-sm">

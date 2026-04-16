@@ -76,6 +76,11 @@ export const helpModal = `
                                         <i class="fas fa-paperclip mr-2 text-sm"></i>
                                         <span>File Attachments</span>
                                     </a>
+                                    <a href="#section-web-search"
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
+                                        <i class="fas fa-globe mr-2 text-sm"></i>
+                                        <span>Web Search</span>
+                                    </a>
                                 </div>
                             </details>
                             <details class="md:col-span-2 p-2 rounded toc-group-privacy" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);">
@@ -630,6 +635,41 @@ export const helpModal = `
                                     <li>Larger files may be truncated if they exceed content limits</li>
                                     <li>The AI will acknowledge attached files and integrate them into its response</li>
                                 </ul>
+                            </div>
+                        </section>
+                        <section id="section-web-search">
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #10b981;"><i
+                                    class="fas fa-globe mr-2"></i>Web Search</h3>
+                            <p style="color: var(--text-primary); margin-bottom: 1rem;">
+                                The Web Search feature enables the AI model to search the web in real-time to find up-to-date information, news, and facts before generating a response.
+                            </p>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                        class="fas fa-power-off mr-2"></i>How to Enable:</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li>Tap the <strong>Globe icon</strong> in the top header next to the new chat button.</li>
+                                    <li>Alternatively, open <strong>Settings</strong> and toggle on <strong>Enable Web Search</strong>.</li>
+                                    <li>When enabled, the Globe icon will turn <strong>emerald green</strong>.</li>
+                                    <li>For privacy and security, this feature is <strong>ephemeral</strong> and will automatically turn off when you close or restart the app.</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                        class="fas fa-robot mr-2"></i>How It Works:</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li>When you send a prompt, if the system determines a web search is helpful, LMSA privately queries a search engine.</li>
+                                    <li>The search results are then fed to your selected AI model to generate a comprehensive and accurate reply.</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: #f59e0b;">
+                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                        class="fas fa-shield-alt mr-2"></i>Privacy Note:</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                    When Web Search is active, your prompt may be sent to a 3rd-party search provider (Serper.dev) to fetch search results. <strong>Do not include sensitive or personal information</strong> in your messages while Web Search is enabled.
+                                </p>
                             </div>
                         </section>
                         <section id="section-security-privacy">
