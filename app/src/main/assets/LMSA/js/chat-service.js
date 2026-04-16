@@ -682,7 +682,7 @@ async function performWebSearch(query) {
         debugLog('SearXNG raw result:', JSON.stringify(result).substring(0, 300));
 
         if (result.results && result.results.length > 0) {
-            let searchContext = "Web Search Results (Use this to augment your knowledge to answer the user's latest query):\n";
+            let searchContext = `${WEB_SEARCH_CONTEXT_HEADER}\n`;
             result.results.slice(0, 5).forEach((item, index) => {
                 const snippet = item.content || item.url || '';
                 searchContext += `${index + 1}. ${item.title}: ${snippet}\n`;
@@ -699,14 +699,30 @@ async function performWebSearch(query) {
     }
 }
 
-const WEB_SEARCH_CONTEXT_HEADER = "Web Search Results (Use this to augment your knowledge to answer the user's latest query):\n";
+const WEB_SEARCH_CONTEXT_HEADER = [
+    "Internal factual context for the assistant:",
+    "- Use this information to improve accuracy.",
+    "- Do not mention web search, search results, or that external context was provided.",
+    "- Respond directly to the user.",
+    "Context:"
+].join('\n');
+const LEGACY_WEB_SEARCH_CONTEXT_HEADER = "Web Search Results (Use this to augment your knowledge to answer the user's latest query):\n";
 
 function stripInjectedWebSearchContext(content) {
-    if (typeof content !== 'string' || !content.startsWith(WEB_SEARCH_CONTEXT_HEADER)) {
+    if (typeof content !== 'string') {
         return content;
     }
 
-    const separatorIndex = content.indexOf('\n\n', WEB_SEARCH_CONTEXT_HEADER.length);
+    let headerLength = null;
+    if (content.startsWith(WEB_SEARCH_CONTEXT_HEADER)) {
+        headerLength = WEB_SEARCH_CONTEXT_HEADER.length;
+    } else if (content.startsWith(LEGACY_WEB_SEARCH_CONTEXT_HEADER)) {
+        headerLength = LEGACY_WEB_SEARCH_CONTEXT_HEADER.length;
+    } else {
+        return content;
+    }
+
+    const separatorIndex = content.indexOf('\n\n', headerLength);
     if (separatorIndex === -1) {
         return content;
     }
