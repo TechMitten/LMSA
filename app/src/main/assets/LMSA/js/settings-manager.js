@@ -567,19 +567,14 @@ export function loadAutoGenerateTitlesSetting() {
 }
 
 /**
- * Loads the web search setting from localStorage
+ * Initializes the web search setting to default off
  */
 export function loadWebSearchSetting() {
   const webSearchToggle = document.getElementById("web-search-toggle");
   if (webSearchToggle) {
-    const savedWebSearch = localStorage.getItem("webSearchEnabled");
-    if (savedWebSearch === "true") {
-      webSearchToggle.checked = true;
-      webSearchEnabled = true;
-    } else {
-      webSearchToggle.checked = false;
-      webSearchEnabled = false;
-    }
+    // Always default to false on app load
+    webSearchToggle.checked = false;
+    webSearchEnabled = false;
 
     // Add event listener for the checkbox with warning modal
     webSearchToggle.addEventListener("change", handleWebSearchToggle);
@@ -590,13 +585,13 @@ export function loadWebSearchSetting() {
 }
 
 /**
- * Saves the web search setting to localStorage
+ * Updates the web search state in memory
  */
 export function saveWebSearchSetting() {
   const webSearchToggle = document.getElementById("web-search-toggle");
   if (webSearchToggle) {
     webSearchEnabled = webSearchToggle.checked;
-    localStorage.setItem("webSearchEnabled", webSearchEnabled);
+    // We intentionally do not save this to localStorage so it resets each session
   }
 }
 
