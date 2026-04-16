@@ -227,7 +227,7 @@ export const settingsModal = `
                                 <div class="toggle-dot"></div>
                             </div>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">When enabled, the LLM will search the web using a private SearXNG instance before answering to augment its knowledge.</p>
+                        <p class="text-xs text-gray-400 mt-1">When enabled, the LLM will search the web using an API that queries popular search engines and other services to augment its knowledge before answering.</p>
                     </div>
 
                     <div class="mb-5">
