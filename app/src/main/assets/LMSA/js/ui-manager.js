@@ -5,7 +5,7 @@ import {
     smartRepliesContainer, userInput
 } from './dom-elements.js';
 import { basicSanitizeInput, sanitizeInput, initializeCodeMirror, scrollToBottom, copyToClipboard, debugLog, debugError, processCodeBlocks, decodeHtmlEntities, htmlToFormattedText, getReasoningStreamState, normalizeReasoningTags, stripReasoningSections } from './utils.js';
-import { getHideThinking, getShowModelLabel } from './settings-manager.js';
+import { getHideThinking, getShowModelLabel, getWebSearchEnabled } from './settings-manager.js';
 import { domBatcher, rafThrottle } from './optimized-utils.js';
 
 
@@ -625,9 +625,11 @@ export function showLoadingIndicator() {
         return;
     }
 
+    const loadingText = getWebSearchEnabled() ? 'Searching web' : 'Generating';
+
     // Ensure the content includes the thinking text
     if (!loadingIndicator.querySelector('.thinking-text')) {
-        loadingIndicator.innerHTML = '<span class="thinking-text">Generating...</span><span class="loading-ellipsis">...</span>';
+        loadingIndicator.innerHTML = `<span class="thinking-text">${loadingText}...</span><span class="loading-ellipsis">...</span>`;
 
         // Apply styling to new elements
         const ellipsis = loadingIndicator.querySelector('.loading-ellipsis');
@@ -642,6 +644,11 @@ export function showLoadingIndicator() {
 
         if (thinkingText) {
             thinkingText.style.marginRight = '2px';
+        }
+    } else {
+        const thinkingText = loadingIndicator.querySelector('.thinking-text');
+        if (thinkingText) {
+            thinkingText.textContent = `${loadingText}...`;
         }
     }
     loadingIndicator.classList.remove('hidden');
