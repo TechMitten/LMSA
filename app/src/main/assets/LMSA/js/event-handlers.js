@@ -4,7 +4,7 @@ import {
     chatForm, userInput, clearChatButton, newChatButton, settingsButton,
     closeSettingsButton, closeSettingsXButton, settingsModal, welcomeMessage, messagesContainer,
     sidebarToggle, closeSidebarButton, confirmActionButton, cancelActionButton,
-    helpButton, newChatHeaderButton, whatsNewButton, aboutButton, stopButton, contextMenu, copyTextButton,
+    helpButton, newChatHeaderButton, webSearchHeaderButton, webSearchHeaderIcon, whatsNewButton, aboutButton, stopButton, contextMenu, copyTextButton,
     regenerateTextButton, exitButton, refreshButton, modelToggleButton, loadedModelDisplay,
     settingsIconButton, newTopicButton, sendButton, sendContextMenu, newTopicMenuButton, scrollToBottomMenuButton,
     modelButton, importExportGroupButton, importExportContainer,
@@ -13,7 +13,7 @@ import {
 } from './dom-elements.js';
 import { showSettingsModal, hideSettingsModal } from './settings-modal-manager.js';
 import { openPremiumModal } from './components/modals/premium-modal.js';
-import { getEnterSendsNewline, clearOpenRouterApiKey, clearLMStudioApiToken } from './settings-manager.js';
+import { getEnterSendsNewline, clearOpenRouterApiKey, clearLMStudioApiToken, toggleWebSearchFeature } from './settings-manager.js';
 import {
     showWelcomeMessage, hideWelcomeMessage, toggleSidebar, closeSidebar, showLoadingIndicator,
     hideLoadingIndicator, toggleSendStopButton, hideConfirmationModal, showConfirmationModal,
@@ -1152,6 +1152,36 @@ export function initializeEventHandlers() {
                 newChatHeaderButton.blur();
             }
         });
+    }
+
+    // Web search header button
+    if (webSearchHeaderButton) {
+        // Only trigger clicks to avoid double-firing with touch
+        webSearchHeaderButton.addEventListener('click', (e) => {
+            // Prevent default behavior
+            e.preventDefault();
+            
+            // Trigger web search toggle functionality
+            toggleWebSearchFeature();
+            
+            // Remove focus to prevent the button from staying highlighted
+            webSearchHeaderButton.blur();
+        });
+        
+        webSearchHeaderButton.addEventListener('touchstart', (e) => {
+            // Prevent default touch highlight
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        webSearchHeaderButton.addEventListener('touchend', (e) => {
+            // Prevent default behavior that might cause highlight
+            e.preventDefault();
+            // Trigger functionality
+            toggleWebSearchFeature();
+            webSearchHeaderButton.blur();
+        }, { passive: false });
     }
 
     // About button

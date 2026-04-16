@@ -52,6 +52,11 @@ export const webSearchWarningModal = `
                 </div>
             </div>
 
+            <div class="mb-5 flex items-center px-1">
+                <input type="checkbox" id="dont-show-web-search-warning" class="w-4 h-4 text-blue-600 rounded bg-gray-700 border-gray-600 focus:ring-blue-500" style="cursor: pointer;">
+                <label for="dont-show-web-search-warning" class="ml-2 text-sm font-medium text-gray-300" style="cursor: pointer;">Don't show this warning again</label>
+            </div>
+
             <div class="flex justify-center">
                 <button id="confirm-web-search-warning"
                     class="web-search-confirm-btn w-full px-4 rounded-lg text-white shadow-lg font-semibold"
@@ -95,6 +100,11 @@ export function initWebSearchWarningModal() {
         // Confirm button handler
         if (confirmButton) {
             confirmButton.addEventListener('click', () => {
+                const dontShowCheckbox = document.getElementById('dont-show-web-search-warning');
+                if (dontShowCheckbox && dontShowCheckbox.checked) {
+                    localStorage.setItem('hideWebSearchWarning', 'true');
+                }
+
                 if (confirmationCallback) {
                     confirmationCallback();
                 }

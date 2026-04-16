@@ -583,6 +583,9 @@ export function loadWebSearchSetting() {
 
     // Add event listener for the checkbox with warning modal
     webSearchToggle.addEventListener("change", handleWebSearchToggle);
+    
+    // Sync the header UI
+    syncWebSearchHeaderUI();
   }
 }
 
@@ -614,19 +617,57 @@ function handleWebSearchToggle(event) {
   const isChecked = event.target.checked;
 
   if (isChecked) {
-    // Prevent checkbox from staying checked until user confirms
-    event.target.checked = false;
-
-    // Show warning modal with callback
-    showWebSearchWarningModal(() => {
-      // User confirmed - enable the feature
+    if (localStorage.getItem("hideWebSearchWarning") === "true") {
+      // User opted to hide warning, enable immediately
       const webSearchToggle = document.getElementById("web-search-toggle");
       if (webSearchToggle) webSearchToggle.checked = true;
       saveWebSearchSetting();
-    });
+      syncWebSearchHeaderUI();
+    } else {
+      // Prevent checkbox from staying checked until user confirms
+      event.target.checked = false;
+
+      // Show warning modal with callback
+      showWebSearchWarningModal(() => {
+        // User confirmed - enable the feature
+        const webSearchToggle = document.getElementById("web-search-toggle");
+        if (webSearchToggle) webSearchToggle.checked = true;
+        saveWebSearchSetting();
+        syncWebSearchHeaderUI();
+      });
+    }
   } else {
     // User is disabling - no warning needed, save directly
     saveWebSearchSetting();
+    syncWebSearchHeaderUI();
+  }
+}
+
+/**
+ * Toggles Web Search feature from outside the settings menu
+ */
+export function toggleWebSearchFeature() {
+  const webSearchToggle = document.getElementById("web-search-toggle");
+  if (!webSearchToggle) return;
+  webSearchToggle.click(); // Trigger the checkbox click event
+}
+
+/**
+ * Synchronizes the web search header icon with the current state
+ */
+export function syncWebSearchHeaderUI() {
+  const headerIcon = document.getElementById("web-search-header-icon");
+  const headerBtn = document.getElementById("web-search-header-button");
+  if (!headerIcon || !headerBtn) return;
+  
+  if (webSearchEnabled) {
+    headerIcon.style.setProperty('color', '#10B981', 'important');
+    headerIcon.style.setProperty('stroke', '#10B981', 'important');
+    headerBtn.classList.add("bg-green-500/10");
+  } else {
+    headerIcon.style.removeProperty('color');
+    headerIcon.style.removeProperty('stroke');
+    headerBtn.classList.remove("bg-green-500/10");
   }
 }
 
