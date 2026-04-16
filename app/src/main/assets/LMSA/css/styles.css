@@ -1379,23 +1379,6 @@ body.light-theme #loaded-model {
     color: var(--button-primary-bg);
 }
 
-#rewarded-premium-status,
-#rewarded-premium-status:hover,
-#rewarded-premium-status:active,
-#rewarded-premium-status:focus,
-#rewarded-premium-status:focus-visible,
-#rewarded-premium-status.menu-press-in {
-    background: transparent !important;
-    transform: none !important;
-    box-shadow: none !important;
-    filter: none !important;
-}
-
-#rewarded-premium-status {
-    cursor: default !important;
-    pointer-events: none;
-}
-
 #sidebar .menu-item i {
     width: 1.5rem;
     margin-right: 0.75rem;

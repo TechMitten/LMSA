@@ -18,7 +18,7 @@ android {
         minSdk = 23
         // Target 36 to stay current with Play Store 2026 requirements
         targetSdk = 36
-        versionCode = 280
+        versionCode = 281
         versionName = "10.12"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -76,42 +76,3 @@ dependencies {
 // Disable specific bundle listing tasks as per your original config
 tasks.matching { it.name == "produceReleaseBundleIdeListingFile" }.configureEach { enabled = false }
 tasks.matching { it.name == "createReleaseBundleListingFileRedirect" }.configureEach { enabled = false }
-
-// Custom task for modifying your WebView assets
-tasks.register("modifyHtmlAndJs") {
-    doLast {
-        val htmlFile = file("src/main/assets/LMSA/index.html")
-        if (htmlFile.exists()) {
-            var htmlContent = htmlFile.readText()
-            val htmlRegex = Regex("""(<div id="remove-ads-banner" class="w-full">.*?</div>)\s*<div id="native-ad-placeholder" class="w-full mt-6 rounded-xl border border-white/5" style="height: 120px; display: none;"></div>""", RegexOption.DOT_MATCHES_ALL)
-            val htmlNew = """$1
-                                
-                                <div id="native-ad-divider" class="w-[85%] mx-auto h-px bg-gradient-to-r from-transparent via-gray-400/30 to-transparent mt-8 mb-8" style="display: none;"></div>
-                                
-                                <div id="native-ad-placeholder" class="w-full rounded-xl border border-white/5" style="height: 120px; display: none;"></div>"""
-
-            if (htmlRegex.containsMatchIn(htmlContent)) {
-                htmlFile.writeText(htmlContent.replace(htmlRegex, htmlNew))
-                println("index.html updated successfully")
-            }
-        }
-
-        val jsFile = file("src/main/assets/LMSA/js/android-interface.js")
-        if (jsFile.exists()) {
-            var jsContent = jsFile.readText()
-            val jsRegex = Regex("""(    // Manage Native Ad placeholder\s+const nativeAdPlaceholder = document\.getElementById\('native-ad-placeholder'\);\s+if \(nativeAdPlaceholder\) \{\s+nativeAdPlaceholder\.style\.display = isPremium \? 'none' : 'block';\s+\})""")
-            val jsNew = """$1
-    
-    // Manage Native Ad divider
-    const nativeAdDivider = document.getElementById('native-ad-divider');
-    if (nativeAdDivider) {
-        nativeAdDivider.style.display = isPremium ? 'none' : 'block';
-    }"""
-
-            if (jsRegex.containsMatchIn(jsContent)) {
-                jsFile.writeText(jsContent.replace(jsRegex, jsNew))
-                println("android-interface.js updated successfully")
-            }
-        }
-    }
-}

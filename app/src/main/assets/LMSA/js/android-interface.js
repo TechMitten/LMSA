@@ -7,12 +7,7 @@ function removeAds() {
 }
 
 function watchRewardedPremiumAd() {
-    if (window.AndroidBilling && typeof window.AndroidBilling.showRewardedPremiumAd === 'function') {
-        window.AndroidBilling.showRewardedPremiumAd();
-    } else {
-        console.log('Rewarded ad interface not available.');
-        alert('Rewarded ads are only available in the Android app.');
-    }
+    console.log('Rewarded ads have been removed.');
 }
 
 function restorePurchases() {
@@ -31,25 +26,18 @@ function restorePurchases() {
 function getPremiumStateSnapshot() {
     return window.LMSAPremiumState || {
         isPremium: false,
-        hasRewardedPremium: false,
-        rewardedPremiumRemainingMs: 0,
         updatedAt: 0
     };
 }
 
-function setPremiumState(isPremium, hasRewardedPremium = false, rewardedPremiumRemainingMs = 0) {
+function setPremiumState(isPremium) {
     const nextState = {
         isPremium: !!isPremium,
-        hasRewardedPremium: !!hasRewardedPremium,
-        rewardedPremiumRemainingMs: Math.max(0, Number(rewardedPremiumRemainingMs) || 0),
         updatedAt: Date.now()
     };
 
     const previousState = getPremiumStateSnapshot();
-    const changed =
-        previousState.isPremium !== nextState.isPremium ||
-        previousState.hasRewardedPremium !== nextState.hasRewardedPremium ||
-        previousState.rewardedPremiumRemainingMs !== nextState.rewardedPremiumRemainingMs;
+    const changed = previousState.isPremium !== nextState.isPremium;
 
     window.LMSAPremiumState = nextState;
 
@@ -78,70 +66,19 @@ function hasPremiumAccess() {
 window.hasPremiumAccess = hasPremiumAccess;
 
 // Updated UI function to manage premium status
-function formatRewardedPremiumRemaining(ms) {
-    const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
-}
-
-function stopRewardedPremiumCountdown() {
-    if (window._rewardedPremiumCountdownInterval) {
-        clearInterval(window._rewardedPremiumCountdownInterval);
-        window._rewardedPremiumCountdownInterval = null;
-    }
-}
-
-function updateUiForPremium(isPremium, hasRewardedPremium = false, rewardedPremiumRemainingMs = 0) {
-    const premiumState = setPremiumState(isPremium, hasRewardedPremium, rewardedPremiumRemainingMs);
+function updateUiForPremium(isPremium) {
+    const premiumState = setPremiumState(isPremium);
     isPremium = premiumState.isPremium;
-    hasRewardedPremium = premiumState.hasRewardedPremium;
-    rewardedPremiumRemainingMs = premiumState.rewardedPremiumRemainingMs;
     console.log('Premium status updated:', isPremium);
     const removeAdsBtn = document.getElementById('remove-ads-button');
     if (removeAdsBtn) {
-        removeAdsBtn.style.display = isPremium && !hasRewardedPremium ? 'none' : 'block';
+        removeAdsBtn.style.display = isPremium ? 'none' : 'block';
     }
 
     // Hide the Remove Ads banner for premium users
     const removeAdsBanner = document.getElementById('remove-ads-banner');
     if (removeAdsBanner) {
         removeAdsBanner.style.display = isPremium ? 'none' : 'flex';
-    }
-
-    const rewardedPremiumButton = document.getElementById('rewarded-premium-button');
-    if (rewardedPremiumButton) {
-        rewardedPremiumButton.style.display = isPremium ? 'none' : 'block';
-    }
-
-    const rewardedPremiumStatus = document.getElementById('rewarded-premium-status');
-    const rewardedPremiumStatusText = document.getElementById('rewarded-premium-status-text');
-    stopRewardedPremiumCountdown();
-
-    if (rewardedPremiumStatus && rewardedPremiumStatusText) {
-        if (hasRewardedPremium && rewardedPremiumRemainingMs > 0) {
-            const rewardEndsAt = Date.now() + rewardedPremiumRemainingMs;
-            rewardedPremiumStatus.classList.remove('hidden');
-
-            const renderRemaining = () => {
-                const remainingMs = rewardEndsAt - Date.now();
-                if (remainingMs <= 0) {
-                    rewardedPremiumStatus.classList.add('hidden');
-                    if (rewardedPremiumButton) {
-                        rewardedPremiumButton.style.display = 'block';
-                    }
-                    stopRewardedPremiumCountdown();
-                    return;
-                }
-
-                rewardedPremiumStatusText.textContent = `Premium active: ${formatRewardedPremiumRemaining(remainingMs)} left`;
-            };
-
-            renderRemaining();
-            window._rewardedPremiumCountdownInterval = setInterval(renderRemaining, 1000);
-        } else {
-            rewardedPremiumStatus.classList.add('hidden');
-        }
     }
 }
 
