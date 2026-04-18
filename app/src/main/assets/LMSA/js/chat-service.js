@@ -671,23 +671,59 @@ async function performWebSearch(query) {
         searxngUrl.searchParams.set('format', 'json');
         searxngUrl.searchParams.set('categories', 'general');
 
+        const urlString = searxngUrl.toString();
         debugLog('Searching the web for context via SearXNG...');
 
-        // Note: No custom headers are set here to avoid triggering a CORS preflight.
-        // SearXNG's JSON endpoint works with a simple GET request.
-        const response = await fetch(searxngUrl.toString());
+        let resultData = null;
 
-        if (!response.ok) {
-            console.error(`Web search HTTP error: ${response.status} ${response.statusText}`);
-            return null;
+        // Tier 1: Try Native Bridge (Android only, bypasses CORS reliably)
+        if (window.nativeFetch && typeof window.nativeFetch === 'function') {
+            const nativeResult = await window.nativeFetch(urlString);
+            if (nativeResult) {
+                try {
+                    resultData = JSON.parse(nativeResult);
+                } catch (e) {
+                    console.error('Failed to parse native fetch result:', e);
+                }
+            }
         }
 
-        const result = await response.json();
-        debugLog('SearXNG raw result:', JSON.stringify(result).substring(0, 300));
+        // Tier 2: Direct Fetch (Works on Android file:// origin if native bridge missing, or if server allows CORS)
+        if (!resultData) {
+            try {
+                const response = await fetch(urlString);
+                if (response.ok) {
+                    resultData = await response.json();
+                } else {
+                    console.warn(`Direct web search HTTP error: ${response.status}`);
+                }
+            } catch (error) {
+                // If direct fetch fails with TypeError (likely CORS), try Tier 3
+                if (error.name === 'TypeError' && window.location.protocol !== 'file:') {
+                    debugLog('Direct search failed (CORS), attempting Tier 3: CORS Proxy...');
+                    
+                    // Tier 3: CORS Proxy (For desktop browser development)
+                    try {
+                        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlString)}`;
+                        const proxyResponse = await fetch(proxyUrl);
+                        if (proxyResponse.ok) {
+                            const proxyData = await proxyResponse.json();
+                            if (proxyData && proxyData.contents) {
+                                resultData = JSON.parse(proxyData.contents);
+                            }
+                        }
+                    } catch (proxyError) {
+                        console.error('CORS proxy fetch failed:', proxyError);
+                    }
+                } else {
+                    throw error;
+                }
+            }
+        }
 
-        if (result.results && result.results.length > 0) {
+        if (resultData && resultData.results && resultData.results.length > 0) {
             let searchContext = `${WEB_SEARCH_CONTEXT_HEADER}\n`;
-            result.results.slice(0, 5).forEach((item, index) => {
+            resultData.results.slice(0, 5).forEach((item, index) => {
                 const snippet = item.content || item.url || '';
                 searchContext += `${index + 1}. ${item.title}: ${snippet}\n`;
             });
@@ -698,7 +734,7 @@ async function performWebSearch(query) {
         console.warn('SearXNG returned no results for query:', query);
         return null;
     } catch (error) {
-        console.error("Web search failed (likely CORS or network error):", error.name, error.message);
+        console.error("Web search failed overall:", error.name, error.message);
         return null;
     }
 }

@@ -175,3 +175,23 @@ function triggerHapticFeedback(type = 'light') {
         window.AndroidHaptics.triggerHapticFeedback();
     }
 }
+
+/**
+ * Performs a network fetch via the Android native bridge (bypasses CORS).
+ * @param {string} url - The URL to fetch.
+ * @returns {Promise<string|null>} - The response text or null if it failed.
+ */
+async function nativeFetch(url) {
+    if (window.AndroidNetwork && typeof window.AndroidNetwork.fetch === 'function') {
+        try {
+            console.log('Using native bridge for fetch:', url);
+            return window.AndroidNetwork.fetch(url);
+        } catch (error) {
+            console.error('Native fetch failed:', error);
+            return null;
+        }
+    }
+    return null;
+}
+
+window.nativeFetch = nativeFetch;

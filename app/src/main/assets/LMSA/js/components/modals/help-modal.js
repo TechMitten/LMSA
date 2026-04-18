@@ -449,7 +449,7 @@ export const helpModal = `
                                         class="fas fa-list mr-2"></i>Accessing Templates:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>Open the sidebar and tap <strong>Templates</strong></li>
-                                     <li>Browse through available templates like Math Tutor, Code Assistant, Fitness Coach, and more</li>
+                                     <li>Browse through available templates like Math Tutor, Code Assistant, Summarizer, and more</li>
                                     <li>Each template has a specialized role and personality designed for specific tasks
                                     </li>
                                 </ul>

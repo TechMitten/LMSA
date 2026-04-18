@@ -426,7 +426,10 @@ class WebViewActivity : AppCompatActivity() {
         webView.addJavascriptInterface(UsageLimiterInterface(), "AndroidUsageLimiter")
         webView.addJavascriptInterface(PowerManagementInterface(), "AndroidPower")
         webView.addJavascriptInterface(HapticInterface(), "AndroidHaptics")
-        webView.addJavascriptInterface(BiometricInterface(), "AndroidBiometric")
+        webView.addJavascriptInterface(BiometricInterface(), "AndroidBiometrics")
+
+        // Register native bridge for network requests (bypasses CORS)
+        webView.addJavascriptInterface(NetworkInterface(), "AndroidNetwork")
 
         webView.webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
@@ -2207,6 +2210,31 @@ class WebViewActivity : AppCompatActivity() {
                     .build()
 
                 biometricPrompt.authenticate(promptInfo)
+            }
+        }
+    }
+
+    inner class NetworkInterface {
+        @JavascriptInterface
+        fun fetch(url: String): String? {
+            return try {
+                val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.connectTimeout = 10000
+                connection.readTimeout = 10000
+                connection.setRequestProperty("Accept", "application/json")
+                connection.setRequestProperty("User-Agent", "LMSA-Android-App")
+
+                val responseCode = connection.responseCode
+                if (responseCode == java.net.HttpURLConnection.HTTP_OK) {
+                    connection.inputStream.bufferedReader().use { it.readText() }
+                } else {
+                    Log.e(TAG, "NetworkInterface error: HTTP $responseCode")
+                    null
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "NetworkInterface exception: ${e.message}")
+                null
             }
         }
     }
