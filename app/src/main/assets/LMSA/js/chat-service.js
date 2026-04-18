@@ -1,6 +1,6 @@
 // Chat Service for handling chat functionality
 import { messagesContainer, userInput, loadedModelDisplay } from './dom-elements.js';
-import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll, renderSmartReplies, hideSmartReplies, showSmartRepliesLoading } from './ui-manager.js';
+import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll, renderSmartReplies, hideSmartReplies, showSmartRepliesLoading, addWebSearchIndicator } from './ui-manager.js';
 import { openHelpModal } from './help.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
 import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOllama, getOpenRouterApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations, getWebSearchEnabled } from './settings-manager.js';
@@ -20,6 +20,10 @@ let isNewTopic = false;
 let chatToRename = null;
 let renameModalEscapeHandler = null;
 let suppressChatHistoryClickUntil = 0;
+
+// Maximum number of historical web search results to include in context
+// This prevents context window bloat while maintaining conversation continuity
+const MAX_HISTORICAL_SEARCHES = 3;
 
 // Export state variables only
 export {
@@ -849,13 +853,54 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         // Note: No default system prompt is added to allow reasoning models to behave naturally
 
         // Add chat history from previous messages
+        // Include historical web search context for continuity
+        let historicalSearchCount = 0;
         for (const msg of chatMessages) {
-            messages.push(msg);
+            // Check if this message had web search results
+            if (msg.hadWebSearch && msg.webSearchResults && historicalSearchCount < MAX_HISTORICAL_SEARCHES) {
+                historicalSearchCount++;
+                
+                // Reconstruct the message with search context included
+                if (getUseOpenRouter()) {
+                    // OpenRouter: prepend search context to user message content
+                    messages.push({
+                        ...msg,
+                        content: msg.webSearchResults + '\n\n' + msg.content
+                    });
+                } else {
+                    // Local models: inject as system message before user message
+                    messages.push({ role: 'system', content: msg.webSearchResults });
+                    messages.push(msg);
+                }
+            } else {
+                // Regular message without web search
+                messages.push(msg);
+            }
         }
 
         if (getWebSearchEnabled() && messages.length > 0) {
-            const searchResults = await performWebSearch(userMessage);
+            // Build a context-aware search query for follow-up turns.
+            // If this is not the first user message, prepend the most recent prior user
+            // message so SearXNG can resolve pronouns and vague references (e.g. "When
+            // was it released?" → "What is Python 3.13? When was it released?").
+            let searchQuery = userMessage;
+            const priorUserMessages = chatMessages
+                .filter(m => m.role === 'user')
+                .slice(0, -1); // exclude the current message (already last in chatMessages)
+            if (priorUserMessages.length > 0) {
+                const lastPriorContent = stripInjectedWebSearchContext(
+                    priorUserMessages[priorUserMessages.length - 1].content || ''
+                );
+                // Trim to ~120 chars so we don't overflow the search engine's query limit
+                const trimmedContext = lastPriorContent.trim().slice(0, 120);
+                if (trimmedContext) {
+                    searchQuery = trimmedContext + ' ' + userMessage;
+                }
+            }
+
+            const searchResults = await performWebSearch(searchQuery);
             if (searchResults) {
+                // Inject search results into the current API request
                 if (getUseOpenRouter()) {
                     // OpenRouter (and most cloud models) do not support system-role messages
                     // injected mid-conversation — only the first message can be system role.
@@ -870,6 +915,26 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                 } else {
                     // Local LM Studio / Ollama: inject as a system message before the last user message
                     messages.splice(messages.length - 1, 0, { role: 'system', content: searchResults });
+                }
+                
+                // Store web search metadata with the user message in chat history
+                // This allows follow-up questions to reference the search results
+                if (chatHistoryData[currentChatId] && chatHistoryData[currentChatId].messages) {
+                    const historyMessages = chatHistoryData[currentChatId].messages;
+                    const lastUserMsgIndex = historyMessages.length - 1;
+                    if (lastUserMsgIndex >= 0 && historyMessages[lastUserMsgIndex].role === 'user') {
+                        historyMessages[lastUserMsgIndex].webSearchResults = searchResults;
+                        historyMessages[lastUserMsgIndex].hadWebSearch = true;
+                        // Save to localStorage immediately
+                        saveChatHistory();
+                        
+                        // Add visual indicator to the user message in the DOM
+                        const userMessages = messagesContainer.querySelectorAll('.user');
+                        if (userMessages.length > 0) {
+                            const lastUserMessageElement = userMessages[userMessages.length - 1];
+                            addWebSearchIndicator(lastUserMessageElement);
+                        }
+                    }
                 }
             }
         }
@@ -2782,7 +2847,12 @@ export function lazyLoadMessages(messages, startIndex, chunkSize = 10) {
         }
 
         // Use appendMessage to ensure proper message formatting and controls
-        appendMessage(message.role === 'user' ? 'user' : 'ai', contentDisplay, null, false, message.model);
+        const messageElement = appendMessage(message.role === 'user' ? 'user' : 'ai', contentDisplay, null, false, message.model);
+        
+        // If this is a user message with web search metadata, add the indicator
+        if (message.role === 'user' && message.hadWebSearch && messageElement) {
+            addWebSearchIndicator(messageElement);
+        }
     }
 
     // If there are more messages to load, schedule the next chunk
@@ -3530,9 +3600,13 @@ export async function regenerateLastResponse(isRetry = false) {
         }
 
         // Get the last user message
-        const storedLastUserMessage = messages[lastUserMessageIndex].content;
-        const lastUserMessage = stripInjectedWebSearchContext(storedLastUserMessage);
-        let fileContents = messages[lastUserMessageIndex].files || [];
+        const lastUserMsg = messages[lastUserMessageIndex];
+        const lastUserMessage = lastUserMsg.content;
+        let fileContents = lastUserMsg.files || [];
+        
+        // Check if the message had web search results stored
+        const hadStoredWebSearch = lastUserMsg.hadWebSearch && lastUserMsg.webSearchResults;
+        const storedWebSearchResults = hadStoredWebSearch ? lastUserMsg.webSearchResults : null;
 
         // Set the generation flag
         isGenerating = true;
@@ -3544,6 +3618,27 @@ export async function regenerateLastResponse(isRetry = false) {
         // Clear any AI messages after the last user message
         const filteredMessages = messages.slice(0, lastUserMessageIndex + 1);
         const shouldInlineChatTitle = shouldRequestInlineChatTitle(filteredMessages);
+        
+        // Build context messages including historical web searches
+        const contextMessages = [];
+        let historicalSearchCount = 0;
+        for (const msg of filteredMessages) {
+            // Include historical web search context (excluding the current message being regenerated)
+            if (msg !== lastUserMsg && msg.hadWebSearch && msg.webSearchResults && historicalSearchCount < MAX_HISTORICAL_SEARCHES) {
+                historicalSearchCount++;
+                if (getUseOpenRouter()) {
+                    contextMessages.push({
+                        ...msg,
+                        content: msg.webSearchResults + '\n\n' + msg.content
+                    });
+                } else {
+                    contextMessages.push({ role: 'system', content: msg.webSearchResults });
+                    contextMessages.push(msg);
+                }
+            } else {
+                contextMessages.push(msg);
+            }
+        }
 
         // Remove existing AI messages from the DOM after the last user message
         const messageElements = Array.from(messagesContainer.children);
@@ -3607,22 +3702,29 @@ export async function regenerateLastResponse(isRetry = false) {
             // Note: No default system prompt is added to allow reasoning models to behave naturally
 
 
-            // Add all messages up to and including the last user message
-            for (const msg of filteredMessages) {
+            // Add context messages (including historical web searches)
+            for (const msg of contextMessages) {
                 apiMessages.push(msg);
             }
 
-            // Ensure regenerated requests always start from a clean user prompt,
-            // then apply the CURRENT web search toggle state.
+            // For the message being regenerated, use stored web search results if available
+            // This ensures consistency - regeneration reproduces the original inputs
             const apiLastUserMessageIndex = apiMessages.length - 1;
-            if (apiLastUserMessageIndex >= 0 && apiMessages[apiLastUserMessageIndex]?.role === 'user') {
-                apiMessages[apiLastUserMessageIndex] = {
-                    ...apiMessages[apiLastUserMessageIndex],
-                    content: lastUserMessage
-                };
-            }
-
-            if (getWebSearchEnabled() && apiMessages.length > 0) {
+            if (hadStoredWebSearch && storedWebSearchResults) {
+                // Use the original web search results for consistency
+                if (getUseOpenRouter()) {
+                    const lastMsg = apiMessages[apiLastUserMessageIndex];
+                    if (lastMsg && lastMsg.role === 'user') {
+                        apiMessages[apiLastUserMessageIndex] = {
+                            ...lastMsg,
+                            content: storedWebSearchResults + '\n\n' + lastUserMessage
+                        };
+                    }
+                } else {
+                    apiMessages.splice(apiLastUserMessageIndex, 0, { role: 'system', content: storedWebSearchResults });
+                }
+            } else if (getWebSearchEnabled() && apiMessages.length > 0) {
+                // If web search is now enabled but wasn't before, perform a new search
                 const searchResults = await performWebSearch(lastUserMessage);
                 if (searchResults) {
                     if (getUseOpenRouter()) {
@@ -3635,6 +3737,16 @@ export async function regenerateLastResponse(isRetry = false) {
                         }
                     } else {
                         apiMessages.splice(apiLastUserMessageIndex, 0, { role: 'system', content: searchResults });
+                    }
+                    
+                    // Store the new web search results in history
+                    if (chatHistoryData[currentChatId] && chatHistoryData[currentChatId].messages) {
+                        const historyMessages = chatHistoryData[currentChatId].messages;
+                        if (lastUserMessageIndex >= 0 && historyMessages[lastUserMessageIndex].role === 'user') {
+                            historyMessages[lastUserMessageIndex].webSearchResults = searchResults;
+                            historyMessages[lastUserMessageIndex].hadWebSearch = true;
+                            saveChatHistory();
+                        }
                     }
                 }
             }

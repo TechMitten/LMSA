@@ -7481,6 +7481,52 @@ body.light-theme .gradient-text {
     white-space: nowrap;
 }
 
+/* Web Search Indicator Badge */
+.web-search-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(41, 128, 185, 0.3));
+    border: 1px solid rgba(52, 152, 219, 0.4);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.75em;
+    font-weight: 600;
+    color: #5dade2;
+    margin-bottom: 8px;
+    width: fit-content;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.web-search-indicator i {
+    font-size: 0.9em;
+    color: #5dade2;
+}
+
+.web-search-indicator:hover {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.3), rgba(41, 128, 185, 0.4));
+    border-color: rgba(52, 152, 219, 0.6);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Dark theme adjustments */
+body.dark-theme .web-search-indicator {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(41, 128, 185, 0.25));
+    border-color: rgba(52, 152, 219, 0.3);
+    color: #85c1e9;
+}
+
+body.dark-theme .web-search-indicator i {
+    color: #85c1e9;
+}
+
+body.dark-theme .web-search-indicator:hover {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.25), rgba(41, 128, 185, 0.35));
+    border-color: rgba(52, 152, 219, 0.5);
+}
+
 /* File preview styles - rebuilt from scratch */
 .file-previews {
     display: flex;

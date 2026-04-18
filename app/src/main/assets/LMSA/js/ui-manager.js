@@ -1174,6 +1174,36 @@ export function appendMessage(sender, message, files = null, isStreaming = false
 }
 
 /**
+ * Adds a web search indicator badge to a user message element
+ * @param {HTMLElement} messageElement - The user message element to add the indicator to
+ */
+export function addWebSearchIndicator(messageElement) {
+    if (!messageElement || !messageElement.classList.contains('user')) {
+        return; // Only add to user messages
+    }
+
+    // Check if indicator already exists
+    if (messageElement.querySelector('.web-search-indicator')) {
+        return; // Already has indicator
+    }
+
+    // Create the web search indicator badge
+    const indicator = document.createElement('div');
+    indicator.classList.add('web-search-indicator');
+    indicator.innerHTML = '<i class="fas fa-globe"></i> Web';
+    indicator.title = 'This message used web search for enhanced context';
+
+    // Insert the indicator at the beginning of the message (before content)
+    const contentContainer = messageElement.querySelector('.message-content');
+    if (contentContainer) {
+        messageElement.insertBefore(indicator, contentContainer);
+    } else {
+        // Fallback: add at the beginning of message element
+        messageElement.insertBefore(indicator, messageElement.firstChild);
+    }
+}
+
+/**
  * Applies the model label visibility setting to all messages
  */
 export function applyModelLabelVisibility() {
