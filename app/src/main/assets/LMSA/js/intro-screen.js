@@ -127,11 +127,23 @@ function showIntroModal() {
 
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+
+    modal._touchMoveBlocker = (e) => {
+        if (!modal.contains(e.target) || e.target === modal || e.target.classList.contains('intro-modal-overlay')) {
+            e.preventDefault();
+        }
+    };
+    modal.addEventListener('touchmove', modal._touchMoveBlocker, { passive: false });
 }
 
 function hideIntroModal() {
     const modal = getIntroModalElement();
     if (!modal) return;
+
+    if (modal._touchMoveBlocker) {
+        modal.removeEventListener('touchmove', modal._touchMoveBlocker);
+        modal._touchMoveBlocker = null;
+    }
 
     modal.classList.add('hidden');
     document.body.style.overflow = '';
@@ -167,13 +179,18 @@ function renderStep() {
     const elements = getStepElements();
     if (!step || !elements.title) return;
 
+    const detailText = typeof step.description === 'string' && step.description.trim()
+        ? step.description.trim()
+        : step.subtitle;
+
     if (elements.card) {
         elements.card.dataset.introTheme = step.theme || 'aurora';
     }
 
     elements.subtitle.textContent = step.subtitle;
     elements.title.textContent = step.title;
-    elements.description.textContent = step.subtitle;
+    elements.description.textContent = detailText;
+    elements.description.style.display = detailText ? '' : 'none';
     elements.icon.innerHTML = `<i class="${step.icon}"></i>`;
 
     elements.progress.innerHTML = INTRO_STEPS.map((_, index) => {
