@@ -16,6 +16,26 @@ let _navigateToStep = null;
 let _openModelInfoAfterSettingsClose = false;
 let _openRouterKeyBeforeEditing = '';
 
+function getBiometricBridge() {
+    if (typeof AndroidBiometrics !== 'undefined') {
+        return AndroidBiometrics;
+    }
+
+    if (typeof window.AndroidBiometrics !== 'undefined') {
+        return window.AndroidBiometrics;
+    }
+
+    if (typeof AndroidBiometric !== 'undefined') {
+        return AndroidBiometric;
+    }
+
+    if (typeof window.AndroidBiometric !== 'undefined') {
+        return window.AndroidBiometric;
+    }
+
+    return null;
+}
+
 
 
 /**
@@ -42,13 +62,48 @@ export async function showSettingsModal() {
         module.initializeTTSVoiceSelection().catch(error => {
             console.error('Error initializing TTS voice selection:', error);
         });
+        // Ensure biometric setting event listener is attached
+        // This is needed because the checkbox may not exist in DOM during initial loadSettings()
+        module.loadBiometricSetting();
     });
 
-    // Dynamically update biometric setting visibility based on current support and debug mode
+    // Dynamically update biometric setting visibility based on current support, debug mode, and premium status
     const biometricContainer = document.getElementById('biometric-setting-container');
     if (biometricContainer) {
-        const isBiometricSupported = typeof AndroidBiometric !== 'undefined' && AndroidBiometric.isBiometricSupported();
-        if (isBiometricSupported || window.isDebugMode || getDebugEnabled()) {
+        let isBiometricSupported = false;
+        const biometricBridge = getBiometricBridge();
+        
+        // Check premium status - premium users should always see the biometric option
+        const isPremium = typeof window.hasPremiumAccess === 'function'
+            ? window.hasPremiumAccess()
+            : (window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus());
+        
+        // Detailed logging to diagnose visibility issue
+        console.log('[Biometric Debug] Settings modal opened');
+        console.log('[Biometric Debug] Bridge found:', !!biometricBridge);
+        console.log('[Biometric Debug] window.isDebugMode:', window.isDebugMode);
+        console.log('[Biometric Debug] getDebugEnabled():', getDebugEnabled());
+        console.log('[Biometric Debug] isPremium:', isPremium);
+        
+        try {
+            if (biometricBridge && typeof biometricBridge.isBiometricSupported === 'function') {
+                isBiometricSupported = !!biometricBridge.isBiometricSupported();
+                console.log('[Biometric Debug] isBiometricSupported() returned:', isBiometricSupported);
+            } else {
+                console.log('[Biometric Debug] Bridge missing or isBiometricSupported not a function');
+            }
+        } catch (error) {
+            console.warn('[Biometric Debug] isBiometricSupported check failed:', error);
+        }
+        
+        // Show biometric setting if:
+        // 1. Device supports biometrics, OR
+        // 2. User is premium (they paid for the feature), OR  
+        // 3. Debug mode is enabled (for testing)
+        const shouldShow = isBiometricSupported || isPremium || window.isDebugMode || getDebugEnabled();
+        console.log('[Biometric Debug] Should show biometric container:', shouldShow);
+        
+        if (shouldShow) {
             biometricContainer.style.display = 'block';
         } else {
             biometricContainer.style.display = 'none';

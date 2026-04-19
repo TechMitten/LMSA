@@ -18,6 +18,27 @@ import { showSmartReplyWarningModal } from "./components/modals/smart-reply-warn
 import { showOpenRouterWarningModal } from "./components/modals/openrouter-warning-modal.js";
 import { showWebSearchWarningModal } from "./components/modals/web-search-warning-modal.js";
 
+// Helper to get biometric bridge (supports both AndroidBiometrics and AndroidBiometric names)
+function getBiometricBridge() {
+  if (typeof AndroidBiometrics !== 'undefined') return AndroidBiometrics;
+  if (typeof window.AndroidBiometrics !== 'undefined') return window.AndroidBiometrics;
+  if (typeof AndroidBiometric !== 'undefined') return AndroidBiometric;
+  if (typeof window.AndroidBiometric !== 'undefined') return window.AndroidBiometric;
+  return null;
+}
+
+// Check if device supports biometric authentication
+function isBiometricSupported() {
+  try {
+    const bridge = getBiometricBridge();
+    if (!bridge || typeof bridge.isBiometricSupported !== 'function') return false;
+    return !!bridge.isBiometricSupported();
+  } catch (e) {
+    console.warn('[Biometric] Support check failed:', e);
+    return false;
+  }
+}
+
 // Default system prompt is empty unless user explicitly sets one
 const DEFAULT_SYSTEM_PROMPT = "";
 
@@ -1857,6 +1878,9 @@ export function getSystemPrompt() {
   return systemPrompt;
 }
 
+// Track if biometric event listener has been attached to prevent duplicates
+let biometricListenerAttached = false;
+
 export function loadBiometricSetting() {
   const checkbox = document.getElementById("require-biometric");
   if (checkbox) {
@@ -1868,20 +1892,48 @@ export function loadBiometricSetting() {
       checkbox.checked = false;
       requireBiometric = false;
     }
-    checkbox.addEventListener("change", saveBiometricSetting);
+    // Only attach listener once to prevent duplicate handlers
+    if (!biometricListenerAttached) {
+      checkbox.addEventListener("change", saveBiometricSetting);
+      biometricListenerAttached = true;
+      console.log('[Biometric] Event listener attached to require-biometric checkbox');
+    }
+  } else {
+    console.log('[Biometric] Checkbox not found in DOM - will retry when settings modal opens');
   }
 }
 
 export async function saveBiometricSetting() {
+  console.log('[Biometric] saveBiometricSetting() called');
   const checkbox = document.getElementById("require-biometric");
   if (checkbox) {
     const isChecked = checkbox.checked;
+    console.log('[Biometric] Checkbox checked:', isChecked);
     
     if (isChecked) {
+      // First check if biometrics are actually supported on this device
+      const biometricSupported = isBiometricSupported();
+      console.log('[Biometric] Device supports biometrics:', biometricSupported);
+      
+      if (!biometricSupported) {
+        console.log('[Biometric] Biometrics not supported on device, showing setup modal');
+        checkbox.checked = false;
+        requireBiometric = false;
+        localStorage.setItem("requireBiometric", "false");
+        // Show modal explaining how to set up biometrics
+        if (typeof window.showBiometricUnavailableModal === 'function') {
+          window.showBiometricUnavailableModal();
+        }
+        return;
+      }
+      
       const isPremium = typeof window.hasPremiumAccess === 'function'
         ? window.hasPremiumAccess()
         : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
+      console.log('[Biometric] isPremium:', isPremium);
+      
       if (!isPremium) {
+        console.log('[Biometric] Not premium, showing premium modal');
         if (typeof window.openPremiumModal === 'function') {
             window.openPremiumModal('Biometric Unlock');
         }
@@ -1892,20 +1944,25 @@ export async function saveBiometricSetting() {
       }
 
       try {
+        console.log('[Biometric] Attempting biometric authentication...');
         // Must successfully authenticate before enabling
         await window.requestBiometricAuth("Confirm Biometric", "Authenticate to enable App Lock");
+        console.log('[Biometric] Authentication successful, enabling biometric lock');
         requireBiometric = true;
         localStorage.setItem("requireBiometric", "true");
       } catch (error) {
-        console.warn("Biometric confirmation failed, reverting to disabled", error);
+        console.warn("[Biometric] Confirmation failed, reverting to disabled", error);
         checkbox.checked = false;
         requireBiometric = false;
         localStorage.setItem("requireBiometric", "false");
       }
     } else {
+      console.log('[Biometric] Disabling biometric lock');
       requireBiometric = false;
       localStorage.setItem("requireBiometric", "false");
     }
+  } else {
+    console.log('[Biometric] saveBiometricSetting: checkbox not found');
   }
 }
 

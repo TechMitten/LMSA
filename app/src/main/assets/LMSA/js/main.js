@@ -21,6 +21,7 @@ import { initPremiumModal, openPremiumModal } from './components/modals/premium-
 import { initSmartReplyWarningModal } from './components/modals/smart-reply-warning-modal.js';
 import { initOpenRouterWarningModal } from './components/modals/openrouter-warning-modal.js';
 import { initWebSearchWarningModal } from './components/modals/web-search-warning-modal.js';
+import { initBiometricUnavailableModal, showBiometricUnavailableModal } from './components/modals/biometric-unavailable-modal.js';
 import { initializeTemplateIndicator } from './template-indicator.js';
 import { initializeHapticFeedback } from './haptics.js';
 import { updateConfirmationModalTheme, updateExportImportModalsTheme } from './confirmation-modal-fix.js';
@@ -44,10 +45,41 @@ const BIOMETRIC_AUTH_SESSION_KEY = 'biometric_authenticated';
 let shouldAutoPromptForBiometricUnlock = false;
 let biometricLockHideTimeout = null;
 
+function getBiometricBridge() {
+    // Kotlin registers AndroidBiometrics; keep singular fallback for compatibility.
+    if (typeof AndroidBiometrics !== 'undefined') {
+        return AndroidBiometrics;
+    }
+
+    if (typeof window.AndroidBiometrics !== 'undefined') {
+        return window.AndroidBiometrics;
+    }
+
+    if (typeof AndroidBiometric !== 'undefined') {
+        return AndroidBiometric;
+    }
+
+    if (typeof window.AndroidBiometric !== 'undefined') {
+        return window.AndroidBiometric;
+    }
+
+    return null;
+}
+
 function isBiometricSupported() {
-    return typeof AndroidBiometric !== 'undefined' &&
-        typeof AndroidBiometric.isBiometricSupported === 'function' &&
-        AndroidBiometric.isBiometricSupported();
+    try {
+        const biometricBridge = getBiometricBridge();
+        if (!biometricBridge) {
+            return false;
+        }
+        if (typeof biometricBridge.isBiometricSupported !== 'function') {
+            return false;
+        }
+        return !!biometricBridge.isBiometricSupported();
+    } catch (error) {
+        console.warn('Biometric support check failed:', error);
+        return false;
+    }
 }
 
 function shouldRequireBiometricUnlock() {
@@ -229,6 +261,11 @@ window.requestBiometricAuth = function(title, subtitle) {
         return Promise.resolve(true);
     }
 
+    const biometricBridge = getBiometricBridge();
+    if (!biometricBridge || typeof biometricBridge.authenticate !== 'function') {
+        return Promise.reject(new Error('Biometric bridge unavailable'));
+    }
+
     if (window.activeBiometricRequest) {
         return window.activeBiometricRequest;
     }
@@ -237,7 +274,7 @@ window.requestBiometricAuth = function(title, subtitle) {
         try {
             window.pendingBiometricResolve = resolve;
             window.pendingBiometricReject = reject;
-            AndroidBiometric.authenticate();
+            biometricBridge.authenticate();
         } catch (error) {
             window.pendingBiometricResolve = null;
             window.pendingBiometricReject = null;
@@ -303,13 +340,22 @@ export async function initializeApp() {
     const biometricSupported = isBiometricSupported();
     const requireBiometric = getRequireBiometric();
     
+    // Check premium status - premium users should always see the biometric option
+    const isPremiumUser = typeof window.hasPremiumAccess === 'function'
+        ? window.hasPremiumAccess()
+        : (window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus());
+    
     // Check if biometric setting exists in DOM to toggle visibility based on support
     const biometricContainer = document.getElementById('biometric-setting-container');
     if (biometricContainer) {
-        if (!biometricSupported && !getDebugEnabled()) {
-            biometricContainer.style.display = 'none';
-        } else {
+        // Show biometric setting if:
+        // 1. Device supports biometrics, OR
+        // 2. User is premium (they paid for the feature), OR
+        // 3. Debug mode is enabled (for testing)
+        if (biometricSupported || isPremiumUser || window.isDebugMode || getDebugEnabled()) {
             biometricContainer.style.display = 'block';
+        } else {
+            biometricContainer.style.display = 'none';
         }
     }
     
@@ -392,6 +438,8 @@ export async function initializeApp() {
     initSmartReplyWarningModal();
     initOpenRouterWarningModal();
     initWebSearchWarningModal();
+    initBiometricUnavailableModal();
+    window.showBiometricUnavailableModal = showBiometricUnavailableModal;
     initializeTemplateIndicator();
 
     const onboardingCompleted = await ensureOnboardingCompleted();
