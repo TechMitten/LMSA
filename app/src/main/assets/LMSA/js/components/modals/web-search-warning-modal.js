@@ -1,6 +1,6 @@
 /**
  * Web Search Warning Modal
- * Warns users that enabling Web Search shares prompts with a third-party API
+ * Warns users that enabling Web Search shares derived search queries with a third-party API
  */
 
 export const webSearchWarningModal = `
@@ -37,7 +37,7 @@ export const webSearchWarningModal = `
                     <ul class="text-sm ml-4" style="color: #d1d5db; list-style: none; padding: 0;">
                         <li class="flex items-start mb-2">
                             <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #60a5fa; flex-shrink: 0;"></i>
-                            <span>Your prompts will be shared with a 3rd party API</span>
+                            <span>A focused search query derived from your prompt will be shared with a 3rd party API</span>
                         </li>
                         <li class="flex items-start mb-2">
                             <i class="fas fa-circle mr-2" style="margin-top: 5px; font-size: 6px; color: #60a5fa; flex-shrink: 0;"></i>

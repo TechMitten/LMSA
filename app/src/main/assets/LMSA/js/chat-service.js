@@ -21,9 +21,30 @@ let chatToRename = null;
 let renameModalEscapeHandler = null;
 let suppressChatHistoryClickUntil = 0;
 
-// Maximum number of historical web search results to include in context
-// This prevents context window bloat while maintaining conversation continuity
+// Maximum number of historical web search results to include in context (legacy)
+// This is deprecated - web search results are now scoped to current turn only
 const MAX_HISTORICAL_SEARCHES = 3;
+const WEB_SEARCH_QUERY_MAX_LENGTH = 220;
+const WEB_SEARCH_CONTEXT_MAX_LENGTH = 96;
+const WEB_SEARCH_SHORT_QUERY_WORDS = 5;
+const WEB_SEARCH_STOP_WORDS = new Set([
+    'a', 'an', 'and', 'are', 'as', 'at', 'be', 'because', 'briefly', 'by', 'can', 'could', 'do', 'does',
+    'for', 'from', 'give', 'i', 'if', 'in', 'into', 'is', 'it', 'just', 'me', 'my', 'of', 'on', 'or', 'our',
+    'please', 'show', 'summarize', 'tell', 'than', 'that', 'the', 'their', 'them', 'then', 'these', 'they',
+    'this', 'those', 'to', 'use', 'using', 'via', 'want', 'what', 'when', 'where', 'which', 'who', 'why',
+    'with', 'would', 'you', 'your'
+]);
+const WEB_SEARCH_FOLLOW_UP_PATTERN = /\b(it|its|they|them|their|this|that|these|those|he|she|him|her|former|latter)\b/i;
+const WEB_SEARCH_AMBIGUOUS_LEAD_PATTERN = /^(and|also|so|then|what about|how about|what else|when|where|why|who|which|is it|are they|does it|do they|did it|can it|could it|would it|should it)\b/i;
+const WEB_SEARCH_ERROR_PATTERN = /\b(error|exception|traceback|stack trace|typeerror|referenceerror|syntaxerror|rangeerror|failed|failure|cannot|can't|undefined|null|not found|http\s*\d{3}|\d{3}\s+error)\b/i;
+const WEB_SEARCH_SKIP_WORDS = new Set([
+    'thanks', 'thank', 'ty', 'thnx', 'thx', 'thankyou', 'thank you',
+    'ok', 'okay', 'k', 'kk', 'got it', 'understood', 'understood', 'yes', 'yep', 'yup', 'yeah', 'no', 'nope',
+    'great', 'nice', 'cool', 'good', 'perfect', 'awesome', 'wonderful', 'excellent',
+    'see', 'seen', 'got', 'right', 'correct', 'true', 'makes sense', 'exactly',
+    'i see', 'i understand', 'i got it', 'i see it', 'makes sense',
+    'sure', 'certainly', 'absolutely', 'of course', 'indeed', 'true that'
+]);
 
 // Export state variables only
 export {
@@ -663,6 +684,245 @@ async function generateAIResponseWithRetry(userMessage, fileContents = [], retry
     }
 }
 
+function normalizeWebSearchText(text) {
+    if (typeof text !== 'string') {
+        return '';
+    }
+
+    return stripInjectedWebSearchContext(text)
+        .replace(/```[\s\S]*?```/g, ' ')
+        .replace(/`[^`]*`/g, ' ')
+        .replace(/[“”]/g, '"')
+        .replace(/[‘’]/g, "'")
+        .replace(/[\r\n\t]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function stripSearchInstructionPhrases(text) {
+    if (!text) {
+        return '';
+    }
+
+    let cleaned = text.trim();
+    cleaned = cleaned.replace(/^(?:hey|hi|hello)\b[\s,!.-]*/i, '');
+    cleaned = cleaned.replace(/^(?:can|could|would|will)\s+you\s+/i, '');
+    cleaned = cleaned.replace(/^(?:please\s+)?(?:search(?:\s+the\s+web)?\s+for|look\s+up|find\s+information\s+about|find\s+out\s+about|tell\s+me\s+about|give\s+me\s+information\s+about|i\s+want\s+to\s+know\s+about|i\s+need\s+information\s+about)\s+/i, '');
+    cleaned = cleaned.replace(/\b(?:using|with)\s+web\s+search\b/gi, ' ');
+    cleaned = cleaned.replace(/\b(?:please|thanks|thank you)\b/gi, ' ');
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+    return cleaned;
+}
+
+function stripPresentationDirectives(text) {
+    if (!text) {
+        return '';
+    }
+
+    return text
+        .replace(/(?:^|[\s,;])(?:in\s+simple\s+terms|step\s+by\s+step|briefly|keep\s+it\s+short|keep\s+it\s+brief|with\s+sources|cite\s+sources|with\s+citations|without\s+tables|no\s+tables|in\s+bullet\s+points|as\s+bullet\s+points)\b/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function extractErrorFocusedQuery(text) {
+    if (!text || !WEB_SEARCH_ERROR_PATTERN.test(text)) {
+        return '';
+    }
+
+    const errorTokens = text.match(/[A-Za-z0-9_./:#+\-]+/g) || [];
+    const filteredTokens = errorTokens.filter(token => {
+        if (!token) {
+            return false;
+        }
+
+        const lowerToken = token.toLowerCase();
+        if (WEB_SEARCH_STOP_WORDS.has(lowerToken)) {
+            return false;
+        }
+
+        return token.length > 1 || /\d/.test(token);
+    });
+
+    return filteredTokens.slice(0, 16).join(' ').trim();
+}
+
+function extractKeywordQuery(text, maxTerms = 14) {
+    if (!text) {
+        return '';
+    }
+
+    const tokens = text.match(/[A-Za-z0-9][A-Za-z0-9_./:#+\-]*/g) || [];
+    const seen = new Set();
+    const keywords = [];
+
+    for (const token of tokens) {
+        const lowerToken = token.toLowerCase();
+        const isStructuredToken = /[A-Z]/.test(token) || /\d/.test(token) || /[._/#:+-]/.test(token);
+
+        if (!isStructuredToken && WEB_SEARCH_STOP_WORDS.has(lowerToken)) {
+            continue;
+        }
+
+        if (token.length <= 1 && !/\d/.test(token)) {
+            continue;
+        }
+
+        if (seen.has(lowerToken)) {
+            continue;
+        }
+
+        seen.add(lowerToken);
+        keywords.push(token);
+
+        if (keywords.length >= maxTerms) {
+            break;
+        }
+    }
+
+    return keywords.join(' ').trim();
+}
+
+function countWords(text) {
+    if (!text) {
+        return 0;
+    }
+
+    return text.split(/\s+/).filter(Boolean).length;
+}
+
+function buildRecentSearchContext(chatMessages) {
+    if (!Array.isArray(chatMessages) || chatMessages.length === 0) {
+        return '';
+    }
+
+    const priorUserMessages = chatMessages
+        .filter(message => message.role === 'user')
+        .slice(0, -1);
+
+    // Only use the immediately previous message, not earlier ones
+    if (priorUserMessages.length === 0) {
+        return '';
+    }
+
+    const lastPriorMessage = priorUserMessages[priorUserMessages.length - 1];
+    const priorText = stripPresentationDirectives(
+        stripSearchInstructionPhrases(normalizeWebSearchText(lastPriorMessage.content || ''))
+    );
+    // Extract 6-8 keywords for context, keeping it brief
+    const keywordContext = extractKeywordQuery(priorText, 8) || priorText;
+
+    return keywordContext.slice(0, WEB_SEARCH_CONTEXT_MAX_LENGTH).trim();
+}
+
+function shouldUseRecentContext(text) {
+    if (!text) {
+        return false;
+    }
+
+    // Only prepend prior context if the query is very short AND has a follow-up indicator
+    // This avoids prepending context for topic switches
+    const wordCount = countWords(text);
+    const hasFollowUpIndicator = WEB_SEARCH_FOLLOW_UP_PATTERN.test(text) || 
+                                 WEB_SEARCH_AMBIGUOUS_LEAD_PATTERN.test(text);
+    
+    return wordCount <= WEB_SEARCH_SHORT_QUERY_WORDS && hasFollowUpIndicator;
+}
+
+function isSkipWorthyWebSearchQuery(text) {
+    if (!text) {
+        return true;
+    }
+
+    const normalized = normalizeWebSearchText(text).toLowerCase().trim();
+    if (!normalized) {
+        return true;
+    }
+
+    const words = normalized.split(/\s+/);
+    
+    // If message is just 1-2 words, check if it's an acknowledgment
+    if (words.length <= 2) {
+        for (const word of words) {
+            if (WEB_SEARCH_SKIP_WORDS.has(word)) {
+                return true;
+            }
+        }
+        // Phrases like "that's right" or "no problem"
+        if (WEB_SEARCH_SKIP_WORDS.has(normalized)) {
+            return true;
+        }
+    }
+
+    // Check for multi-word acknowledgment phrases
+    const skipPhrases = [
+        'got it', 'make sense', 'got that', 'i see', 'i understand', 'no problem',
+        'all good', 'no worries', 'that works', 'that\'s right', 'that\'s correct',
+        'sounds good', 'thank you', 'thanks for', 'appreciate it'
+    ];
+    
+    for (const phrase of skipPhrases) {
+        if (normalized.includes(phrase)) {
+            return true;
+        }
+    }
+
+    // If the cleaned prompt (after removing filler) is too short, skip search
+    const cleanedPrompt = stripPresentationDirectives(
+        stripSearchInstructionPhrases(normalized)
+    );
+    
+    if (countWords(cleanedPrompt) <= 1) {
+        return true;
+    }
+
+    return false;
+}
+
+function isFirstUserMessage(chatMessages) {
+    if (!Array.isArray(chatMessages)) {
+        return true;
+    }
+    return chatMessages.filter(m => m.role === 'user').length === 0;
+}
+
+function buildWebSearchQuery(userMessage, chatMessages = []) {
+    const normalizedPrompt = normalizeWebSearchText(userMessage);
+    if (!normalizedPrompt) {
+        return '';
+    }
+
+    // Light cleanup: remove conversational filler and presentation directives.
+    // We deliberately avoid aggressive keyword stripping here because SearXNG
+    // handles natural language well, and over-stripping causes 'hit or miss' searches.
+    const cleanedPrompt = stripPresentationDirectives(
+        stripSearchInstructionPhrases(normalizedPrompt)
+    ) || normalizedPrompt;
+
+    let finalQuery;
+
+    if (WEB_SEARCH_ERROR_PATTERN.test(cleanedPrompt)) {
+        // Error/code debugging: extract focused tokens to avoid sending large code blocks
+        finalQuery = extractErrorFocusedQuery(cleanedPrompt) || cleanedPrompt;
+    } else if (!isFirstUserMessage(chatMessages) && shouldUseRecentContext(cleanedPrompt)) {
+        // Short, ambiguous follow-up on a non-first turn: prepend prior context
+        const recentContext = buildRecentSearchContext(chatMessages);
+        finalQuery = recentContext ? `${recentContext} ${cleanedPrompt}` : cleanedPrompt;
+    } else {
+        // All other cases (including the first message): use the cleaned prompt as-is.
+        // This is the most reliable path — don't over-process.
+        finalQuery = cleanedPrompt;
+    }
+
+    finalQuery = finalQuery.replace(/\s+/g, ' ').trim();
+    if (finalQuery.length > WEB_SEARCH_QUERY_MAX_LENGTH) {
+        finalQuery = finalQuery.slice(0, WEB_SEARCH_QUERY_MAX_LENGTH).trim();
+    }
+
+    return finalQuery;
+}
+
 async function performWebSearch(query) {
     if (!query) return null;
     try {
@@ -888,52 +1148,16 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         appendRequestSystemPrompts(messages, getSystemPrompt(), shouldInlineChatTitle);
         // Note: No default system prompt is added to allow reasoning models to behave naturally
 
-        // Add chat history from previous messages
-        // Include historical web search context for continuity
-        let historicalSearchCount = 0;
+        // Add chat history from previous messages (without historical search context)
+        // Only inject current-turn search results, not old ones, to avoid context confusion
         for (const msg of chatMessages) {
-            // Check if this message had web search results
-            if (msg.hadWebSearch && msg.webSearchResults && historicalSearchCount < MAX_HISTORICAL_SEARCHES) {
-                historicalSearchCount++;
-                
-                // Reconstruct the message with search context included
-                if (getUseOpenRouter()) {
-                    // OpenRouter: prepend search context to user message content
-                    messages.push({
-                        ...msg,
-                        content: msg.webSearchResults + '\n\n' + msg.content
-                    });
-                } else {
-                    // Local models: inject as system message before user message
-                    messages.push({ role: 'system', content: msg.webSearchResults });
-                    messages.push(msg);
-                }
-            } else {
-                // Regular message without web search
-                messages.push(msg);
-            }
+            messages.push(msg);
         }
 
-        if (getWebSearchEnabled() && messages.length > 0) {
-            // Build a context-aware search query for follow-up turns.
-            // If this is not the first user message, prepend the most recent prior user
-            // message so SearXNG can resolve pronouns and vague references (e.g. "When
-            // was it released?" → "What is Python 3.13? When was it released?").
-            let searchQuery = userMessage;
-            const priorUserMessages = chatMessages
-                .filter(m => m.role === 'user')
-                .slice(0, -1); // exclude the current message (already last in chatMessages)
-            if (priorUserMessages.length > 0) {
-                const lastPriorContent = stripInjectedWebSearchContext(
-                    priorUserMessages[priorUserMessages.length - 1].content || ''
-                );
-                // Trim to ~120 chars so we don't overflow the search engine's query limit
-                const trimmedContext = lastPriorContent.trim().slice(0, 120);
-                if (trimmedContext) {
-                    searchQuery = trimmedContext + ' ' + userMessage;
-                }
-            }
-
+        const isFirstMsg = isFirstUserMessage(chatMessages);
+        if (getWebSearchEnabled() && messages.length > 0 && (isFirstMsg || !isSkipWorthyWebSearchQuery(userMessage))) {
+            const searchQuery = buildWebSearchQuery(userMessage, chatMessages);
+            debugLog('Derived web search query:', searchQuery, '| first message:', isFirstMsg);
             const searchResults = await performWebSearch(searchQuery);
             if (searchResults) {
                 // Inject search results into the current API request
@@ -3655,25 +3879,10 @@ export async function regenerateLastResponse(isRetry = false) {
         const filteredMessages = messages.slice(0, lastUserMessageIndex + 1);
         const shouldInlineChatTitle = shouldRequestInlineChatTitle(filteredMessages);
         
-        // Build context messages including historical web searches
+        // Build context messages (current turn only, no historical search accumulation)
         const contextMessages = [];
-        let historicalSearchCount = 0;
         for (const msg of filteredMessages) {
-            // Include historical web search context (excluding the current message being regenerated)
-            if (msg !== lastUserMsg && msg.hadWebSearch && msg.webSearchResults && historicalSearchCount < MAX_HISTORICAL_SEARCHES) {
-                historicalSearchCount++;
-                if (getUseOpenRouter()) {
-                    contextMessages.push({
-                        ...msg,
-                        content: msg.webSearchResults + '\n\n' + msg.content
-                    });
-                } else {
-                    contextMessages.push({ role: 'system', content: msg.webSearchResults });
-                    contextMessages.push(msg);
-                }
-            } else {
-                contextMessages.push(msg);
-            }
+            contextMessages.push(msg);
         }
 
         // Remove existing AI messages from the DOM after the last user message
@@ -3738,7 +3947,7 @@ export async function regenerateLastResponse(isRetry = false) {
             // Note: No default system prompt is added to allow reasoning models to behave naturally
 
 
-            // Add context messages (including historical web searches)
+            // Add context messages (current turn only, no historical search accumulation)
             for (const msg of contextMessages) {
                 apiMessages.push(msg);
             }
@@ -3759,9 +3968,14 @@ export async function regenerateLastResponse(isRetry = false) {
                 } else {
                     apiMessages.splice(apiLastUserMessageIndex, 0, { role: 'system', content: storedWebSearchResults });
                 }
-            } else if (getWebSearchEnabled() && apiMessages.length > 0) {
+            } else if (getWebSearchEnabled() && apiMessages.length > 0 && !isSkipWorthyWebSearchQuery(lastUserMessage)) {
                 // If web search is now enabled but wasn't before, perform a new search
-                const searchResults = await performWebSearch(lastUserMessage);
+                const currentChatMessages = chatHistoryData[currentChatId] && chatHistoryData[currentChatId].messages
+                    ? chatHistoryData[currentChatId].messages
+                    : [];
+                const searchQuery = buildWebSearchQuery(lastUserMessage, currentChatMessages);
+                debugLog('Derived web search query for regeneration:', searchQuery);
+                const searchResults = await performWebSearch(searchQuery);
                 if (searchResults) {
                     if (getUseOpenRouter()) {
                         const lastMsg = apiMessages[apiLastUserMessageIndex];

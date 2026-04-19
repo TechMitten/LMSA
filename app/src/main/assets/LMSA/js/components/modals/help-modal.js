@@ -668,7 +668,7 @@ export const helpModal = `
                                 <p class="font-medium flex items-center" style="color: #f59e0b;"><i
                                         class="fas fa-shield-alt mr-2"></i>Privacy Note:</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">
-                                    When Web Search is active, your prompt is shared with an API that performs a web search using popular search engines and other services. <strong>Do not include sensitive or personal information</strong> in your messages while Web Search is enabled.
+                                    When Web Search is active, a focused search query derived from your prompt may be shared with an API that performs a web search using popular search engines and other services. <strong>Do not include sensitive or personal information</strong> in your messages while Web Search is enabled.
                                 </p>
                             </div>
                         </section>
