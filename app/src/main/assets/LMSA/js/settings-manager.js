@@ -677,8 +677,8 @@ export function syncWebSearchHeaderUI() {
   if (!headerIcon || !headerBtn) return;
   
   if (webSearchEnabled) {
-    headerIcon.style.setProperty('color', '#10B981', 'important');
-    headerIcon.style.setProperty('stroke', '#10B981', 'important');
+    headerIcon.style.setProperty('color', '#3B82F6', 'important');
+    headerIcon.style.setProperty('stroke', '#3B82F6', 'important');
     headerBtn.classList.add("bg-green-500/10");
   } else {
     headerIcon.style.removeProperty('color');
