@@ -827,21 +827,23 @@ class WebViewActivity : AppCompatActivity() {
         updatePremiumUiState()
         val webView: WebView = findViewById(R.id.webView)
         webView.onResume()
-        // Android may kill the TTS engine service while the app is in the background.
-        // Proactively shut down the (potentially stale/dead) TTS instance and immediately
-        // start a fresh one so the engine is warm by the time the user taps the speaker
-        // button, avoiding the multi-tap delay caused by lazy re-initialization.
-        resetTTSPlaybackState(
-            stopPlayback = false,
-            shutdownEngine = true,
-            clearPendingRequest = true,
-            releaseAudioFocus = true
-        )
-        notifyTTSInitialized(false)
-        // Immediately begin re-initialization — the success callback will flip
-        // TTSService.initialized back to true without requiring a JS-side trigger.
-        startTTSEngine()
-        Log.d(TAG, "TTS reset and re-initialization started on resume")
+        
+        // Only re-initialize TTS if it's null or the connection was lost.
+        // This prevents main-thread jank on simple resume events.
+        if (textToSpeech == null || !isTTSInitialized) {
+            resetTTSPlaybackState(
+                stopPlayback = false,
+                shutdownEngine = true,
+                clearPendingRequest = true,
+                releaseAudioFocus = true
+            )
+            notifyTTSInitialized(false)
+            // Immediately begin re-initialization — the success callback will flip
+            // TTSService.initialized back to true without requiring a JS-side trigger.
+            startTTSEngine()
+            Log.d(TAG, "TTS engine re-initialization started on resume")
+        }
+
         if (shouldRequireBiometricReentryOnResume && !biometricPromptShowing) {
             shouldRequireBiometricReentryOnResume = false
             notifyAppForegrounded()
