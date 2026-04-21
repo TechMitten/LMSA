@@ -494,7 +494,8 @@ export const helpModal = `
                                     class="fas fa-th-large mr-2"></i>Using Templates</h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">Templates provide pre-configured
                                 AI personas that specialize in different tasks. Instead of writing custom system
-                                prompts, you can select from ready-made templates to get started quickly.</p>
+                            prompts, you can select from ready-made templates, build your own custom templates,
+                            or work with advanced v2 character cards.</p>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #a78bfa;"><i
@@ -502,8 +503,42 @@ export const helpModal = `
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>Open the sidebar and tap <strong>Templates</strong></li>
                                      <li>Browse through available templates like Math Tutor, Code Assistant, Summarizer, and more</li>
+                                    <li>Tap <strong>Create New</strong> to build your own template, or use <strong>Import v2 Card</strong> at the top of the page to load a character card JSON file</li>
                                     <li>Each template has a specialized role and personality designed for specific tasks
                                     </li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #60a5fa;"><i
+                                        class="fas fa-layer-group mr-2"></i>Basic vs Advanced v2</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li><strong>Basic</strong> templates are ideal when you only need a description and a system prompt</li>
+                                    <li><strong>Advanced v2 Card</strong> adds roleplay-oriented fields such as personality, scenario, first message, alternate greetings, tags, character book JSON, and extensions JSON</li>
+                                    <li>LMSA stores the full v2 card data, then builds the runtime system prompt from that card when you activate it</li>
+                                    <li>If the v2 card includes a first message or alternate greetings, LMSA can seed the opening assistant message automatically when the template is activated</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                        class="fas fa-file-import mr-2"></i>Importing v2 Character Cards</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li>Use <strong>Import v2 Card</strong> on the Templates page to import a JSON character card directly into LMSA</li>
+                                    <li>You can also open <strong>Create New</strong>, switch to <strong>Advanced v2 Card</strong>, and use <strong>Import JSON</strong> inside the modal</li>
+                                    <li>LMSA currently supports the JSON v2 card format and converts the card into a reusable LMSA custom template</li>
+                                    <li>After import, review the fields before saving if you want to adjust the runtime behavior or metadata</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                        class="fas fa-wand-magic-sparkles mr-2"></i>AI Fill for v2 Cards</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li>Inside the <strong>Advanced v2 Card</strong> tab, tap <strong>Generate with AI</strong> to fill blank character-card fields</li>
+                                    <li><strong>Description is required</strong> before AI generation will run</li>
+                                    <li>The AI uses the fields you already filled in as constraints and only generates the fields that are still blank</li>
+                                    <li>After generation, LMSA refreshes the derived runtime prompt so the basic prompt field stays in sync with the v2 card data</li>
                                 </ul>
                             </div>
 
@@ -899,7 +934,7 @@ export const helpModal = `
                                     <li><strong>Advertisements:</strong> Free users see advertisements throughout the app</li>
                                     <li><strong>File Attachments:</strong> Not available on the Free tier; upgrade to Premium to attach files to chats</li>
                                     <li><strong>TTS (Text-to-Speech):</strong> Unlimited with the default voice; upgrade to Premium to unlock alternate voices</li>
-                                    <li><strong>Custom Templates:</strong> Not available on the Free tier; upgrade to Premium to create and use custom templates</li>
+                                    <li><strong>Custom Templates and v2 Character Cards:</strong> Not available on the Free tier; upgrade to Premium to create, import, and use them</li>
                                 </ul>
                             </div>
 
@@ -914,7 +949,8 @@ export const helpModal = `
                                     <li><strong>File Attachments:</strong> Attach files (documents, code, data) to chats for analysis</li>
                                     <li><strong>OpenRouter Access:</strong> Full access to cloud models via OpenRouter</li>
                                     <li><strong>TTS (Text-to-Speech):</strong> Hear AI responses with the default voice plus alternate premium voices</li>
-                                    <li><strong>Custom Templates:</strong> Create, save, and reuse prompt templates</li>
+                                    <li><strong>Custom Templates:</strong> Create, save, edit, and reuse prompt templates</li>
+                                    <li><strong>v2 Character Cards:</strong> Import JSON v2 cards, edit advanced fields, and use AI to fill blank card fields</li>
                                     <li><strong>One-Time Purchase:</strong> Upgrade with a single lifetime purchase</li>
                                 </ul>
                             </div>

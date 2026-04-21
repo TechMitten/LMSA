@@ -13,7 +13,7 @@ export const whatsNewModal = `
                     <div class="flex flex-col">
                         <span class="text-blue-400 font-extrabold">What's New</span>
                         <span class="text-xs text-blue-300/80 font-medium">v<span
-                            id="whats-new-version">10.12</span></span>
+                            id="whats-new-version">10.13</span></span>
                     </div>
                 </h2>
                 <button id="close-whats-new"
@@ -24,6 +24,28 @@ export const whatsNewModal = `
 
                     <div class="features-container overflow-y-auto grow px-1 py-2">
                 <div class="space-y-3">
+                    <div class="feature-item">
+                        <div class="relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-rose-500/10 to-orange-700/5 rounded-full blur-xl"></div>
+                            <div class="flex items-start relative z-10">
+                                <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-rose-500/20 w-10 h-10 shadow-sm">
+                                    <i class="fas fa-star text-rose-300"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <h3 class="feature-title underline decoration-rose-500/30 underline-offset-4">Latest App Improvements</h3>
+                                    </div>
+                                    <div class="feature-description">
+                                        <p class="mb-3 text-sm">You can now import system prompts directly from LM Studio.</p>
+                                        <p class="mb-3 text-sm">Templates are now fully v2 character card compatible, including template imports.</p>
+                                        <p class="mb-3 text-sm">TTS is now available to free users, with voice mode changes still restricted to premium.</p>
+                                        <p class="mb-3 text-sm">Images now persist in chat history instead of disappearing after reloads or revisits.</p>
+                                        <p class="mb-3 text-sm">You can quickly confirm whether you are using Local Server or OpenRouter by checking the bottom of the side menu.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="feature-item">
                         <div class="relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-green-500/10 to-emerald-700/5 rounded-full blur-xl"></div>
