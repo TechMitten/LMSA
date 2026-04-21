@@ -657,18 +657,17 @@ function initializeAndroidKeyboardFix() {
             // Scroll to input field
             const userInput = document.getElementById('user-input');
             const visibleModal = document.querySelector('.modal-container:not(.hidden)');
-            if (userInput && !visibleModal) {
-                setTimeout(() => {
-                    userInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 100);
+            if (userInput && document.activeElement === userInput && !visibleModal) {
+                requestAnimationFrame(() => {
+                    userInput.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+                });
             }
         } else {
             document.body.classList.remove('keyboard-visible');
         }
     }
 
-    // Use window resize — works correctly with adjustResize since innerHeight shrinks
-    window.addEventListener('resize', function () {
+    function handleKeyboardViewportChange() {
         const currentHeight = window.innerHeight;
         const keyboardHeight = baselineHeight - currentHeight;
         androidKeyboardHeight = Math.max(0, keyboardHeight);
@@ -680,7 +679,10 @@ function initializeAndroidKeyboardFix() {
             // Keep baseline updated when keyboard is not open (e.g. after rotation)
             baselineHeight = Math.max(baselineHeight, currentHeight);
         }
-    });
+    }
+
+    // Window resize handles the Android adjustResize change for shared modals.
+    window.addEventListener('resize', handleKeyboardViewportChange);
 }
 
 // Initialize the application when the DOM is loaded and terms are accepted

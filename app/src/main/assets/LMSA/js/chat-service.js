@@ -4,7 +4,7 @@ import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendSt
 import { openHelpModal } from './help.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
 import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOllama, getOpenRouterApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations, getWebSearchEnabled } from './settings-manager.js';
-import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags, normalizeMalformedCodeFences } from './utils.js';
+import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags, normalizeMalformedCodeFences, isAndroidWebView } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
 import { canSendCompletion, recordCompletion, canSendOpenRouterCompletion, recordOpenRouterCompletion } from './usage-limiter.js';
 
@@ -19,6 +19,8 @@ let isGenerating = false;
 let isNewTopic = false;
 let chatToRename = null;
 let renameModalEscapeHandler = null;
+let renameModalTouchMoveHandler = null;
+let renameModalViewportCleanup = null;
 let suppressChatHistoryClickUntil = 0;
 
 // Maximum number of historical web search results to include in context (legacy)
@@ -2961,13 +2963,13 @@ function ensureRenameChatModal() {
 
     modal = document.createElement('div');
     modal.id = 'chat-rename-modal';
-    modal.className = 'fixed inset-0 bg-black/70 dark:bg-black/70 light:bg-gray-900/50 backdrop-blur-sm items-center justify-center hidden z-[2100]';
+    modal.className = 'modal-container fixed inset-0 bg-black/70 dark:bg-black/70 light:bg-gray-900/50 backdrop-blur-sm items-center justify-center hidden z-[2100]';
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-labelledby', 'chat-rename-title');
 
     modal.innerHTML = `
-        <div class="bg-gradient-to-b from-[#0a192f] to-[#0d1f3d] dark:from-[#0a192f] dark:to-[#0d1f3d] light:from-[#f8fafc] light:to-[#f1f5f9] p-6 rounded-xl w-[420px] max-w-[90%] shadow-2xl modal-content border border-blue-900/30 dark:border-blue-900/30 light:border-blue-200 overflow-hidden">
+        <div class="chat-rename-modal-box bg-gradient-to-b from-[#0a192f] to-[#0d1f3d] dark:from-[#0a192f] dark:to-[#0d1f3d] light:from-[#f8fafc] light:to-[#f1f5f9] p-6 rounded-xl w-[420px] max-w-[90%] shadow-2xl modal-content border border-blue-900/30 dark:border-blue-900/30 light:border-blue-200 overflow-x-hidden overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 id="chat-rename-title" class="text-xl font-bold flex items-center text-blue-400 dark:text-blue-400 light:text-blue-700">
                     <i class="fas fa-edit mr-3"></i>Rename Chat
@@ -3000,6 +3002,16 @@ function closeRenameChatModal() {
     const modal = document.getElementById('chat-rename-modal');
     if (!modal) return;
 
+    if (renameModalViewportCleanup) {
+        renameModalViewportCleanup();
+        renameModalViewportCleanup = null;
+    }
+
+    if (renameModalTouchMoveHandler) {
+        modal.removeEventListener('touchmove', renameModalTouchMoveHandler);
+        renameModalTouchMoveHandler = null;
+    }
+
     modal.classList.add('hidden');
     modal.classList.remove('flex');
     chatToRename = null;
@@ -3008,6 +3020,131 @@ function closeRenameChatModal() {
         document.removeEventListener('keydown', renameModalEscapeHandler);
         renameModalEscapeHandler = null;
     }
+}
+
+function getRenameModalViewportMetrics() {
+    const visualViewport = window.visualViewport;
+    if (visualViewport && typeof visualViewport.height === 'number' && visualViewport.height > 0) {
+        return {
+            height: Math.round(Math.min(window.innerHeight, visualViewport.height)),
+            width: Math.round(Math.min(window.innerWidth, visualViewport.width || window.innerWidth)),
+            offsetTop: Math.max(0, Math.round(visualViewport.offsetTop || 0)),
+            offsetLeft: Math.max(0, Math.round(visualViewport.offsetLeft || 0))
+        };
+    }
+
+    return {
+        height: window.innerHeight,
+        width: window.innerWidth,
+        offsetTop: 0,
+        offsetLeft: 0
+    };
+}
+
+function clearRenameModalViewportStyles(modal) {
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.remove('keyboard-visible');
+    modal.style.height = '';
+    modal.style.maxHeight = '';
+    modal.style.width = '';
+    modal.style.maxWidth = '';
+    modal.style.position = '';
+    modal.style.top = '';
+    modal.style.left = '';
+    modal.style.right = '';
+    modal.style.bottom = '';
+    modal.style.alignItems = '';
+    modal.style.justifyContent = '';
+    modal.style.padding = '';
+    modal.style.overflow = '';
+    modal.style.touchAction = '';
+
+    const modalBox = modal.querySelector('.chat-rename-modal-box');
+    if (modalBox) {
+        modalBox.style.maxHeight = '';
+        modalBox.style.margin = '';
+        modalBox.style.transform = '';
+        modalBox.style.touchAction = '';
+    }
+}
+
+function syncRenameModalViewport(modal, baselineHeightRef) {
+    if (!modal || modal.classList.contains('hidden')) {
+        return;
+    }
+
+    if (!isAndroidWebView()) {
+        clearRenameModalViewportStyles(modal);
+        return;
+    }
+
+    const metrics = getRenameModalViewportMetrics();
+    const input = modal.querySelector('#chat-rename-input');
+    const keyboardHeight = Math.max(0, baselineHeightRef.value - metrics.height);
+    const keyboardOpen = keyboardHeight > 100
+        || (input === document.activeElement && keyboardHeight > 48);
+
+    if (!keyboardOpen) {
+        baselineHeightRef.value = Math.max(baselineHeightRef.value, metrics.height);
+        clearRenameModalViewportStyles(modal);
+        return;
+    }
+
+    const bottomInset = Math.max(40, Math.min(72, Math.round(keyboardHeight * 0.22)));
+    const modalBox = modal.querySelector('.chat-rename-modal-box');
+
+    modal.classList.add('keyboard-visible');
+    modal.style.height = `${metrics.height}px`;
+    modal.style.maxHeight = `${metrics.height}px`;
+    modal.style.width = `${metrics.width}px`;
+    modal.style.maxWidth = `${metrics.width}px`;
+    modal.style.position = 'fixed';
+    modal.style.top = `${metrics.offsetTop}px`;
+    modal.style.left = `${metrics.offsetLeft}px`;
+    modal.style.right = 'auto';
+    modal.style.bottom = 'auto';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.padding = `8px 8px ${bottomInset}px`;
+    modal.style.overflow = 'hidden';
+    modal.style.touchAction = 'none';
+
+    if (modalBox) {
+        modalBox.style.maxHeight = `calc(100% - ${bottomInset + 16}px)`;
+        modalBox.style.margin = 'auto';
+        modalBox.style.transform = 'none';
+        modalBox.style.touchAction = 'auto';
+    }
+}
+
+function setupRenameModalViewportHandling(modal) {
+    if (!modal || !isAndroidWebView() || !window.visualViewport) {
+        return null;
+    }
+
+    const baselineHeightRef = {
+        value: getRenameModalViewportMetrics().height
+    };
+
+    const handleViewportChange = () => {
+        syncRenameModalViewport(modal, baselineHeightRef);
+    };
+
+    window.visualViewport.addEventListener('resize', handleViewportChange, { passive: true });
+    window.visualViewport.addEventListener('scroll', handleViewportChange, { passive: true });
+    window.addEventListener('resize', handleViewportChange, { passive: true });
+
+    handleViewportChange();
+
+    return () => {
+        window.visualViewport.removeEventListener('resize', handleViewportChange);
+        window.visualViewport.removeEventListener('scroll', handleViewportChange);
+        window.removeEventListener('resize', handleViewportChange);
+        clearRenameModalViewportStyles(modal);
+    };
 }
 
 function confirmRenameChatModal() {
@@ -3069,6 +3206,22 @@ function openRenameChatModal(id, currentTitle) {
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+
+    if (renameModalViewportCleanup) {
+        renameModalViewportCleanup();
+    }
+    renameModalViewportCleanup = setupRenameModalViewportHandling(modal);
+
+    if (!renameModalTouchMoveHandler) {
+        renameModalTouchMoveHandler = (e) => {
+            const modalBox = modal.querySelector('.chat-rename-modal-box');
+            if (!modalBox || e.target === modal || !modalBox.contains(e.target)) {
+                e.preventDefault();
+            }
+        };
+    }
+
+    modal.addEventListener('touchmove', renameModalTouchMoveHandler, { passive: false });
 
     if (!modal.dataset.handlersAttached) {
         saveButton.addEventListener('click', (e) => {

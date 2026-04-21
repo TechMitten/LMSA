@@ -3967,6 +3967,36 @@ body.light-theme #clear-system-prompt-modal #close-clear-system-prompt-modal:hov
     margin: 0 auto !important;
 }
 
+#chat-rename-modal .chat-rename-modal-box {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 1;
+    box-sizing: border-box;
+    max-height: calc(100% - 16px);
+    margin: 8px auto 0;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+#chat-rename-modal.keyboard-visible {
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 8px 8px 40px !important;
+    overflow: hidden !important;
+    overscroll-behavior: contain;
+    touch-action: none;
+}
+
+#chat-rename-modal.keyboard-visible .chat-rename-modal-box {
+    touch-action: auto;
+    transform: none !important;
+}
+
+.modal-container.keyboard-visible #chat-rename-modal .chat-rename-modal-box {
+    max-height: calc(100% - 48px) !important;
+    margin: auto !important;
+}
+
 .modal-container.hidden {
     background-color: transparent !important;
     visibility: hidden !important;
