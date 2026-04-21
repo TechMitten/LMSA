@@ -51,6 +51,11 @@ export const helpModal = `
                                          <i class="fas fa-plug mr-2 text-sm"></i>
                                          <span>LM Studio MCP</span>
                                      </a>
+                                     <a href="#section-lmstudio-prompts"
+                                         class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
+                                         <i class="fas fa-file-import mr-2 text-sm"></i>
+                                         <span>Import LM Studio Prompts</span>
+                                     </a>
                                      <a href="#section-ollama-setup"
                                          class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                          <i class="fas fa-terminal mr-2 text-sm"></i>
@@ -257,6 +262,53 @@ export const helpModal = `
                                          <li>The MCP builder in LMSA creates the <code>integrations</code> JSON for you, so you usually do not need to type JSON manually.</li>
                                          <li>Your normal LM Studio server connection still needs to work first before MCP integrations can be used.</li>
                                          <li>If a tool-enabled request behaves strangely, double-check the server URL or plugin id, and make sure the target integration is available in LM Studio.</li>
+                                     </ul>
+                                 </div>
+                             </div>
+                         </section>
+
+                         <section id="section-lmstudio-prompts">
+                             <h3 class="text-lg font-semibold mb-2 flex items-center"
+                                 style="color: #10b981;"><i class="fas fa-file-import mr-2"></i>Import LM Studio Prompts
+                             </h3>
+                             <p style="color: var(--text-primary); margin-bottom: 1rem;">
+                                 LMSA can import system prompts from LM Studio profile JSON files. After import, the prompt is saved inside LMSA so you can reopen it later from the Saved Prompts list.
+                             </p>
+
+                             <div class="space-y-4">
+                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                     <p class="font-medium flex items-center" style="color: #60a5fa;"><i
+                                             class="fas fa-folder-open mr-2"></i>Where LM Studio Stores the JSON Files</p>
+                                     <ul class="list-disc pl-5 mt-2 space-y-1"
+                                         style="color: var(--text-primary); font-size: 0.9em;">
+                                         <li><strong>Windows</strong>: <code>%USERPROFILE%\.lmstudio\config-presets</code></li>
+                                         <li><strong>macOS / Linux</strong>: <code>~/.lmstudio/config-presets</code></li>
+                                         <li>Find the LM Studio profile <code>.json</code> file on your computer, then transfer that file to your mobile device before importing it into LMSA.</li>
+                                     </ul>
+                                 </div>
+
+                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                     <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                             class="fas fa-list-ol mr-2"></i>How to Import It</p>
+                                     <ol class="list-decimal pl-5 mt-2 space-y-1"
+                                         style="color: var(--text-primary); font-size: 0.9em;">
+                                         <li>Copy or send the LM Studio profile JSON file from your computer to your phone or tablet using any transfer method you prefer.</li>
+                                         <li>In LMSA, open <strong>Options</strong>.</li>
+                                         <li>Open <strong>Import/Export</strong> and tap <strong>Import System Prompt (LMS)</strong>.</li>
+                                         <li>When the LMSA file picker opens, browse to the JSON file on your mobile device and select it.</li>
+                                         <li>LMSA reads the system prompt from that JSON file and saves it as a reusable LMSA prompt.</li>
+                                     </ol>
+                                 </div>
+
+                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                     <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                             class="fas fa-save mr-2"></i>Where to Find Imported Prompts</p>
+                                     <ul class="list-disc pl-5 mt-2 space-y-1"
+                                         style="color: var(--text-primary); font-size: 0.9em;">
+                                         <li>Imported prompts appear in <strong>Options &gt; Saved Prompts</strong>.</li>
+                                         <li>The <strong>Saved Prompts</strong> button opens the modal where you can review, edit, and reuse the prompts you imported.</li>
+                                         <li>If the LM Studio JSON includes a profile name, LMSA uses that as the saved prompt name. Otherwise it falls back to the JSON filename.</li>
+                                         <li>After the import finishes and the prompt appears in Saved Prompts, you can delete the transferred JSON file from your phone if you no longer need it.</li>
                                      </ul>
                                  </div>
                              </div>
