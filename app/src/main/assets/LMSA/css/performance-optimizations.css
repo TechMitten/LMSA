@@ -431,6 +431,8 @@ body.light-theme #ip-port-confirm-btn {
 
 #ip-port-confirmation-modal .modal-content {
   width: min(92vw, 520px) !important;
+  max-height: calc(100% - 20px) !important;
+  margin: auto !important;
 }
 
 #ip-port-confirmation-modal .ip-port-modal-header {
@@ -512,6 +514,15 @@ body.light-theme #ip-port-confirmation-modal .ip-port-progress-card {
   color: var(--toggle-active-bg);
   font-size: 1.25rem;
   font-weight: 700;
+}
+
+#ip-port-confirmation-modal .ip-port-modal-actions {
+  display: flex;
+  align-items: stretch;
+}
+
+#ip-port-confirmation-modal .ip-port-modal-actions button {
+  min-height: 52px;
 }
 
 #ip-port-confirmation-modal #ip-port-cancel-btn {
@@ -651,6 +662,75 @@ body.light-theme #ip-port-confirmation-modal input[type="checkbox"]:checked::aft
 
 /* Enhanced touch targets and spacing for mobile devices */
 @media (max-width: 767px) {
+  #ip-port-confirmation-modal {
+    padding: 10px;
+    align-items: center !important;
+  }
+
+  #ip-port-confirmation-modal .modal-content {
+    width: min(96vw, 520px) !important;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-header {
+    padding: 0.875rem 1rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-icon {
+    width: 2.2rem;
+    height: 2.2rem;
+    min-width: 2.2rem;
+  }
+
+  #ip-port-confirmation-modal #ip-port-confirmation-title {
+    font-size: 1.05rem;
+    line-height: 1.25;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-subtitle {
+    font-size: 0.76rem;
+    line-height: 1.25;
+  }
+
+  #ip-port-confirmation-modal .relative.z-10 > .px-6.py-6 {
+    padding: 0.95rem 1rem 1rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-intro {
+    margin-bottom: 0.75rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-intro p {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+
+  #ip-port-confirmation-modal .ip-port-checklist-stack {
+    margin-bottom: 0.85rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-section-title {
+    margin-bottom: 0.55rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+  }
+
+  #ip-port-confirmation-modal .ip-port-checklist-item {
+    padding: 0.7rem 0.75rem;
+    border-radius: 0.9rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-checklist-label {
+    font-size: 0.84rem;
+    line-height: 1.2;
+  }
+
+  #ip-port-confirmation-modal .ip-port-checklist-copy {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.75rem;
+    line-height: 1.3;
+  }
+
   #ip-port-confirmation-modal input[type="checkbox"] {
     width: 22px !important;
     height: 22px !important;
@@ -671,16 +751,161 @@ body.light-theme #ip-port-confirmation-modal input[type="checkbox"]:checked::aft
     font-size: 15px;
     left: 2.5px;
   }
-  
-  /* Increase spacing between checkbox items on mobile */
-  #ip-port-confirmation-modal .space-y-4 > div {
-    margin-bottom: 1rem;
+
+  #ip-port-confirmation-modal .ip-port-progress-card {
+    padding: 0.75rem 0.85rem;
+    gap: 0.45rem;
+    margin-top: 0.55rem;
   }
-  
-  /* Better touch target for labels */
+
+  #ip-port-confirmation-modal .ip-port-progress-count {
+    font-size: 1.05rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-never-show-row {
+    margin-top: 0.75rem;
+    padding-bottom: 0;
+    gap: 0.45rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-never-show-row label {
+    font-size: 0.8rem;
+    line-height: 1.25;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-actions {
+    margin-top: 0.5rem;
+    gap: 0.65rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-actions button {
+    min-height: 44px;
+    padding: 0.58rem 0.8rem;
+    font-size: 0.86rem;
+  }
+
   #ip-port-confirmation-modal label {
     padding: 4px 0;
     line-height: 1.4;
+  }
+}
+
+@media (max-width: 420px), (max-height: 760px) {
+  #ip-port-confirmation-modal {
+    padding: 8px;
+  }
+
+  #ip-port-confirmation-modal .modal-content {
+    width: min(97vw, 520px) !important;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-header {
+    padding: 0.8rem 0.9rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-icon {
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
+  }
+
+  #ip-port-confirmation-modal .relative.z-10 > .px-6.py-6 {
+    padding: 0.85rem 0.9rem 0.9rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-intro {
+    margin-bottom: 0.65rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-intro p,
+  #ip-port-confirmation-modal .ip-port-checklist-copy,
+  #ip-port-confirmation-modal .ip-port-never-show-row label {
+    font-size: 0.74rem;
+    line-height: 1.25;
+  }
+
+  #ip-port-confirmation-modal .ip-port-section-title {
+    margin-bottom: 0.45rem;
+    font-size: 0.66rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-checklist-stack {
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-checklist-item {
+    padding: 0.58rem 0.65rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-checklist-label {
+    font-size: 0.8rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-progress-card {
+    padding: 0.62rem 0.75rem;
+    margin-top: 0.45rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-progress-count {
+    font-size: 0.98rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-never-show-row {
+    margin-top: 0.65rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-actions {
+    margin-top: 0.6rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-actions button {
+    min-height: 40px;
+    padding: 0.52rem 0.72rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-height: 680px) {
+  #ip-port-confirmation-modal .ip-port-modal-subtitle {
+    display: none;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-header {
+    padding-bottom: 0.7rem;
+  }
+}
+
+@media (max-height: 620px) {
+  #ip-port-confirmation-modal {
+    padding: 6px;
+  }
+
+  #ip-port-confirmation-modal .modal-content {
+    width: min(98vw, 520px) !important;
+    max-height: calc(100% - 12px) !important;
+  }
+
+  #ip-port-confirmation-modal .relative.z-10 > .px-6.py-6 {
+    padding: 0.75rem 0.8rem 0.8rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-intro {
+    margin-bottom: 0.55rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-checklist-stack {
+    margin-bottom: 0.65rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-checklist-item {
+    padding: 0.5rem 0.55rem;
+  }
+
+  #ip-port-confirmation-modal .ip-port-modal-actions button {
+    min-height: 38px;
+    padding: 0.46rem 0.65rem;
+    font-size: 0.78rem;
   }
 }
 
