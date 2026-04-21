@@ -625,11 +625,47 @@ class WebViewActivity : AppCompatActivity() {
 
             val jsCommand = "if(typeof updateUiForPremium === 'function') { updateUiForPremium($effectivePremium); }"
             webView.evaluateJavascript(jsCommand, null)
+            syncCurrentTTSVoiceToAccessLevel()
         }
     }
 
     private fun hasEffectivePremium(): Boolean {
         return isPremium && !isDebugMode
+    }
+
+    private fun syncCurrentTTSVoiceToAccessLevel() {
+        val tts = textToSpeech ?: return
+        if (!isTTSInitialized) return
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            if (!hasEffectivePremium()) {
+                tts.setLanguage(Locale.US)
+            }
+            return
+        }
+
+        if (!hasEffectivePremium()) {
+            val restoredVoice = defaultTTSVoice
+            if (restoredVoice != null) {
+                if (tts.voice?.name != restoredVoice.name) {
+                    tts.voice = restoredVoice
+                    Log.d(TAG, "Reset TTS voice to the default voice for the free tier")
+                }
+            } else {
+                tts.setLanguage(Locale.US)
+                Log.d(TAG, "Reset TTS voice to the default language for the free tier")
+            }
+            return
+        }
+
+        val preferredVoiceName = preferredTTSVoiceName
+        if (!preferredVoiceName.isNullOrBlank()) {
+            val preferredVoice = tts.voices?.find { it.name == preferredVoiceName }
+            if (preferredVoice != null && tts.voice?.name != preferredVoiceName) {
+                tts.voice = preferredVoice
+                Log.d(TAG, "Reapplied preferred premium TTS voice: $preferredVoiceName")
+            }
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -1706,7 +1742,7 @@ class WebViewActivity : AppCompatActivity() {
                         Log.d(TAG, "Audio attributes set for TTS with USAGE_MEDIA/CONTENT_TYPE_SPEECH")
 
                         val preferredVoiceName = preferredTTSVoiceName
-                        if (!preferredVoiceName.isNullOrBlank()) {
+                        if (!preferredVoiceName.isNullOrBlank() && hasEffectivePremium()) {
                             val preferredVoice = tts.voices?.find { it.name == preferredVoiceName }
                             if (preferredVoice != null) {
                                 tts.voice = preferredVoice
@@ -1715,6 +1751,8 @@ class WebViewActivity : AppCompatActivity() {
                                 Log.w(TAG, "Preferred TTS voice no longer available after init: $preferredVoiceName")
                                 preferredTTSVoiceName = null
                             }
+                        } else if (!preferredVoiceName.isNullOrBlank()) {
+                            Log.d(TAG, "Skipping preferred premium TTS voice while premium access is unavailable")
                         }
                     }
 
@@ -2161,6 +2199,11 @@ class WebViewActivity : AppCompatActivity() {
                     Log.w(TAG, "TTS not initialized, cannot set voice")
                     false
                 } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    if (!hasEffectivePremium()) {
+                        Log.w(TAG, "Ignoring premium TTS voice selection for non-premium user")
+                        syncCurrentTTSVoiceToAccessLevel()
+                        false
+                    } else {
                     val voices = textToSpeech?.voices
                     val selectedVoice = voices?.find { it.name == voiceName }
 
@@ -2172,6 +2215,7 @@ class WebViewActivity : AppCompatActivity() {
                     } else {
                         Log.w(TAG, "Voice not found: $voiceName")
                         false
+                    }
                     }
                 } else {
                     Log.w(TAG, "Voice selection not supported on API level < 21")

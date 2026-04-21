@@ -291,7 +291,7 @@ export const settingsModal = `
                             class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500">
                             <option value="">Loading voices...</option>
                         </select>
-                        <p class="text-xs text-gray-400 mt-1">Select the text-to-speech voice for reading AI responses
+                        <p class="text-xs text-gray-400 mt-1">Free users can use unlimited TTS with the default voice. Premium unlocks alternate voices.
                         </p>
                     </div>
 

@@ -375,6 +375,46 @@ function isPremiumUser() {
   );
 }
 
+function requestTTSVoicePremiumAccess() {
+  if (typeof window.openPremiumModal === "function") {
+    window.openPremiumModal("TTS Voices");
+  } else {
+    alert("Alternate TTS voices are reserved for premium users.");
+  }
+}
+
+function updateTTSVoicePremiumState(voiceSelect = document.getElementById("tts-voice-select")) {
+  if (!voiceSelect) {
+    return;
+  }
+
+  const isPremium = isPremiumUser();
+  voiceSelect.dataset.premiumLocked = isPremium ? "false" : "true";
+  voiceSelect.title = isPremium
+    ? "Select the text-to-speech voice for AI responses"
+    : "Free users can use only the default TTS voice";
+}
+
+async function syncTTSVoiceSelectionForAccess(
+  voiceSelect = document.getElementById("tts-voice-select")
+) {
+  updateTTSVoicePremiumState(voiceSelect);
+
+  if (isPremiumUser()) {
+    return;
+  }
+
+  selectedTTSVoice = null;
+
+  if (voiceSelect) {
+    voiceSelect.value = "";
+  }
+
+  if (window.TTSService) {
+    await window.TTSService.setVoice("");
+  }
+}
+
 export function canEditSystemPrompt() {
   return isPremiumUser();
 }
@@ -426,6 +466,7 @@ export function updateSystemPromptPremiumState() {
 
 document.addEventListener("premium-status-changed", () => {
   updateSystemPromptPremiumState();
+  void syncTTSVoiceSelectionForAccess();
 });
 
 /**
@@ -1637,7 +1678,7 @@ export async function initializeTTSVoiceSelection() {
 
       // Load saved voice preference
       const savedVoice = localStorage.getItem("ttsVoice");
-      if (savedVoice) {
+      if (savedVoice && isPremiumUser()) {
         selectedTTSVoice = savedVoice;
         voiceSelect.value = savedVoice;
 
@@ -1649,19 +1690,43 @@ export async function initializeTTSVoiceSelection() {
           localStorage.removeItem("ttsVoice");
           debugLog("Saved TTS voice was unavailable and has been cleared");
         }
+      } else if (savedVoice) {
+        selectedTTSVoice = null;
+        voiceSelect.value = "";
+        await window.TTSService.setVoice("");
+        debugLog("Saved premium TTS voice is locked for the free tier; using default voice");
       }
+
+      updateTTSVoicePremiumState(voiceSelect);
 
       // Add the change listener only once even if the settings modal is reopened.
       if (voiceSelect.dataset.ttsVoiceListenerAttached !== "true") {
         voiceSelect.addEventListener("change", async (e) => {
           const voiceName = e.target.value;
-          selectedTTSVoice = voiceName;
 
           if (voiceName) {
+            if (!isPremiumUser()) {
+              selectedTTSVoice = null;
+              e.target.value = "";
+              await window.TTSService.setVoice("");
+              requestTTSVoicePremiumAccess();
+              return;
+            }
+
+            selectedTTSVoice = voiceName;
             localStorage.setItem("ttsVoice", voiceName);
-            await window.TTSService.setVoice(voiceName);
+            const voiceApplied = await window.TTSService.setVoice(voiceName);
+            if (!voiceApplied) {
+              selectedTTSVoice = null;
+              e.target.value = "";
+              localStorage.removeItem("ttsVoice");
+              await window.TTSService.setVoice("");
+              debugLog("Unable to apply the selected TTS voice; reverted to default");
+              return;
+            }
             debugLog("TTS voice set to:", voiceName);
           } else {
+            selectedTTSVoice = null;
             localStorage.removeItem("ttsVoice");
             await window.TTSService.setVoice("");
             debugLog("TTS voice reset to default");
@@ -1691,11 +1756,23 @@ export function getSelectedTTSVoice() {
  * Set selected TTS voice
  */
 export async function setSelectedTTSVoice(voiceName) {
+  if (voiceName && !isPremiumUser()) {
+    selectedTTSVoice = null;
+    await syncTTSVoiceSelectionForAccess();
+    return false;
+  }
+
   selectedTTSVoice = voiceName;
   if (voiceName) {
     localStorage.setItem("ttsVoice", voiceName);
     if (window.TTSService) {
-      await window.TTSService.setVoice(voiceName);
+      const voiceApplied = await window.TTSService.setVoice(voiceName);
+      if (!voiceApplied) {
+        selectedTTSVoice = null;
+        localStorage.removeItem("ttsVoice");
+        await window.TTSService.setVoice("");
+        return false;
+      }
     }
   } else {
     localStorage.removeItem("ttsVoice");
@@ -1703,6 +1780,9 @@ export async function setSelectedTTSVoice(voiceName) {
       await window.TTSService.setVoice("");
     }
   }
+
+  updateTTSVoicePremiumState();
+  return true;
 }
 
 /**

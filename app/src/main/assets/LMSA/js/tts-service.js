@@ -173,21 +173,6 @@ class TTSService {
      * @param {Object} options - Speech options
      */
     async speak(text, options = {}) {
-        // Check if user is premium for TTS functionality
-        const isPremium = typeof window.hasPremiumAccess === 'function'
-            ? window.hasPremiumAccess()
-            : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function'
-                ? window.AndroidBilling.checkPremiumStatus()
-                : false;
-
-        if (!isPremium) {
-            console.warn('TTS is a premium feature');
-            if (typeof window.openPremiumModal === 'function') {
-                window.openPremiumModal('TTS');
-            }
-            return Promise.resolve(false);
-        }
-
         if (!text || text.trim().length === 0) {
             console.warn('No text provided for TTS');
             return Promise.resolve(false);
@@ -626,6 +611,12 @@ class TTSService {
      * @returns {boolean} Success status
      */
     async setVoice(voiceName) {
+        const hasPremiumVoiceAccess = typeof window.hasPremiumAccess === 'function'
+            ? window.hasPremiumAccess()
+            : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function'
+                ? window.AndroidBilling.checkPremiumStatus()
+                : false;
+
         if (this.isAndroid) {
             try {
                 if (!this.isInitialized()) {
@@ -636,6 +627,14 @@ class TTSService {
                     if (typeof AndroidTTS !== 'undefined' && typeof AndroidTTS.resetVoice === 'function') {
                         this.selectedVoice = null;
                         return AndroidTTS.resetVoice();
+                    }
+                    return false;
+                }
+
+                if (!hasPremiumVoiceAccess) {
+                    console.warn('Alternate TTS voices require premium access');
+                    if (typeof window.openPremiumModal === 'function') {
+                        window.openPremiumModal('TTS Voices');
                     }
                     return false;
                 }
@@ -657,6 +656,15 @@ class TTSService {
         if (!voiceName) {
             this.selectedVoice = null;
             return true;
+        }
+
+        if (!hasPremiumVoiceAccess) {
+            this.selectedVoice = null;
+            console.warn('Alternate TTS voices require premium access');
+            if (typeof window.openPremiumModal === 'function') {
+                window.openPremiumModal('TTS Voices');
+            }
+            return false;
         }
 
         const voice = this.voices.find(v => v.name === voiceName);
