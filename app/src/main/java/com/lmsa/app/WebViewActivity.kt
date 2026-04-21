@@ -11,6 +11,7 @@ import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
@@ -67,6 +68,7 @@ import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.appopen.AppOpenAd
+import org.json.JSONObject
 
 import android.widget.FrameLayout
 import com.android.billingclient.api.*
@@ -78,6 +80,7 @@ class WebViewActivity : AppCompatActivity() {
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private lateinit var fileChooserLauncher: ActivityResultLauncher<Intent>
     private lateinit var fileSaverLauncher: ActivityResultLauncher<Intent>
+    private lateinit var systemPromptImportLauncher: ActivityResultLauncher<Intent>
     private var pendingFileContent: String? = null
     private var pendingFileName: String? = null
     private var isImageFile: Boolean = false
@@ -134,6 +137,7 @@ class WebViewActivity : AppCompatActivity() {
     private var isDebugMode = false
     private var biometricPromptShowing = false
     private var shouldRequireBiometricReentryOnResume = false
+    private var suppressBiometricReentryForExternalPicker = false
 
 
     private val purchasesUpdatedListener = PurchasesUpdatedListener { billingResult, purchases ->
@@ -367,6 +371,43 @@ class WebViewActivity : AppCompatActivity() {
                 pendingFileContent = null
                 pendingFileName = null
                 isImageFile = false
+            }
+
+        systemPromptImportLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode != Activity.RESULT_OK) {
+                    notifyLmStudioSystemPromptImportResult(
+                        success = false,
+                        errorMessage = "cancelled"
+                    )
+                    return@registerForActivityResult
+                }
+
+                val uri = result.data?.data
+                if (uri == null) {
+                    notifyLmStudioSystemPromptImportResult(
+                        success = false,
+                        errorMessage = "No file was selected."
+                    )
+                    return@registerForActivityResult
+                }
+
+                try {
+                    val fileContent = readTextFromUri(uri)
+                    val fileName = getDisplayNameFromUri(uri) ?: "lm-studio-prompt.json"
+
+                    notifyLmStudioSystemPromptImportResult(
+                        success = true,
+                        fileName = fileName,
+                        content = fileContent
+                    )
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error importing LM Studio prompt", e)
+                    notifyLmStudioSystemPromptImportResult(
+                        success = false,
+                        errorMessage = e.message ?: "Failed to read the selected file."
+                    )
+                }
             }
 
         WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
@@ -811,7 +852,7 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        if (!isChangingConfigurations && !biometricPromptShowing) {
+        if (!isChangingConfigurations && !biometricPromptShowing && !suppressBiometricReentryForExternalPicker) {
             shouldRequireBiometricReentryOnResume = true
             notifyAppBackgrounded()
         }
@@ -842,6 +883,12 @@ class WebViewActivity : AppCompatActivity() {
             // TTSService.initialized back to true without requiring a JS-side trigger.
             startTTSEngine()
             Log.d(TAG, "TTS engine re-initialization started on resume")
+        }
+
+        if (suppressBiometricReentryForExternalPicker) {
+            suppressBiometricReentryForExternalPicker = false
+            shouldRequireBiometricReentryOnResume = false
+            return
         }
 
         if (shouldRequireBiometricReentryOnResume && !biometricPromptShowing) {
@@ -1053,6 +1100,66 @@ class WebViewActivity : AppCompatActivity() {
         ttsInitWatchdogRunnable = null
     }
 
+    private fun readTextFromUri(uri: Uri): String {
+        return contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8).use { reader ->
+            reader?.readText() ?: throw IOException("Unable to open selected file")
+        }
+    }
+
+    private fun markExternalPickerLaunch() {
+        suppressBiometricReentryForExternalPicker = true
+    }
+
+    private fun clearExternalPickerLaunchMarker() {
+        suppressBiometricReentryForExternalPicker = false
+    }
+
+    private fun getDisplayNameFromUri(uri: Uri): String? {
+        return contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+            val columnIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (columnIndex != -1 && cursor.moveToFirst()) {
+                cursor.getString(columnIndex)
+            } else {
+                null
+            }
+        }
+    }
+
+    private fun notifyLmStudioSystemPromptImportResult(
+        success: Boolean,
+        fileName: String? = null,
+        content: String? = null,
+        errorMessage: String? = null
+    ) {
+        val webView: WebView = findViewById(R.id.webView)
+        val jsCommand = buildString {
+            append("if (window.onLmStudioSystemPromptImportResult) window.onLmStudioSystemPromptImportResult({")
+            append("success:")
+            append(if (success) "true" else "false")
+
+            if (fileName != null) {
+                append(",fileName:")
+                append(JSONObject.quote(fileName))
+            }
+
+            if (content != null) {
+                append(",content:")
+                append(JSONObject.quote(content))
+            }
+
+            if (errorMessage != null) {
+                append(",errorMessage:")
+                append(JSONObject.quote(errorMessage))
+            }
+
+            append("});")
+        }
+
+        webView.post {
+            webView.evaluateJavascript(jsCommand, null)
+        }
+    }
+
     inner class FileOperationInterface {
         @JavascriptInterface
         fun saveData(key: String, data: String): Boolean {
@@ -1114,8 +1221,10 @@ class WebViewActivity : AppCompatActivity() {
             }
 
             try {
+                markExternalPickerLaunch()
                 fileSaverLauncher.launch(intent)
             } catch (e: Exception) {
+                clearExternalPickerLaunchMarker()
                 Log.e(TAG, "Error launching file saver", e)
                 // Notify JavaScript that the save failed
                 val webView: WebView = findViewById(R.id.webView)
@@ -1161,8 +1270,10 @@ class WebViewActivity : AppCompatActivity() {
                     putExtra(Intent.EXTRA_TITLE, filename)
                 }
 
+                markExternalPickerLaunch()
                 fileSaverLauncher.launch(intent)
             } catch (e: Exception) {
+                clearExternalPickerLaunchMarker()
                 Log.e(TAG, "Error launching image file saver", e)
                 // Notify JavaScript that the save failed
                 val webView: WebView = findViewById(R.id.webView)
@@ -1178,6 +1289,27 @@ class WebViewActivity : AppCompatActivity() {
         @JavascriptInterface
         fun isAndroidApp(): Boolean {
             return true
+        }
+
+        @JavascriptInterface
+        fun importLmStudioSystemPrompt() {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "application/json"
+                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/json", "text/plain"))
+            }
+
+            try {
+                markExternalPickerLaunch()
+                systemPromptImportLauncher.launch(intent)
+            } catch (e: Exception) {
+                clearExternalPickerLaunchMarker()
+                Log.e(TAG, "Error launching LM Studio prompt picker", e)
+                notifyLmStudioSystemPromptImportResult(
+                    success = false,
+                    errorMessage = e.message ?: "Unable to open the file picker."
+                )
+            }
         }
     }
 

@@ -8,15 +8,310 @@ import { requireSystemPromptPremiumAccess } from './settings-manager.js';
 
 // Local storage key for saved system prompts
 const SAVED_PROMPTS_KEY = 'savedSystemPrompts';
+const SAVED_PROMPTS_FILE_KEY = 'savedSystemPrompts';
+const LM_STUDIO_SYSTEM_PROMPT_KEY = 'llm.prediction.systemPrompt';
+const LM_STUDIO_IMPORT_CANCELLED = 'cancelled';
+
+let hasCheckedLegacySavedPromptMigration = false;
+
+function canUseNativePromptStorage() {
+    return !!(
+        window.AndroidFileOps &&
+        typeof window.AndroidFileOps.loadData === 'function' &&
+        typeof window.AndroidFileOps.saveData === 'function'
+    );
+}
+
+function normalizeSavedPrompt(prompt, fallbackName = 'Imported Prompt') {
+    if (!prompt || typeof prompt !== 'object') {
+        return null;
+    }
+
+    const name = typeof prompt.name === 'string' && prompt.name.trim()
+        ? prompt.name.trim()
+        : fallbackName;
+    const content = typeof prompt.content === 'string' ? prompt.content.trim() : '';
+
+    if (!content) {
+        return null;
+    }
+
+    const createdAt = typeof prompt.createdAt === 'string' && prompt.createdAt
+        ? prompt.createdAt
+        : new Date().toISOString();
+    const updatedAt = typeof prompt.updatedAt === 'string' && prompt.updatedAt
+        ? prompt.updatedAt
+        : createdAt;
+    const id = typeof prompt.id === 'string' && prompt.id
+        ? prompt.id
+        : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    return {
+        id,
+        name,
+        content,
+        createdAt,
+        updatedAt
+    };
+}
+
+function normalizeSavedPromptCollection(prompts) {
+    if (!Array.isArray(prompts)) {
+        return [];
+    }
+
+    return prompts
+        .map((prompt, index) => normalizeSavedPrompt(prompt, `Imported Prompt ${index + 1}`))
+        .filter(Boolean);
+}
+
+function getPromptDedupKey(prompt) {
+    return `${prompt.name.toLowerCase()}\u0000${prompt.content}`;
+}
+
+function mergeSavedPromptCollections(primaryPrompts, secondaryPrompts) {
+    const merged = [...normalizeSavedPromptCollection(primaryPrompts)];
+    const seenKeys = new Set(merged.map(getPromptDedupKey));
+
+    normalizeSavedPromptCollection(secondaryPrompts).forEach(prompt => {
+        const dedupKey = getPromptDedupKey(prompt);
+        if (!seenKeys.has(dedupKey)) {
+            merged.push(prompt);
+            seenKeys.add(dedupKey);
+        }
+    });
+
+    return merged;
+}
+
+function readSavedPromptsFromNativeStorage() {
+    if (!canUseNativePromptStorage()) {
+        return [];
+    }
+
+    try {
+        const saved = window.AndroidFileOps.loadData(SAVED_PROMPTS_FILE_KEY);
+        if (!saved || !saved.trim()) {
+            return [];
+        }
+
+        return normalizeSavedPromptCollection(JSON.parse(saved));
+    } catch (error) {
+        debugLog('Error loading saved system prompts from Android internal storage:', error);
+        return [];
+    }
+}
+
+function readSavedPromptsFromLocalStorage() {
+    try {
+        const saved = localStorage.getItem(SAVED_PROMPTS_KEY);
+        if (!saved) {
+            return [];
+        }
+
+        return normalizeSavedPromptCollection(JSON.parse(saved));
+    } catch (error) {
+        debugLog('Error loading saved system prompts from localStorage:', error);
+        return [];
+    }
+}
+
+function persistSavedPromptCollection(prompts) {
+    const normalizedPrompts = normalizeSavedPromptCollection(prompts);
+    const serializedPrompts = JSON.stringify(normalizedPrompts);
+
+    if (canUseNativePromptStorage()) {
+        try {
+            const savedToNative = window.AndroidFileOps.saveData(SAVED_PROMPTS_FILE_KEY, serializedPrompts);
+            if (savedToNative) {
+                localStorage.removeItem(SAVED_PROMPTS_KEY);
+                return { success: true, savedToNative: true };
+            }
+
+            debugLog('Failed to save saved system prompts to Android internal storage, falling back to localStorage');
+        } catch (error) {
+            debugLog('Error saving saved system prompts to Android internal storage, falling back to localStorage:', error);
+        }
+    }
+
+    try {
+        localStorage.setItem(SAVED_PROMPTS_KEY, serializedPrompts);
+        return { success: true, savedToNative: false };
+    } catch (error) {
+        debugLog('Error saving saved system prompts:', error);
+        return { success: false, savedToNative: false };
+    }
+}
+
+function migrateLegacySavedPromptsIfNeeded(nativePrompts) {
+    const localPrompts = readSavedPromptsFromLocalStorage();
+
+    if (!canUseNativePromptStorage() || hasCheckedLegacySavedPromptMigration || localPrompts.length === 0) {
+        hasCheckedLegacySavedPromptMigration = true;
+        return nativePrompts;
+    }
+
+    const mergedPrompts = mergeSavedPromptCollections(nativePrompts, localPrompts);
+    const { success, savedToNative } = persistSavedPromptCollection(mergedPrompts);
+    hasCheckedLegacySavedPromptMigration = true;
+
+    if (success && savedToNative) {
+        debugLog('Migrated saved system prompts from localStorage to Android internal storage');
+        return mergedPrompts;
+    }
+
+    return mergedPrompts;
+}
+
+function extractFilenameStem(fileName = '') {
+    return fileName.replace(/\.[^.]+$/, '').trim();
+}
+
+function getLmStudioPromptFieldValue(fields) {
+    if (!Array.isArray(fields)) {
+        return '';
+    }
+
+    const field = fields.find(entry =>
+        entry &&
+        entry.key === LM_STUDIO_SYSTEM_PROMPT_KEY &&
+        typeof entry.value === 'string' &&
+        entry.value.trim()
+    );
+
+    return field ? field.value.trim() : '';
+}
+
+function extractLmStudioPromptData(profile, fileName = '') {
+    if (!profile || typeof profile !== 'object' || Array.isArray(profile)) {
+        throw new Error('The selected file is not a valid LM Studio profile JSON file.');
+    }
+
+    const promptContent = [
+        typeof profile.systemPrompt === 'string' ? profile.systemPrompt.trim() : '',
+        typeof profile.prompt === 'string' ? profile.prompt.trim() : '',
+        getLmStudioPromptFieldValue(profile.operation?.fields),
+        getLmStudioPromptFieldValue(profile.load?.fields)
+    ].find(value => typeof value === 'string' && value.trim());
+
+    if (!promptContent) {
+        throw new Error('No system prompt was found in the selected LM Studio JSON file.');
+    }
+
+    const fallbackName = extractFilenameStem(fileName) || 'Imported LM Studio Prompt';
+    const name = typeof profile.name === 'string' && profile.name.trim()
+        ? profile.name.trim()
+        : fallbackName;
+
+    return {
+        name,
+        content: promptContent.trim()
+    };
+}
+
+function refreshSavedPromptsModalIfOpen() {
+    const savedPromptsModal = document.getElementById('saved-prompts-modal');
+    if (savedPromptsModal && !savedPromptsModal.classList.contains('hidden')) {
+        populateSavedPromptsModal();
+    }
+}
+
+function importLmStudioPromptFromJson(fileContent, fileName = '') {
+    try {
+        const parsedProfile = JSON.parse(fileContent);
+        const importedPrompt = extractLmStudioPromptData(parsedProfile, fileName);
+
+        if (saveSystemPrompt(importedPrompt.name, importedPrompt.content)) {
+            refreshSavedPromptsModalIfOpen();
+            showSuccessMessage(`Imported "${importedPrompt.name}" to Saved Prompts.`);
+        } else {
+            showErrorMessage('Failed to save the imported system prompt. Please try again.');
+        }
+    } catch (error) {
+        showErrorMessage(error.message || 'Failed to import the selected LM Studio JSON file.');
+    }
+}
+
+function handleNativeLmStudioSystemPromptImportResult(result) {
+    if (!result || result.success !== true) {
+        if (result && result.errorMessage && result.errorMessage !== LM_STUDIO_IMPORT_CANCELLED) {
+            showErrorMessage(result.errorMessage);
+        }
+        return;
+    }
+
+    importLmStudioPromptFromJson(result.content || '', result.fileName || '');
+}
+
+function openLmStudioPromptFileInput() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json,text/plain';
+    input.className = 'hidden';
+
+    const cleanup = () => {
+        input.value = '';
+        input.remove();
+    };
+
+    input.addEventListener('change', (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) {
+            cleanup();
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (typeof reader.result !== 'string') {
+                showErrorMessage('Failed to read the selected JSON file.');
+                cleanup();
+                return;
+            }
+
+            importLmStudioPromptFromJson(reader.result, file.name);
+            cleanup();
+        };
+        reader.onerror = () => {
+            showErrorMessage('Failed to read the selected JSON file.');
+            cleanup();
+        };
+        reader.readAsText(file);
+    });
+
+    document.body.appendChild(input);
+    input.click();
+}
+
+function handleLmStudioSystemPromptImport() {
+    if (!requireSystemPromptPremiumAccess()) {
+        return;
+    }
+
+    closeSidebarExport();
+
+    if (window.AndroidFileOps && typeof window.AndroidFileOps.importLmStudioSystemPrompt === 'function') {
+        window.AndroidFileOps.importLmStudioSystemPrompt();
+        return;
+    }
+
+    openLmStudioPromptFileInput();
+}
 
 /**
- * Gets all saved system prompts from localStorage
+ * Gets all saved system prompts from Android internal storage or localStorage
  * @returns {Array} Array of saved prompt objects
  */
 export function getSavedSystemPrompts() {
     try {
-        const saved = localStorage.getItem(SAVED_PROMPTS_KEY);
-        return saved ? JSON.parse(saved) : [];
+        let savedPrompts = readSavedPromptsFromNativeStorage();
+
+        if (canUseNativePromptStorage()) {
+            savedPrompts = migrateLegacySavedPromptsIfNeeded(savedPrompts);
+            return savedPrompts;
+        }
+
+        return readSavedPromptsFromLocalStorage();
     } catch (error) {
         debugLog('Error loading saved system prompts:', error);
         return [];
@@ -24,7 +319,7 @@ export function getSavedSystemPrompts() {
 }
 
 /**
- * Saves a system prompt to localStorage
+ * Saves a system prompt to persistent storage
  * @param {string} name - The name/title for the prompt
  * @param {string} content - The prompt content
  * @returns {boolean} Success status
@@ -45,7 +340,10 @@ export function saveSystemPrompt(name, content) {
         };
 
         savedPrompts.push(newPrompt);
-        localStorage.setItem(SAVED_PROMPTS_KEY, JSON.stringify(savedPrompts));
+        const { success } = persistSavedPromptCollection(savedPrompts);
+        if (!success) {
+            throw new Error('Failed to persist saved prompts');
+        }
         debugLog('System prompt saved successfully:', newPrompt.name);
         return true;
     } catch (error) {
@@ -63,7 +361,10 @@ export function deleteSystemPrompt(id) {
     try {
         const savedPrompts = getSavedSystemPrompts();
         const filteredPrompts = savedPrompts.filter(prompt => prompt.id !== id);
-        localStorage.setItem(SAVED_PROMPTS_KEY, JSON.stringify(filteredPrompts));
+        const { success } = persistSavedPromptCollection(filteredPrompts);
+        if (!success) {
+            throw new Error('Failed to persist saved prompts');
+        }
         debugLog('System prompt deleted successfully:', id);
         return true;
     } catch (error) {
@@ -95,7 +396,10 @@ export function updateSystemPrompt(id, name, content) {
             updatedAt: new Date().toISOString()
         };
 
-        localStorage.setItem(SAVED_PROMPTS_KEY, JSON.stringify(savedPrompts));
+        const { success } = persistSavedPromptCollection(savedPrompts);
+        if (!success) {
+            throw new Error('Failed to persist saved prompts');
+        }
         debugLog('System prompt updated successfully:', id);
         return true;
     } catch (error) {
@@ -108,14 +412,21 @@ export function updateSystemPrompt(id, name, content) {
  * Restores saved system prompts from imported data
  * @param {Array} prompts - Array of prompt objects to restore
  */
-export function restoreSavedSystemPrompts(prompts) {
+export function restoreSavedSystemPrompts(prompts, replaceExisting = true) {
     try {
         if (!Array.isArray(prompts)) {
             debugLog('Invalid prompts data for restore');
             return;
         }
 
-        localStorage.setItem(SAVED_PROMPTS_KEY, JSON.stringify(prompts));
+        const normalizedPrompts = normalizeSavedPromptCollection(prompts);
+        const promptsToSave = replaceExisting
+            ? normalizedPrompts
+            : mergeSavedPromptCollections(getSavedSystemPrompts(), normalizedPrompts);
+        const { success } = persistSavedPromptCollection(promptsToSave);
+        if (!success) {
+            throw new Error('Failed to persist restored prompts');
+        }
         debugLog('Saved system prompts restored successfully');
     } catch (error) {
         debugLog('Error restoring saved system prompts:', error);
@@ -658,6 +969,8 @@ function showErrorMessage(message) {
     }, 4000);
 }
 
+window.onLmStudioSystemPromptImportResult = handleNativeLmStudioSystemPromptImportResult;
+
 /**
  * Escapes HTML characters to prevent XSS
  * @param {string} text - The text to escape
@@ -675,6 +988,8 @@ function escapeHtml(text) {
 export function initializeSavedSystemPrompts() {
     debugLog('Initializing saved system prompts functionality');
 
+    getSavedSystemPrompts();
+
     // Add event listeners for the saved prompts modal
     const savedPromptsButton = document.getElementById('saved-prompts-btn');
     if (savedPromptsButton) {
@@ -691,6 +1006,11 @@ export function initializeSavedSystemPrompts() {
     const saveSystemPromptButton = document.getElementById('save-system-prompt-btn');
     if (saveSystemPromptButton) {
         saveSystemPromptButton.addEventListener('click', handleSaveFromSettings);
+    }
+
+    const importLmStudioPromptButton = document.getElementById('import-system-prompt-lms-btn');
+    if (importLmStudioPromptButton) {
+        importLmStudioPromptButton.addEventListener('click', handleLmStudioSystemPromptImport);
     }
 
     // Save prompt modal event listeners

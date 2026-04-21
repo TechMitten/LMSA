@@ -26,6 +26,7 @@ export function resetApp() {
         const itemsToRemove = [
             'systemPrompt',
             'isUserCreatedSystemPrompt',
+            'savedSystemPrompts',
             'temperature',
             'hideThinking',
             'autoGenerateTitles',
@@ -66,6 +67,7 @@ export function resetApp() {
             // Clear native storage
             if (window.AndroidFileOps && typeof window.AndroidFileOps.deleteData === 'function') {
                 window.AndroidFileOps.deleteData('chatHistory');
+                window.AndroidFileOps.deleteData('savedSystemPrompts');
                 console.log('RESET APP: Cleared chat history from Android internal storage');
             }
         } catch (error) {
