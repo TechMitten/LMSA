@@ -424,9 +424,126 @@ body.light-theme #privacy-policy-close-btn {
   color: white !important;
 }
 
-/* Fix Apply Changes button in network settings modal to have black text in light theme */
+/* Keep the network settings primary action readable across themes */
 body.light-theme #ip-port-confirm-btn {
-  color: #1e293b !important;
+  color: #ffffff !important;
+}
+
+#ip-port-confirmation-modal .modal-content {
+  width: min(92vw, 520px) !important;
+}
+
+#ip-port-confirmation-modal .ip-port-modal-header {
+  padding: 1rem 1.25rem;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.14), transparent 72%);
+  border-bottom: 1px solid var(--border-color);
+}
+
+#ip-port-confirmation-modal .ip-port-modal-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.16);
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body.light-theme #ip-port-confirmation-modal .ip-port-modal-icon {
+  color: #2563eb;
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+#ip-port-confirmation-modal .ip-port-modal-subtitle {
+  color: var(--text-secondary);
+  margin-top: 0.2rem;
+}
+
+#ip-port-confirmation-modal .ip-port-section-title {
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+#ip-port-confirmation-modal .ip-port-checklist-item {
+  background: rgba(15, 23, 42, 0.18);
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+body.light-theme #ip-port-confirmation-modal .ip-port-checklist-item {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+#ip-port-confirmation-modal .ip-port-checklist-item:hover {
+  border-color: var(--border-color-hover);
+  transform: translateY(-1px);
+}
+
+#ip-port-confirmation-modal .ip-port-checklist-label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+#ip-port-confirmation-modal .ip-port-checklist-copy {
+  color: var(--text-secondary);
+}
+
+#ip-port-confirmation-modal .ip-port-progress-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.95rem 1rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--border-color);
+  background: rgba(15, 23, 42, 0.22);
+}
+
+body.light-theme #ip-port-confirmation-modal .ip-port-progress-card {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+#ip-port-confirmation-modal .ip-port-progress-count {
+  color: var(--toggle-active-bg);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+#ip-port-confirmation-modal #ip-port-cancel-btn {
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+}
+
+body.light-theme #ip-port-confirmation-modal #ip-port-cancel-btn {
+  background: rgba(255, 255, 255, 0.62);
+}
+
+#ip-port-confirmation-modal #ip-port-cancel-btn:hover {
+  border-color: var(--border-color-hover);
+  background: rgba(148, 163, 184, 0.14);
+}
+
+#ip-port-confirmation-modal #ip-port-confirm-btn {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  border: 1px solid rgba(96, 165, 250, 0.34);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+#ip-port-confirmation-modal #ip-port-confirm-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(37, 99, 235, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+#ip-port-confirmation-modal #ip-port-confirm-btn:disabled {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.38), rgba(59, 130, 246, 0.26));
+  border-color: rgba(96, 165, 250, 0.18);
+  box-shadow: none;
 }
 
 /* IP/port confirmation modal checkbox styling */
@@ -453,18 +570,18 @@ body.light-theme #ip-port-confirm-btn {
 
 /* Dark theme checkbox styling */
 #ip-port-confirmation-modal input[type="checkbox"] {
-  background-color: #2c2c2c;
-  border: 2px solid #64748b;
+  background-color: rgba(15, 23, 42, 0.48);
+  border: 2px solid rgba(148, 163, 184, 0.7);
 }
 
 #ip-port-confirmation-modal input[type="checkbox"]:hover {
-  border-color: #f97316;
+  border-color: #60a5fa;
   transform: scale(1.05);
 }
 
 #ip-port-confirmation-modal input[type="checkbox"]:checked {
-  background-color: #f97316;
-  border-color: #f97316;
+  background-color: #3b82f6;
+  border-color: #3b82f6;
   transform: scale(1.05);
 }
 
@@ -486,13 +603,13 @@ body.light-theme #ip-port-confirmation-modal input[type="checkbox"] {
 }
 
 body.light-theme #ip-port-confirmation-modal input[type="checkbox"]:hover {
-  border-color: #f97316;
+  border-color: #3b82f6;
   transform: scale(1.05);
 }
 
 body.light-theme #ip-port-confirmation-modal input[type="checkbox"]:checked {
-  background-color: #f97316;
-  border-color: #f97316;
+  background-color: #3b82f6;
+  border-color: #3b82f6;
   transform: scale(1.05);
 }
 
@@ -511,7 +628,7 @@ body.light-theme #ip-port-confirmation-modal input[type="checkbox"]:checked::aft
 /* Make modal narrower on desktop and tablet screens for better UX */
 @media (min-width: 768px) {
   #ip-port-confirmation-modal .modal-content {
-    width: 480px !important;
+    width: 500px !important;
     max-width: 90% !important;
   }
 }
@@ -519,7 +636,7 @@ body.light-theme #ip-port-confirmation-modal input[type="checkbox"]:checked::aft
 /* Further optimize for larger desktop screens */
 @media (min-width: 1024px) {
   #ip-port-confirmation-modal .modal-content {
-    width: 420px !important;
+    width: 460px !important;
     max-width: 85% !important;
   }
 }
@@ -527,7 +644,7 @@ body.light-theme #ip-port-confirmation-modal input[type="checkbox"]:checked::aft
 /* Extra large screens - keep it compact */
 @media (min-width: 1440px) {
   #ip-port-confirmation-modal .modal-content {
-    width: 400px !important;
+    width: 440px !important;
     max-width: 80% !important;
   }
 }

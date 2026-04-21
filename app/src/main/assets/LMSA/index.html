@@ -959,100 +959,96 @@
     <div id="ip-port-confirmation-modal" class="fixed inset-0 items-center justify-center hidden modal-container"
         style="z-index: 2600; background: var(--modal-overlay); backdrop-filter: blur(12px) saturate(180%); -webkit-backdrop-filter: blur(12px) saturate(180%);"
         aria-labelledby="ip-port-confirmation-title" role="dialog" aria-modal="true">
-        <div class="relative p-8 rounded-2xl w-[600px] max-w-[90%] shadow-2xl overflow-hidden flex flex-col modal-content"
+        <div class="relative rounded-2xl w-[520px] max-w-[90%] shadow-2xl overflow-hidden flex flex-col modal-content"
             style="background: var(--modal-bg); border: 1px solid var(--border-color); box-shadow: 0 25px 50px -12px var(--modal-overlay), 0 0 0 1px var(--border-color) inset, 0 1px 3px 0 var(--border-color) inset;">
-            <!-- Animated background gradient -->
             <div
-                class="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-yellow-500/10 rounded-2xl">
+                class="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-cyan-400/10 rounded-2xl pointer-events-none">
             </div>
 
-            <!-- Decorative border glow -->
             <div
-                class="absolute inset-0 rounded-2xl bg-gradient-to-r from-orange-500/30 via-yellow-500/20 to-orange-500/30 opacity-20">
+                class="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/20 via-sky-400/10 to-blue-500/20 opacity-30 pointer-events-none">
             </div>
 
             <div class="relative z-10">
-                <!-- Enhanced title with warning icon -->
-                <div class="mb-6 text-center">
-                    <h2 id="ip-port-confirmation-title" class="text-2xl font-bold mb-2" style="color: #f97316;">
-                        <i class="fas fa-exclamation-triangle mr-3"></i>Network Settings Checklist
-                    </h2>
-                    <div class="w-20 h-0.5 bg-gradient-to-r from-orange-500 to-yellow-500 mx-auto rounded-full"></div>
+                <div class="modal-header ip-port-modal-header">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="ip-port-modal-icon" aria-hidden="true">
+                            <i class="fas fa-network-wired"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h2 id="ip-port-confirmation-title" class="modal-title text-xl font-bold">
+                                Network Settings Checklist
+                            </h2>
+                            <p class="ip-port-modal-subtitle text-sm">
+                                Confirm your local setup before applying these changes.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Main message -->
-                <div class="mb-6">
-                    <p class="text-center mb-4 font-medium" style="color: var(--text-primary);">
+                <div class="px-6 py-6">
+                    <div class="mb-5">
+                        <p class="text-center text-sm leading-6" style="color: var(--text-secondary);">
                         You've changed your IP address and/or port settings. Before applying these changes, please
                         ensure you've completed the following steps:
                     </p>
-                </div>
+                    </div>
 
-                <!-- Checklist -->
-                <div class="mb-8 space-y-4">
-                    <h3 class="text-lg font-semibold mb-4" style="color: var(--text-primary);">
-                        <i class="fas fa-list-check mr-2" style="color: #f97316;"></i>Required Setup Steps:
-                    </h3>
-                    <div class="flex items-center space-x-3 p-3 rounded-lg"
-                        style="background: var(--settings-label-bg); border: 1px solid var(--border-color);">
-                        <input type="checkbox" id="cors-check" class="focus:ring-orange-500 focus:ring-2">
-                        <label for="cors-check" class="text-sm cursor-pointer" style="color: var(--text-primary);">
-                            <span class="font-medium" style="color: #f97316;">CORS Enabled:</span> Did you enable CORS
-                            in LM Studio server on your computer?
+                    <div class="mb-6 space-y-3">
+                        <h3 class="ip-port-section-title text-sm font-semibold uppercase tracking-[0.14em]">
+                            Required Setup Steps
+                        </h3>
+                        <div class="ip-port-checklist-item flex items-start space-x-3 p-3 rounded-xl">
+                        <input type="checkbox" id="cors-check" class="focus:ring-blue-500 focus:ring-2">
+                        <label for="cors-check" class="text-sm cursor-pointer leading-6" style="color: var(--text-primary);">
+                            <span class="ip-port-checklist-label block">CORS Enabled</span>
+                            <span class="ip-port-checklist-copy">Did you enable CORS in LM Studio server on your computer?</span>
                         </label>
                     </div>
 
-                    <div class="flex items-center space-x-3 p-3 rounded-lg"
-                        style="background: var(--settings-label-bg); border: 1px solid var(--border-color);">
-                        <input type="checkbox" id="local-network-check" class="focus:ring-orange-500 focus:ring-2">
-                        <label for="local-network-check" class="text-sm cursor-pointer"
+                        <div class="ip-port-checklist-item flex items-start space-x-3 p-3 rounded-xl">
+                        <input type="checkbox" id="local-network-check" class="focus:ring-blue-500 focus:ring-2">
+                        <label for="local-network-check" class="text-sm cursor-pointer leading-6"
                             style="color: var(--text-primary);">
-                            <span class="font-medium" style="color: #f97316;">Local Network:</span> Did you enable the
-                            "Serve on Local Network" setting in LM Studio server settings on your computer?
+                            <span class="ip-port-checklist-label block">Local Network</span>
+                            <span class="ip-port-checklist-copy">Did you enable the "Serve on Local Network" setting in LM Studio server settings on your computer?</span>
                         </label>
                     </div>
 
-                    <div class="flex items-center space-x-3 p-3 rounded-lg"
-                        style="background: var(--settings-label-bg); border: 1px solid var(--border-color);">
-                        <input type="checkbox" id="wifi-check" class="focus:ring-orange-500 focus:ring-2">
-                        <label for="wifi-check" class="text-sm cursor-pointer" style="color: var(--text-primary);">
-                            <span class="font-medium" style="color: #f97316;">Same WiFi Network:</span> Is your mobile
-                            device connected to the same WiFi network as the computer running LM Studio server?
+                        <div class="ip-port-checklist-item flex items-start space-x-3 p-3 rounded-xl">
+                        <input type="checkbox" id="wifi-check" class="focus:ring-blue-500 focus:ring-2">
+                        <label for="wifi-check" class="text-sm cursor-pointer leading-6" style="color: var(--text-primary);">
+                            <span class="ip-port-checklist-label block">Same WiFi Network</span>
+                            <span class="ip-port-checklist-copy">Is your mobile device connected to the same WiFi network as the computer running LM Studio server?</span>
                         </label>
                     </div>
 
-                    <!-- Progress Tracker -->
-                    <div id="checklist-progress-tracker" class="mt-4 text-center">
-                        <span id="progress-text" class="font-bold text-lg" style="color: var(--text-primary);">Progress:
-                            <span id="progress-count" style="color: #f97316;">0/3</span></span>
+                        <div id="checklist-progress-tracker" class="ip-port-progress-card mt-2 text-center">
+                            <span id="progress-text" class="font-medium" style="color: var(--text-secondary);">Progress</span>
+                            <span id="progress-count" class="ip-port-progress-count">0/3</span>
+                        </div>
                     </div>
 
-                    <!-- Never Show Again Option -->
                     <div class="mt-5 flex items-center justify-center space-x-2 pb-2">
                         <input type="checkbox" id="ip-port-never-show-again"
-                            class="focus:ring-orange-500 focus:ring-2 rounded cursor-pointer w-4 h-4">
+                            class="focus:ring-blue-500 focus:ring-2 rounded cursor-pointer w-4 h-4">
                         <label for="ip-port-never-show-again" class="text-sm cursor-pointer font-medium select-none"
-                            style="color: var(--text-primary);">
+                            style="color: var(--text-secondary);">
                             Don't show this checklist again
                         </label>
                     </div>
-                </div>
-
-
-
-                <!-- Action buttons -->
-                <div class="flex space-x-3">
-                    <button id="ip-port-cancel-btn"
-                        class="flex-1 px-4 py-3 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2"
-                        style="background: var(--settings-label-bg); color: var(--text-primary); border: 1px solid var(--border-color); box-shadow: 0 2px 4px var(--modal-overlay);">
-                        <i class="fas fa-times mr-2"></i>Cancel
-                    </button>
-                    <button id="ip-port-confirm-btn"
-                        class="flex-1 px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled
-                        style="box-shadow: 0 4px 6px var(--modal-overlay), 0 2px 4px var(--modal-overlay), 0 0 1px var(--border-color) inset;">
-                        <i class="fas fa-check mr-2"></i>Apply Changes
-                    </button>
+                    <div class="flex space-x-3">
+                        <button id="ip-port-cancel-btn"
+                            class="flex-1 px-4 py-3 rounded-xl font-medium transition-colors duration-200 focus:outline-none focus:ring-2"
+                            style="color: var(--text-primary);">
+                            <i class="fas fa-times mr-2"></i>Cancel
+                        </button>
+                        <button id="ip-port-confirm-btn"
+                            class="flex-1 px-4 py-3 text-white rounded-xl font-medium transition-colors duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled>
+                            <i class="fas fa-check mr-2"></i>Apply Changes
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
