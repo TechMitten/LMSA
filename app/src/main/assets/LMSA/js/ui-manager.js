@@ -87,6 +87,40 @@ function ensureAIEditButton(controlsContainer) {
     }
 }
 
+function isImageAttachment(file) {
+    if (!file || typeof file !== 'object') {
+        return false;
+    }
+
+    return file.isImage === true ||
+        (typeof file.type === 'string' && file.type.startsWith('image/'));
+}
+
+function getAttachmentPreviewSrc(file) {
+    if (!isImageAttachment(file)) {
+        return '';
+    }
+
+    if (typeof file.content === 'string' && file.content.startsWith('data:image/')) {
+        return file.content;
+    }
+
+    if (typeof file.blobUrl === 'string' && file.blobUrl) {
+        return file.blobUrl;
+    }
+
+    if (typeof file.chatBubbleBlobUrl === 'string' && file.chatBubbleBlobUrl) {
+        return file.chatBubbleBlobUrl;
+    }
+
+    if (file instanceof Blob) {
+        file.chatBubbleBlobUrl = URL.createObjectURL(file);
+        return file.chatBubbleBlobUrl;
+    }
+
+    return '';
+}
+
 /**
  * Shows the welcome message and hides the messages container
  */
@@ -849,22 +883,44 @@ export function appendMessage(sender, message, files = null, isStreaming = false
             files.forEach(file => {
                 const fileAttachment = document.createElement('div');
                 fileAttachment.classList.add('file-attachment');
+                const fileType = typeof file.type === 'string' ? file.type : '';
+                const fileName = typeof file.name === 'string' ? file.name : 'Attachment';
+
+                const isImageFile = isImageAttachment(file);
+                if (isImageFile) {
+                    fileAttachment.classList.add('file-attachment--image');
+                }
 
                 // Choose icon based on file type
                 let iconClass = 'fa-file';
-                if (file.type.includes('image')) iconClass = 'fa-file-image';
-                else if (file.type.includes('text') ||
-                    file.name.endsWith('.json') ||
-                    file.name.endsWith('.md') ||
-                    file.name.endsWith('.py') ||
-                    file.name.endsWith('.js')) iconClass = 'fa-file-alt';
-                else if (file.name.endsWith('.pdf')) iconClass = 'fa-file-pdf';
-                else if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) iconClass = 'fa-file-word';
+                if (fileType.includes('image')) iconClass = 'fa-file-image';
+                else if (fileType.includes('text') ||
+                    fileName.endsWith('.json') ||
+                    fileName.endsWith('.md') ||
+                    fileName.endsWith('.py') ||
+                    fileName.endsWith('.js')) iconClass = 'fa-file-alt';
+                else if (fileName.endsWith('.pdf')) iconClass = 'fa-file-pdf';
+                else if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) iconClass = 'fa-file-word';
 
-                fileAttachment.innerHTML = `
-                    <i class="fas ${iconClass}"></i>
-                    <span title="${file.name}">${file.name}</span>
-                `;
+                const previewSrc = getAttachmentPreviewSrc(file);
+                if (isImageFile && previewSrc) {
+                    const thumbnail = document.createElement('img');
+                    thumbnail.classList.add('file-attachment-thumbnail');
+                    thumbnail.src = previewSrc;
+                    thumbnail.alt = fileName || 'Attached image';
+                    thumbnail.loading = 'lazy';
+                    fileAttachment.appendChild(thumbnail);
+                } else {
+                    const icon = document.createElement('i');
+                    icon.className = `fas ${iconClass}`;
+                    fileAttachment.appendChild(icon);
+                }
+
+                const fileLabel = document.createElement('span');
+                fileLabel.classList.add('file-attachment-label');
+                fileLabel.title = fileName;
+                fileLabel.textContent = fileName;
+                fileAttachment.appendChild(fileLabel);
 
                 fileAttachmentsContainer.appendChild(fileAttachment);
             });

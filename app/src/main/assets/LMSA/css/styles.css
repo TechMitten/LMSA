@@ -7309,6 +7309,14 @@ body.light-theme .gradient-text {
     color: #e0e0e0;
 }
 
+.file-attachment--image {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px;
+    max-width: 180px;
+}
+
 .file-attachment i {
     margin-right: 6px;
     color: #3498db;
@@ -7319,6 +7327,25 @@ body.light-theme .gradient-text {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.file-attachment-label {
+    display: block;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-attachment-thumbnail {
+    display: block;
+    width: 100%;
+    max-width: 160px;
+    max-height: 160px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* Web Search Indicator Badge */

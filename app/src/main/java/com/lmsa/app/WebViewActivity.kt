@@ -557,6 +557,7 @@ class WebViewActivity : AppCompatActivity() {
 
                 try {
                     if (intent.resolveActivity(packageManager) != null) {
+                        markExternalPickerLaunch()
                         fileChooserLauncher.launch(intent)
                     } else {
                         val fallbackIntent =
@@ -565,15 +566,18 @@ class WebViewActivity : AppCompatActivity() {
                                 type = "*/*"
                             }
                         if (fallbackIntent.resolveActivity(packageManager) != null) {
+                            markExternalPickerLaunch()
                             fileChooserLauncher.launch(fallbackIntent)
                         } else {
                             Log.e(TAG, "No app available to handle file selection")
+                            clearExternalPickerLaunchMarker()
                             filePathCallback?.onReceiveValue(null)
                             filePathCallback = null
                             return false
                         }
                     }
                 } catch (e: Exception) {
+                    clearExternalPickerLaunchMarker()
                     Log.e(TAG, "Cannot open file chooser", e)
                     filePathCallback?.onReceiveValue(null)
                     filePathCallback = null

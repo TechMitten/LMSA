@@ -27,6 +27,9 @@ const MAX_HISTORICAL_SEARCHES = 3;
 const WEB_SEARCH_QUERY_MAX_LENGTH = 220;
 const WEB_SEARCH_CONTEXT_MAX_LENGTH = 96;
 const WEB_SEARCH_SHORT_QUERY_WORDS = 5;
+const CHAT_IMAGE_STORE_KEY = 'chatImageStore';
+const CHAT_IMAGE_STORE_VERSION = 1;
+const IMAGE_FILE_EXTENSION_PATTERN = /\.(?:apng|avif|bmp|gif|jpe?g|png|svg|webp)$/i;
 const WEB_SEARCH_STOP_WORDS = new Set([
     'a', 'an', 'and', 'are', 'as', 'at', 'be', 'because', 'briefly', 'by', 'can', 'could', 'do', 'does',
     'for', 'from', 'give', 'i', 'if', 'in', 'into', 'is', 'it', 'just', 'me', 'my', 'of', 'on', 'or', 'our',
@@ -45,6 +48,7 @@ const WEB_SEARCH_SKIP_WORDS = new Set([
     'i see', 'i understand', 'i got it', 'i see it', 'makes sense',
     'sure', 'certainly', 'absolutely', 'of course', 'indeed', 'true that'
 ]);
+let cachedChatImageStore = createEmptyChatImageStore();
 
 // Export state variables only
 export {
@@ -71,6 +75,318 @@ function ensureFirstMessageInitialized() {
     if (typeof isFirstMessage === 'undefined') {
         isFirstMessage = true;
     }
+}
+
+function createEmptyChatImageStore() {
+    return {
+        version: CHAT_IMAGE_STORE_VERSION,
+        images: {}
+    };
+}
+
+function loadStoredData(key) {
+    let savedData = '';
+    let usingNativeStorage = false;
+
+    if (window.AndroidFileOps && typeof window.AndroidFileOps.loadData === 'function') {
+        savedData = window.AndroidFileOps.loadData(key);
+        if (savedData && savedData.trim() !== '') {
+            usingNativeStorage = true;
+        }
+    }
+
+    const localStorageData = localStorage.getItem(key);
+    if (!usingNativeStorage && localStorageData) {
+        savedData = localStorageData;
+
+        if (window.AndroidFileOps && typeof window.AndroidFileOps.saveData === 'function') {
+            const migrationSucceeded = window.AndroidFileOps.saveData(key, localStorageData);
+            if (migrationSucceeded) {
+                localStorage.removeItem(key);
+            }
+        }
+    }
+
+    return savedData || '';
+}
+
+function saveStoredData(key, data) {
+    if (window.AndroidFileOps && typeof window.AndroidFileOps.saveData === 'function') {
+        const success = window.AndroidFileOps.saveData(key, data);
+        if (success) {
+            localStorage.removeItem(key);
+            return true;
+        }
+    }
+
+    try {
+        localStorage.setItem(key, data);
+        return true;
+    } catch (error) {
+        debugError(`Error saving ${key} to localStorage:`, error);
+        return false;
+    }
+}
+
+function deleteStoredData(key) {
+    localStorage.removeItem(key);
+
+    if (window.AndroidFileOps && typeof window.AndroidFileOps.deleteData === 'function') {
+        return window.AndroidFileOps.deleteData(key);
+    }
+
+    return true;
+}
+
+function loadChatImageStore() {
+    try {
+        const rawStore = loadStoredData(CHAT_IMAGE_STORE_KEY);
+        if (!rawStore || rawStore.trim() === '') {
+            cachedChatImageStore = createEmptyChatImageStore();
+            return cachedChatImageStore;
+        }
+
+        const parsedStore = JSON.parse(rawStore);
+        cachedChatImageStore = {
+            version: CHAT_IMAGE_STORE_VERSION,
+            images: parsedStore && typeof parsedStore === 'object' && parsedStore.images && typeof parsedStore.images === 'object'
+                ? parsedStore.images
+                : {}
+        };
+    } catch (error) {
+        debugError('Error loading chat image store:', error);
+        cachedChatImageStore = createEmptyChatImageStore();
+    }
+
+    return cachedChatImageStore;
+}
+
+function persistChatImageStore(images) {
+    if (!images || Object.keys(images).length === 0) {
+        cachedChatImageStore = createEmptyChatImageStore();
+        deleteStoredData(CHAT_IMAGE_STORE_KEY);
+        return;
+    }
+
+    const nextStore = {
+        version: CHAT_IMAGE_STORE_VERSION,
+        images
+    };
+
+    const saveSucceeded = saveStoredData(CHAT_IMAGE_STORE_KEY, JSON.stringify(nextStore));
+    if (saveSucceeded) {
+        cachedChatImageStore = nextStore;
+    } else {
+        debugError('Failed to persist chat image store');
+    }
+}
+
+function isImageAttachment(file) {
+    if (!file || typeof file !== 'object') {
+        return false;
+    }
+
+    if (file.isImage === true) {
+        return true;
+    }
+
+    if (typeof file.imageStorageId === 'string' && file.imageStorageId.trim() !== '') {
+        return true;
+    }
+
+    const fileType = typeof file.type === 'string' ? file.type.toLowerCase() : '';
+    if (fileType.startsWith('image/')) {
+        return true;
+    }
+
+    const fileName = typeof file.name === 'string' ? file.name : '';
+    return IMAGE_FILE_EXTENSION_PATTERN.test(fileName);
+}
+
+function normalizeImageDataUrl(dataUrl) {
+    if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) {
+        return '';
+    }
+
+    const separatorIndex = dataUrl.indexOf(',');
+    if (separatorIndex === -1) {
+        return '';
+    }
+
+    const header = dataUrl.slice(0, separatorIndex);
+    const payload = dataUrl.slice(separatorIndex + 1).replace(/\s/g, '');
+    if (!payload) {
+        return '';
+    }
+
+    return `${header},${payload}`;
+}
+
+function createChatImageStorageId(chatId, messageIndex, fileIndex) {
+    return `chat-${chatId}-msg-${messageIndex}-file-${fileIndex}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function serializeFilesForStorage(files, chatId, messageIndex, nextImageEntries) {
+    if (!Array.isArray(files) || files.length === 0) {
+        return [];
+    }
+
+    return files.map((file, fileIndex) => {
+        if (!file || typeof file !== 'object') {
+            return null;
+        }
+
+        const serializedFile = {
+            name: file.name || `attachment-${fileIndex + 1}`,
+            type: file.type || '',
+        };
+
+        if (typeof file.id !== 'undefined') {
+            serializedFile.id = file.id;
+        }
+        if (typeof file.size !== 'undefined') {
+            serializedFile.size = file.size;
+        }
+        if (typeof file.lastModified !== 'undefined') {
+            serializedFile.lastModified = file.lastModified;
+        }
+
+        if (isImageAttachment(file)) {
+            const imageStorageId = file.imageStorageId || createChatImageStorageId(chatId, messageIndex, fileIndex);
+            const existingImage = cachedChatImageStore.images?.[imageStorageId];
+            const dataUrl = normalizeImageDataUrl(file.content) || existingImage?.dataUrl || '';
+
+            serializedFile.isImage = true;
+            serializedFile.imageStorageId = imageStorageId;
+
+            if (dataUrl) {
+                nextImageEntries[imageStorageId] = {
+                    chatId: String(chatId),
+                    name: serializedFile.name,
+                    type: serializedFile.type || existingImage?.type || '',
+                    dataUrl
+                };
+            }
+
+            return serializedFile;
+        }
+
+        if (typeof file.content === 'string') {
+            serializedFile.content = file.content;
+        }
+
+        return serializedFile;
+    }).filter(Boolean);
+}
+
+function hydrateFilesFromImageStore(files, imageStore) {
+    if (!Array.isArray(files) || files.length === 0) {
+        return [];
+    }
+
+    return files.map(file => {
+        if (!file || typeof file !== 'object') {
+            return file;
+        }
+
+        if (!isImageAttachment(file)) {
+            return file;
+        }
+
+        const imageStorageId = typeof file.imageStorageId === 'string' ? file.imageStorageId : '';
+        const storedImage = imageStorageId ? imageStore.images?.[imageStorageId] : null;
+        const dataUrl = normalizeImageDataUrl(file.content) || storedImage?.dataUrl || '';
+
+        return {
+            ...file,
+            isImage: true,
+            imageStorageId: imageStorageId || undefined,
+            name: storedImage?.name || file.name || 'image',
+            type: storedImage?.type || file.type || '',
+            content: dataUrl
+        };
+    });
+}
+
+function syncLatestUserMessageFiles(fileContents) {
+    if (!Array.isArray(fileContents) || fileContents.length === 0) {
+        return;
+    }
+
+    const currentChat = chatHistoryData[currentChatId];
+    if (!currentChat) {
+        return;
+    }
+
+    const messages = Array.isArray(currentChat) ? currentChat : currentChat.messages;
+    if (!Array.isArray(messages) || messages.length === 0) {
+        return;
+    }
+
+    for (let i = messages.length - 1; i >= 0; i--) {
+        if (messages[i]?.role === 'user') {
+            messages[i].files = fileContents.map(file => ({ ...file }));
+            return;
+        }
+    }
+}
+
+function cloneContentForRequest(content) {
+    if (!Array.isArray(content)) {
+        return content;
+    }
+
+    return content.map(part => {
+        if (!part || typeof part !== 'object') {
+            return part;
+        }
+
+        if (part.type === 'image_url') {
+            return {
+                ...part,
+                image_url: part.image_url ? { ...part.image_url } : part.image_url
+            };
+        }
+
+        return { ...part };
+    });
+}
+
+function cloneMessageForRequest(message) {
+    if (!message || typeof message !== 'object') {
+        return message;
+    }
+
+    const clonedMessage = {
+        ...message,
+        content: cloneContentForRequest(message.content)
+    };
+
+    if (Array.isArray(message.files)) {
+        clonedMessage.files = message.files.map(file => ({ ...file }));
+    }
+
+    return clonedMessage;
+}
+
+function getDisplayTextFromMessageContent(content) {
+    if (Array.isArray(content)) {
+        return content
+            .map(part => part?.type === 'text' ? (part.text || '') : '')
+            .filter(Boolean)
+            .join('\n\n')
+            .trim();
+    }
+
+    if (typeof content === 'string') {
+        return content;
+    }
+
+    if (content == null) {
+        return '';
+    }
+
+    return String(content);
 }
 
 /**
@@ -1141,6 +1457,12 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                 ? chatHistoryData[currentChatId]
                 : chatHistoryData[currentChatId].messages)
             : [];
+
+        if (fileContents && fileContents.length > 0) {
+            syncLatestUserMessageFiles(fileContents);
+            saveChatHistory();
+        }
+
         const shouldInlineChatTitle = shouldRequestInlineChatTitle(chatMessages);
 
         // Add the system prompt only if one is explicitly set by the user or we need
@@ -1151,7 +1473,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         // Add chat history from previous messages (without historical search context)
         // Only inject current-turn search results, not old ones, to avoid context confusion
         for (const msg of chatMessages) {
-            messages.push(msg);
+            messages.push(cloneMessageForRequest(msg));
         }
 
         const isFirstMsg = isFirstUserMessage(chatMessages);
@@ -3088,16 +3410,20 @@ export function lazyLoadMessages(messages, startIndex, chunkSize = 10) {
         }
 
         let contentDisplay = message.role === 'assistant'
-            ? removeInlineChatTitleMarkup(message.content)
-            : message.content;
+            ? removeInlineChatTitleMarkup(getDisplayTextFromMessageContent(message.content))
+            : getDisplayTextFromMessageContent(message.content);
+
+        const messageFiles = Array.isArray(message.files) && message.files.length > 0
+            ? message.files
+            : null;
 
         // Add file attachment indicator if present
-        if (message.has_files) {
+        if (!messageFiles && message.has_files) {
             contentDisplay += ' [File attached]';
         }
 
         // Use appendMessage to ensure proper message formatting and controls
-        const messageElement = appendMessage(message.role === 'user' ? 'user' : 'ai', contentDisplay, null, false, message.model);
+        const messageElement = appendMessage(message.role === 'user' ? 'user' : 'ai', contentDisplay, messageFiles, false, message.model);
         
         // If this is a user message with web search metadata, add the indicator
         if (message.role === 'user' && message.hadWebSearch && messageElement) {
@@ -3178,6 +3504,9 @@ export function clearAllChats() {
         window.AndroidFileOps.deleteData('chatHistory');
         debugLog('Cleared chat history from Android internal storage');
     }
+
+    deleteStoredData(CHAT_IMAGE_STORE_KEY);
+    cachedChatImageStore = createEmptyChatImageStore();
 
     // Reset current chat ID
     currentChatId = Date.now();
@@ -3308,13 +3637,15 @@ export function saveChatHistory() {
 
         // Make a deep copy of the chat history to avoid reference issues
         const chatHistoryToSave = JSON.parse(JSON.stringify(chatHistoryData));
+        const nextImageEntries = {};
 
         // Log the number of chats being saved
         debugLog(`Saving ${Object.keys(chatHistoryToSave).length} chats to localStorage`);
 
         // Ensure all chat entries have the proper structure
         Object.keys(chatHistoryToSave).forEach(chatId => {
-            const chatData = chatHistoryToSave[chatId];
+            let chatData = chatHistoryToSave[chatId];
+            const sourceChatData = chatHistoryData[chatId];
 
             // Log the chat being processed
             debugLog(`Processing chat ${chatId} for saving`);
@@ -3328,6 +3659,7 @@ export function saveChatHistory() {
                     messages: oldMessages,
                     title: oldTitle,
                 };
+                chatData = chatHistoryToSave[chatId];
             }
 
             // Ensure messages property exists and is an array
@@ -3361,7 +3693,21 @@ export function saveChatHistory() {
 
             // Process each message to ensure code blocks are properly encoded
             if (Array.isArray(chatData.messages)) {
-                chatData.messages.forEach(message => {
+                const sourceMessages = Array.isArray(sourceChatData)
+                    ? sourceChatData
+                    : Array.isArray(sourceChatData?.messages)
+                        ? sourceChatData.messages
+                        : [];
+
+                chatData.messages.forEach((message, messageIndex) => {
+                    const sourceMessage = sourceMessages[messageIndex];
+
+                    if (Array.isArray(sourceMessage?.files) && sourceMessage.files.length > 0) {
+                        message.files = serializeFilesForStorage(sourceMessage.files, chatId, messageIndex, nextImageEntries);
+                    } else if (Array.isArray(message.files) && message.files.length > 0) {
+                        message.files = serializeFilesForStorage(message.files, chatId, messageIndex, nextImageEntries);
+                    }
+
                     if (message.content && typeof message.content === 'string') {
                         if (message.role === 'assistant') {
                             if (!chatData.title) {
@@ -3441,6 +3787,8 @@ export function saveChatHistory() {
             localStorage.setItem('chatHistory', chatHistoryJSON);
         }
 
+        persistChatImageStore(nextImageEntries);
+
         // Verify the data was saved correctly by reading it back
         let savedData;
         if (window.AndroidFileOps && typeof window.AndroidFileOps.loadData === 'function') {
@@ -3475,39 +3823,11 @@ export function saveChatHistory() {
  * Loads the chat history from localStorage or Android internal storage
  */
 export function loadChatHistory() {
-    let savedHistory = null;
-    let usingNativeStorage = false;
+    let savedHistory = loadStoredData('chatHistory');
+    const imageStore = loadChatImageStore();
 
-    // Check for native storage first
-    if (window.AndroidFileOps && typeof window.AndroidFileOps.loadData === 'function') {
-        savedHistory = window.AndroidFileOps.loadData('chatHistory');
-        
-        // If native storage has data, we're good
-        if (savedHistory && savedHistory.trim() !== "") {
-            usingNativeStorage = true;
-            debugLog('Loaded chat history from Android internal storage');
-        }
-    }
-
-    // Migration / Fallback logic
-    const localStorageHistory = localStorage.getItem('chatHistory');
-    
-    if (!usingNativeStorage && localStorageHistory) {
-        // If we didn't find data in native storage but found it in localStorage
-        savedHistory = localStorageHistory;
-        debugLog('Loaded chat history from localStorage');
-
-        // Migrate to native storage if available
-        if (window.AndroidFileOps && typeof window.AndroidFileOps.saveData === 'function') {
-            debugLog('Migrating chat history from localStorage to Android internal storage...');
-            const success = window.AndroidFileOps.saveData('chatHistory', localStorageHistory);
-            if (success) {
-                debugLog('Migration successful, clearing localStorage');
-                localStorage.removeItem('chatHistory');
-            } else {
-                debugError('Migration failed, keeping data in localStorage');
-            }
-        }
+    if (savedHistory && savedHistory.trim() !== '') {
+        debugLog('Loaded chat history from persistent storage');
     }
 
     if (savedHistory && savedHistory.trim() !== "") {
@@ -3578,6 +3898,10 @@ export function loadChatHistory() {
 
                 // Process each message for backward compatibility and code block handling
                 messages.forEach(msg => {
+                    if (Array.isArray(msg.content)) {
+                        msg.content = getDisplayTextFromMessageContent(msg.content);
+                    }
+
                     // If this is a system message with the topic boundary marker text
                     // but doesn't have the isTopicBoundary flag, add it
                     if (msg.role === 'system' &&
@@ -3604,6 +3928,10 @@ export function loadChatHistory() {
                         // Only preserve the original content during load - don't add any markers
                         // HTML markers should only be added during save operations, not load operations
                         debugLog('Preserved original code block content on load');
+                    }
+
+                    if (Array.isArray(msg.files) && msg.files.length > 0) {
+                        msg.files = hydrateFilesFromImageStore(msg.files, imageStore);
                     }
                 });
 
@@ -3870,10 +4198,7 @@ export async function regenerateLastResponse(isRetry = false) {
         const shouldInlineChatTitle = shouldRequestInlineChatTitle(filteredMessages);
         
         // Build context messages (current turn only, no historical search accumulation)
-        const contextMessages = [];
-        for (const msg of filteredMessages) {
-            contextMessages.push(msg);
-        }
+        const contextMessages = filteredMessages.map(cloneMessageForRequest);
 
         // Remove existing AI messages from the DOM after the last user message
         const messageElements = Array.from(messagesContainer.children);
@@ -3939,7 +4264,7 @@ export async function regenerateLastResponse(isRetry = false) {
 
             // Add context messages (current turn only, no historical search accumulation)
             for (const msg of contextMessages) {
-                apiMessages.push(msg);
+                apiMessages.push(cloneMessageForRequest(msg));
             }
 
             // For the message being regenerated, use stored web search results if available
