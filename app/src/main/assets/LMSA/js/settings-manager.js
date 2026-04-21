@@ -1324,7 +1324,7 @@ function syncModeIndicator(isCloudMode) {
   if (!statusText) return;
 
   if (isCloudMode) {
-    statusText.textContent = "OPEN ROUTER";
+    statusText.textContent = "OPENROUTER";
     modeIndicator.title = "Current AI Mode: Cloud (OpenRouter)";
   } else {
     statusText.textContent = "LOCAL SERVER";

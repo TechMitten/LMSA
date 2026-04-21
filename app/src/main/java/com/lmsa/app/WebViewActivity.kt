@@ -2172,11 +2172,14 @@ class WebViewActivity : AppCompatActivity() {
         @JavascriptInterface
         fun isBiometricSupported(): Boolean {
             val biometricManager = BiometricManager.from(this@WebViewActivity)
-            return biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK or BiometricManager.Authenticators.DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS
+            // We want to support at least Strong Biometrics or Device Credentials
+            val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                                BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            return biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS
         }
 
         @JavascriptInterface
-        fun authenticate() {
+        fun authenticate(title: String? = null, subtitle: String? = null) {
             runOnUiThread {
                 biometricPromptShowing = true
                 val executor: Executor = ContextCompat.getMainExecutor(this@WebViewActivity)
@@ -2185,10 +2188,10 @@ class WebViewActivity : AppCompatActivity() {
                         override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                             super.onAuthenticationError(errorCode, errString)
                             biometricPromptShowing = false
-                            Log.e(TAG, "Biometric auth error: \$errString")
+                            Log.e(TAG, "Biometric auth error: $errString")
                             // You might want to notify JS here, depending on needs. Let's send a failure call
                             val webView: WebView = findViewById(R.id.webView)
-                            webView.evaluateJavascript("if(window.onBiometricFailure) window.onBiometricFailure('\$errString');", null)
+                            webView.evaluateJavascript("if(window.onBiometricFailure) window.onBiometricFailure('$errString');", null)
                         }
 
                         override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
@@ -2206,9 +2209,9 @@ class WebViewActivity : AppCompatActivity() {
                     })
 
                 val promptInfo = BiometricPrompt.PromptInfo.Builder()
-                    .setTitle("App Locked")
-                    .setSubtitle("Authenticate to access LMSA")
-                    .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_WEAK or BiometricManager.Authenticators.DEVICE_CREDENTIAL)
+                    .setTitle(title ?: "App Locked")
+                    .setSubtitle(subtitle ?: "Authenticate to access LMSA")
+                    .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL)
                     .build()
 
                 biometricPrompt.authenticate(promptInfo)

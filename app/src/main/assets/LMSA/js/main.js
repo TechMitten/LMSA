@@ -274,7 +274,7 @@ window.requestBiometricAuth = function(title, subtitle) {
         try {
             window.pendingBiometricResolve = resolve;
             window.pendingBiometricReject = reject;
-            biometricBridge.authenticate();
+            biometricBridge.authenticate(title, subtitle);
         } catch (error) {
             window.pendingBiometricResolve = null;
             window.pendingBiometricReject = null;
