@@ -284,20 +284,6 @@ export const settingsModal = `
                         <p class="text-xs text-gray-400 mt-1">When enabled, shows a scrollbar on the side of the chat message area.</p>
                     </div>
 
-                    <div class="mb-5 hidden">
-                        <div class="flex justify-between items-center mb-2">
-                            <label for="theme-toggle" class="text-sm font-medium">
-                                <i class="fas fa-moon mr-2 text-blue-400"></i>Light Theme</label>
-                            <div class="toggle-container">
-                                <input type="checkbox" id="theme-toggle">
-                                <div class="toggle-switch"></div>
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">When enabled, switches the app to light theme. When
-                            disabled, uses the default dark theme.</p>
-                    </div>
-
                     <div class="mb-5">
                         <label for="tts-voice-select" class="block text-sm font-medium mb-2">
                             <i class="fas fa-microphone mr-2 text-blue-400"></i>TTS Voice</label>

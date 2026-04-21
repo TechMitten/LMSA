@@ -2668,22 +2668,6 @@ export function initializeSettingsModal() {
                 hideSettingsModal();
             }
         });
-
-        // Listen for theme changes to update the modal appearance
-        document.addEventListener('themeChanged', function(e) {
-            // The modal will automatically use the theme CSS variables
-            // when it's opened next time, but if it's currently open,
-            // we need to ensure it reflects the current theme
-            if (!settingsModal.classList.contains('hidden')) {
-                debugLog('Theme changed while settings modal is open, updating appearance');
-                // The CSS variables will be applied automatically
-                // Force a small repaint by toggling a class
-                settingsModal.classList.add('theme-update');
-                setTimeout(() => {
-                    settingsModal.classList.remove('theme-update');
-                }, 10);
-            }
-        });
     }
 
     // Initialize mobile navigation

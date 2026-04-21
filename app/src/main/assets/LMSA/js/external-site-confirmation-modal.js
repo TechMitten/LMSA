@@ -420,20 +420,3 @@ document.addEventListener('DOMContentLoaded', () => {
     createExternalSiteModal();
 });
 
-// Listen for theme changes
-document.addEventListener('themeChanged', () => {
-    updateExternalSiteModalTheme();
-    
-    // Also update backdrop if modal is currently visible
-    const modal = document.getElementById('external-site-modal');
-    if (modal && !modal.classList.contains('hidden')) {
-        const isLightTheme = getLightThemeEnabled();
-        if (isLightTheme) {
-            modal.classList.remove('bg-black', 'bg-opacity-70');
-            modal.classList.add('bg-slate-500', 'bg-opacity-50');
-        } else {
-            modal.classList.remove('bg-slate-500', 'bg-opacity-50');
-            modal.classList.add('bg-black', 'bg-opacity-70');
-        }
-    }
-});

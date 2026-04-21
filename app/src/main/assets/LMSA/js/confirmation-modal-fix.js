@@ -1,6 +1,5 @@
 // Import the checkAndShowWelcomeMessage function
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
-import { getLightThemeEnabled } from './settings-manager.js';
 
 // Script to ensure the confirmation modal is properly hidden on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -143,12 +142,6 @@ export function updateExportImportModalsTheme() {
         }
     }
 }
-
-// Listen for theme changes
-document.addEventListener('themeChanged', () => {
-    updateConfirmationModalTheme();
-    updateExportImportModalsTheme();
-});
 
 // Initialize the themes when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {

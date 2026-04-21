@@ -174,11 +174,6 @@ export function updateImageUploadErrorModalTheme() {
     }
 }
 
-// Listen for theme changes
-document.addEventListener('themeChanged', () => {
-    updateImageUploadErrorModalTheme();
-});
-
 // Initialize the theme when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     updateImageUploadErrorModalTheme();

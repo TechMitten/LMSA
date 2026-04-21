@@ -843,28 +843,27 @@ function displayCurrentModel(modelName) {
  * Attaches a live search/filter bar to the model list (OpenRouter only).
  * Must be called after the section title has been appended but before model items.
  * @param {HTMLElement} container - The parent list container
- * @param {boolean} isLightTheme
  */
-function attachModelSearch(container, isLightTheme) {
+function attachModelSearch(container) {
     const wrapper = document.createElement('div');
     wrapper.id = 'or-model-search-wrapper';
     wrapper.className = 'mb-5 pb-1';
     wrapper.innerHTML = `
         <div style="position:relative;width:100%;">
-            <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:12px;color:${isLightTheme ? '#9ca3af' : '#4b5563'};pointer-events:none;"></i>
+            <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:12px;color:#4b5563;pointer-events:none;"></i>
             <input id="or-model-search"
                 type="text"
                 placeholder="Search models…"
                 autocomplete="off"
-                style="width:100%;box-sizing:border-box;padding:10px 36px 10px 34px;border-radius:10px;border:1px solid ${isLightTheme ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.08)'};background:${isLightTheme ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)'};color:${isLightTheme ? '#1e293b' : '#e2e8f0'};font-size:13px;outline:none;transition:border-color 0.15s;"
-                onfocus="this.style.borderColor='${isLightTheme ? 'rgba(59,130,246,0.5)' : 'rgba(59,130,246,0.4)'}'"
-                onblur="this.style.borderColor='${isLightTheme ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.08)'}'"
+                style="width:100%;box-sizing:border-box;padding:10px 36px 10px 34px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:#e2e8f0;font-size:13px;outline:none;transition:border-color 0.15s;"
+                onfocus="this.style.borderColor='rgba(59,130,246,0.4)'"
+                onblur="this.style.borderColor='rgba(255,255,255,0.08)'"
             />
-            <button id="or-model-search-clear" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);display:none;background:none;border:none;cursor:pointer;color:${isLightTheme ? '#9ca3af' : '#6b7280'};padding:4px;border-radius:4px;">
+            <button id="or-model-search-clear" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);display:none;background:none;border:none;cursor:pointer;color:#6b7280;padding:4px;border-radius:4px;">
                 <i class="fas fa-times" style="font-size:11px;"></i>
             </button>
         </div>
-        <div id="or-model-search-count" style="margin-top:6px;font-size:11px;text-align:right;color:${isLightTheme ? '#9ca3af' : '#4b5563'};padding-right:4px;"></div>
+        <div id="or-model-search-count" style="margin-top:6px;font-size:11px;text-align:right;color:#4b5563;padding-right:4px;"></div>
     `;
     container.appendChild(wrapper);
 
@@ -890,7 +889,7 @@ function attachModelSearch(container, isLightTheme) {
                 noResults = document.createElement('div');
                 noResults.id = noResultsId;
                 noResults.className = 'py-4 text-center text-sm';
-                noResults.style.color = isLightTheme ? '#6b7280' : '#9ca3af';
+                noResults.style.color = '#9ca3af';
                 noResults.innerHTML = '<i class="fas fa-search mr-2 opacity-50"></i>No models match your search';
                 container.appendChild(noResults);
             }
@@ -916,14 +915,13 @@ function attachModelSearch(container, isLightTheme) {
  */
 function displayAvailableModels(models, loadedModelId) {
     if (availableModelsList) {
-        const isLightTheme = document.body.classList.contains('light-theme');
-        const textClass = isLightTheme ? 'text-gray-700' : 'text-gray-300';
-        const mutedTextClass = isLightTheme ? 'text-gray-500' : 'text-gray-400';
-        const bgClass = isLightTheme ? 'bg-gray-100' : 'bg-darkBg-70';
-        const borderClass = isLightTheme ? 'border-gray-200' : 'border-white/5';
+        const textClass = 'text-gray-300';
+        const mutedTextClass = 'text-gray-400';
+        const bgClass = 'bg-darkBg-70';
+        const borderClass = 'border-white/5';
 
         if (models.length === 0) {
-            const noModelsTextColor = isLightTheme ? '#6b7280' : '#9ca3af'; // gray-500 : gray-400
+            const noModelsTextColor = '#9ca3af';
             availableModelsList.innerHTML = `
                 <div class="p-4 ${bgClass} rounded-xl ${borderClass} border flex items-center" style="color: ${noModelsTextColor} !important;">
                     <i class="fas fa-info-circle mr-3 text-blue-400"></i>
@@ -944,16 +942,16 @@ function displayAvailableModels(models, loadedModelId) {
         titleElement.style.cssText = 'margin-bottom:14px;';
         titleElement.innerHTML = `
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                <span style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:${isLightTheme ? '#3b82f6' : '#93c5fd'};">Available Models</span>
-                <div style="flex:1;height:1px;background:${isLightTheme ? 'rgba(59,130,246,0.2)' : 'rgba(147,197,253,0.15)'};"></div>
+                <span style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#93c5fd;">Available Models</span>
+                <div style="flex:1;height:1px;background:rgba(147,197,253,0.15);"></div>
             </div>
-            <p style="font-size:12px;color:${isLightTheme ? '#6b7280' : '#94a3b8'};margin:0;">Click &quot;Select&quot; to switch to a different model</p>
+            <p style="font-size:12px;color:#94a3b8;margin:0;">Click &quot;Select&quot; to switch to a different model</p>
         `;
         availableModelsList.appendChild(titleElement);
 
         // Inject live search bar for OpenRouter (catalog can have hundreds of models)
         if (getUseOpenRouter()) {
-            attachModelSearch(availableModelsList, isLightTheme);
+            attachModelSearch(availableModelsList);
 
             // Restore the previous search query (and re-apply the filter) so that
             // selecting a model while a search is active doesn't reset the list.
@@ -1093,14 +1091,13 @@ function displayAvailableModels(models, loadedModelId) {
  */
 function displayPotentialModels(models) {
     if (availableModelsList) {
-        const isLightTheme = document.body.classList.contains('light-theme');
-        const textClass = isLightTheme ? 'text-gray-700' : 'text-gray-300';
-        const mutedTextClass = isLightTheme ? 'text-gray-500' : 'text-gray-400';
-        const bgClass = isLightTheme ? 'bg-gray-100' : 'bg-darkBg-70';
-        const borderClass = isLightTheme ? 'border-gray-200' : 'border-white/5';
+        const textClass = 'text-gray-300';
+        const mutedTextClass = 'text-gray-400';
+        const bgClass = 'bg-darkBg-70';
+        const borderClass = 'border-white/5';
 
         if (models.length === 0) {
-            const noModelsTextColor = isLightTheme ? '#6b7280' : '#9ca3af'; // gray-500 : gray-400
+            const noModelsTextColor = '#9ca3af';
             availableModelsList.innerHTML = `
                 <div class="p-4 ${bgClass} rounded-xl ${borderClass} border flex items-center" style="color: ${noModelsTextColor} !important;">
                     <i class="fas fa-info-circle mr-3 text-blue-400"></i>
@@ -1118,15 +1115,15 @@ function displayPotentialModels(models) {
         titleElement.className = 'model-list-header flex items-center justify-between px-0.5 mb-2 pb-2';
         titleElement.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:14px;';
         titleElement.innerHTML = `
-            <span style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:${isLightTheme ? '#3b82f6' : '#93c5fd'};">Available Models</span>
-            <div style="flex:1;height:1px;background:${isLightTheme ? 'rgba(59,130,246,0.2)' : 'rgba(147,197,253,0.15'});"></div>
-            <span style="font-size:11px;font-weight:700;color:${isLightTheme ? '#3b82f6' : '#93c5fd'};">${models.length}</span>
+            <span style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#93c5fd;">Available Models</span>
+            <div style="flex:1;height:1px;background:rgba(147,197,253,0.15);"></div>
+            <span style="font-size:11px;font-weight:700;color:#93c5fd;">${models.length}</span>
         `;
         availableModelsList.appendChild(titleElement);
 
         // Inject live search bar for OpenRouter (catalog can have hundreds of models)
         if (getUseOpenRouter()) {
-            attachModelSearch(availableModelsList, isLightTheme);
+            attachModelSearch(availableModelsList);
         }
 
         // Render models in chunks to avoid blocking the WebView's main thread.

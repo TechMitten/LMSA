@@ -4,7 +4,6 @@ import {
   hideThinkingCheckbox,
   autoGenerateTitlesCheckbox,
   autoSmartReplyCheckbox,
-  themeToggleCheckbox,
   ollamaToggleCheckbox,
   openRouterToggleCheckbox,
   openRouterApiKeyInput,
@@ -50,7 +49,6 @@ let hideThinking = false;
 let autoGenerateTitles = false;
 let autoSmartReply = false;
 let useOllama = false;
-let lightThemeEnabled = false;
 let autoScrollEnabled = false; // Auto-scroll to bottom during LLM streaming
 let enterSendsNewline = false; // If true, Enter creates a new line, Shift+Enter sends
 let reasoningTimeout = 300; // Default 5 minutes for reasoning models (in seconds)
@@ -985,109 +983,23 @@ export function getShowModelLabel() {
 }
 
 /**
- * Loads the theme setting from localStorage
+ * Forces the app theme to dark mode.
  */
 export function loadThemeSetting() {
-  const savedTheme = localStorage.getItem("lightThemeEnabled");
-
-  // Set the theme based on saved preference
-  if (savedTheme === "true") {
-    lightThemeEnabled = true;
-    document.body.classList.add("light-theme");
-    document.body.classList.remove("dark");
-    document.body.classList.remove("custom-dark-mode"); // Remove custom-dark-mode class for light theme
-  } else {
-    lightThemeEnabled = false;
-    document.body.classList.remove("light-theme");
-    document.body.classList.add("dark");
-    document.body.classList.add("custom-dark-mode"); // Ensure custom-dark-mode class is present for dark theme
-  }
+  localStorage.removeItem("lightThemeEnabled");
+  document.body.classList.remove("light-theme");
+  document.body.classList.add("dark");
+  document.body.classList.add("custom-dark-mode");
 
   refreshAllCodeBlocks();
-
-  // Update the settings modal toggle if it exists
-  if (themeToggleCheckbox) {
-    themeToggleCheckbox.checked = lightThemeEnabled;
-
-    // Change the icon to match the theme
-    const themeIcon = document.querySelector('label[for="theme-toggle"] i');
-    if (themeIcon) {
-      if (lightThemeEnabled) {
-        themeIcon.classList.remove("fa-moon");
-        themeIcon.classList.add("fa-sun");
-      } else {
-        themeIcon.classList.remove("fa-sun");
-        themeIcon.classList.add("fa-moon");
-      }
-    }
-
-    // Add event listener for the checkbox
-    themeToggleCheckbox.addEventListener("change", saveThemeSetting);
-  }
-
-  // Dispatch a custom event to notify other components about the initial theme
-  const themeChangedEvent = new CustomEvent("themeChanged", {
-    detail: { lightThemeEnabled },
-  });
-  document.dispatchEvent(themeChangedEvent);
 }
 
 /**
- * Saves the theme setting to localStorage
- */
-export function saveThemeSetting() {
-  if (themeToggleCheckbox) {
-    lightThemeEnabled = themeToggleCheckbox.checked;
-    localStorage.setItem("lightThemeEnabled", lightThemeEnabled);
-
-    if (lightThemeEnabled) {
-      document.body.classList.add("light-theme");
-      document.body.classList.remove("dark");
-      document.body.classList.remove("custom-dark-mode"); // Remove custom-dark-mode class for light theme
-      // Change the icon to sun when light theme is enabled
-      const themeIcon = document.querySelector('label[for="theme-toggle"] i');
-      if (themeIcon) {
-        themeIcon.classList.remove("fa-moon");
-        themeIcon.classList.add("fa-sun");
-      }
-    } else {
-      document.body.classList.remove("light-theme");
-      document.body.classList.add("dark");
-      document.body.classList.add("custom-dark-mode"); // Add custom-dark-mode class for dark theme
-      // Change the icon to moon when dark theme is enabled
-      const themeIcon = document.querySelector('label[for="theme-toggle"] i');
-      if (themeIcon) {
-        themeIcon.classList.remove("fa-sun");
-        themeIcon.classList.add("fa-moon");
-      }
-    }
-
-    refreshAllCodeBlocks();
-
-    // Force refresh of sidebar styles
-    const sidebar = document.getElementById("sidebar");
-    if (sidebar) {
-      // Temporarily hide and show sidebar to force style recalculation
-      const originalDisplay = sidebar.style.display;
-      sidebar.style.display = "none";
-      sidebar.offsetHeight; // Force reflow
-      sidebar.style.display = originalDisplay;
-    }
-
-    // Dispatch a custom event to notify other components about the theme change
-    const themeChangedEvent = new CustomEvent("themeChanged", {
-      detail: { lightThemeEnabled },
-    });
-    document.dispatchEvent(themeChangedEvent);
-  }
-}
-
-/**
- * Gets the current theme setting
- * @returns {boolean} - True if light theme is enabled, false otherwise
+ * Gets the current theme setting.
+ * Retained for compatibility with modules that still query the old theme API.
  */
 export function getLightThemeEnabled() {
-  return lightThemeEnabled;
+  return false;
 }
 
 /**

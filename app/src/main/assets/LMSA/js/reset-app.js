@@ -29,7 +29,6 @@ export function resetApp() {
             'temperature',
             'hideThinking',
             'autoGenerateTitles',
-            'lightThemeEnabled',
             'serverIp',
             'serverPort',
             'lastActiveChatId',

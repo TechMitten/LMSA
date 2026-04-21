@@ -113,7 +113,6 @@ export const openRouterToggleCheckbox = domCache.get('openrouter-toggle');
 export const openRouterApiKeyInput = domCache.get('openrouter-api-key');
 export const autoSmartReplyCheckbox = domCache.get('auto-smart-reply');
 export const smartRepliesContainer = domCache.get('smart-replies-container');
-export const themeToggleCheckbox = domCache.get('theme-toggle');
 export const ollamaToggleCheckbox = domCache.get('ollama-toggle');
 export const showModelLabelCheckbox = domCache.get('show-model-label');
 

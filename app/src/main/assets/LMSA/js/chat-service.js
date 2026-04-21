@@ -2342,13 +2342,7 @@ export function updateChatHistoryUI() {
                 chatIcon.classList.add('fas', 'fa-comment-alt', 'mr-3', 'flex-shrink-0');
 
                 // Set icon color based on theme and active state
-                const isLightTheme = document.body.classList.contains('light-theme');
-                const isActive = (id === currentChatId);
-                if (isLightTheme) {
-                    chatIcon.style.color = isActive ? '#1d4ed8' : '#2563eb';
-                } else {
-                    chatIcon.style.color = 'var(--button-primary-bg)';
-                }
+                chatIcon.style.color = 'var(--button-primary-bg)';
 
                 titleWrapper.appendChild(chatIcon);
 
@@ -2433,9 +2427,7 @@ export function updateChatHistoryUI() {
                 const renameIcon = document.createElement('i');
                 renameIcon.classList.add('fas', 'fa-edit');
 
-                const getRenameIconColor = () => {
-                    return document.body.classList.contains('light-theme') ? '#1d4ed8' : '#60a5fa';
-                };
+                const getRenameIconColor = () => '#60a5fa';
 
                 renameIcon.style.cssText = `
                     color: ${getRenameIconColor()};
@@ -2516,9 +2508,7 @@ export function updateChatHistoryUI() {
                 trashIcon.classList.add('fas', 'fa-trash');
 
                 // Function to get the appropriate trash icon color based on theme
-                const getTrashIconColor = () => {
-                    return document.body.classList.contains('light-theme') ? '#dc2626' : '#b91c1c';
-                };
+                const getTrashIconColor = () => '#b91c1c';
 
                 trashIcon.style.cssText = `
                     color: ${getTrashIconColor()};
@@ -5256,39 +5246,3 @@ export async function addUserMessageToHistory(userMessage, fileContents = []) {
     }
 }
 
-/**
- * Updates all trash icon colors when theme changes
- */
-function updateTrashIconColors() {
-    const isLightTheme = document.body.classList.contains('light-theme');
-    const trashIcons = document.querySelectorAll('.trash-icon-container .fas.fa-trash');
-    const color = isLightTheme ? '#dc2626' : '#b91c1c';
-
-    trashIcons.forEach(icon => {
-        // Only update if not currently being hovered
-        if (!icon.parentElement.matches(':hover')) {
-            icon.style.color = color;
-        }
-    });
-}
-
-/**
- * Updates chat icon colors when theme changes
- */
-function updateChatIconColors() {
-    const isLightTheme = document.body.classList.contains('light-theme');
-    const chatIcons = document.querySelectorAll('.chat-item .fa-comment-alt');
-
-    chatIcons.forEach(icon => {
-        // Check if this is the active chat
-        const isActive = icon.closest('.chat-item').classList.contains('active');
-        const color = isLightTheme ? (isActive ? '#1d4ed8' : '#2563eb') : 'var(--button-primary-bg)';
-        icon.style.color = color;
-    });
-}
-
-// Listen for theme changes to update icon colors
-document.addEventListener('themeChanged', () => {
-    updateTrashIconColors();
-    updateChatIconColors();
-});

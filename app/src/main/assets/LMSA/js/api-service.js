@@ -1,6 +1,6 @@
 // API Service for handling server communication
 import { serverIpInput, serverPortInput, loadedModelDisplay } from './dom-elements.js';
-import { getLightThemeEnabled, getUseOllama, getUseOpenRouter, getOpenRouterApiKey, getLMStudioApiToken } from './settings-manager.js';
+import { getUseOllama, getUseOpenRouter, getOpenRouterApiKey, getLMStudioApiToken } from './settings-manager.js';
 import { showIpPortErrorModal, hideIpPortErrorModal } from './ui-manager.js';
 
 let API_URL = '';

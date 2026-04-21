@@ -226,34 +226,7 @@ var DARK_THEME = {
     'sh-doctype': { color: '#75715e', fontStyle: 'italic' }
 };
 
-var LIGHT_THEME = {
-    'sh-comment': { color: '#6a737d', fontStyle: 'italic' },
-    'sh-string': { color: '#032f62' },
-    'sh-keyword': { color: '#d73a49', fontWeight: '700' },
-    'sh-number': { color: '#005cc5' },
-    'sh-function': { color: '#6f42c1' },
-    'sh-operator': { color: '#d73a49' },
-    'sh-punctuation': { color: '#24292e' },
-    'sh-tag': { color: '#22863a' },
-    'sh-attr': { color: '#6f42c1' },
-    'sh-bracket': { color: '#24292e' },
-    'sh-property': { color: '#005cc5' },
-    'sh-selector': { color: '#22863a' },
-    'sh-color': { color: '#005cc5' },
-    'sh-regex': { color: '#032f62' },
-    'sh-decorator': { color: '#6f42c1' },
-    'sh-annotation': { color: '#6f42c1' },
-    'sh-variable': { color: '#e36209' },
-    'sh-symbol': { color: '#005cc5' },
-    'sh-macro': { color: '#22863a', fontWeight: '700' },
-    'sh-preprocessor': { color: '#d73a49' },
-    'sh-doctype': { color: '#6a737d', fontStyle: 'italic' }
-};
-
 function getActiveTheme() {
-    if (typeof document !== 'undefined' && document.body && document.body.classList.contains('light-theme')) {
-        return LIGHT_THEME;
-    }
     return DARK_THEME;
 }
 

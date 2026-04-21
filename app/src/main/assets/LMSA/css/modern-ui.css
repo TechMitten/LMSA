@@ -1331,25 +1331,6 @@ body.light-theme .close-btn:hover {
     padding: 0.5rem 0.75rem !important;
   }
 
-  /* Theme toggle in welcome screen */
-  #welcome-theme-toggle .welcome-toggle-container {
-    padding: 0.35rem 0.5rem !important;
-  }
-
-  #welcome-theme-toggle .toggle-container {
-    width: 38px !important;
-    height: 20px !important;
-  }
-
-  #welcome-theme-toggle .toggle-dot {
-    width: 14px !important;
-    height: 14px !important;
-  }
-
-  #welcome-theme-toggle input[type="checkbox"]:checked~.toggle-dot {
-    transform: translateX(18px) !important;
-  }
-
   /* Fix paperclip position */
   #paperclip-button {
     right: 0.5rem !important;
@@ -2300,37 +2281,6 @@ body.light-theme #welcome-message {
     margin-bottom: 0.75rem !important;
   }
 
-  #welcome-theme-toggle {
-    margin-top: 0.65rem !important;
-    margin-bottom: 0.65rem !important;
-  }
-
-  #welcome-theme-toggle .text-sm {
-    font-size: 0.75rem !important;
-  }
-
-  #welcome-theme-toggle .welcome-toggle-container {
-    padding: 0.35rem 0.5rem !important;
-    width: auto !important;
-    max-width: 100% !important;
-    display: flex !important;
-    justify-content: center !important;
-  }
-
-  #welcome-theme-toggle .toggle-container {
-    width: 38px !important;
-    margin: 0 2px !important;
-  }
-
-  #welcome-theme-toggle i.fa-moon,
-  #welcome-theme-toggle i.fa-sun {
-    font-size: 0.85rem !important;
-  }
-
-  #welcome-theme-toggle input[type="checkbox"]:checked~.toggle-dot {
-    transform: translateX(18px) !important;
-  }
-
   #welcome-footer {
     margin-top: 0.65rem !important;
     padding-top: 0.65rem !important;
@@ -2383,12 +2333,6 @@ body.light-theme #welcome-message {
     gap: 0.5rem !important;
   }
 
-  /* Ensure proper spacing for the appearance toggle section */
-  #welcome-theme-toggle {
-    margin-top: 0.75rem !important;
-    margin-bottom: 0.75rem !important;
-  }
-
   #welcome-character-gallery-btn,
   #welcome-new-chat-btn,
   #welcome-help-btn,
@@ -2404,40 +2348,6 @@ body.light-theme #welcome-message {
     /* Better touch target */
     padding: 0.45rem 0.65rem !important;
     font-size: 0.85rem !important;
-  }
-
-  /* Fix appearance toggle in welcome screen for iPhone SE */
-  #welcome-theme-toggle .welcome-toggle-container {
-    padding: 0.4rem 0.6rem !important;
-    /* Reduce horizontal padding */
-    width: auto !important;
-    max-width: 100% !important;
-    display: flex !important;
-    justify-content: center !important;
-  }
-
-  #welcome-theme-toggle .toggle-container {
-    width: 40px !important;
-    /* Slightly smaller toggle */
-    margin: 0 2px !important;
-    /* Reduce margins */
-  }
-
-  #welcome-theme-toggle i.fa-moon,
-  #welcome-theme-toggle i.fa-sun {
-    font-size: 0.9rem !important;
-    /* Smaller icons */
-  }
-
-  #welcome-theme-toggle input[type="checkbox"]:checked~.toggle-dot {
-    transform: translateX(20px) !important;
-    /* Adjust for smaller toggle */
-  }
-
-  /* Ensure the label fits within the container */
-  #welcome-theme-toggle label {
-    width: 100% !important;
-    justify-content: center !important;
   }
 
   /* Optimize chat input for iPhone SE */
@@ -2863,11 +2773,6 @@ body.light-theme .dark-footer-text {
     /* Reduce button gaps */
     margin-bottom: 0.5rem !important;
     /* Reduce bottom margin */
-  }
-
-  #welcome-theme-toggle {
-    margin: 0.5rem 0 !important;
-    /* Reduce theme toggle margins */
   }
 
   #welcome-footer {
