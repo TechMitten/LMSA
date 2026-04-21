@@ -81,10 +81,15 @@
 
         </header>
         <main class="flex-1 overflow-y-auto p-5 pb-28 scroll-smooth">
-            <div class="mb-6">
-                <p class="text-sm text-slate-400 leading-relaxed">
-                    Choose a persona to start your conversation with a specialized context.
+            <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p class="text-sm text-slate-400 leading-relaxed max-w-2xl">
+                    Choose a persona to start your conversation with a specialized context, or import a v2 character card to turn it into a reusable LMSA template.
                 </p>
+                <button type="button" id="open-character-card-import-btn"
+                    class="template-secondary-action inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-slate-200 transition-colors">
+                    <span class="material-symbols-outlined text-lg">upload_file</span>
+                    <span>Import v2 Card</span>
+                </button>
             </div>
             <div id="templates-grid" class="responsive-template-grid">
                 <!-- Create New Template Button -->
@@ -98,7 +103,7 @@
                     <span
                         class="font-semibold text-sm text-slate-300 group-hover:text-blue-400 transition-colors">Create
                         New</span>
-                    <span class="text-xs text-slate-500 mt-1">Custom persona</span>
+                    <span class="text-xs text-slate-500 mt-1">Prompt or v2 card</span>
                 </button>
                 <button
                     class="glass-card flex flex-col items-center justify-center p-4 rounded-2xl aspect-square group hover:bg-slate-800/50">
@@ -289,30 +294,190 @@
                         <input type="text" id="new-template-name"
                             autocomplete="off" data-form-type="other"
                             class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors"
-                            placeholder="e.g., Python Expert">
+                            placeholder="e.g., Python Expert or Elara">
                     </div>
 
-                    <div>
-                        <label class="block text-sm text-slate-400 mb-1">Description</label>
-                        <input type="text" id="new-template-desc"
-                            autocomplete="off" data-form-type="other"
-                            class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors"
-                            placeholder="Short description...">
-                    </div>
-
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label class="block text-sm text-slate-400">System Prompt</label>
-                            <button type="button" id="generate-prompt-btn"
-                                class="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                <span class="material-symbols-outlined text-sm">auto_awesome</span>
-                                <span>Generate with AI</span>
+                    <div class="template-tab-shell">
+                        <div class="template-tab-strip" role="tablist" aria-label="Template editor mode">
+                            <button type="button" id="basic-template-tab"
+                                class="template-tab-btn active"
+                                data-template-tab="basic"
+                                role="tab"
+                                aria-selected="true"
+                                aria-controls="basic-template-panel">
+                                Basic
+                            </button>
+                            <button type="button" id="advanced-template-tab"
+                                class="template-tab-btn"
+                                data-template-tab="advanced"
+                                role="tab"
+                                aria-selected="false"
+                                aria-controls="advanced-template-panel">
+                                Advanced v2 Card
                             </button>
                         </div>
-                        <textarea id="new-template-prompt" rows="8"
-                            autocomplete="off" data-form-type="other"
-                            class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
-                            placeholder="You are an expert..."></textarea>
+
+                        <div id="basic-template-panel" class="template-tab-panel" role="tabpanel" aria-labelledby="basic-template-tab">
+                            <div>
+                                <label class="block text-sm text-slate-400 mb-1">Description</label>
+                                <input type="text" id="new-template-desc"
+                                    autocomplete="off" data-form-type="other"
+                                    class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                                    placeholder="Short description...">
+                            </div>
+
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-sm text-slate-400">System Prompt</label>
+                                    <button type="button" id="generate-prompt-btn"
+                                        class="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                                        <span>Generate with AI</span>
+                                    </button>
+                                </div>
+                                <textarea id="new-template-prompt" rows="8"
+                                    autocomplete="off" data-form-type="other"
+                                    class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                    placeholder="You are an expert..."></textarea>
+                            </div>
+                        </div>
+
+                        <div id="advanced-template-panel" class="template-tab-panel hidden" role="tabpanel" aria-labelledby="advanced-template-tab">
+                            <div class="template-advanced-callout">
+                                <div>
+                                    <p class="template-advanced-title">Character Card v2</p>
+                                    <p class="template-advanced-copy">LMSA stores the full v2 card data, builds the active runtime prompt from it, and can seed the opening greeting when the card is activated.</p>
+                                </div>
+                                <div class="template-callout-actions">
+                                    <button type="button" id="generate-character-card-btn"
+                                        class="template-import-btn inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-100 transition-colors">
+                                        <span class="material-symbols-outlined text-lg">auto_awesome</span>
+                                        <span>Generate with AI</span>
+                                    </button>
+                                    <button type="button" id="import-character-card-btn"
+                                        class="template-import-btn inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-100 transition-colors">
+                                        <span class="material-symbols-outlined text-lg">upload_file</span>
+                                        <span>Import JSON</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm text-slate-400 mb-1">Description</label>
+                                    <textarea id="character-card-description" rows="3"
+                                        autocomplete="off" data-form-type="other"
+                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                        placeholder="Physical appearance and background info."></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm text-slate-400 mb-1">Personality</label>
+                                    <textarea id="character-card-personality" rows="3"
+                                        autocomplete="off" data-form-type="other"
+                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                        placeholder="Core traits and behaviors."></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm text-slate-400 mb-1">Scenario</label>
+                                    <textarea id="character-card-scenario" rows="3"
+                                        autocomplete="off" data-form-type="other"
+                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                        placeholder="The setting or situation the roleplay starts in."></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm text-slate-400 mb-1">First Message</label>
+                                    <textarea id="character-card-first-message" rows="4"
+                                        autocomplete="off" data-form-type="other"
+                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                        placeholder="The very first message the AI sends to start the chat."></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm text-slate-400 mb-1">Message Example</label>
+                                    <textarea id="character-card-message-example" rows="5"
+                                        autocomplete="off" data-form-type="other"
+                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                        placeholder="<START>\n{{user}}: Hello!\n{{char}}: *Nods* Greetings."></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm text-slate-400 mb-1">Creator Notes</label>
+                                    <textarea id="character-card-creator-notes" rows="3"
+                                        autocomplete="off" data-form-type="other"
+                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                        placeholder="Internal notes for the user."></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm text-slate-400 mb-1">System Prompt Override</label>
+                                    <textarea id="character-card-system-prompt" rows="4"
+                                        autocomplete="off" data-form-type="other"
+                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                        placeholder="Optional: custom instructions to override LMSA's default template prompt."></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm text-slate-400 mb-1">Post-History Instructions</label>
+                                    <textarea id="character-card-post-history" rows="3"
+                                        autocomplete="off" data-form-type="other"
+                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                        placeholder="Instructions that should apply after the chat history."></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm text-slate-400 mb-1">Alternate Greetings</label>
+                                    <textarea id="character-card-alternate-greetings" rows="3"
+                                        autocomplete="off" data-form-type="other"
+                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                        placeholder="One greeting per line."></textarea>
+                                </div>
+
+                                <div class="template-two-column-grid">
+                                    <div>
+                                        <label class="block text-sm text-slate-400 mb-1">Tags</label>
+                                        <input type="text" id="character-card-tags"
+                                            autocomplete="off" data-form-type="other"
+                                            class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                                            placeholder="Fantasy, Hero">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm text-slate-400 mb-1">Creator</label>
+                                        <input type="text" id="character-card-creator"
+                                            autocomplete="off" data-form-type="other"
+                                            class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                                            placeholder="Author Name">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm text-slate-400 mb-1">Character Version</label>
+                                    <input type="text" id="character-card-version"
+                                        autocomplete="off" data-form-type="other"
+                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                                        placeholder="1.0.0">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm text-slate-400 mb-1">Character Book JSON</label>
+                                    <textarea id="character-card-book" rows="4"
+                                        autocomplete="off" data-form-type="other"
+                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none font-mono text-sm"
+                                        placeholder='{"entries": []}'></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm text-slate-400 mb-1">Extensions JSON</label>
+                                    <textarea id="character-card-extensions" rows="4"
+                                        autocomplete="off" data-form-type="other"
+                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none font-mono text-sm"
+                                        placeholder='{}'></textarea>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="avatar-section">
@@ -427,6 +592,8 @@
             </div>
         </div>
     </div>
+
+    <input type="file" id="character-card-import-input" class="hidden" accept=".json,application/json,text/plain">
 
     <script src="js/android-interface.js"></script>
     <script type="module">

@@ -1,7 +1,7 @@
 // Main entry point for the application
 import { loadServerSettings, fetchAvailableModels } from './api-service.js';
 import { loadSettings, getRequireBiometric } from './settings-manager.js';
-import { loadChatHistory, loadChat, chatHistoryData } from './chat-service.js';
+import { loadChatHistory, loadChat, chatHistoryData, activatePendingTemplateCharacterCard } from './chat-service.js';
 import { initializeFileUpload } from './file-upload.js';
 import { initializeEventHandlers } from './event-handlers.js';
 import { hideLoadingIndicatorOnLoad, ensureWelcomeMessagePosition, initializeCollapsibleSections } from './ui-manager.js';
@@ -467,6 +467,8 @@ export async function initializeApp() {
     } catch (error) {
         console.error('Error initializing saved system prompts:', error);
     }
+
+    activatePendingTemplateCharacterCard();
 
     initializeExportImport();
     initializeWhatsNew();

@@ -29,6 +29,7 @@ const WEB_SEARCH_CONTEXT_MAX_LENGTH = 96;
 const WEB_SEARCH_SHORT_QUERY_WORDS = 5;
 const CHAT_IMAGE_STORE_KEY = 'chatImageStore';
 const CHAT_IMAGE_STORE_VERSION = 1;
+const PENDING_TEMPLATE_CHARACTER_CARD_KEY = 'pendingTemplateCharacterCard';
 const IMAGE_FILE_EXTENSION_PATTERN = /\.(?:apng|avif|bmp|gif|jpe?g|png|svg|webp)$/i;
 const WEB_SEARCH_STOP_WORDS = new Set([
     'a', 'an', 'and', 'are', 'as', 'at', 'be', 'because', 'briefly', 'by', 'can', 'could', 'do', 'does',
@@ -3613,6 +3614,90 @@ export function createNewChat() {
     }
 
     return newChatId;
+}
+
+function getPendingTemplateCharacterCardActivation() {
+    const rawActivation = localStorage.getItem(PENDING_TEMPLATE_CHARACTER_CARD_KEY);
+    if (!rawActivation) {
+        return null;
+    }
+
+    try {
+        const parsedActivation = JSON.parse(rawActivation);
+        if (!parsedActivation || typeof parsedActivation !== 'object') {
+            localStorage.removeItem(PENDING_TEMPLATE_CHARACTER_CARD_KEY);
+            return null;
+        }
+
+        return parsedActivation;
+    } catch (error) {
+        debugError('Failed to parse pending template character card activation:', error);
+        localStorage.removeItem(PENDING_TEMPLATE_CHARACTER_CARD_KEY);
+        return null;
+    }
+}
+
+function getCharacterCardActivationGreeting(cardData) {
+    if (!cardData || typeof cardData !== 'object') {
+        return '';
+    }
+
+    if (typeof cardData.first_mes === 'string' && cardData.first_mes.trim()) {
+        return cardData.first_mes.trim();
+    }
+
+    if (Array.isArray(cardData.alternate_greetings)) {
+        const alternateGreeting = cardData.alternate_greetings.find(greeting => typeof greeting === 'string' && greeting.trim());
+        if (alternateGreeting) {
+            return alternateGreeting.trim();
+        }
+    }
+
+    return '';
+}
+
+export function activatePendingTemplateCharacterCard() {
+    const pendingActivation = getPendingTemplateCharacterCardActivation();
+    if (!pendingActivation) {
+        return false;
+    }
+
+    const characterCard = pendingActivation.characterCard;
+    const cardData = characterCard && typeof characterCard === 'object' ? characterCard.data : null;
+    const openingMessage = getCharacterCardActivationGreeting(cardData);
+
+    localStorage.removeItem(PENDING_TEMPLATE_CHARACTER_CARD_KEY);
+
+    if (!cardData || !openingMessage) {
+        return false;
+    }
+
+    const newChatId = createNewChat();
+    const currentChat = chatHistoryData[newChatId];
+
+    if (!currentChat || !Array.isArray(currentChat.messages)) {
+        return false;
+    }
+
+    currentChat.messages.push({
+        role: 'assistant',
+        content: openingMessage,
+        model: getSelectedModel()
+    });
+
+    const preferredTitle = typeof pendingActivation.templateName === 'string' && pendingActivation.templateName.trim()
+        ? pendingActivation.templateName.trim()
+        : (typeof cardData.name === 'string' && cardData.name.trim() ? cardData.name.trim() : null);
+
+    if (preferredTitle) {
+        currentChat.title = preferredTitle;
+    }
+
+    saveChatHistory();
+    hideWelcomeMessage();
+    loadChat(newChatId, true);
+
+    return true;
 }
 
 /**

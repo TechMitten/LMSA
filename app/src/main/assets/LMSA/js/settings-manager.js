@@ -286,6 +286,8 @@ export function initializeSystemPrompt() {
 
       // Clear the active template since the user is manually editing
       localStorage.removeItem("activeTemplateName");
+      localStorage.removeItem("activeTemplateCharacterCard");
+      localStorage.removeItem("pendingTemplateCharacterCard");
 
       debugLog("Saved user-created system prompt:", systemPrompt);
 
@@ -2071,6 +2073,8 @@ export function resetSystemPrompt() {
   localStorage.removeItem("isUserCreatedSystemPrompt");
   // Also clear active template name if it exists
   localStorage.removeItem("activeTemplateName");
+  localStorage.removeItem("activeTemplateCharacterCard");
+  localStorage.removeItem("pendingTemplateCharacterCard");
 
   // Update UI elements
   if (systemPromptInput) {
