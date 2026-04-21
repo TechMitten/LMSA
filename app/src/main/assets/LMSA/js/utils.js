@@ -1259,23 +1259,20 @@ export function processCodeBlocks(content, encode = false) {
 export function scrollToBottom(messagesContainer, force = false) {
     if (!messagesContainer) return;
 
-    // Completely disable auto-scrolling during streaming (when force=true is passed)
-    // This allows users to read anywhere in the chat history while responses are streaming
-    if (force) {
-        return;
-    }
-
-    // Only allow manual scrolling to bottom (when force=false or not specified)
     // Check how far we've scrolled from the bottom
     const distanceFromBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight;
     
     // Use a more generous threshold (50px) to determine if we're already at the bottom
-    // This helps with inconsistent detection across devices
     const bottomThreshold = 50;
     const isAlreadyAtBottom = distanceFromBottom < bottomThreshold;
 
     // If already at bottom and not forcing, just return
     if (isAlreadyAtBottom && !force) {
+        return;
+    }
+
+    // If user has scrolled up significantly, don't auto-scroll unless forced
+    if (!force && window.userHasScrolledUp) {
         return;
     }
 
