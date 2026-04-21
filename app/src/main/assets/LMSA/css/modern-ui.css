@@ -1841,13 +1841,15 @@ body.light-theme #welcome-message {
     max-height: 100dvh !important;
   }
 
-  .android-webview #app-container {
+  .android-webview #app-container,
+  #main-app-container.android-webview {
     height: 100dvh !important;
     max-height: 100dvh !important;
     overflow: hidden !important;
   }
 
-  .android-webview.keyboard-visible #app-container {
+  .android-webview.keyboard-visible #app-container,
+  #main-app-container.android-webview.keyboard-visible {
     height: 100dvh !important;
     padding-bottom: 0 !important;
   }
@@ -1863,16 +1865,13 @@ body.light-theme #welcome-message {
     }
   }
 
-  /* Fix for the white gap issue when keyboard appears */
+  /* android-webview #chat-form: stay in normal flow; native IME inset shrinks the WebView */
   .android-webview #chat-form {
-    position: fixed !important;
-    bottom: 0 !important;
-    width: 100% !important;
     z-index: 1000 !important;
+    width: 100% !important;
   }
 
   .android-webview.keyboard-visible #chat-form {
-    bottom: 0 !important;
     transform: none !important;
     width: 100% !important;
     max-width: 100% !important;

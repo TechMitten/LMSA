@@ -562,6 +562,11 @@ function initializeAndroidKeyboardFix() {
         return;
     }
 
+    const mainAppContainer = document.getElementById('main-app-container');
+    if (mainAppContainer) {
+        mainAppContainer.classList.add('android-webview');
+    }
+
     // With adjustResize, both window.innerHeight and visualViewport.height shrink
     // together when the keyboard opens, so the only reliable detection is comparing
     // window.innerHeight against the original baseline captured before any keyboard input.
@@ -599,43 +604,30 @@ function initializeAndroidKeyboardFix() {
     }
 
     function syncVisibleModalContainers(keyboardOpen) {
+        // Native (WebViewActivity.applySystemBarInsets) consumes the IME inset and
+        // shrinks the WebView above the keyboard, so the visual viewport already
+        // represents the keyboard-free area. Modal containers are position:fixed and
+        // naturally fit that area — applying extra inline sizing or the
+        // `.keyboard-visible` overrides (align-items: stretch + top padding) would
+        // push the modal too high. Just clear any previously-applied inline styles.
         const visibleModalContainers = document.querySelectorAll('.modal-container:not(.hidden)');
-        const visibleViewportMetrics = getVisibleViewportMetrics();
-
         visibleModalContainers.forEach((modal) => {
             if (!(modal instanceof HTMLElement)) {
                 return;
             }
-
-            // The system prompt overlay already manages its own keyboard layout
-            // using visual viewport offsets, so skip the generic modal resize path.
             if (modal.id === 'system-prompt-overlay') {
                 return;
             }
-
-            if (keyboardOpen) {
-                modal.classList.add('keyboard-visible');
-                modal.style.height = `${visibleViewportMetrics.height}px`;
-                modal.style.maxHeight = `${visibleViewportMetrics.height}px`;
-                modal.style.width = `${visibleViewportMetrics.width}px`;
-                modal.style.maxWidth = `${visibleViewportMetrics.width}px`;
-                modal.style.position = 'fixed';
-                modal.style.top = `${visibleViewportMetrics.offsetTop}px`;
-                modal.style.left = `${visibleViewportMetrics.offsetLeft}px`;
-                modal.style.right = 'auto';
-                modal.style.bottom = 'auto';
-            } else {
-                modal.classList.remove('keyboard-visible');
-                modal.style.height = '';
-                modal.style.maxHeight = '';
-                modal.style.width = '';
-                modal.style.maxWidth = '';
-                modal.style.position = '';
-                modal.style.top = '';
-                modal.style.left = '';
-                modal.style.right = '';
-                modal.style.bottom = '';
-            }
+            modal.classList.remove('keyboard-visible');
+            modal.style.height = '';
+            modal.style.maxHeight = '';
+            modal.style.width = '';
+            modal.style.maxWidth = '';
+            modal.style.position = '';
+            modal.style.top = '';
+            modal.style.left = '';
+            modal.style.right = '';
+            modal.style.bottom = '';
         });
     }
 
@@ -644,6 +636,9 @@ function initializeAndroidKeyboardFix() {
         syncVisibleModalContainers(keyboardOpen);
         if (keyboardOpen) {
             document.body.classList.add('keyboard-visible');
+            if (mainAppContainer) {
+                mainAppContainer.classList.add('keyboard-visible');
+            }
 
             // Hide scroll-to-bottom button immediately
             const scrollBtn = document.getElementById('scroll-to-bottom');
@@ -664,6 +659,9 @@ function initializeAndroidKeyboardFix() {
             }
         } else {
             document.body.classList.remove('keyboard-visible');
+            if (mainAppContainer) {
+                mainAppContainer.classList.remove('keyboard-visible');
+            }
         }
     }
 

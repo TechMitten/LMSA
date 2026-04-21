@@ -963,19 +963,16 @@ body.light-theme #loaded-model {
     bottom: 0;
 }
 
-#app-container {
+#app-container,
+#main-app-container {
     height: 100vh !important;
     overflow: auto !important;
     -webkit-overflow-scrolling: touch;
     position: relative;
 }
 
-/* Fix for Android keyboard overlapping input */
+/* android-webview #chat-form: keep in normal flow (native IME inset handles shrinkage) */
 .android-webview #chat-form {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
     z-index: 1000;
     width: 100%;
 }
@@ -1110,7 +1107,8 @@ body.light-theme #loaded-model {
 }
 
 /* Android keyboard fix container */
-.android-webview.keyboard-visible #app-container {
+.android-webview.keyboard-visible #app-container,
+#main-app-container.android-webview.keyboard-visible {
     position: fixed;
     height: 100vh !important;
     max-height: 100vh !important;
@@ -1140,14 +1138,13 @@ body.light-theme #loaded-model {
     padding-bottom: 0 !important;
 }
 
-.android-webview.keyboard-visible #app-container {
+.android-webview.keyboard-visible #app-container,
+#main-app-container.android-webview.keyboard-visible {
     padding-bottom: 0 !important;
     height: 100vh !important;
 }
 
 .android-webview.keyboard-visible #chat-form {
-    position: fixed !important;
-    bottom: 0 !important;
     width: 100% !important;
 }
 

@@ -794,9 +794,19 @@ class WebViewActivity : AppCompatActivity() {
         val rootContainer = findViewById<View>(R.id.rootContainer)
         val bottomSpacer = findViewById<View>(R.id.bottomSpacer)
 
+        // Small gap between the keyboard and the WebView content so the chat input
+        // (and other focused fields) aren't visually flush against the IME.
+        val imeBreathingRoomPx = (resources.displayMetrics.density * 8f).toInt().coerceAtLeast(1)
+
         ViewCompat.setOnApplyWindowInsetsListener(rootContainer) { _, insets ->
             val navigationInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            val targetHeight = navigationInsets.bottom.coerceAtLeast(1)
+            val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
+            // When the IME is visible, expand the bottom spacer to absorb the keyboard
+            // height so the WebView shrinks above it. On Android 15+ (targetSdk 35),
+            // edge-to-edge is enforced and adjustResize no longer shrinks the content
+            // automatically — we must consume the ime inset ourselves.
+            val imeBottom = if (imeInsets.bottom > 0) imeInsets.bottom + imeBreathingRoomPx else 0
+            val targetHeight = maxOf(navigationInsets.bottom, imeBottom).coerceAtLeast(1)
 
             if (bottomSpacer.layoutParams.height != targetHeight) {
                 bottomSpacer.layoutParams = bottomSpacer.layoutParams.apply {

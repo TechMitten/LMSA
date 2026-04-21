@@ -3076,48 +3076,14 @@ function syncRenameModalViewport(modal, baselineHeightRef) {
         return;
     }
 
-    if (!isAndroidWebView()) {
-        clearRenameModalViewportStyles(modal);
-        return;
-    }
-
-    const metrics = getRenameModalViewportMetrics();
-    const input = modal.querySelector('#chat-rename-input');
-    const keyboardHeight = Math.max(0, baselineHeightRef.value - metrics.height);
-    const keyboardOpen = keyboardHeight > 100
-        || (input === document.activeElement && keyboardHeight > 48);
-
-    if (!keyboardOpen) {
-        baselineHeightRef.value = Math.max(baselineHeightRef.value, metrics.height);
-        clearRenameModalViewportStyles(modal);
-        return;
-    }
-
-    const bottomInset = Math.max(40, Math.min(72, Math.round(keyboardHeight * 0.22)));
-    const modalBox = modal.querySelector('.chat-rename-modal-box');
-
-    modal.classList.add('keyboard-visible');
-    modal.style.height = `${metrics.height}px`;
-    modal.style.maxHeight = `${metrics.height}px`;
-    modal.style.width = `${metrics.width}px`;
-    modal.style.maxWidth = `${metrics.width}px`;
-    modal.style.position = 'fixed';
-    modal.style.top = `${metrics.offsetTop}px`;
-    modal.style.left = `${metrics.offsetLeft}px`;
-    modal.style.right = 'auto';
-    modal.style.bottom = 'auto';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    modal.style.padding = `8px 8px ${bottomInset}px`;
-    modal.style.overflow = 'hidden';
-    modal.style.touchAction = 'none';
-
-    if (modalBox) {
-        modalBox.style.maxHeight = `calc(100% - ${bottomInset + 16}px)`;
-        modalBox.style.margin = 'auto';
-        modalBox.style.transform = 'none';
-        modalBox.style.touchAction = 'auto';
-    }
+    // Native (WebViewActivity.applySystemBarInsets) consumes the IME inset and
+    // shrinks the WebView above the keyboard with a small breathing-room gap.
+    // The modal is position:fixed and naturally fits the visible area, so any
+    // extra inline sizing or bottom padding here would push it too high.
+    // Keep this function as a no-op cleanup to clear any stale styles from
+    // older code paths.
+    void baselineHeightRef;
+    clearRenameModalViewportStyles(modal);
 }
 
 function setupRenameModalViewportHandling(modal) {
