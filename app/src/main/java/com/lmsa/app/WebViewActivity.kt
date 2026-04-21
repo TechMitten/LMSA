@@ -776,7 +776,7 @@ class WebViewActivity : AppCompatActivity() {
 
         val controller = WindowCompat.getInsetsController(window, window.decorView)
         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        controller.hide(WindowInsetsCompat.Type.statusBars())
+        controller.hide(WindowInsetsCompat.Type.systemBars())
     }
 
     private fun showSystemBars() {
@@ -787,7 +787,7 @@ class WebViewActivity : AppCompatActivity() {
         }
 
         WindowCompat.getInsetsController(window, window.decorView)
-            .show(WindowInsetsCompat.Type.statusBars())
+            .show(WindowInsetsCompat.Type.systemBars())
     }
 
     private fun applySystemBarInsets() {

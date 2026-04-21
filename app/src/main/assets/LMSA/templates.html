@@ -64,7 +64,7 @@
 
     <div
         class="template-main-container w-full relative flex flex-col bg-slate-900/50 overflow-hidden sm:rounded-[30px] sm:border sm:border-white/10 sm:shadow-2xl ring-1 ring-white/5 backdrop-blur-sm">
-        <header class="flex items-center justify-between px-4 py-4 glass-header sticky top-0 z-30">
+        <header class="template-page-header flex items-center justify-between px-4 py-4 glass-header sticky top-0 z-30">
             <div class="flex items-center space-x-3">
                 <button type="button" class="p-2 -ml-2 rounded-full hover:bg-white/10 transition text-slate-200"
                     onclick="window.location.href='index.html'">
@@ -80,7 +80,7 @@
             </div>
 
         </header>
-        <main class="flex-1 overflow-y-auto p-5 pb-28 scroll-smooth">
+        <main class="template-scroll-area flex-1 overflow-y-auto p-5 pb-28 scroll-smooth">
             <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p class="text-sm text-slate-400 leading-relaxed max-w-2xl">
                     Choose a persona to start your conversation with a specialized context, or import a v2 character card to turn it into a reusable LMSA template.
@@ -255,7 +255,7 @@
 
         </main>
         <div
-            class="template-footer absolute bottom-0 left-0 w-full px-6 pt-12 pb-10 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent z-20">
+            class="template-footer absolute bottom-0 left-0 w-full bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent z-20">
             <button type="button" id="start-chatting-btn"
                 class="w-full bg-primary hover:bg-blue-400 text-white font-semibold py-4 rounded-2xl shadow-lg shadow-blue-500/20 transition-all transform active:scale-[0.98] flex items-center justify-center space-x-2 opacity-50 cursor-not-allowed">
                 <span>Start Chatting</span>

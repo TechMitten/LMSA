@@ -13,6 +13,14 @@
     --blue-400: #60a5fa;
 
     --primary: #60A5FA;
+    --template-mobile-viewport-height: 100vh;
+    --template-mobile-footer-height: 5.75rem;
+}
+
+@supports (height: 100svh) {
+    :root {
+        --template-mobile-viewport-height: 100svh;
+    }
 }
 
 
@@ -898,6 +906,41 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+.template-page-header {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.template-scroll-area {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+}
+
+.template-footer {
+    pointer-events: none;
+    padding: 0.75rem 1.25rem 0.5rem;
+}
+
+.template-footer > * {
+    pointer-events: auto;
+}
+
+.template-footer #start-chatting-btn {
+    margin: 0;
+}
+
+#templates-grid > button,
+.template-secondary-action,
+.template-tab-btn,
+.template-import-btn {
+    touch-action: pan-y;
+}
+
 body {
     min-height: max(884px, 100dvh);
 }
@@ -1275,6 +1318,7 @@ body {
 
 html,
 body {
+    height: 100%;
     overflow-x: hidden;
     width: 100%;
     overscroll-behavior-y: none;
@@ -1283,6 +1327,7 @@ body {
 
 body {
     min-height: 100vh;
+    justify-content: flex-start;
     /* Remove fixed pixel min-height that forces scroll on smaller screens unless intended */
     /* min-height: max(884px, 100dvh); <- this was likely causing scrollbar issues if viewport < 884px */
 }
@@ -1322,25 +1367,41 @@ body {
 
 /* Mobile only - ensure full viewport height */
 @media (max-width: 640px) {
-    .template-main-container {
-        min-height: 100vh;
-        height: auto;
-        max-height: none;
+    body {
+        min-height: var(--template-mobile-viewport-height);
+        height: var(--template-mobile-viewport-height);
+        overflow: hidden;
     }
 
-    main {
-        flex: 0 1 auto;
-        padding-bottom: 1.25rem;
+    .template-main-container {
+        min-height: 100vh;
+        height: var(--template-mobile-viewport-height);
+        max-height: var(--template-mobile-viewport-height);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .template-scroll-area {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding-bottom: calc(var(--template-mobile-footer-height) + 1rem);
     }
 
     .template-footer {
         position: sticky;
         bottom: 0;
-        left: auto;
-        width: auto;
+        left: 0;
+        right: 0;
+        width: 100%;
         margin-top: auto;
         flex-shrink: 0;
-        padding: 0.35rem 1.25rem 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: var(--template-mobile-footer-height);
+        box-sizing: border-box;
+        padding: 0.25rem 1rem 0.25rem;
         background: linear-gradient(to top,
                 rgba(15, 23, 42, 0.98) 0%,
                 rgba(15, 23, 42, 0.92) 72%,
@@ -1354,12 +1415,12 @@ body {
 @media (min-width: 320px) and (max-width: 375px) {
     .template-main-container {
         max-width: 100%;
-        max-height: 100dvh;
-        height: 100dvh;
+        max-height: var(--template-mobile-viewport-height);
+        height: var(--template-mobile-viewport-height);
     }
 
-    main {
-        padding-bottom: 8rem;
+    .template-scroll-area {
+        padding-bottom: calc(var(--template-mobile-footer-height) + 1rem);
     }
 
     #templates-grid {
@@ -1388,12 +1449,12 @@ body {
 @media (min-width: 376px) and (max-width: 480px) {
     .template-main-container {
         max-width: 100%;
-        max-height: 100dvh;
-        height: 100dvh;
+        max-height: var(--template-mobile-viewport-height);
+        height: var(--template-mobile-viewport-height);
     }
 
-    main {
-        padding-bottom: 8rem;
+    .template-scroll-area {
+        padding-bottom: calc(var(--template-mobile-footer-height) + 1rem);
     }
 
     #templates-grid {
@@ -1405,12 +1466,12 @@ body {
 @media (min-width: 481px) and (max-width: 640px) {
     .template-main-container {
         max-width: 600px;
-        max-height: 100dvh;
-        height: 100dvh;
+        max-height: var(--template-mobile-viewport-height);
+        height: var(--template-mobile-viewport-height);
     }
 
-    main {
-        padding-bottom: 8rem;
+    .template-scroll-area {
+        padding-bottom: calc(var(--template-mobile-footer-height) + 1rem);
     }
 
     #templates-grid {
@@ -1434,7 +1495,7 @@ body {
         overflow-y: visible;
     }
 
-    main {
+    .template-scroll-area {
         padding-bottom: 8rem;
         /* Enable scrolling with constrained height */
         overflow-y: auto;
@@ -1470,7 +1531,7 @@ body {
         overflow: visible;
     }
 
-    main {
+    .template-scroll-area {
         padding-bottom: 8rem;
         /* Enable scrolling */
         overflow-y: auto;
@@ -1510,7 +1571,7 @@ body {
         flex-direction: column;
     }
 
-    main {
+    .template-scroll-area {
         padding-bottom: 7rem;
         flex: 1;
         overflow-y: auto;
@@ -1534,7 +1595,7 @@ body {
         flex-direction: column;
     }
 
-    main {
+    .template-scroll-area {
         padding-bottom: 7rem;
         flex: 1;
         overflow-y: auto;
@@ -1680,7 +1741,7 @@ body {
 
 /* Medium height screens (tablets landscape) */
 @media (min-height: 601px) and (max-height: 700px) {
-    main {
+    .template-scroll-area {
         padding: 1rem;
         padding-bottom: 7rem;
     }
@@ -1698,7 +1759,7 @@ body {
         overflow: visible;
     }
 
-    main {
+    .template-scroll-area {
         padding-bottom: 7rem;
         /* Enable scrolling */
         overflow-y: auto;
@@ -2094,12 +2155,14 @@ textarea {
         padding-right: env(safe-area-inset-right);
     }
 
-    header {
-        padding-top: env(safe-area-inset-top);
+    .template-page-header {
+        padding-top: calc(env(safe-area-inset-top) + 0.75rem);
+        padding-bottom: 0.85rem;
     }
 
     .template-footer {
-        padding-bottom: calc(0.8rem + env(safe-area-inset-bottom));
+        min-height: calc(var(--template-mobile-footer-height) + env(safe-area-inset-bottom));
+        padding-bottom: calc(0.25rem + env(safe-area-inset-bottom));
     }
 }
 
