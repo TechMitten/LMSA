@@ -78,9 +78,26 @@ header {
   z-index: 100;
 }
 
-body.light-theme header {
-  background: #f8fafc;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+.mode-indicator-sidebar {
+  user-select: none;
+  font-family: inherit;
+  letter-spacing: 0.02rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #10b981; /* Green */
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.status-text {
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.05rem;
 }
 
 .header-btn {

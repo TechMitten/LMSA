@@ -9,6 +9,7 @@ import {
   openRouterToggleCheckbox,
   openRouterApiKeyInput,
   showModelLabelCheckbox,
+  modeIndicator,
 } from "./dom-elements.js";
 
 import { applyThinkingVisibility, refreshAllMessages, applyModelLabelVisibility } from "./ui-manager.js";
@@ -1312,6 +1313,26 @@ export function getUseOllama() {
 }
 
 /**
+ * Synchronizes the mode indicator icon in the header with the current provider state.
+ * Displays "C" for Cloud (OpenRouter) or "L" for Local Server.
+ * @param {boolean} isCloudMode
+ */
+function syncModeIndicator(isCloudMode) {
+  if (!modeIndicator) return;
+
+  const statusText = modeIndicator.querySelector('.status-text');
+  if (!statusText) return;
+
+  if (isCloudMode) {
+    statusText.textContent = "OPEN ROUTER";
+    modeIndicator.title = "Current AI Mode: Cloud (OpenRouter)";
+  } else {
+    statusText.textContent = "LOCAL SERVER";
+    modeIndicator.title = "Current AI Mode: Local Server";
+  }
+}
+
+/**
  * Updates the OpenRouter UI: shows/hides connection panels and selector button states,
  * and disables Smart Reply when OpenRouter is enabled (incompatible features).
  * @param {boolean} isEnabled
@@ -1321,6 +1342,9 @@ function updateOpenRouterUI(isEnabled) {
   const openRouterPanel = document.getElementById('openrouter-settings');
   const localBtn = document.getElementById('select-local-server');
   const openRouterBtn = document.getElementById('select-openrouter');
+
+  // Update header mode indicator
+  syncModeIndicator(isEnabled);
 
   if (isEnabled) {
     if (localPanel) localPanel.classList.add('hidden');
