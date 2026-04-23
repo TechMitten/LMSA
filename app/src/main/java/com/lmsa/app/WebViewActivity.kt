@@ -211,10 +211,14 @@ class WebViewActivity : AppCompatActivity() {
         
         updatePremiumUiState()
 
-        // Initialize Mobile Ads only after restoring persisted premium state.
-        // This prevents App Open ad loading on paid users during cold-start races.
-        MobileAds.initialize(this) {
-            loadAppOpenAd()
+        // Initialize Mobile Ads only when network is available so offline startup stays responsive.
+        // This also prevents ad SDK connection delays from affecting cold starts.
+        if (isNetworkAvailable()) {
+            MobileAds.initialize(this) {
+                loadAppOpenAd()
+            }
+        } else {
+            Log.d(TAG, "Network unavailable at startup; skipping ad initialization")
         }
 
         // Initialize AudioManager for TTS audio focus management
@@ -2412,11 +2416,16 @@ class WebViewActivity : AppCompatActivity() {
     inner class NetworkInterface {
         @JavascriptInterface
         fun fetch(url: String): String? {
+            if (!isNetworkAvailable()) {
+                Log.d(TAG, "NetworkInterface skipped because network is unavailable")
+                return null
+            }
+
             return try {
                 val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
                 connection.requestMethod = "GET"
-                connection.connectTimeout = 10000
-                connection.readTimeout = 10000
+                connection.connectTimeout = 3000
+                connection.readTimeout = 3000
                 connection.setRequestProperty("Accept", "application/json")
                 connection.setRequestProperty("User-Agent", "LMSA-Android-App")
 

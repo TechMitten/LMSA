@@ -36,7 +36,7 @@
             };
             
             // Use the browser bundle that doesn't use AMD/CommonJS
-            script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+            script.src = 'vendor/js/marked.min.js';
             
             // Use defer to ensure it loads after Monaco but doesn't block rendering
             script.defer = true;

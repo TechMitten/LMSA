@@ -332,7 +332,13 @@ export async function initializeApp() {
     const aboutButton = document.getElementById('about-btn');
 
     // Load critical settings first
-    loadServerSettings(); // This will also fetch available models
+    setTimeout(() => {
+        try {
+            loadServerSettings(); // This will also fetch available models
+        } catch (error) {
+            console.warn('Server settings load failed (non-blocking):', error);
+        }
+    }, 0);
     loadSettings();
     ensureBiometricUnlockButton();
 

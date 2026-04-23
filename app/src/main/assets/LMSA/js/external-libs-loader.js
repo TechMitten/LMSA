@@ -13,7 +13,7 @@ window.loadJSZipLibrary = function () {
 
         window._jsZipLoading = new Promise((loadResolve, loadReject) => {
             const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+            script.src = 'vendor/js/jszip.min.js';
             script.integrity = 'sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==';
             script.crossOrigin = 'anonymous';
             script.onload = () => {
@@ -46,7 +46,7 @@ window.loadTesseractLibrary = function () {
 
         window._tesseractLoading = new Promise((loadResolve, loadReject) => {
             const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.4/dist/tesseract.min.js';
+            script.src = 'vendor/js/tesseract.min.js';
             script.crossOrigin = 'anonymous';
             script.onload = () => {
                 console.log('Tesseract loaded successfully');
@@ -87,7 +87,7 @@ window.loadPDFLibrary = function () {
             // Create a unique script element to avoid conflicts
             const script = document.createElement('script');
             script.id = 'pdfjs-loader-' + Date.now();
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            script.src = 'vendor/pdfjs/pdf.min.js';
 
             script.onload = function () {
                 console.log('PDF.js script loaded, checking availability...');
@@ -100,12 +100,12 @@ window.loadPDFLibrary = function () {
                     attempts++;
 
                     if (window.pdfjsLib) {
-                        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';
                         console.log('PDF.js found as pdfjsLib and configured successfully');
                         loadResolve();
                     } else if (window.PDFJS) {
                         window.pdfjsLib = window.PDFJS;
-                        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';
                         console.log('PDF.js found as PDFJS and configured successfully');
                         loadResolve();
                     } else if (attempts < maxAttempts) {
@@ -224,12 +224,12 @@ window.loadKaTeXLibrary = function () {
                 const link = document.createElement('link');
                 link.id = 'katex-css';
                 link.rel = 'stylesheet';
-                link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css';
+                link.href = 'vendor/css/katex.min.css';
                 link.crossOrigin = 'anonymous';
                 document.head.appendChild(link);
             }
             const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js';
+            script.src = 'vendor/js/katex.min.js';
             script.crossOrigin = 'anonymous';
             script.onload = () => {
                 console.log('KaTeX loaded successfully');

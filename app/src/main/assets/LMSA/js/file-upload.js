@@ -1071,6 +1071,9 @@ async function extractPdfText(input) {
 
                         // Perform OCR on the rendered page with optimized settings
                         const { data: { text } } = await Tesseract.recognize(imageData, 'eng', {
+                            workerPath: 'vendor/tesseract/worker.min.js',
+                            corePath: 'vendor/tesseract/tesseract-core.wasm.js',
+                            langPath: 'vendor/tesseract/lang-data',
                             logger: m => {
                                 if (m.status === 'recognizing text') {
                                     console.log(`OCR progress for page ${pageNum}: ${Math.round(m.progress * 100)}%`);
