@@ -580,6 +580,8 @@ function initializeAndroidKeyboardFix() {
 
     // Track orientation changes so we can reset the baseline after rotation
     let baselineHeight = initialViewportHeight;
+    let lastAppliedKeyboardState = false;
+    let viewportRafId = null;
     window.addEventListener('orientationchange', () => {
         // After rotation settles, recapture the baseline
         setTimeout(() => {
@@ -638,6 +640,11 @@ function initializeAndroidKeyboardFix() {
     }
 
     function applyKeyboardState(keyboardOpen) {
+        if (keyboardOpen === lastAppliedKeyboardState) {
+            return;
+        }
+
+        lastAppliedKeyboardState = keyboardOpen;
         window.androidKeyboardVisible = keyboardOpen;
         syncVisibleModalContainers(keyboardOpen);
         if (keyboardOpen) {
@@ -671,18 +678,35 @@ function initializeAndroidKeyboardFix() {
         }
     }
 
-    function handleKeyboardViewportChange() {
+    function handleKeyboardViewportChangeNow() {
         const currentHeight = window.innerHeight;
         const keyboardHeight = baselineHeight - currentHeight;
         androidKeyboardHeight = Math.max(0, keyboardHeight);
 
-        if (keyboardHeight > 150) {
-            applyKeyboardState(true);
-        } else {
-            applyKeyboardState(false);
+        // Use hysteresis to avoid rapid open/close flips while the IME animates.
+        const openThresholdPx = 150;
+        const closeThresholdPx = 110;
+        const isKeyboardOpen = lastAppliedKeyboardState
+            ? keyboardHeight > closeThresholdPx
+            : keyboardHeight > openThresholdPx;
+
+        applyKeyboardState(isKeyboardOpen);
+
+        if (!isKeyboardOpen) {
             // Keep baseline updated when keyboard is not open (e.g. after rotation)
             baselineHeight = Math.max(baselineHeight, currentHeight);
         }
+    }
+
+    function handleKeyboardViewportChange() {
+        if (viewportRafId !== null) {
+            cancelAnimationFrame(viewportRafId);
+        }
+
+        viewportRafId = requestAnimationFrame(() => {
+            viewportRafId = null;
+            handleKeyboardViewportChangeNow();
+        });
     }
 
     // Window resize handles the Android adjustResize change for shared modals.
