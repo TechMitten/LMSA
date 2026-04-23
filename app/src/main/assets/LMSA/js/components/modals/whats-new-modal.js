@@ -13,7 +13,7 @@ export const whatsNewModal = `
                     <div class="flex flex-col">
                         <span class="text-blue-400 font-extrabold">What's New</span>
                         <span class="text-xs text-blue-300/80 font-medium">v<span
-                            id="whats-new-version">10.13</span></span>
+                            id="whats-new-version">10.14</span></span>
                     </div>
                 </h2>
                 <button id="close-whats-new"
@@ -24,6 +24,25 @@ export const whatsNewModal = `
 
                     <div class="features-container overflow-y-auto grow px-1 py-2">
                 <div class="space-y-3">
+                    <div class="feature-item">
+                        <div class="relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-slate-500/10 to-gray-700/5 rounded-full blur-xl"></div>
+                            <div class="flex items-start relative z-10">
+                                <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-slate-500/20 w-10 h-10 shadow-sm">
+                                    <i class="fas fa-plane text-slate-300"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <h3 class="feature-title underline decoration-slate-500/30 underline-offset-4">Offline Access</h3>
+                                    </div>
+                                    <div class="feature-description">
+                                        <p class="mb-3 text-sm">Core app features now work seamlessly without an internet connection. Use Local Server chat, saved chats, templates, and all main functionality offline.</p>
+                                        <p class="mb-3 text-sm text-gray-400 text-xs italic">Note: OpenRouter API calls and web search require an active internet connection.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="feature-item">
                         <div class="relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-rose-500/10 to-orange-700/5 rounded-full blur-xl"></div>
@@ -58,7 +77,7 @@ export const whatsNewModal = `
                                         <h3 class="feature-title underline decoration-green-500/30 underline-offset-4">Real-Time Web Search</h3>
                                     </div>
                                     <div class="feature-description">
-                                        <p class="mb-3 text-sm">Augment AI responses with real-time data from the web! Toggle it effortlessly via the <span class="text-green-400 font-semibold">globe icon</span> in the header or in Settings.</p>
+                                        <p class="mb-3 text-sm">Augment AI responses with real-time data from the web! Toggle it effortlessly via the <span class="font-semibold">globe icon</span> in the header or in Settings.</p>
                                         <p class="mb-3 text-sm">When enabled, the AI performs a live search to provide up-to-date answers on recent events, news, or complex facts.</p>
                                     </div>
                                 </div>
@@ -257,10 +276,8 @@ export const whatsNewModal = `
                                         <h3 class="feature-title">Smart Reply</h3>
                                     </div>
                                     <div class="feature-description">
-                                        <p class="mb-3">Experience faster conversations with AI-powered smart replies. After each AI response, you'll see 3 contextually relevant suggestions that you can click to instantly continue the conversation.</p>
-                                        <p class="mb-3">Simply tap a suggestion to automatically send it - no typing required. Perfect for quick follow-ups and keeping conversations flowing naturally.</p>
-                                        <p class="mb-3">Enable or disable this feature in Settings under "Enable Smart Reply". Suggestions are tailored to your conversation context for maximum relevance.</p>
-                                        <p class="text-yellow-300/90 text-xs italic border-l-2 border-yellow-500/50 pl-2 py-1 bg-yellow-500/5 rounded-r"><strong>Note:</strong> Smart Reply is currently in <span class="font-semibold">BETA</span>. The quality of suggestions will vary depending on which AI model you're using. Some models may provide more relevant responses than others.</p>
+                                        <p class="mb-3">Get 3 AI-powered suggestions after each response. Tap any suggestion to instantly send it - no typing required.</p>
+                                        <p class="mb-3 text-yellow-300/90 text-xs italic border-l-2 border-yellow-500/50 pl-2 py-1 bg-yellow-500/5 rounded-r"><strong>Note:</strong> Smart Reply is in <span class="font-semibold">BETA</span> - suggestion quality varies by AI model. Toggle in Settings.</p>
                                     </div>
                                 </div>
                             </div>
