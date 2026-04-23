@@ -4,6 +4,10 @@ import { debugLog, debugError } from './utils.js';
 import { showConfirmationModal } from './ui-manager.js';
 import { setActionToPerform } from './shared-state.js';
 
+const INTRO_COMPLETED_KEY = 'lmsa_intro_completed';
+const INTRO_VERSION_KEY = 'lmsa_intro_version';
+const WELCOME_SETTINGS_TAPPED_KEY = 'welcomeSettingsTapped';
+
 /**
  * Resets the entire application to its default state
  * - Deletes all chats
@@ -13,6 +17,16 @@ import { setActionToPerform } from './shared-state.js';
 export function resetApp() {
     try {
         console.log('RESET APP: Starting app reset to default state');
+
+        // Reset native onboarding state so first-run intro can appear again after reload.
+        try {
+            if (window.AndroidBilling && typeof window.AndroidBilling.setOnboardingCompleted === 'function') {
+                window.AndroidBilling.setOnboardingCompleted(false);
+                console.log('RESET APP: Cleared native onboarding completion state');
+            }
+        } catch (error) {
+            console.error('RESET APP: Error clearing native onboarding state:', error);
+        }
 
         // 1. Clear all chats first
         try {
@@ -43,7 +57,10 @@ export function resetApp() {
             'reasoningTimeout',
             'useOpenRouter',
             'openRouterApiKey',
-            'openRouterSelectedModel'
+            'openRouterSelectedModel',
+            INTRO_COMPLETED_KEY,
+            INTRO_VERSION_KEY,
+            WELCOME_SETTINGS_TAPPED_KEY
         ];
 
         console.log('RESET APP: Clearing localStorage items...');
