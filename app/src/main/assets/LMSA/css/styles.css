@@ -3964,6 +3964,46 @@ body.light-theme #clear-system-prompt-modal #close-clear-system-prompt-modal:hov
     margin: 0 auto !important;
 }
 
+.modal-container.modal-input-keyboard-fit {
+    align-items: stretch !important;
+    justify-content: flex-end !important;
+    --modal-keyboard-bottom-gap: 10px;
+    padding-top: env(safe-area-inset-top) !important;
+    padding-right: env(safe-area-inset-right) !important;
+    padding-bottom: calc(env(safe-area-inset-bottom) + var(--modal-keyboard-bottom-gap)) !important;
+    padding-left: env(safe-area-inset-left) !important;
+    overflow: hidden !important;
+}
+
+.modal-container.modal-input-keyboard-fit .modal-content,
+.modal-container.modal-input-keyboard-fit .connection-input-modal-box,
+.modal-container.modal-input-keyboard-fit .chat-rename-modal-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 100% !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.modal-container.modal-input-keyboard-fit .modal-content,
+.modal-container.modal-input-keyboard-fit .connection-input-modal-box,
+.modal-container.modal-input-keyboard-fit .chat-rename-modal-box {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modal-container.modal-input-keyboard-fit .connection-input-modal-box,
+.modal-container.modal-input-keyboard-fit .chat-rename-modal-box {
+    align-self: flex-end;
+}
+
+.modal-container.modal-input-keyboard-fit .connection-input-modal-accent {
+    border-radius: 0 !important;
+}
+
 #chat-rename-modal .chat-rename-modal-box {
     display: flex;
     flex-direction: column;

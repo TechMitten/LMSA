@@ -899,6 +899,47 @@ function initializeAndroidKeyboardFix() {
         };
     }
 
+    function isVisibleTextEntryField(element) {
+        if (!(element instanceof HTMLElement)) {
+            return false;
+        }
+
+        if (element.disabled || element.readOnly) {
+            return false;
+        }
+
+        if (element instanceof HTMLInputElement) {
+            const type = (element.type || 'text').toLowerCase();
+            const allowedTypes = new Set(['text', 'password', 'search', 'url', 'email', 'tel', 'number']);
+            if (!allowedTypes.has(type)) {
+                return false;
+            }
+        } else if (!(element instanceof HTMLTextAreaElement)) {
+            return false;
+        }
+
+        const styles = window.getComputedStyle(element);
+        if (styles.display === 'none' || styles.visibility === 'hidden') {
+            return false;
+        }
+
+        return true;
+    }
+
+    function modalSupportsKeyboardFit(modal) {
+        const candidates = modal.querySelectorAll('input, textarea');
+        return Array.from(candidates).some(isVisibleTextEntryField);
+    }
+
+    function modalHasFocusedTextEntry(modal) {
+        const active = document.activeElement;
+        if (!(active instanceof HTMLElement) || !modal.contains(active)) {
+            return false;
+        }
+
+        return isVisibleTextEntryField(active);
+    }
+
     function syncVisibleModalContainers(keyboardOpen) {
         // Native (WebViewActivity.applySystemBarInsets) consumes the IME inset and
         // shrinks the WebView above the keyboard, so the visual viewport already
@@ -915,6 +956,7 @@ function initializeAndroidKeyboardFix() {
                 return;
             }
             modal.classList.remove('keyboard-visible');
+            modal.classList.remove('modal-input-keyboard-fit');
             modal.style.height = '';
             modal.style.maxHeight = '';
             modal.style.width = '';
@@ -924,6 +966,16 @@ function initializeAndroidKeyboardFix() {
             modal.style.left = '';
             modal.style.right = '';
             modal.style.bottom = '';
+
+            if (!keyboardOpen) {
+                return;
+            }
+
+            if (!modalSupportsKeyboardFit(modal) || !modalHasFocusedTextEntry(modal)) {
+                return;
+            }
+
+            modal.classList.add('modal-input-keyboard-fit');
         });
     }
 
@@ -999,6 +1051,12 @@ function initializeAndroidKeyboardFix() {
 
     // Window resize handles the Android adjustResize change for shared modals.
     window.addEventListener('resize', handleKeyboardViewportChange);
+
+    // Keep modal keyboard-fit state synchronized when focus moves between fields.
+    document.addEventListener('focusin', handleKeyboardViewportChange, true);
+    document.addEventListener('focusout', () => {
+        requestAnimationFrame(handleKeyboardViewportChange);
+    }, true);
 }
 
 // Initialize the application when the DOM is loaded and terms are accepted

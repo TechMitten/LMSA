@@ -1678,22 +1678,39 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
-    private fun startBillingConnection() {
+    private fun startBillingConnection(queryOnConnected: Boolean = true, onConnected: (() -> Unit)? = null) {
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    queryPurchases()
+                    if (queryOnConnected) {
+                        queryPurchases()
+                    }
+                    onConnected?.invoke()
                 }
             }
             override fun onBillingServiceDisconnected() {
                 Log.w(TAG, "Billing service disconnected, attempting reconnect")
-                startBillingConnection()
+                startBillingConnection(queryOnConnected, onConnected)
             }
         })
     }
 
-    private fun queryPurchases() {
-        if (!billingClient.isReady) return
+    private fun notifyRestorePurchasesResult(success: Boolean, message: String) {
+        runOnUiThread {
+            val webView: WebView = findViewById(R.id.webView)
+            val escapedMessage = escapeJsString(message)
+            val jsCommand = "if (window.onRestorePurchasesResult) window.onRestorePurchasesResult(${if (success) "true" else "false"}, '$escapedMessage');"
+            webView.evaluateJavascript(jsCommand, null)
+        }
+    }
+
+    private fun queryPurchases(notifyRestoreResult: Boolean = false) {
+        if (!billingClient.isReady) {
+            if (notifyRestoreResult) {
+                notifyRestorePurchasesResult(false, "Billing is not ready yet. Please try again in a moment.")
+            }
+            return
+        }
         
         val params = QueryPurchasesParams.newBuilder()
             .setProductType(BillingClient.ProductType.INAPP)
@@ -1716,8 +1733,19 @@ class WebViewActivity : AppCompatActivity() {
                 }
 
                 markStartupEntitlementResolved("queryPurchases")
+
+                if (notifyRestoreResult) {
+                    if (hasPremium) {
+                        notifyRestorePurchasesResult(true, "Purchase restored successfully. Premium is now active.")
+                    } else {
+                        notifyRestorePurchasesResult(false, "No previous purchase was found for this Google account.")
+                    }
+                }
             } else {
                 Log.w(TAG, "queryPurchases failed during startup: ${billingResult.responseCode} ${billingResult.debugMessage}")
+                if (notifyRestoreResult) {
+                    notifyRestorePurchasesResult(false, "Unable to check purchases right now. Please try again.")
+                }
             }
         }
     }
@@ -1811,7 +1839,16 @@ class WebViewActivity : AppCompatActivity() {
             runOnUiThread {
                 Toast.makeText(this@WebViewActivity, "Checking for purchases...", Toast.LENGTH_SHORT).show()
             }
-            queryPurchases()
+
+            if (billingClient.isReady) {
+                queryPurchases(notifyRestoreResult = true)
+                return
+            }
+
+            Log.w(TAG, "Billing client not ready, reconnecting before restore")
+            startBillingConnection(queryOnConnected = false) {
+                queryPurchases(notifyRestoreResult = true)
+            }
         }
 
         @JavascriptInterface

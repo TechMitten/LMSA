@@ -10,18 +10,37 @@ function watchRewardedPremiumAd() {
     console.log('Rewarded ads have been removed.');
 }
 
+let restorePurchasesPending = false;
+
 function restorePurchases() {
-    // Check if the AndroidBilling interface is available
     if (window.AndroidBilling && typeof window.AndroidBilling.restorePurchases === 'function') {
+        if (restorePurchasesPending) {
+            return;
+        }
+
+        restorePurchasesPending = true;
         console.log('Calling AndroidBilling.restorePurchases()');
         window.AndroidBilling.restorePurchases();
-        // You can optionally show a message to the user, like an alert.
-        alert('Attempting to restore purchases. If you have a valid purchase, your premium status will be updated shortly.');
     } else {
         console.log('Billing interface not available. This is not an Android app environment.');
         alert('This feature is only available in the Android app.');
     }
 }
+
+window.onRestorePurchasesResult = function (success, message) {
+    restorePurchasesPending = false;
+
+    if (typeof message === 'string' && message.trim().length > 0) {
+        alert(message);
+        return;
+    }
+
+    if (success) {
+        alert('Purchase restored successfully. Premium is now active.');
+    } else {
+        alert('No previous purchase was found for this account.');
+    }
+};
 
 function getPremiumStateSnapshot() {
     return window.LMSAPremiumState || {
