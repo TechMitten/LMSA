@@ -159,7 +159,102 @@ export function initializeEventHandlers() {
         }, delayMs);
     };
 
+    const bindSidebarScrollableTap = (element, callback) => {
+        if (!element || typeof callback !== 'function') {
+            return;
+        }
+
+        const TOUCH_SCROLL_GUARD_SLOP = 4;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchMoved = false;
+        let touchStartScrollTop = 0;
+        let suppressClickUntil = 0;
+
+        const getSidebarScrollTop = () => {
+            const sidebarScrollContent = document.getElementById('sidebar-scroll-content');
+            if (sidebarScrollContent) {
+                return sidebarScrollContent.scrollTop;
+            }
+
+            const sidebarElement = document.getElementById('sidebar');
+            return sidebarElement ? sidebarElement.scrollTop : 0;
+        };
+
+        element.addEventListener('touchstart', (e) => {
+            const touch = e.touches && e.touches[0];
+            if (!touch) {
+                touchMoved = false;
+                return;
+            }
+
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            touchMoved = false;
+            touchStartScrollTop = getSidebarScrollTop();
+        }, { passive: true });
+
+        element.addEventListener('touchmove', (e) => {
+            const touch = e.touches && e.touches[0];
+            if (!touch || touchMoved) {
+                return;
+            }
+
+            const deltaX = Math.abs(touch.clientX - touchStartX);
+            const deltaY = Math.abs(touch.clientY - touchStartY);
+            const scrollDelta = Math.abs(getSidebarScrollTop() - touchStartScrollTop);
+
+            if (deltaX > TOUCH_SCROLL_GUARD_SLOP || deltaY > TOUCH_SCROLL_GUARD_SLOP || scrollDelta > 0) {
+                touchMoved = true;
+                setPressedState(element, false);
+                element.blur();
+            }
+        }, { passive: true });
+
+        element.addEventListener('touchend', (e) => {
+            const scrollDelta = Math.abs(getSidebarScrollTop() - touchStartScrollTop);
+            if (scrollDelta > 0) {
+                touchMoved = true;
+            }
+
+            if (touchMoved) {
+                touchMoved = false;
+                if (e.cancelable) {
+                    e.preventDefault();
+                }
+                e.stopPropagation();
+                suppressClickUntil = Date.now() + 250;
+                setPressedState(element, false);
+                element.blur();
+                return;
+            }
+        }, { passive: false });
+
+        element.addEventListener('touchcancel', () => {
+            touchMoved = false;
+            setPressedState(element, false);
+            element.blur();
+        }, { passive: true });
+
+        element.addEventListener('click', (e) => {
+            if (Date.now() < suppressClickUntil) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
+
+            runAfterPressIn(element, () => {
+                callback();
+                element.blur();
+            });
+        });
+    };
+
     const openPremiumFlow = () => {
+        if (typeof window.hasPremiumAccess === 'function' && window.hasPremiumAccess()) {
+            return;
+        }
+
         // Prefer opening the premium modal; fall back to direct purchase only if needed.
         if (typeof window.openPremiumModal === 'function') {
             window.openPremiumModal();
@@ -314,15 +409,17 @@ export function initializeEventHandlers() {
             openPremiumFlow();
         };
 
-        sidebarPremiumButton.addEventListener('click', openSidebarPremiumFlow);
-        sidebarPremiumButton.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            runAfterPressIn(sidebarPremiumButton, () => {
-                openSidebarPremiumFlow();
-                sidebarPremiumButton.blur();
-            });
-        }, { passive: false });
+        bindSidebarScrollableTap(sidebarPremiumButton, openSidebarPremiumFlow);
+    }
+
+    const restorePurchasesBtn = document.getElementById('restore-purchases-button');
+    if (restorePurchasesBtn) {
+        bindPressInFeedback(restorePurchasesBtn);
+        bindSidebarScrollableTap(restorePurchasesBtn, () => {
+            if (typeof window.restorePurchases === 'function') {
+                window.restorePurchases();
+            }
+        });
     }
 
     // Welcome "Saved" button (previously used inline onclick)
@@ -669,7 +766,9 @@ export function initializeEventHandlers() {
     // Legacy Access button
     const legacyAccessBtn = document.getElementById('legacy-access-btn');
     if (legacyAccessBtn) {
-        legacyAccessBtn.addEventListener('click', () => {
+        bindPressInFeedback(legacyAccessBtn);
+
+        bindSidebarScrollableTap(legacyAccessBtn, () => {
             // Close the sidebar first
             closeSidebar();
 

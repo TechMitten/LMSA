@@ -120,7 +120,7 @@ export const premiumModal = `
 
                     <!-- Trust indicator -->
                     <p class="premium-modal-trust" style="color: var(--text-secondary); font-size: 0.7rem; margin: 0.625rem 0 0 0; opacity: 0.8; flex-shrink: 0;">
-                        Secure payment • 10k+ Installs
+                        Pricing shown on next page
                     </p>
                 </div>
             </div>

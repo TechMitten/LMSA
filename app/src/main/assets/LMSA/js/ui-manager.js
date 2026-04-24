@@ -150,14 +150,16 @@ export function showWelcomeMessage() {
             messagesContainer.style.visibility = 'hidden';
             messagesContainer.style.display = 'none';
         }
-        // Show the Remove Ads banner when welcome screen is displayed (for non-premium users)
+        // Show the premium banner in the correct state when welcome screen is displayed.
         const removeAdsBanner = document.getElementById('remove-ads-banner');
         if (removeAdsBanner) {
-            // Only show if user is not premium
             const isPremium = typeof window.hasPremiumAccess === 'function'
                 ? window.hasPremiumAccess()
                 : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
-            if (!isPremium) {
+
+            if (typeof window.updateUiForPremium === 'function') {
+                window.updateUiForPremium(!!isPremium);
+            } else {
                 removeAdsBanner.style.display = 'flex';
             }
         }

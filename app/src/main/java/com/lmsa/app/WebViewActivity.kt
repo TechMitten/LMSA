@@ -89,14 +89,17 @@ class WebViewActivity : AppCompatActivity() {
     private var exitConfirmationDialog: AlertDialog? = null
     
     // App Open Ad
-    private val APP_OPEN_AD_UNIT_ID = "ca-app-pub-1388425042154340/2733504962"
+    private val APP_OPEN_AD_UNIT_ID_PROD = "ca-app-pub-1388425042154340/2733504962"
+    private val APP_OPEN_AD_UNIT_ID_TEST = "ca-app-pub-3940256099942544/9257395921"
     private val WARM_START_AD_OPPORTUNITY_MS = 1500L
+    private val APP_OPEN_AD_MAX_AGE_MS = 4 * 60 * 60 * 1000L
     private val APP_OPEN_ELIGIBLE_AFTER_COUNT = 3
     private val APP_OPEN_MIN_INTERVAL_FREE_USER_MS = 15 * 60 * 1000L
     private val APP_OPEN_MIN_INTERVAL_AFTER_FOURTH_DAILY_AD_MS = 10 * 60 * 1000L
     private val APP_OPEN_MIN_INTERVAL_DEBUG_MS = 1 * 60 * 1000L
     private val APP_OPEN_DAILY_CAP_FREE_USER = 8
     private var appOpenAd: AppOpenAd? = null
+    private var appOpenAdLoadedAtMs = 0L
     private var isLoadingAppOpenAd = false
     private var isSplashOverlayVisible = true
     private var hasStartupPageFinished = false
@@ -223,6 +226,7 @@ class WebViewActivity : AppCompatActivity() {
         isDebugMode = prefs.getBoolean(PREF_IS_DEBUG_MODE, false)
         
         updatePremiumUiState()
+        beginWarmStartAdOpportunity()
 
         // Initialize Mobile Ads only when network is available so offline startup stays responsive.
         // This also prevents ad SDK connection delays from affecting cold starts.
@@ -427,7 +431,7 @@ class WebViewActivity : AppCompatActivity() {
                 }
             }
 
-        WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
+        syncWebContentsDebuggingState()
 
         val webView: WebView = findViewById(R.id.webView)
         val webSettings: WebSettings = webView.settings
@@ -656,6 +660,12 @@ class WebViewActivity : AppCompatActivity() {
         return isPremium && !isDebugMode
     }
 
+    private fun syncWebContentsDebuggingState() {
+        runOnUiThread {
+            WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG || isDebugMode)
+        }
+    }
+
     private fun syncCurrentTTSVoiceToAccessLevel() {
         val tts = textToSpeech ?: return
         if (!isTTSInitialized) return
@@ -729,6 +739,26 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
+    private fun getAppOpenAdUnitId(): String {
+        return if (isDebugMode) APP_OPEN_AD_UNIT_ID_TEST else APP_OPEN_AD_UNIT_ID_PROD
+    }
+
+    private fun isAppOpenAdFresh(now: Long = System.currentTimeMillis()): Boolean {
+        if (appOpenAd == null || appOpenAdLoadedAtMs <= 0L) {
+            return false
+        }
+        val ageMs = now - appOpenAdLoadedAtMs
+        return ageMs in 0..APP_OPEN_AD_MAX_AGE_MS
+    }
+
+    private fun clearCachedAppOpenAd(reason: String) {
+        if (appOpenAd != null) {
+            Log.d(TAG, "Clearing cached App Open ad: $reason")
+        }
+        appOpenAd = null
+        appOpenAdLoadedAtMs = 0L
+    }
+
     private fun showPostAppOpenPremiumCta() {
         runOnUiThread {
             val webView: WebView = findViewById(R.id.webView)
@@ -770,25 +800,34 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun loadAppOpenAd() {
-        if (isLoadingAppOpenAd || appOpenAd != null) return
+        if (isLoadingAppOpenAd) return
         if (hasEffectivePremium()) {
             Log.d(TAG, "App Open ad blocked: effective premium user")
             return
         }
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val now = System.currentTimeMillis()
+        if (appOpenAd != null) {
+            if (isAppOpenAdFresh(now)) {
+                return
+            }
+            clearCachedAppOpenAd("cached ad expired before reload")
+        }
         if (!isAppOpenAdEligible(prefs, now)) return
 
         isLoadingAppOpenAd = true
+        val appOpenAdUnitId = getAppOpenAdUnitId()
+
         AppOpenAd.load(
             this,
-            APP_OPEN_AD_UNIT_ID,
+            appOpenAdUnitId,
             AdRequest.Builder().build(),
             object : AppOpenAd.AppOpenAdLoadCallback() {
                 override fun onAdLoaded(ad: AppOpenAd) {
                     appOpenAd = ad
+                    appOpenAdLoadedAtMs = System.currentTimeMillis()
                     isLoadingAppOpenAd = false
-                    Log.d(TAG, "App Open ad loaded")
+                    Log.d(TAG, "App Open ad loaded (unit=${if (isDebugMode) "TEST" else "PROD"})")
                     runOnUiThread {
                         showAppOpenAdIfReady()
                         maybeHideStartupSplash("onAppOpenAdLoaded")
@@ -846,14 +885,21 @@ class WebViewActivity : AppCompatActivity() {
             clearWarmStartAdOpportunity()
             return
         }
+        val now = System.currentTimeMillis()
         val ad = appOpenAd ?: return
+        if (!isAppOpenAdFresh(now)) {
+            clearCachedAppOpenAd("cached ad expired before show")
+            if (isNetworkAvailable()) {
+                loadAppOpenAd()
+            }
+            return
+        }
         if (hasEffectivePremium()) {
-            appOpenAd = null
+            clearCachedAppOpenAd("effective premium user")
             clearWarmStartAdOpportunity()
             return
         }
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        val now = System.currentTimeMillis()
         if (!isAppOpenAdEligible(prefs, now)) {
             clearWarmStartAdOpportunity()
             return
@@ -875,7 +921,7 @@ class WebViewActivity : AppCompatActivity() {
                     incrementAppOpenDailyCounter(prefs)
                 }
                 showPostAppOpenPremiumCta()
-                appOpenAd = null
+                clearCachedAppOpenAd("ad dismissed")
                 if (isNetworkAvailable()) {
                     loadAppOpenAd()
                 }
@@ -884,7 +930,7 @@ class WebViewActivity : AppCompatActivity() {
 
             override fun onAdFailedToShowFullScreenContent(adError: AdError) {
                 Log.e(TAG, "App Open ad failed to show: ${adError.message}")
-                appOpenAd = null
+                clearCachedAppOpenAd("failed to show")
                 if (isNetworkAvailable()) {
                     loadAppOpenAd()
                 }
@@ -1876,6 +1922,11 @@ class WebViewActivity : AppCompatActivity() {
             isDebugMode = enable
             val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             prefs.edit().putBoolean(PREF_IS_DEBUG_MODE, enable).apply()
+            syncWebContentsDebuggingState()
+            clearCachedAppOpenAd("debug mode toggled")
+            if (isNetworkAvailable()) {
+                loadAppOpenAd()
+            }
             runOnUiThread {
                 Toast.makeText(this@WebViewActivity, "Debug Mode: ${if(enable) "Enabled" else "Disabled"}", Toast.LENGTH_SHORT).show()
             }

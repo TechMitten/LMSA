@@ -3531,6 +3531,32 @@ body.light-theme #welcome-help-btn.professional-button:hover {
     0 0 0 2px rgba(236, 72, 153, 0.4);
 }
 
+#remove-ads-banner-button.professional-button.premium-activated {
+  animation: none;
+  cursor: default;
+  pointer-events: none;
+  border-color: rgba(16, 185, 129, 0.72);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.12),
+    0 4px 14px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(16, 185, 129, 0.34);
+}
+
+#remove-ads-banner-button.professional-button.premium-activated:hover {
+  animation: none;
+  border-color: rgba(16, 185, 129, 0.84);
+  box-shadow:
+    0 10px 34px rgba(16, 185, 129, 0.2),
+    0 5px 18px rgba(5, 150, 105, 0.14),
+    0 2px 9px rgba(4, 120, 87, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    0 0 0 2px rgba(16, 185, 129, 0.36);
+}
+
 body.light-theme #remove-ads-banner-button.professional-button {
   border-color: rgba(236, 72, 153, 0.7);
   box-shadow:
@@ -3551,6 +3577,32 @@ body.light-theme #remove-ads-banner-button.professional-button:hover {
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
     inset 0 -1px 0 rgba(0, 0, 0, 0.15),
     0 0 0 2px rgba(236, 72, 153, 0.5);
+}
+
+body.light-theme #remove-ads-banner-button.professional-button.premium-activated {
+  animation: none;
+  cursor: default;
+  pointer-events: none;
+  border-color: rgba(5, 150, 105, 0.78);
+  box-shadow:
+    0 8px 28px rgba(15, 23, 42, 0.14),
+    0 4px 14px rgba(30, 41, 59, 0.1),
+    0 2px 7px rgba(51, 65, 85, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(5, 150, 105, 0.4);
+}
+
+body.light-theme #remove-ads-banner-button.professional-button.premium-activated:hover {
+  animation: none;
+  border-color: rgba(5, 150, 105, 0.9);
+  box-shadow:
+    0 10px 32px rgba(5, 150, 105, 0.24),
+    0 5px 18px rgba(4, 120, 87, 0.18),
+    0 2px 9px rgba(6, 95, 70, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 0 0 2px rgba(5, 150, 105, 0.46);
 }
 
 /* Mobile optimizations for professional buttons */

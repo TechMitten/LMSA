@@ -29,6 +29,7 @@ function restorePurchases() {
 
 window.onRestorePurchasesResult = function (success, message) {
     restorePurchasesPending = false;
+    console.log('onRestorePurchasesResult called: success=' + success + ', message=' + message);
 
     if (typeof message === 'string' && message.trim().length > 0) {
         alert(message);
@@ -71,12 +72,13 @@ function setPremiumState(isPremium) {
 
 function hasPremiumAccess() {
     const knownState = getPremiumStateSnapshot();
+    const isDebugEnabled = !!window.isDebugMode || !!(window.AndroidBilling && typeof window.AndroidBilling.checkDebugMode === 'function' && window.AndroidBilling.checkDebugMode());
     if (knownState.updatedAt > 0) {
-        return knownState.isPremium;
+        return knownState.isPremium && !isDebugEnabled;
     }
 
     if (window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function') {
-        return !!window.AndroidBilling.checkPremiumStatus();
+        return !!window.AndroidBilling.checkPremiumStatus() && !isDebugEnabled;
     }
 
     return false;
@@ -87,17 +89,54 @@ window.hasPremiumAccess = hasPremiumAccess;
 // Updated UI function to manage premium status
 function updateUiForPremium(isPremium) {
     const premiumState = setPremiumState(isPremium);
-    isPremium = premiumState.isPremium;
-    console.log('Premium status updated:', isPremium);
+    const isDebugEnabled = !!window.isDebugMode || !!(window.AndroidBilling && typeof window.AndroidBilling.checkDebugMode === 'function' && window.AndroidBilling.checkDebugMode());
+    isPremium = premiumState.isPremium && !isDebugEnabled;
+    console.log('Premium status updated:', isPremium, '(debug:', isDebugEnabled, ')');
     const removeAdsBtn = document.getElementById('remove-ads-button');
     if (removeAdsBtn) {
         removeAdsBtn.style.display = isPremium ? 'none' : 'block';
     }
 
-    // Hide the Remove Ads banner for premium users
+    const premiumActivatedBtn = document.getElementById('premium-activated-button');
+    if (premiumActivatedBtn) {
+        premiumActivatedBtn.style.display = isPremium ? 'block' : 'none';
+    }
+
+    const restorePurchasesBtn = document.getElementById('restore-purchases-button');
+    if (restorePurchasesBtn) {
+        restorePurchasesBtn.style.display = isPremium ? 'none' : 'block';
+    }
+
+    const legacyAccessBtn = document.getElementById('legacy-access-btn');
+    if (legacyAccessBtn) {
+        legacyAccessBtn.style.display = isPremium ? 'none' : 'block';
+    }
+
+    // Keep the welcome premium banner visible, but switch to activated state for premium users.
     const removeAdsBanner = document.getElementById('remove-ads-banner');
     if (removeAdsBanner) {
-        removeAdsBanner.style.display = isPremium ? 'none' : 'flex';
+        removeAdsBanner.style.display = 'flex';
+    }
+
+    const removeAdsBannerButton = document.getElementById('remove-ads-banner-button');
+    if (removeAdsBannerButton) {
+        removeAdsBannerButton.classList.toggle('premium-activated', isPremium);
+        removeAdsBannerButton.disabled = isPremium;
+        removeAdsBannerButton.setAttribute('aria-label', isPremium ? 'Premium Activated' : 'Unlock Premium');
+        removeAdsBannerButton.setAttribute('aria-disabled', isPremium ? 'true' : 'false');
+        removeAdsBannerButton.tabIndex = isPremium ? -1 : 0;
+
+        const buttonLabel = removeAdsBannerButton.querySelector('span');
+        if (buttonLabel) {
+            buttonLabel.textContent = isPremium ? 'Premium Activated' : 'Unlock Premium';
+        }
+
+        const buttonIcon = removeAdsBannerButton.querySelector('i');
+        if (buttonIcon) {
+            buttonIcon.classList.toggle('fa-crown', !isPremium);
+            buttonIcon.classList.toggle('fa-check-circle', isPremium);
+            buttonIcon.style.color = isPremium ? '#34d399' : '#fbbf24';
+        }
     }
 }
 
@@ -246,13 +285,8 @@ function createNewChatAfterAd() {
  * @returns {boolean} - True if ads should be shown
  */
 function shouldShowAds() {
-    // First check: Premium users never see ads
-    if (hasPremiumAccess()) {
-        return false; // Premium user, no ads
-    }
-
-    // All checks passed - show ads
-    return true;
+    // Native/interstitial ad surfaces are disabled. App Open ads are handled natively.
+    return false;
 }
 
 /**
