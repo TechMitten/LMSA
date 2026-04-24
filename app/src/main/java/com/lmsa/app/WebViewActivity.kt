@@ -16,7 +16,6 @@ import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.graphics.Rect
-import android.graphics.Color
 import android.view.HapticFeedbackConstants
 import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
@@ -161,7 +160,7 @@ class WebViewActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
-        window.statusBarColor = Color.TRANSPARENT
+        WindowCompat.enableEdgeToEdge(window)
         hideSystemBars()
         setContentView(R.layout.activity_webview)
         applySystemBarInsets()
@@ -772,24 +771,12 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun hideSystemBars() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            window.attributes = window.attributes.apply {
-                layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-            }
-        }
-
         val controller = WindowCompat.getInsetsController(window, window.decorView)
         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         controller.hide(WindowInsetsCompat.Type.systemBars())
     }
 
     private fun showSystemBars() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            window.attributes = window.attributes.apply {
-                layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
-            }
-        }
-
         WindowCompat.getInsetsController(window, window.decorView)
             .show(WindowInsetsCompat.Type.systemBars())
     }
