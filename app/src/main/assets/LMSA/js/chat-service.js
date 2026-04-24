@@ -6,7 +6,7 @@ import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } 
 import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOllama, getOpenRouterApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations, getWebSearchEnabled } from './settings-manager.js';
 import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags, normalizeMalformedCodeFences, isAndroidWebView } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
-import { canSendCompletion, recordCompletion, canSendOpenRouterCompletion, recordOpenRouterCompletion } from './usage-limiter.js';
+import { canSendCompletion, recordCompletion, canSendOpenRouterCompletion, recordOpenRouterCompletion, canUseWebSearch, recordWebSearch } from './usage-limiter.js';
 
 
 let currentChatId = Date.now();
@@ -1318,6 +1318,16 @@ async function performWebSearch(query) {
     }
 }
 
+function consumeWebSearchQuota() {
+    if (!canUseWebSearch()) {
+        document.dispatchEvent(new CustomEvent('webSearchLimitReached'));
+        return false;
+    }
+
+    recordWebSearch();
+    return true;
+}
+
 const WEB_SEARCH_CONTEXT_HEADER = [
     "Internal factual context for the assistant:",
     "- Use this information to improve accuracy.",
@@ -1483,6 +1493,14 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         if (getWebSearchEnabled() && messages.length > 0 && (isFirstMsg || !isSkipWorthyWebSearchQuery(userMessage))) {
             const searchQuery = buildWebSearchQuery(userMessage, chatMessages);
             debugLog('Derived web search query:', searchQuery, '| first message:', isFirstMsg);
+            if (!consumeWebSearchQuota()) {
+                hideLoadingIndicator();
+                const stopButton = document.getElementById('stop-button');
+                if (stopButton && !stopButton.classList.contains('hidden')) {
+                    toggleSendStopButton();
+                }
+                return;
+            }
             const searchResults = await performWebSearch(searchQuery);
             if (searchResults) {
                 // Inject search results into the current API request
@@ -4494,6 +4512,9 @@ export async function regenerateLastResponse(isRetry = false) {
                     : [];
                 const searchQuery = buildWebSearchQuery(lastUserMessage, currentChatMessages);
                 debugLog('Derived web search query for regeneration:', searchQuery);
+                if (!consumeWebSearchQuota()) {
+                    return;
+                }
                 const searchResults = await performWebSearch(searchQuery);
                 if (searchResults) {
                     if (getUseOpenRouter()) {

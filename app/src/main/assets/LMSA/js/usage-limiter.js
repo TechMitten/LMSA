@@ -29,6 +29,27 @@ export function recordCompletion() {
 }
 
 /**
+ * Returns true if the user is allowed to trigger a web search.
+ * Premium users always receive true.
+ */
+export function canUseWebSearch() {
+    if (window.AndroidUsageLimiter && typeof window.AndroidUsageLimiter.canUseWebSearch === 'function') {
+        return window.AndroidUsageLimiter.canUseWebSearch();
+    }
+    return true;
+}
+
+/**
+ * Records one web search attempt against today's quota.
+ * Should be called immediately before firing the web search request.
+ */
+export function recordWebSearch() {
+    if (window.AndroidUsageLimiter && typeof window.AndroidUsageLimiter.recordWebSearch === 'function') {
+        window.AndroidUsageLimiter.recordWebSearch();
+    }
+}
+
+/**
  * Returns true if the user is allowed to send an OpenRouter completion request.
  * OpenRouter completions are not tier-limited in the app.
  */

@@ -726,6 +726,7 @@ export async function initializeApp() {
     initPremiumModal();
     window.openPremiumModal = openPremiumModal;
     document.addEventListener('completionLimitReached', () => openPremiumModal('Chat Messages'));
+    document.addEventListener('webSearchLimitReached', () => openPremiumModal('Web Search'));
     // OpenRouter is currently unmetered by app tier; keep listener for forward compatibility.
     document.addEventListener('openRouterLimitReached', () => openPremiumModal('OpenRouter Messages'));
     initSmartReplyWarningModal();

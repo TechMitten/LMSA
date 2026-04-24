@@ -137,6 +137,11 @@ export const helpModal = `
                                         <i class="fas fa-tools mr-2 text-sm"></i>
                                         <span>Troubleshooting</span>
                                     </a>
+                                    <a href="#section-refund-policy"
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
+                                        <i class="fas fa-receipt mr-2 text-sm"></i>
+                                        <span>Refund Policy</span>
+                                    </a>
                                 </div>
                             </details>
                         </div>
@@ -1040,6 +1045,7 @@ export const helpModal = `
                                     Free users have the following limits and features:</p>
                                 <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
                                     <li><strong>Local Chat Limit: 15 per day</strong> — After reaching this limit, you'll enter a cooldown period</li>
+                                    <li><strong>Web Search Limit: 2 per day</strong> — Free users can augment two prompts per day with real-time web results</li>
                                     <li><strong>Automatic Reset: Midnight (Local Time)</strong> — Your chat completion counts reset at midnight in your timezone, allowing you to chat freely again</li>
                                     <li><strong>Advertisements:</strong> Free users see advertisements throughout the app</li>
                                     <li><strong>File Attachments:</strong> Not available on the Free tier; upgrade to Premium to attach files to chats</li>
@@ -1056,6 +1062,7 @@ export const helpModal = `
                                     Premium users enjoy unlimited access with the following benefits:</p>
                                     <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
                                     <li><strong>Unlimited Chat Completions</strong> — No daily limits or cooldown periods</li>
+                                    <li><strong>Unlimited Web Search</strong> — No daily cap on real-time web-augmented prompts</li>
                                     <li><strong>Ad-Free Experience</strong> — No advertisements throughout the app</li>
                                     <li><strong>File Attachments:</strong> Attach files (documents, code, data) to chats for analysis</li>
                                     <li><strong>Offline Use (Local LM Studio/Ollama):</strong> Full access to use local LM Studio and Ollama servers with no internet connection required</li>
@@ -1206,6 +1213,35 @@ export const helpModal = `
                                     </li>
                                     <li>If the traceroute fails, there may be network isolation preventing
                                         communication</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="section-refund-policy">
+                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #22c55e;"><i
+                                class="fas fa-receipt mr-2"></i>Refund Policy</h3>
+                        <p style="color: var(--text-primary); margin-bottom: 1rem;">
+                            LMSA Premium is a one-time lifetime purchase processed through Google Play. Refund eligibility and policies are determined by Google Play, not by LMSA.
+                        </p>
+
+                        <div class="space-y-4">
+                            <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                        class="fas fa-google mr-2"></i>How to Request a Refund</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                    All refund requests for LMSA Premium must go through Google Play. Visit your Google Play purchase history and submit a refund request for the LMSA Premium purchase. Google Play will determine eligibility based on their policies.
+                                </p>
+                            </div>
+
+                            <div class="p-3 rounded-lg\" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #3b82f6;\"><i
+                                        class="fas fa-question-circle mr-2"></i>Questions About Your Purchase?</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                    If you have concerns about your LMSA Premium purchase, you can reach out to:
+                                </p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li><strong>Google Play support</strong> — for account, payment, and refund matters</li>
+                                    <li><strong>support@lmsa.app</strong> — for app-specific questions or issues</li>
                                 </ul>
                             </div>
                         </div>

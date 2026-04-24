@@ -1850,36 +1850,55 @@ class WebViewActivity : AppCompatActivity() {
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         private fun today(): String = dateFormat.format(Date())
 
+        private fun getUsageCountForToday(dateKey: String, countKey: String): Int {
+            val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
+            val todayStr = today()
+            val storedDate = prefs.getString(dateKey, "") ?: ""
+
+            if (storedDate.isEmpty() || storedDate != todayStr) {
+                prefs.edit()
+                    .putString(dateKey, todayStr)
+                    .putInt(countKey, 0)
+                    .apply()
+                return 0
+            }
+
+            return prefs.getInt(countKey, 0)
+        }
+
+        private fun recordUsage(dateKey: String, countKey: String) {
+            val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
+            val todayStr = today()
+            val count = getUsageCountForToday(dateKey, countKey)
+
+            prefs.edit()
+                .putString(dateKey, todayStr)
+                .putInt(countKey, count + 1)
+                .apply()
+        }
+
         @JavascriptInterface
         fun canSendCompletion(): Boolean {
             if (hasEffectivePremium()) return true
-            val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
-            val storedDate = prefs.getString("lmsa_completion_date", "") ?: ""
-            val count = prefs.getInt("lmsa_completion_count", 0)
-            val todayStr = today()
-            if (storedDate.isEmpty() || storedDate != todayStr) {
-                prefs.edit()
-                    .putString("lmsa_completion_date", todayStr)
-                    .putInt("lmsa_completion_count", 0)
-                    .apply()
-                return true
-            }
-            return count < 15
+            return getUsageCountForToday("lmsa_completion_date", "lmsa_completion_count") < 15
         }
 
         @JavascriptInterface
         fun recordCompletion() {
             if (hasEffectivePremium()) return
-            val prefs = getSharedPreferences("LMSA_PREFS", MODE_PRIVATE)
-            val todayStr = today()
-            val storedDate = prefs.getString("lmsa_completion_date", "") ?: ""
-            val count = prefs.getInt("lmsa_completion_count", 0)
-            val editor = prefs.edit()
-            if (storedDate.isEmpty() || storedDate != todayStr) {
-                editor.putString("lmsa_completion_date", todayStr)
-                editor.putInt("lmsa_completion_count", 0) // Reset count for the new day
-            }
-            editor.putInt("lmsa_completion_count", count + 1).apply()
+            recordUsage("lmsa_completion_date", "lmsa_completion_count")
+        }
+
+        @JavascriptInterface
+        fun canUseWebSearch(): Boolean {
+            if (hasEffectivePremium()) return true
+            return getUsageCountForToday("lmsa_web_search_date", "lmsa_web_search_count") < 2
+        }
+
+        @JavascriptInterface
+        fun recordWebSearch() {
+            if (hasEffectivePremium()) return
+            recordUsage("lmsa_web_search_date", "lmsa_web_search_count")
         }
 
         @JavascriptInterface
