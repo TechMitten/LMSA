@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">LMSA</string>
+    <string name="exit_confirmation_title">Close LMSA?</string>
+    <string name="exit_confirmation_message">Press Close to exit the app.</string>
+    <string name="exit_confirmation_stay">Stay</string>
+    <string name="exit_confirmation_close">Close</string>
 </resources>

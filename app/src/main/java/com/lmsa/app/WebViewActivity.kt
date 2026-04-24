@@ -43,6 +43,7 @@ import java.util.Date
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -83,10 +84,10 @@ class WebViewActivity : AppCompatActivity() {
     private var pendingFileContent: String? = null
     private var pendingFileName: String? = null
     private var isImageFile: Boolean = false
+    private var exitConfirmationDialog: AlertDialog? = null
     
     // App Open Ad
     private val APP_OPEN_AD_UNIT_ID = "ca-app-pub-1388425042154340/2733504962"
-    private val COLD_START_SPLASH_MAX_MS = 1500L
     private val WARM_START_AD_OPPORTUNITY_MS = 1500L
     private val APP_OPEN_ELIGIBLE_AFTER_COUNT = 3
     private val APP_OPEN_MIN_INTERVAL_FREE_USER_MS = 15 * 60 * 1000L
@@ -95,13 +96,12 @@ class WebViewActivity : AppCompatActivity() {
     private val APP_OPEN_DAILY_CAP_FREE_USER = 8
     private var appOpenAd: AppOpenAd? = null
     private var isLoadingAppOpenAd = false
-    private var isSplashActive = true
+    private var isSplashOverlayVisible = true
+    private var hasStartupPageFinished = false
     private var hasCompletedInitialResume = false
     private var hasBackgroundedSinceInitialLaunch = false
     private var warmStartAdOpportunityActive = false
     private var warmStartAdOpportunityDeadlineAtMs = 0L
-    private var splashHandler: Handler? = null
-    private var splashRunnable: Runnable? = null
     private var warmStartAdTimeoutRunnable: Runnable? = null
     private val PREF_APP_OPEN_COUNT = "app_open_count"
     private val PREF_LAST_APP_OPEN_AD_SHOWN_AT = "last_app_open_ad_shown_at"
@@ -201,15 +201,6 @@ class WebViewActivity : AppCompatActivity() {
             // For other exceptions, use the default handler
             defaultHandler?.uncaughtException(thread, throwable)
         }
-
-        // Custom Splash Screen Logic
-        val splashImage = findViewById<android.widget.ImageView>(R.id.splashImageView)
-        // Keep splash screen visible for 3 seconds then fade out (unless App Open ad takes over)
-        splashHandler = android.os.Handler(android.os.Looper.getMainLooper())
-        splashRunnable = Runnable {
-            hideSplash()
-        }
-        splashHandler!!.postDelayed(splashRunnable!!, COLD_START_SPLASH_MAX_MS)
 
         // Initialize BillingClient
         billingClient = BillingClient.newBuilder(this)
@@ -500,8 +491,14 @@ class WebViewActivity : AppCompatActivity() {
                 super.onPageStarted(view, url, favicon)
             }
 
+            override fun onPageCommitVisible(view: WebView?, url: String?) {
+                super.onPageCommitVisible(view, url)
+            }
+
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
+                hasStartupPageFinished = true
+                maybeHideStartupSplash("onPageFinished")
                 // Now that the page is loaded, update the UI with the persisted premium status
                 updatePremiumUiState()
                 updateOnboardingUiState()
@@ -789,12 +786,16 @@ class WebViewActivity : AppCompatActivity() {
                     appOpenAd = ad
                     isLoadingAppOpenAd = false
                     Log.d(TAG, "App Open ad loaded")
-                    runOnUiThread { showAppOpenAdIfReady() }
+                    runOnUiThread {
+                        showAppOpenAdIfReady()
+                        maybeHideStartupSplash("onAppOpenAdLoaded")
+                    }
                 }
 
                 override fun onAdFailedToLoad(adError: LoadAdError) {
                     isLoadingAppOpenAd = false
                     Log.e(TAG, "App Open ad failed to load: ${adError.message}")
+                    runOnUiThread { maybeHideStartupSplash("onAppOpenAdFailedToLoad") }
                 }
             }
         )
@@ -857,6 +858,10 @@ class WebViewActivity : AppCompatActivity() {
         clearWarmStartAdOpportunity()
 
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdShowedFullScreenContent() {
+                hideSplash()
+            }
+
             override fun onAdDismissedFullScreenContent() {
                 val ts = System.currentTimeMillis()
                 prefs.edit()
@@ -871,6 +876,7 @@ class WebViewActivity : AppCompatActivity() {
                 if (isNetworkAvailable()) {
                     loadAppOpenAd()
                 }
+                hideSplash()
             }
 
             override fun onAdFailedToShowFullScreenContent(adError: AdError) {
@@ -879,19 +885,30 @@ class WebViewActivity : AppCompatActivity() {
                 if (isNetworkAvailable()) {
                     loadAppOpenAd()
                 }
+                maybeHideStartupSplash("onAppOpenAdFailedToShow")
             }
         }
 
         ad.show(this)
     }
 
+    private fun maybeHideStartupSplash(source: String) {
+        if (!isSplashOverlayVisible) return
+        if (!hasStartupPageFinished) return
+        if (startupEntitlementResolution == StartupEntitlementResolution.UNKNOWN) return
+        if (isLoadingAppOpenAd) return
+        Log.d(TAG, "Hiding splash early from $source (billing resolved and no ad loading)")
+        hideSplash()
+    }
+
     private fun hideSplash() {
-        if (!isSplashActive) return
-        isSplashActive = false
+        if (!isSplashOverlayVisible) return
+        isSplashOverlayVisible = false
+
         val splashImage = findViewById<android.widget.ImageView>(R.id.splashImageView)
         splashImage.animate()
             .alpha(0f)
-            .setDuration(500)
+            .setDuration(350)
             .withEndAction { splashImage.visibility = View.GONE }
             .start()
     }
@@ -1015,10 +1032,29 @@ class WebViewActivity : AppCompatActivity() {
                 if (webView.canGoBack()) {
                     webView.goBack()
                 } else {
-                    finish()
+                    handleAppExitBackPress()
                 }
             }
         })
+    }
+
+    private fun handleAppExitBackPress() {
+        showExitConfirmationDialog()
+    }
+
+    private fun showExitConfirmationDialog() {
+        val activeDialog = exitConfirmationDialog
+        if (activeDialog?.isShowing == true) {
+            return
+        }
+
+        exitConfirmationDialog = AlertDialog.Builder(this)
+            .setTitle(R.string.exit_confirmation_title)
+            .setMessage(R.string.exit_confirmation_message)
+            .setNegativeButton(R.string.exit_confirmation_stay, null)
+            .setPositiveButton(R.string.exit_confirmation_close) { _, _ -> finish() }
+            .setOnDismissListener { exitConfirmationDialog = null }
+            .show()
     }
 
     override fun onPause() {
@@ -1167,6 +1203,7 @@ class WebViewActivity : AppCompatActivity() {
             startupBillingTimeoutRunnable = null
             Log.w(TAG, "Startup billing entitlement resolution timed out after ${STARTUP_BILLING_TIMEOUT_MS}ms")
             showAppOpenAdIfReady()
+            hideSplash()
         }
         mainHandler.postDelayed(startupBillingTimeoutRunnable!!, STARTUP_BILLING_TIMEOUT_MS)
     }
@@ -1179,7 +1216,10 @@ class WebViewActivity : AppCompatActivity() {
         startupBillingTimeoutRunnable?.let { mainHandler.removeCallbacks(it) }
         startupBillingTimeoutRunnable = null
         Log.d(TAG, "Startup billing entitlement resolved via $source")
-        runOnUiThread { showAppOpenAdIfReady() }
+        runOnUiThread {
+            showAppOpenAdIfReady()
+            maybeHideStartupSplash("billingResolved:$source")
+        }
     }
 
     private fun requestAudioFocus(): Int {
