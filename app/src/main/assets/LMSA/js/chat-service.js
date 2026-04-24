@@ -31,6 +31,7 @@ const WEB_SEARCH_CONTEXT_MAX_LENGTH = 96;
 const WEB_SEARCH_SHORT_QUERY_WORDS = 5;
 const CHAT_IMAGE_STORE_KEY = 'chatImageStore';
 const CHAT_IMAGE_STORE_VERSION = 1;
+const ACTIVE_TEMPLATE_CHARACTER_CARD_KEY = 'activeTemplateCharacterCard';
 const PENDING_TEMPLATE_CHARACTER_CARD_KEY = 'pendingTemplateCharacterCard';
 const IMAGE_FILE_EXTENSION_PATTERN = /\.(?:apng|avif|bmp|gif|jpe?g|png|svg|webp)$/i;
 const WEB_SEARCH_STOP_WORDS = new Set([
@@ -182,6 +183,39 @@ function persistChatImageStore(images) {
     } else {
         debugError('Failed to persist chat image store');
     }
+}
+
+function parseStoredTemplateCharacterCard(key) {
+    const rawCharacterCard = localStorage.getItem(key);
+    if (!rawCharacterCard) {
+        return null;
+    }
+
+    try {
+        const parsedCharacterCard = JSON.parse(rawCharacterCard);
+        if (!parsedCharacterCard || typeof parsedCharacterCard !== 'object') {
+            localStorage.removeItem(key);
+            return null;
+        }
+
+        return parsedCharacterCard;
+    } catch (error) {
+        debugError(`Failed to parse stored template character card for ${key}:`, error);
+        localStorage.removeItem(key);
+        return null;
+    }
+}
+
+function getActiveTemplateCharacterCardActivation() {
+    const activeCharacterCard = parseStoredTemplateCharacterCard(ACTIVE_TEMPLATE_CHARACTER_CARD_KEY);
+    if (!activeCharacterCard) {
+        return null;
+    }
+
+    return {
+        templateName: localStorage.getItem('activeTemplateName') || '',
+        characterCard: activeCharacterCard
+    };
 }
 
 function isImageAttachment(file) {
@@ -3654,7 +3688,10 @@ export function clearAllChats() {
  * Creates a new chat
  * @returns {string} - The ID of the new chat
  */
-export function createNewChat() {
+export function createNewChat(options = {}) {
+    const {
+        skipActiveTemplateGreeting = false
+    } = options;
 
     // Stop any ongoing TTS playback
     if (window.TTSService && typeof window.TTSService.stop === 'function') {
@@ -3750,6 +3787,35 @@ export function createNewChat() {
         toggleSidebar();
     }
 
+    if (!skipActiveTemplateGreeting) {
+        const activeCharacterCardActivation = getActiveTemplateCharacterCardActivation();
+        const activeCardData = activeCharacterCardActivation?.characterCard?.data;
+        const openingMessage = getCharacterCardActivationGreeting(activeCardData);
+
+        if (activeCardData && openingMessage) {
+            const currentChat = chatHistoryData[newChatId];
+            if (currentChat && Array.isArray(currentChat.messages)) {
+                currentChat.messages.push({
+                    role: 'assistant',
+                    content: openingMessage,
+                    model: getSelectedModel()
+                });
+
+                const preferredTitle = typeof activeCharacterCardActivation.templateName === 'string' && activeCharacterCardActivation.templateName.trim()
+                    ? activeCharacterCardActivation.templateName.trim()
+                    : (typeof activeCardData.name === 'string' && activeCardData.name.trim() ? activeCardData.name.trim() : null);
+
+                if (preferredTitle) {
+                    currentChat.title = preferredTitle;
+                }
+
+                saveChatHistory();
+                hideWelcomeMessage();
+                loadChat(newChatId, true);
+            }
+        }
+    }
+
     return newChatId;
 }
 
@@ -3809,7 +3875,7 @@ export function activatePendingTemplateCharacterCard() {
         return false;
     }
 
-    const newChatId = createNewChat();
+    const newChatId = createNewChat({ skipActiveTemplateGreeting: true });
     const currentChat = chatHistoryData[newChatId];
 
     if (!currentChat || !Array.isArray(currentChat.messages)) {

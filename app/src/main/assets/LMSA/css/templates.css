@@ -941,6 +941,43 @@
     touch-action: pan-y;
 }
 
+#templates-grid > button {
+    min-width: 0;
+    width: 100%;
+}
+
+.custom-user-template {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.custom-user-template .template-card-avatar {
+    flex-shrink: 0;
+}
+
+.custom-user-template .template-card-title,
+.custom-user-template .template-card-desc {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.custom-user-template .template-card-title {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+}
+
+.custom-user-template .template-card-desc {
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+}
+
+.custom-user-template span {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
 body {
     min-height: max(884px, 100dvh);
 }
@@ -1637,14 +1674,14 @@ body {
 /* Base grid - 2 columns for mobile */
 .responsive-template-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
 }
 
 /* Extra small phones (320px-375px) */
 @media (max-width: 375px) {
     .responsive-template-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.5rem;
     }
 }
@@ -1652,7 +1689,7 @@ body {
 /* Large phones (426px-640px) */
 @media (min-width: 426px) and (max-width: 640px) {
     .responsive-template-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 1rem;
     }
 }
@@ -1660,7 +1697,7 @@ body {
 /* Small tablets (641px-768px) - 3 columns */
 @media (min-width: 641px) and (max-width: 768px) {
     .responsive-template-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 1rem;
     }
 }
@@ -1668,7 +1705,7 @@ body {
 /* Tablets portrait (769px-896px) */
 @media (min-width: 769px) and (max-width: 896px) {
     .responsive-template-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 1.125rem;
     }
 }
@@ -1676,7 +1713,7 @@ body {
 /* Tablets landscape/desktop (897px-1024px) - 4 columns */
 @media (min-width: 897px) and (max-width: 1024px) {
     .responsive-template-grid {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 1rem;
     }
 }
@@ -1684,7 +1721,7 @@ body {
 /* Desktop (1025px-1280px) - 4 columns */
 @media (min-width: 1025px) and (max-width: 1280px) {
     .responsive-template-grid {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 1.25rem;
     }
 }
@@ -1692,7 +1729,7 @@ body {
 /* Large desktop (1281px-1535px) - 5 columns */
 @media (min-width: 1281px) and (max-width: 1535px) {
     .responsive-template-grid {
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 1.5rem;
     }
 }
@@ -1700,7 +1737,7 @@ body {
 /* Ultra-wide (1536px+) - 6 columns */
 @media (min-width: 1536px) {
     .responsive-template-grid {
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(6, minmax(0, 1fr));
         gap: 1.5rem;
     }
 }

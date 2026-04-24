@@ -44,9 +44,58 @@ function createTemplateId() {
     return `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
 }
 
+function loadTemplateStoredData(key) {
+    let savedData = '';
+    let usingNativeStorage = false;
+
+    if (window.AndroidFileOps && typeof window.AndroidFileOps.loadData === 'function') {
+        savedData = window.AndroidFileOps.loadData(key);
+        if (savedData && savedData.trim() !== '') {
+            usingNativeStorage = true;
+        }
+    }
+
+    const localStorageData = localStorage.getItem(key);
+    if (!usingNativeStorage && localStorageData) {
+        savedData = localStorageData;
+
+        if (window.AndroidFileOps && typeof window.AndroidFileOps.saveData === 'function') {
+            const migrationSucceeded = window.AndroidFileOps.saveData(key, localStorageData);
+            if (migrationSucceeded) {
+                localStorage.removeItem(key);
+            }
+        }
+    }
+
+    return savedData || '';
+}
+
+function saveTemplateStoredData(key, data) {
+    if (window.AndroidFileOps && typeof window.AndroidFileOps.saveData === 'function') {
+        const success = window.AndroidFileOps.saveData(key, data);
+        if (success) {
+            localStorage.removeItem(key);
+            return true;
+        }
+    }
+
+    try {
+        localStorage.setItem(key, data);
+        return true;
+    } catch (error) {
+        console.warn(`Error saving ${key} to localStorage:`, error);
+        return false;
+    }
+}
+
 function getStoredCustomTemplates() {
     try {
-        const rawTemplates = JSON.parse(localStorage.getItem(CUSTOM_TEMPLATE_STORAGE_KEY));
+        const rawTemplateData = loadTemplateStoredData(CUSTOM_TEMPLATE_STORAGE_KEY);
+        if (!rawTemplateData || rawTemplateData.trim() === '') {
+            return [];
+        }
+
+        const rawTemplates = JSON.parse(rawTemplateData);
         return Array.isArray(rawTemplates) ? rawTemplates : [];
     } catch (error) {
         console.warn('Failed to parse stored custom templates:', error);
@@ -55,7 +104,11 @@ function getStoredCustomTemplates() {
 }
 
 function saveStoredCustomTemplates(customTemplates) {
-    localStorage.setItem(CUSTOM_TEMPLATE_STORAGE_KEY, JSON.stringify(customTemplates));
+    const serializedTemplates = JSON.stringify(customTemplates);
+    const saved = saveTemplateStoredData(CUSTOM_TEMPLATE_STORAGE_KEY, serializedTemplates);
+    if (!saved) {
+        console.warn('Failed to persist custom templates');
+    }
 }
 
 function normalizeStringArray(values) {
@@ -191,6 +244,15 @@ function buildCharacterCardRuntimePrompt(cardData) {
 function normalizeCustomTemplate(template) {
     const templateName = typeof template?.name === 'string' ? template.name.trim() : '';
     const hasCharacterCard = template?.characterCard?.spec === CHARACTER_CARD_SPEC || template?.format === CHARACTER_CARD_TEMPLATE_MODE;
+    const normalizedTopLevelAvatar = typeof template?.avatarUrl === 'string' && template.avatarUrl.trim()
+        ? template.avatarUrl.trim()
+        : null;
+    const normalizedCharacterCardAvatar = typeof template?.characterCard?.data?.extensions?.lmsa_avatar_url === 'string' && template.characterCard.data.extensions.lmsa_avatar_url.trim()
+        ? template.characterCard.data.extensions.lmsa_avatar_url.trim()
+        : (typeof template?.data?.extensions?.lmsa_avatar_url === 'string' && template.data.extensions.lmsa_avatar_url.trim()
+            ? template.data.extensions.lmsa_avatar_url.trim()
+            : null);
+    const resolvedAvatarUrl = normalizedTopLevelAvatar || normalizedCharacterCardAvatar;
 
     if (hasCharacterCard) {
         const cardData = normalizeCharacterCardData(template?.characterCard?.data || template?.data || {});
@@ -210,7 +272,7 @@ function normalizeCustomTemplate(template) {
             prompt: typeof template?.prompt === 'string' && template.prompt.trim()
                 ? template.prompt.trim()
                 : buildCharacterCardRuntimePrompt(cardData),
-            avatarUrl: typeof template?.avatarUrl === 'string' ? template.avatarUrl : null,
+            avatarUrl: resolvedAvatarUrl,
             format: CHARACTER_CARD_TEMPLATE_MODE,
             characterCard: buildCharacterCardTemplate(cardData)
         };
@@ -221,7 +283,7 @@ function normalizeCustomTemplate(template) {
         name: templateName,
         desc: typeof template?.desc === 'string' ? template.desc.trim() : '',
         prompt: typeof template?.prompt === 'string' ? template.prompt.trim() : '',
-        avatarUrl: typeof template?.avatarUrl === 'string' ? template.avatarUrl : null,
+        avatarUrl: resolvedAvatarUrl,
         format: BASIC_TEMPLATE_MODE
     };
 }
@@ -338,13 +400,14 @@ function createCustomTemplateCard(t) {
     let iconHtml = '';
     if (t.avatarUrl) {
         iconHtml = `
-            <div class="w-16 h-16 mb-3 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors border border-blue-500/10 overflow-hidden">
-                <img src="${t.avatarUrl}" alt="${t.name}" class="w-full h-full object-cover">
+            <div class="template-card-avatar w-16 h-16 mb-3 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors border border-blue-500/10 overflow-hidden relative">
+                <span class="material-symbols-outlined text-5xl text-blue-400">face</span>
+                <img src="${t.avatarUrl}" alt="${t.name}" class="absolute inset-0 w-full h-full object-cover" onerror="this.remove()">
             </div>
         `;
     } else {
         iconHtml = `
-            <div class="w-16 h-16 mb-3 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors border border-blue-500/10">
+            <div class="template-card-avatar w-16 h-16 mb-3 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors border border-blue-500/10">
                 <span class="material-symbols-outlined text-5xl text-blue-400">face</span>
             </div>
         `;
@@ -368,8 +431,8 @@ function createCustomTemplateCard(t) {
             </div>
         </div>
         ${iconHtml}
-        <span class="font-semibold text-sm text-slate-100 text-center">${t.name}</span>
-        <span class="text-xs text-slate-400 mt-1 text-center truncate w-full px-2">${t.desc}</span>
+        <span class="template-card-title font-semibold text-sm text-slate-100 text-center">${t.name}</span>
+        <span class="template-card-desc text-xs text-slate-400 mt-1 text-center w-full px-2">${t.desc}</span>
         ${formatChip}
     `;
 
@@ -1235,6 +1298,12 @@ function saveNewTemplate() {
 
     let nextTemplateRecord;
     try {
+        const previewImage = document.querySelector('#avatar-preview img');
+        const previewAvatarUrl = previewImage && typeof previewImage.getAttribute === 'function'
+            ? (previewImage.getAttribute('src') || '').trim()
+            : '';
+        const resolvedAvatarUrl = selectedAvatarUrl || previewAvatarUrl || existingTemplate?.avatarUrl || null;
+
         if (activeTemplateEditorMode === CHARACTER_CARD_TEMPLATE_MODE) {
             const characterCardData = collectCharacterCardFormData(name);
             const runtimePrompt = buildCharacterCardRuntimePrompt(characterCardData);
@@ -1244,14 +1313,20 @@ function saveNewTemplate() {
                 return;
             }
 
+            const characterCardTemplate = buildCharacterCardTemplate(characterCardData);
+            if (resolvedAvatarUrl) {
+                characterCardTemplate.data.extensions = normalizeObjectValue(characterCardTemplate.data.extensions, {});
+                characterCardTemplate.data.extensions.lmsa_avatar_url = resolvedAvatarUrl;
+            }
+
             nextTemplateRecord = normalizeCustomTemplate({
                 id: existingTemplate?.id || createTemplateId(),
                 name,
                 desc: characterCardData.description || characterCardData.personality || 'Character card template',
                 prompt: runtimePrompt,
-                avatarUrl: selectedAvatarUrl || existingTemplate?.avatarUrl || null,
+                avatarUrl: resolvedAvatarUrl,
                 format: CHARACTER_CARD_TEMPLATE_MODE,
-                characterCard: buildCharacterCardTemplate(characterCardData)
+                characterCard: characterCardTemplate
             });
         } else {
             const desc = basicFields.desc.value.trim();
@@ -1267,7 +1342,7 @@ function saveNewTemplate() {
                 name,
                 desc,
                 prompt,
-                avatarUrl: selectedAvatarUrl || existingTemplate?.avatarUrl || null,
+                avatarUrl: resolvedAvatarUrl,
                 format: BASIC_TEMPLATE_MODE
             });
         }

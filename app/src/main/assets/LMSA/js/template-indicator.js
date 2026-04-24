@@ -4,10 +4,40 @@
 import { debugLog } from './utils.js';
 import { resetSystemPrompt } from './settings-manager.js';
 
+const CUSTOM_TEMPLATE_STORAGE_KEY = 'customTemplates';
+
+function migrateCustomTemplatesStorageIfNeeded() {
+    if (!window.AndroidFileOps || typeof window.AndroidFileOps.loadData !== 'function' || typeof window.AndroidFileOps.saveData !== 'function') {
+        return;
+    }
+
+    try {
+        const nativeTemplates = window.AndroidFileOps.loadData(CUSTOM_TEMPLATE_STORAGE_KEY);
+        if (nativeTemplates && nativeTemplates.trim() !== '') {
+            return;
+        }
+
+        const localTemplates = localStorage.getItem(CUSTOM_TEMPLATE_STORAGE_KEY);
+        if (!localTemplates || localTemplates.trim() === '') {
+            return;
+        }
+
+        const migrationSucceeded = window.AndroidFileOps.saveData(CUSTOM_TEMPLATE_STORAGE_KEY, localTemplates);
+        if (migrationSucceeded) {
+            localStorage.removeItem(CUSTOM_TEMPLATE_STORAGE_KEY);
+            debugLog('Migrated custom templates from localStorage to Android internal storage');
+        }
+    } catch (error) {
+        debugLog('Failed to migrate custom templates storage:', error);
+    }
+}
+
 /**
  * Initialize the template indicator
  */
 export function initializeTemplateIndicator() {
+    migrateCustomTemplatesStorageIfNeeded();
+
     const templateIndicator = document.getElementById('template-indicator');
     const templateNameElement = document.getElementById('template-name');
     const disableTemplateBtn = document.getElementById('disable-template-btn');
