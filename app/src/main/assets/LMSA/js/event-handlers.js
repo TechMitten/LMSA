@@ -56,6 +56,8 @@ import { debugLog, debugError, formatDate, closeApplication, copyToClipboard, sa
 let abortController = null;
 let sidebar = document.getElementById('sidebar');
 const WELCOME_SETTINGS_TAPPED_KEY = 'welcomeSettingsTapped';
+const OFFLINE_ACCESS_LOCK_REASON = 'offline-access';
+const OFFLINE_ACCESS_NOTICE_HTML = 'Only premium users can use the app offline. Free users need an active internet connection.';
 
 function isConfirmationModalVisible() {
     const confirmationModal = document.getElementById('confirmation-modal');
@@ -81,6 +83,44 @@ function isPremiumUser() {
     return window.AndroidBilling &&
            typeof window.AndroidBilling.checkPremiumStatus === 'function' &&
            window.AndroidBilling.checkPremiumStatus();
+}
+
+function hasActiveInternetConnectionForOfflineGate() {
+    if (window.AndroidNetwork && typeof window.AndroidNetwork.isInternetReachable === 'function') {
+        try {
+            return !!window.AndroidNetwork.isInternetReachable();
+        } catch (error) {
+            debugError('Native strict internet reachability check failed:', error);
+        }
+    }
+
+    if (window.AndroidNetwork && typeof window.AndroidNetwork.isInternetAvailable === 'function') {
+        try {
+            return !!window.AndroidNetwork.isInternetAvailable();
+        } catch (error) {
+            debugError('Native internet availability check failed:', error);
+        }
+    }
+
+    return navigator.onLine;
+}
+
+function canFreeUserContinueWhenOffline() {
+    if (isPremiumUser()) {
+        return true;
+    }
+
+    if (hasActiveInternetConnectionForOfflineGate()) {
+        return true;
+    }
+
+    openPremiumModal('Offline Access', {
+        noticeHtml: OFFLINE_ACCESS_NOTICE_HTML,
+        locked: true,
+        lockReason: OFFLINE_ACCESS_LOCK_REASON,
+        hideUpgradeButton: true
+    });
+    return false;
 }
 
 /**
@@ -1737,6 +1777,11 @@ async function handleChatFormSubmit(e) {
         // If we're already generating text, don't start a new generation
         if (isGeneratingText()) {
             debugLog('Text generation already in progress, ignoring new submission');
+            return;
+        }
+
+        if (!canFreeUserContinueWhenOffline()) {
+            debugLog('Chat submission blocked: free user is offline');
             return;
         }
 

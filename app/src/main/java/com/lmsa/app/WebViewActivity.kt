@@ -1180,8 +1180,8 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun isInternetReachableForOfflineGate(): Boolean {
-        if (!isNetworkAvailable()) {
-            Log.d(TAG, "Offline gate internet probe skipped: no validated network transport")
+        if (!hasInternetCapableTransportForOfflineGateProbe()) {
+            Log.d(TAG, "Offline gate internet probe skipped: no internet-capable network transport")
             return false
         }
 
@@ -1220,6 +1220,26 @@ class WebViewActivity : AppCompatActivity() {
 
         Log.d(TAG, "Offline gate internet probe failed for all endpoints")
         return false
+    }
+
+    private fun hasInternetCapableTransportForOfflineGateProbe(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val network = connectivityManager.activeNetwork ?: return false
+            val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
+            val hasSupportedTransport = activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) ||
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+            val hasInternetCapability = activeNetwork.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+
+            return hasSupportedTransport && hasInternetCapability
+        } else {
+            @Suppress("DEPRECATION")
+            val networkInfo = connectivityManager.activeNetworkInfo ?: return false
+            @Suppress("DEPRECATION")
+            return networkInfo.isConnected
+        }
     }
 
     private fun dispatchOfflineGateInternetProbeResult(hasInternet: Boolean) {
@@ -2721,6 +2741,11 @@ class WebViewActivity : AppCompatActivity() {
         @JavascriptInterface
         fun isInternetAvailable(): Boolean {
             return isNetworkAvailable()
+        }
+
+        @JavascriptInterface
+        fun isInternetReachable(): Boolean {
+            return isInternetReachableForOfflineGate()
         }
 
         @JavascriptInterface

@@ -39,9 +39,14 @@ let isAppInitialized = false;
 let offlineAccessPolicyBound = false;
 let latestOfflineGateInternetAvailability = null;
 let offlineGateInternetProbePending = false;
+let offlineGatePendingOverlayShowTimeout = null;
+let offlineGatePendingOverlayHideTimeout = null;
+let offlineGatePendingOverlayVisible = false;
 
 const OFFLINE_ACCESS_LOCK_REASON = 'offline-access';
 const OFFLINE_ACCESS_NOTICE_HTML = 'Only premium users can use the app offline. Free users need an active internet connection.';
+const OFFLINE_GATE_PENDING_OVERLAY_DELAY_MS = 420;
+const OFFLINE_GATE_PENDING_OVERLAY_FADE_MS = 220;
 
 function ensureOfflineGatePendingOverlay() {
     let overlay = document.getElementById('offline-gate-pending-overlay');
@@ -55,9 +60,12 @@ function ensureOfflineGatePendingOverlay() {
         'position: fixed',
         'inset: 0',
         'display: none',
+        'opacity: 0',
+        `transition: opacity ${OFFLINE_GATE_PENDING_OVERLAY_FADE_MS}ms ease`,
         'align-items: center',
         'justify-content: center',
         'background: rgba(3, 7, 18, 0.98)',
+        'pointer-events: none',
         'z-index: 2050'
     ].join(';');
 
@@ -111,7 +119,57 @@ function shouldShowOfflineGatePendingOverlay() {
 
 function syncOfflineGatePendingOverlay() {
     const overlay = ensureOfflineGatePendingOverlay();
-    overlay.style.display = shouldShowOfflineGatePendingOverlay() ? 'flex' : 'none';
+    const shouldShow = shouldShowOfflineGatePendingOverlay();
+
+    if (shouldShow) {
+        if (offlineGatePendingOverlayHideTimeout) {
+            clearTimeout(offlineGatePendingOverlayHideTimeout);
+            offlineGatePendingOverlayHideTimeout = null;
+        }
+        if (offlineGatePendingOverlayVisible || offlineGatePendingOverlayShowTimeout) {
+            return;
+        }
+
+        offlineGatePendingOverlayShowTimeout = setTimeout(() => {
+            offlineGatePendingOverlayShowTimeout = null;
+            if (!shouldShowOfflineGatePendingOverlay()) {
+                return;
+            }
+
+            overlay.style.display = 'flex';
+            requestAnimationFrame(() => {
+                overlay.style.opacity = '1';
+                overlay.style.pointerEvents = 'auto';
+            });
+            offlineGatePendingOverlayVisible = true;
+        }, OFFLINE_GATE_PENDING_OVERLAY_DELAY_MS);
+        return;
+    }
+
+    if (offlineGatePendingOverlayShowTimeout) {
+        clearTimeout(offlineGatePendingOverlayShowTimeout);
+        offlineGatePendingOverlayShowTimeout = null;
+    }
+
+    if (!offlineGatePendingOverlayVisible) {
+        overlay.style.display = 'none';
+        overlay.style.opacity = '0';
+        overlay.style.pointerEvents = 'none';
+        return;
+    }
+
+    overlay.style.opacity = '0';
+    overlay.style.pointerEvents = 'none';
+    if (offlineGatePendingOverlayHideTimeout) {
+        clearTimeout(offlineGatePendingOverlayHideTimeout);
+    }
+    offlineGatePendingOverlayHideTimeout = setTimeout(() => {
+        offlineGatePendingOverlayHideTimeout = null;
+        if (!shouldShowOfflineGatePendingOverlay()) {
+            overlay.style.display = 'none';
+            offlineGatePendingOverlayVisible = false;
+        }
+    }, OFFLINE_GATE_PENDING_OVERLAY_FADE_MS);
 }
 
 window.pendingBiometricResolve = null;
