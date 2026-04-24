@@ -34,6 +34,8 @@ export const premiumModal = `
                         <span id="premium-feature-name">Feature</span> is a premium feature!
                     </p>
 
+                    <p id="premium-offline-exit-countdown" style="color: #f87171; margin: -0.4rem 0 0.9rem 0; font-size: 0.82rem; font-weight: 700; display: none;"></p>
+
                     <!-- Benefits cards -->
                     <div class="premium-benefits" style="display: grid; grid-template-columns: 1fr; gap: 0.5rem; margin: 0 0 0.875rem 0; flex-shrink: 0;">
                         <!-- Benefit item 1 -->
@@ -342,6 +344,72 @@ export const premiumModal = `
 `;
 
 let premiumModalInitialized = false;
+const OFFLINE_ACCESS_LOCK_REASON = 'offline-access';
+const OFFLINE_EXIT_COUNTDOWN_SECONDS = 10;
+let offlineExitCountdownIntervalId = null;
+let offlineExitCountdownRemainingSeconds = OFFLINE_EXIT_COUNTDOWN_SECONDS;
+
+function getOfflineExitCountdownElement() {
+    return document.getElementById('premium-offline-exit-countdown');
+}
+
+function requestNativeAppClose() {
+    if (window.AndroidPower && typeof window.AndroidPower.closeApp === 'function') {
+        window.AndroidPower.closeApp();
+        return true;
+    }
+
+    console.warn('AndroidPower.closeApp is unavailable; cannot auto-close app from offline premium gate');
+    return false;
+}
+
+function stopOfflineExitCountdown() {
+    if (offlineExitCountdownIntervalId) {
+        clearInterval(offlineExitCountdownIntervalId);
+        offlineExitCountdownIntervalId = null;
+    }
+
+    offlineExitCountdownRemainingSeconds = OFFLINE_EXIT_COUNTDOWN_SECONDS;
+    const countdownNotice = getOfflineExitCountdownElement();
+    if (countdownNotice) {
+        countdownNotice.style.display = 'none';
+        countdownNotice.textContent = '';
+    }
+}
+
+function renderOfflineExitCountdown() {
+    const countdownNotice = getOfflineExitCountdownElement();
+    if (!countdownNotice) {
+        return;
+    }
+
+    const secondsLabel = offlineExitCountdownRemainingSeconds === 1 ? 'second' : 'seconds';
+    countdownNotice.textContent = `App will close in ${offlineExitCountdownRemainingSeconds} ${secondsLabel}.`;
+    countdownNotice.style.display = 'block';
+}
+
+function startOfflineExitCountdownIfNeeded() {
+    const { locked, lockReason } = getPremiumModalState();
+    if (!locked || lockReason !== OFFLINE_ACCESS_LOCK_REASON) {
+        stopOfflineExitCountdown();
+        return;
+    }
+
+    stopOfflineExitCountdown();
+    renderOfflineExitCountdown();
+
+    offlineExitCountdownIntervalId = setInterval(() => {
+        offlineExitCountdownRemainingSeconds -= 1;
+
+        if (offlineExitCountdownRemainingSeconds <= 0) {
+            stopOfflineExitCountdown();
+            requestNativeAppClose();
+            return;
+        }
+
+        renderOfflineExitCountdown();
+    }, 1000);
+}
 
 function getPremiumModalState() {
     return window.__premiumModalState || {
@@ -452,6 +520,7 @@ export function closePremiumModal(force = false) {
     });
     applyPremiumModalLockState();
     setPremiumFeatureNotice('');
+    stopOfflineExitCountdown();
 
     return true;
 }
@@ -467,6 +536,7 @@ export function openPremiumModal(featureName, options = {}) {
     });
     applyPremiumModalLockState();
     setPremiumFeatureNotice(getPremiumFeatureNotice(featureName, options));
+    startOfflineExitCountdownIfNeeded();
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -478,6 +548,7 @@ export function openPremiumModal(featureName, options = {}) {
 export function initPremiumModal() {
     if (premiumModalInitialized) {
         applyPremiumModalLockState();
+        startOfflineExitCountdownIfNeeded();
         return;
     }
 

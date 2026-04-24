@@ -2607,6 +2607,19 @@ class WebViewActivity : AppCompatActivity() {
                 }
             }
         }
+
+        @JavascriptInterface
+        fun closeApp() {
+            runOnUiThread {
+                Log.d(TAG, "AndroidPower.closeApp requested from WebView")
+                try {
+                    finishAndRemoveTask()
+                } catch (error: Exception) {
+                    Log.e(TAG, "finishAndRemoveTask failed, falling back to finish", error)
+                    finish()
+                }
+            }
+        }
     }
 
     inner class HapticInterface {
