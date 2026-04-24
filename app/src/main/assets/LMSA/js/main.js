@@ -17,7 +17,7 @@ import { initializeWhatsNew } from './whats-new.js';
 import { initializeSettingsModal } from './settings-modal-manager.js';
 import { initializeIpPortConfirmationModal } from './ip-port-confirmation-modal.js';
 import { initializeChatScrollbar, refreshChatScrollbar } from './chat-scrollbar.js';
-import { initPremiumModal, openPremiumModal } from './components/modals/premium-modal.js';
+import { closePremiumModal, initPremiumModal, isPremiumModalLocked, openPremiumModal } from './components/modals/premium-modal.js';
 import { initSmartReplyWarningModal } from './components/modals/smart-reply-warning-modal.js';
 import { initOpenRouterWarningModal } from './components/modals/openrouter-warning-modal.js';
 import { initWebSearchWarningModal } from './components/modals/web-search-warning-modal.js';
@@ -36,6 +36,83 @@ let androidKeyboardHeight = 0;
 import { hasAcceptedCurrentTerms } from './terms-acceptance.js';
 
 let isAppInitialized = false;
+let offlineAccessPolicyBound = false;
+let latestOfflineGateInternetAvailability = null;
+let offlineGateInternetProbePending = false;
+
+const OFFLINE_ACCESS_LOCK_REASON = 'offline-access';
+const OFFLINE_ACCESS_NOTICE_HTML = 'Only premium users can use the app offline. Free users need an active internet connection.';
+
+function ensureOfflineGatePendingOverlay() {
+    let overlay = document.getElementById('offline-gate-pending-overlay');
+    if (overlay) {
+        return overlay;
+    }
+
+    overlay = document.createElement('div');
+    overlay.id = 'offline-gate-pending-overlay';
+    overlay.style.cssText = [
+        'position: fixed',
+        'inset: 0',
+        'display: none',
+        'align-items: center',
+        'justify-content: center',
+        'background: rgba(3, 7, 18, 0.98)',
+        'z-index: 2050'
+    ].join(';');
+
+    const content = document.createElement('div');
+    content.style.cssText = [
+        'display: flex',
+        'flex-direction: column',
+        'align-items: center',
+        'gap: 14px',
+        'padding: 24px',
+        'text-align: center'
+    ].join(';');
+
+    const spinner = document.createElement('div');
+    spinner.style.cssText = [
+        'width: 28px',
+        'height: 28px',
+        'border-radius: 999px',
+        'border: 3px solid rgba(148, 163, 184, 0.2)',
+        'border-top-color: #fbbf24',
+        'animation: offlineGateSpin 0.8s linear infinite'
+    ].join(';');
+
+    const label = document.createElement('div');
+    label.textContent = 'Checking internet connection...';
+    label.style.cssText = 'color: #e2e8f0; font-size: 14px; font-weight: 600; letter-spacing: 0.01em;';
+
+    const style = document.createElement('style');
+    style.textContent = '@keyframes offlineGateSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+
+    content.appendChild(spinner);
+    content.appendChild(label);
+    overlay.appendChild(content);
+    overlay.appendChild(style);
+    document.body.appendChild(overlay);
+
+    return overlay;
+}
+
+function shouldShowOfflineGatePendingOverlay() {
+    if (isAppInitialized) {
+        return false;
+    }
+
+    const isPremiumUser = typeof window.hasPremiumAccess === 'function'
+        ? window.hasPremiumAccess()
+        : false;
+
+    return !isPremiumUser && offlineGateInternetProbePending && latestOfflineGateInternetAvailability === null;
+}
+
+function syncOfflineGatePendingOverlay() {
+    const overlay = ensureOfflineGatePendingOverlay();
+    overlay.style.display = shouldShowOfflineGatePendingOverlay() ? 'flex' : 'none';
+}
 
 window.pendingBiometricResolve = null;
 window.pendingBiometricReject = null;
@@ -289,12 +366,163 @@ window.requestBiometricAuth = function(title, subtitle) {
     return window.activeBiometricRequest;
 };
 
+function getQuickInternetSignal() {
+    if (window.AndroidNetwork && typeof window.AndroidNetwork.isInternetAvailable === 'function') {
+        try {
+            return !!window.AndroidNetwork.isInternetAvailable();
+        } catch (error) {
+            console.warn('Native internet check failed, falling back to navigator.onLine:', error);
+        }
+    }
+
+    return navigator.onLine;
+}
+
+function requestOfflineGateInternetProbe() {
+    if (offlineGateInternetProbePending) {
+        syncOfflineGatePendingOverlay();
+        return;
+    }
+
+    if (window.AndroidNetwork && typeof window.AndroidNetwork.probeInternetAvailability === 'function') {
+        offlineGateInternetProbePending = true;
+        syncOfflineGatePendingOverlay();
+        try {
+            window.AndroidNetwork.probeInternetAvailability();
+            return;
+        } catch (error) {
+            offlineGateInternetProbePending = false;
+            syncOfflineGatePendingOverlay();
+            console.warn('Async offline gate internet probe failed to start:', error);
+        }
+    }
+
+    latestOfflineGateInternetAvailability = getQuickInternetSignal();
+    syncOfflineGatePendingOverlay();
+}
+
+window.onNativeOfflineInternetProbeResult = function(hasInternet) {
+    offlineGateInternetProbePending = false;
+    latestOfflineGateInternetAvailability = !!hasInternet;
+    syncOfflineGatePendingOverlay();
+    console.log(`[Offline Gate Probe] internet=${latestOfflineGateInternetAvailability}`);
+    evaluateOfflineAccessPolicy({ initializeIfNeeded: true });
+};
+
+function hasActiveInternetConnection() {
+    if (typeof latestOfflineGateInternetAvailability === 'boolean') {
+        return latestOfflineGateInternetAvailability;
+    }
+
+    return getQuickInternetSignal();
+}
+
+function shouldDeferOfflineAccessDecision() {
+    const isPremiumUser = typeof window.hasPremiumAccess === 'function'
+        ? window.hasPremiumAccess()
+        : false;
+
+    return !isPremiumUser && offlineGateInternetProbePending && latestOfflineGateInternetAvailability === null;
+}
+
+function showOfflineAccessPremiumGate() {
+    syncOfflineGatePendingOverlay();
+    if (window.AndroidNetwork && typeof window.AndroidNetwork.dismissStartupSplash === 'function') {
+        try {
+            window.AndroidNetwork.dismissStartupSplash();
+        } catch (error) {
+            console.warn('Unable to dismiss native startup splash for offline gate:', error);
+        }
+    }
+
+    openPremiumModal('Offline Access', {
+        noticeHtml: OFFLINE_ACCESS_NOTICE_HTML,
+        locked: true,
+        lockReason: OFFLINE_ACCESS_LOCK_REASON,
+        hideUpgradeButton: true
+    });
+}
+
+function clearOfflineAccessPremiumGate() {
+    syncOfflineGatePendingOverlay();
+    if (isPremiumModalLocked(OFFLINE_ACCESS_LOCK_REASON)) {
+        closePremiumModal(true);
+    }
+}
+
+function isOfflineAccessBlocked() {
+    const isPremiumUser = typeof window.hasPremiumAccess === 'function'
+        ? window.hasPremiumAccess()
+        : false;
+    const hasInternet = hasActiveInternetConnection();
+    const blocked = !isPremiumUser && !hasInternet;
+
+    console.log(`[Offline Gate] premium=${isPremiumUser} internet=${hasInternet} blocked=${blocked}`);
+
+    return blocked;
+}
+
+function evaluateOfflineAccessPolicy(options = {}) {
+    if (shouldDeferOfflineAccessDecision()) {
+        syncOfflineGatePendingOverlay();
+        console.log('[Offline Gate] awaiting async internet probe before startup');
+        return false;
+    }
+
+    const blocked = isOfflineAccessBlocked();
+
+    if (blocked) {
+        showOfflineAccessPremiumGate();
+        return false;
+    }
+
+    clearOfflineAccessPremiumGate();
+
+    if (options.initializeIfNeeded && !isAppInitialized && hasAcceptedCurrentTerms()) {
+        void initializeApp();
+    }
+
+    return true;
+}
+
+function bindOfflineAccessPolicy() {
+    if (offlineAccessPolicyBound) {
+        return;
+    }
+
+    offlineAccessPolicyBound = true;
+
+    const reevaluateAndInitialize = () => {
+        requestOfflineGateInternetProbe();
+        evaluateOfflineAccessPolicy({ initializeIfNeeded: true });
+    };
+
+    window.addEventListener('online', reevaluateAndInitialize);
+    window.addEventListener('offline', () => {
+        latestOfflineGateInternetAvailability = false;
+        offlineGateInternetProbePending = false;
+        syncOfflineGatePendingOverlay();
+        evaluateOfflineAccessPolicy();
+    });
+    document.addEventListener('premium-status-changed', reevaluateAndInitialize);
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            reevaluateAndInitialize();
+        }
+    });
+}
+
 export async function initializeApp() {
     if (isAppInitialized) return;
     
     // Wait for terms acceptance check before proceeding
     if (!hasAcceptedCurrentTerms()) {
         console.log('Terms not accepted, skipping app initialization');
+        return;
+    }
+
+    if (!evaluateOfflineAccessPolicy()) {
+        console.log('Offline access blocked for free user until internet or premium access is available');
         return;
     }
 
@@ -719,10 +947,16 @@ document.addEventListener('DOMContentLoaded', function () {
     // Make initializeApp globally available
     window.initializeApp = initializeApp;
     window.openOnboarding = () => openOnboarding(true);
+    window.openPremiumModal = openPremiumModal;
+
+    initPremiumModal();
+    ensureOfflineGatePendingOverlay();
+    bindOfflineAccessPolicy();
+    requestOfflineGateInternetProbe();
 
     // Check terms acceptance first, then initialize app if passed
     if (hasAcceptedCurrentTerms()) {
-        initializeApp();
+        evaluateOfflineAccessPolicy({ initializeIfNeeded: true });
     } else {
         console.log('Terms not accepted - app initialization paused until terms are accepted');
     }

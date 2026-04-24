@@ -55,6 +55,8 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import java.util.concurrent.Executor
+import java.net.HttpURLConnection
+import java.net.URL
 
 import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
@@ -897,7 +899,7 @@ class WebViewActivity : AppCompatActivity() {
         if (!isSplashOverlayVisible) return
         if (!hasStartupPageFinished) return
         if (startupEntitlementResolution == StartupEntitlementResolution.UNKNOWN) return
-        if (isLoadingAppOpenAd) return
+        if (warmStartAdOpportunityActive && isLoadingAppOpenAd) return
         Log.d(TAG, "Hiding splash early from $source (billing resolved and no ad loading)")
         hideSplash()
     }
@@ -1161,16 +1163,72 @@ class WebViewActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val network = connectivityManager.activeNetwork ?: return false
             val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
-            return when {
-                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
-                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
-                else -> false
-            }
+            val hasSupportedTransport = activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) ||
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+            val hasInternetCapability = activeNetwork.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            val hasValidatedInternet = activeNetwork.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+
+            return hasSupportedTransport && hasInternetCapability && hasValidatedInternet
         } else {
             @Suppress("DEPRECATION")
             val networkInfo = connectivityManager.activeNetworkInfo ?: return false
             @Suppress("DEPRECATION")
             return networkInfo.isConnected
+        }
+    }
+
+    private fun isInternetReachableForOfflineGate(): Boolean {
+        if (!isNetworkAvailable()) {
+            Log.d(TAG, "Offline gate internet probe skipped: no validated network transport")
+            return false
+        }
+
+        val probeUrls = listOf(
+            "https://connectivitycheck.gstatic.com/generate_204",
+            "https://clients3.google.com/generate_204"
+        )
+
+        for (probeUrl in probeUrls) {
+            try {
+                val connection = (URL(probeUrl).openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
+                    requestMethod = "GET"
+                    connectTimeout = 1500
+                    readTimeout = 1500
+                    useCaches = false
+                    setRequestProperty("Cache-Control", "no-cache")
+                    setRequestProperty("Pragma", "no-cache")
+                    setRequestProperty("User-Agent", "LMSA-Internet-Probe")
+                }
+
+                connection.connect()
+                val responseCode = connection.responseCode
+                connection.disconnect()
+
+                if (responseCode == HttpURLConnection.HTTP_NO_CONTENT) {
+                    Log.d(TAG, "Offline gate internet probe succeeded via $probeUrl with HTTP $responseCode")
+                    return true
+                }
+
+                Log.d(TAG, "Offline gate internet probe returned HTTP $responseCode via $probeUrl")
+            } catch (e: Exception) {
+                Log.d(TAG, "Offline gate internet probe failed via $probeUrl: ${e.message}")
+            }
+        }
+
+        Log.d(TAG, "Offline gate internet probe failed for all endpoints")
+        return false
+    }
+
+    private fun dispatchOfflineGateInternetProbeResult(hasInternet: Boolean) {
+        runOnUiThread {
+            val webView: WebView = findViewById(R.id.webView)
+            webView.evaluateJavascript(
+                "if (typeof window.onNativeOfflineInternetProbeResult === 'function') { window.onNativeOfflineInternetProbeResult($hasInternet); }",
+                null
+            )
         }
     }
 
@@ -2660,6 +2718,26 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     inner class NetworkInterface {
+        @JavascriptInterface
+        fun isInternetAvailable(): Boolean {
+            return isNetworkAvailable()
+        }
+
+        @JavascriptInterface
+        fun probeInternetAvailability() {
+            Thread {
+                val hasInternet = isInternetReachableForOfflineGate()
+                dispatchOfflineGateInternetProbeResult(hasInternet)
+            }.start()
+        }
+
+        @JavascriptInterface
+        fun dismissStartupSplash() {
+            runOnUiThread {
+                hideSplash()
+            }
+        }
+
         @JavascriptInterface
         fun fetch(url: String): String? {
             if (!isNetworkAvailable()) {

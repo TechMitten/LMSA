@@ -341,25 +341,132 @@ export const premiumModal = `
     </style>
 `;
 
-export function openPremiumModal(featureName) {
+let premiumModalInitialized = false;
+
+function getPremiumModalState() {
+    return window.__premiumModalState || {
+        locked: false,
+        lockReason: null,
+        hideUpgradeButton: false
+    };
+}
+
+function setPremiumModalState(nextState) {
+    window.__premiumModalState = {
+        ...getPremiumModalState(),
+        ...nextState
+    };
+
+    return window.__premiumModalState;
+}
+
+function applyPremiumModalLockState() {
+    const modal = document.getElementById('premium-modal');
+    const closeButton = document.getElementById('close-premium-modal');
+    const secondaryCloseButton = document.getElementById('close-premium-modal-secondary');
+    const upgradeButton = document.getElementById('premium-upgrade-button');
+    if (!modal) {
+        return;
+    }
+
+    const { locked, lockReason, hideUpgradeButton } = getPremiumModalState();
+    modal.dataset.locked = locked ? 'true' : 'false';
+    modal.dataset.lockReason = lockReason || '';
+    modal.dataset.hideUpgradeButton = hideUpgradeButton ? 'true' : 'false';
+
+    if (closeButton) {
+        closeButton.style.display = locked ? 'none' : 'flex';
+    }
+
+    if (secondaryCloseButton) {
+        secondaryCloseButton.style.display = locked ? 'none' : 'block';
+    }
+
+    if (upgradeButton) {
+        upgradeButton.style.display = hideUpgradeButton ? 'none' : 'block';
+    }
+}
+
+function setPremiumFeatureNotice(noticeHtml) {
+    const notice = document.getElementById('premium-feature-notice');
+    if (!notice) {
+        return;
+    }
+
+    if (noticeHtml) {
+        notice.innerHTML = noticeHtml;
+        notice.style.display = 'block';
+        return;
+    }
+
+    notice.style.display = 'none';
+}
+
+function getPremiumFeatureNotice(featureName, options = {}) {
+    if (options.noticeHtml) {
+        return options.noticeHtml;
+    }
+
+    if (!featureName) {
+        return '';
+    }
+
+    if (featureName === 'OpenRouter Messages') {
+        return `You've reached your daily limit for OpenRouter Messages!`;
+    }
+
+    if (featureName === 'Chat Messages') {
+        return `You've reached your daily limit for Chat Messages!`;
+    }
+
+    return `<span id="premium-feature-name">${featureName}</span> is a premium feature!`;
+}
+
+export function isPremiumModalLocked(lockReason) {
+    const state = getPremiumModalState();
+    if (!state.locked) {
+        return false;
+    }
+
+    return !lockReason || state.lockReason === lockReason;
+}
+
+export function closePremiumModal(force = false) {
+    const modal = document.getElementById('premium-modal');
+    if (!modal) {
+        return false;
+    }
+
+    if (!force && isPremiumModalLocked()) {
+        return false;
+    }
+
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    modal.style.opacity = '0';
+
+    setPremiumModalState({
+        locked: false,
+        lockReason: null,
+        hideUpgradeButton: false
+    });
+    applyPremiumModalLockState();
+    setPremiumFeatureNotice('');
+
+    return true;
+}
+
+export function openPremiumModal(featureName, options = {}) {
     const modal = document.getElementById('premium-modal');
     if (!modal) return;
 
-    const notice = document.getElementById('premium-feature-notice');
-    const nameSpan = document.getElementById('premium-feature-name');
-
-    if (featureName && notice) {
-        if (featureName === 'OpenRouter Messages') {
-            notice.innerHTML = `You've reached your daily limit for OpenRouter Messages!`;
-        } else if (featureName === 'Chat Messages') {
-            notice.innerHTML = `You've reached your daily limit for Chat Messages!`;
-        } else {
-            notice.innerHTML = `<span id="premium-feature-name">${featureName}</span> is a premium feature!`;
-        }
-        notice.style.display = 'block';
-    } else if (notice) {
-        notice.style.display = 'none';
-    }
+    setPremiumModalState({
+        locked: !!options.locked,
+        lockReason: options.lockReason || null,
+        hideUpgradeButton: !!options.hideUpgradeButton
+    });
+    applyPremiumModalLockState();
+    setPremiumFeatureNotice(getPremiumFeatureNotice(featureName, options));
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -369,22 +476,26 @@ export function openPremiumModal(featureName) {
 }
 
 export function initPremiumModal() {
+    if (premiumModalInitialized) {
+        applyPremiumModalLockState();
+        return;
+    }
+
     const modal = document.getElementById('premium-modal');
     const openButton = document.getElementById('remove-ads-banner-button');
     const closeButton = document.getElementById('close-premium-modal');
     const secondaryCloseButton = document.getElementById('close-premium-modal-secondary');
     const upgradeButton = document.getElementById('premium-upgrade-button');
+    if (!modal) {
+        return;
+    }
+
+    premiumModalInitialized = true;
+    applyPremiumModalLockState();
 
     // Close modal function
     const closeModal = () => {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        
-        // Hide the feature notice when modal is closed
-        const notice = document.getElementById('premium-feature-notice');
-        if (notice) {
-            notice.style.display = 'none';
-        }
+        closePremiumModal();
     };
 
     // Open modal
@@ -405,14 +516,14 @@ export function initPremiumModal() {
 
     // Close when clicking outside the modal
     modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
+        if (e.target === modal && !isPremiumModalLocked()) {
             closeModal();
         }
     });
 
     // Handle ESC key
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden') && !isPremiumModalLocked()) {
             closeModal();
         }
     });
@@ -420,7 +531,9 @@ export function initPremiumModal() {
     // Upgrade button - calls same function as side menu button
     if (upgradeButton) {
         upgradeButton.addEventListener('click', () => {
-            closeModal();
+            if (!isPremiumModalLocked()) {
+                closePremiumModal(true);
+            }
             // Call the existing global removeAds bridge function from android-interface.js.
             if (typeof window.removeAds === 'function') {
                 window.removeAds();
