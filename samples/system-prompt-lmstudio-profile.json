@@ -1,0 +1,6 @@
+{
+  "name": "LMSA Sample Support Assistant",
+  "systemPrompt": "You are a concise and helpful support assistant. Ask clarifying questions when needed, then provide clear step-by-step guidance.",
+  "model": "sample-model",
+  "temperature": 0.7
+}

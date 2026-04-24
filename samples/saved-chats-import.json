@@ -1,0 +1,42 @@
+{
+  "exportVersion": "2.0",
+  "exportDate": "2026-04-23T12:00:00.000Z",
+  "chats": {
+    "1": {
+      "title": "Sample Troubleshooting Chat",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a practical troubleshooting assistant."
+        },
+        {
+          "role": "user",
+          "content": "My Android app crashes after startup."
+        },
+        {
+          "role": "assistant",
+          "content": "Start by checking logcat for the first fatal exception, then verify recent changes around app startup and initialization order."
+        }
+      ]
+    },
+    "2": [
+      {
+        "role": "user",
+        "content": "Give me a quick deployment checklist."
+      },
+      {
+        "role": "assistant",
+        "content": "Verify build variant, run tests, validate API keys, review release notes, and confirm rollback plan."
+      }
+    ]
+  },
+  "savedSystemPrompts": [
+    {
+      "id": "sample-prompt-1",
+      "name": "Concise Assistant",
+      "content": "Answer clearly and briefly while keeping technical accuracy.",
+      "createdAt": "2026-04-23T12:00:00.000Z",
+      "updatedAt": "2026-04-23T12:00:00.000Z"
+    }
+  ]
+}

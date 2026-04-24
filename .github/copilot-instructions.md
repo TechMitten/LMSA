@@ -18,23 +18,29 @@
   - **Premium Modal**: [app/src/main/assets/LMSA/js/components/modals/premium-modal.js](app/src/main/assets/LMSA/js/components/modals/premium-modal.js)
 
 ### Native Bridge (JS ↔ Kotlin)
-Five main JSInterface classes expose ~30 methods:
-1. **`AndroidFileOps`** — File I/O (save files, images)
-2. **`AndroidBilling`** — Premium purchases, ads, revenue tracking
-3. **`AndroidTTS`** — Text-to-speech synthesis + recovery watchdog
-4. **`AndroidReview`** — In-app review prompt
-5. **`AndroidUsageLimiter`** — Rate limiting (20+ completions/day; unlimited if premium)
+Nine JSInterface classes registered in `WebViewActivity.kt`:
+1. **`AndroidFileOps`** (`FileOperationInterface`) — File I/O (save files, images)
+2. **`AndroidBilling`** (`BillingInterface`) — Premium purchases, ads, revenue tracking
+3. **`AndroidTTS`** (`TTSInterface`) — Text-to-speech synthesis + recovery watchdog
+4. **`AndroidReview`** (`ReviewInterface`) — In-app review prompt
+5. **`AndroidUsageLimiter`** (`UsageLimiterInterface`) — Rate limiting (15 local completions/day; OpenRouter completions unmetered; unlimited if premium)
+6. **`AndroidPower`** (`PowerManagementInterface`) — Screen wake lock / power management
+7. **`AndroidHaptics`** (`HapticInterface`) — Haptic feedback control
+8. **`AndroidBiometrics`** (`BiometricInterface`) — Biometric authentication (fingerprint/face)
+9. **`AndroidNetwork`** (`NetworkInterface`) — Network connectivity checks
 
 ### Key Features
 - **Monetization**: One-time purchase `"ad_removal"` → lifetime premium access stored in SharedPreferences
-- **Ad System**: Interstitial ads (ad unit: `ca-app-pub-1388425042154340/3976255369`); skipped if premium
+- **Ad System**: Interstitial ads (`ca-app-pub-1388425042154340/3976255369`) + App Open Ads (`ca-app-pub-1388425042154340/2733504962`); both skipped if premium
+- **App Open Ad**: Shows after 5+ app opens, max once per 12 hours; 10-minute cooldown shared with interstitial ads
 - **State Sync**: Native calls JS via `evaluateJavascript()` to sync premium status, ads, etc.
+- **Features Catalog**: Full user-facing feature inventory in [FEATURES_AND_OPTIONS_CATALOG.md](FEATURES_AND_OPTIONS_CATALOG.md)
 
 ---
 
 ## Build System & Commands
 
-**Gradle 8.13.2**, **Kotlin 2.0**, **Java 17**, targeting **Android 12–15** (minSdk 23, targetSdk 35)
+**Gradle 8.13.2**, **Kotlin 2.0**, **Java 17**, targeting **Android 6–16** (minSdk 23, compileSdk/targetSdk 36)
 
 ### Core Tasks
 ```bash
@@ -111,10 +117,19 @@ app/src/main/
 │   ├── index.html (main page)
 │   ├── css/ (styles, themes, responsive layouts)
 │   ├── js/
-│   │   ├── android-interface.js (JSInterface bridges)
-│   │   ├── components/modals/premium-modal.js
-│   │   ├── ui-manager.js (sidebar, collapsibles, rendering)
-│   │   └── [other modules]
+│   │   ├── android-interface.js (JSInterface bridges + premium state)
+│   │   ├── app.js / main.js (app bootstrap)
+│   │   ├── api-service.js (LM Studio / OpenRouter API calls)
+│   │   ├── chat-service.js (chat session management)
+│   │   ├── settings-manager.js / settings-modal-manager.js
+│   │   ├── model-manager.js (model loading/selection)
+│   │   ├── ui-manager.js / ui-manager-part.js (sidebar, collapsibles, rendering)
+│   │   ├── tts-service.js (TTS orchestration)
+│   │   ├── export-import.js (chat export/import)
+│   │   ├── shared-state.js (global state)
+│   │   ├── usage-limiter.js (client-side rate limiting)
+│   │   ├── syntax-highlighter.js / marked-bundle.js (markdown + code)
+│   │   └── components/modals/ (19 modal components)
 │   ├── fonts/ (custom typefaces)
 │   └── images/ (logos, icons, banners)
 ├── res/ (Android resources: layouts, drawables, colors, strings)
@@ -224,4 +239,4 @@ When working on LMSA, keep in mind:
 
 ---
 
-**Last updated**: April 2026 | **Kotlin 2.0** | **Android 12–15 (minSdk 23, targetSdk 35)**
+**Last updated**: April 2026 | **Kotlin 2.0** | **Android 6–16 (minSdk 23, compileSdk/targetSdk 36)** | **v10.14 (build 297)**

@@ -87,8 +87,9 @@ class WebViewActivity : AppCompatActivity() {
     // App Open Ad
     private val APP_OPEN_AD_UNIT_ID = "ca-app-pub-1388425042154340/2733504962"
     private val APP_OPEN_ELIGIBLE_AFTER_COUNT = 5
-    private val APP_OPEN_MIN_INTERVAL_MS = 12 * 60 * 60 * 1000L   // 12 hours
-    private val FULL_SCREEN_AD_COOLDOWN_MS = 10 * 60 * 1000L       // 10 minutes
+    private val APP_OPEN_MIN_INTERVAL_FREE_USER_MS = 45 * 60 * 1000L
+    private val APP_OPEN_MIN_INTERVAL_DEBUG_MS = 1 * 60 * 1000L
+    private val APP_OPEN_DAILY_CAP_FREE_USER = 6
     private var appOpenAd: AppOpenAd? = null
     private var isLoadingAppOpenAd = false
     private var isSplashActive = true
@@ -96,7 +97,15 @@ class WebViewActivity : AppCompatActivity() {
     private var splashRunnable: Runnable? = null
     private val PREF_APP_OPEN_COUNT = "app_open_count"
     private val PREF_LAST_APP_OPEN_AD_SHOWN_AT = "last_app_open_ad_shown_at"
-    private val PREF_LAST_FULL_SCREEN_AD_SHOWN_AT = "last_full_screen_ad_shown_at"
+    private val PREF_LAST_APP_OPEN_AD_COOLDOWN_AT = "last_app_open_ad_cooldown_at"
+    private val PREF_LAST_FULL_SCREEN_AD_SHOWN_AT_LEGACY = "last_full_screen_ad_shown_at"
+    private val PREF_APP_OPEN_AD_DAILY_DATE = "app_open_ad_daily_date"
+    private val PREF_APP_OPEN_AD_DAILY_COUNT = "app_open_ad_daily_count"
+    private val STARTUP_BILLING_TIMEOUT_MS = 1500L
+    private enum class StartupEntitlementResolution { UNKNOWN, RESOLVED, TIMED_OUT }
+    private var startupEntitlementResolution = StartupEntitlementResolution.UNKNOWN
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var startupBillingTimeoutRunnable: Runnable? = null
 
 
 
@@ -131,6 +140,7 @@ class WebViewActivity : AppCompatActivity() {
     private val PRODUCT_ID = "ad_removal"
     private val PREFS_NAME = "LMSA_PREFS"
     private val PREF_IS_PREMIUM = "is_premium"
+    private val PREF_IS_DEBUG_MODE = "is_debug_mode"
     private val PREF_ONBOARDING_COMPLETED = "onboarding_completed"
     private var isPremium = false
     private var isDebugMode = false
@@ -198,7 +208,8 @@ class WebViewActivity : AppCompatActivity() {
             .setListener(purchasesUpdatedListener)
             .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
             .build()
-        
+
+        startStartupEntitlementResolution()
         startBillingConnection()
         
         // Check if premium before loading ads
@@ -207,6 +218,7 @@ class WebViewActivity : AppCompatActivity() {
         val appOpenCount = prefs.getInt(PREF_APP_OPEN_COUNT, 0) + 1
         prefs.edit().putInt(PREF_APP_OPEN_COUNT, appOpenCount).apply()
         isPremium = prefs.getBoolean(PREF_IS_PREMIUM, false)
+        isDebugMode = prefs.getBoolean(PREF_IS_DEBUG_MODE, false)
         
         updatePremiumUiState()
 
@@ -675,14 +687,72 @@ class WebViewActivity : AppCompatActivity() {
     // App Open Ad
     // -------------------------------------------------------------------------
 
+    private fun appOpenDailyKey(): String {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        return dateFormat.format(Date())
+    }
+
+    private fun getCurrentAppOpenMinIntervalMs(): Long {
+        return if (isDebugMode) APP_OPEN_MIN_INTERVAL_DEBUG_MS else APP_OPEN_MIN_INTERVAL_FREE_USER_MS
+    }
+
+    private fun normalizeAppOpenDailyCounter(prefs: android.content.SharedPreferences): Int {
+        val todayKey = appOpenDailyKey()
+        val storedDate = prefs.getString(PREF_APP_OPEN_AD_DAILY_DATE, "") ?: ""
+        if (storedDate != todayKey) {
+            prefs.edit()
+                .putString(PREF_APP_OPEN_AD_DAILY_DATE, todayKey)
+                .putInt(PREF_APP_OPEN_AD_DAILY_COUNT, 0)
+                .apply()
+            return 0
+        }
+        return prefs.getInt(PREF_APP_OPEN_AD_DAILY_COUNT, 0)
+    }
+
+    private fun incrementAppOpenDailyCounter(prefs: android.content.SharedPreferences) {
+        val todayCount = normalizeAppOpenDailyCounter(prefs)
+        prefs.edit().putInt(PREF_APP_OPEN_AD_DAILY_COUNT, todayCount + 1).apply()
+    }
+
+    private fun isAppOpenAdEligible(prefs: android.content.SharedPreferences, now: Long): Boolean {
+        val appOpenCount = prefs.getInt(PREF_APP_OPEN_COUNT, 0)
+        if (appOpenCount < APP_OPEN_ELIGIBLE_AFTER_COUNT) {
+            Log.d(TAG, "App Open ad blocked: app open count $appOpenCount < $APP_OPEN_ELIGIBLE_AFTER_COUNT")
+            return false
+        }
+
+        val minIntervalMs = getCurrentAppOpenMinIntervalMs()
+        val lastShownAt = maxOf(
+            prefs.getLong(PREF_LAST_APP_OPEN_AD_COOLDOWN_AT, 0L),
+            prefs.getLong(PREF_LAST_FULL_SCREEN_AD_SHOWN_AT_LEGACY, 0L)
+        )
+        if (now - lastShownAt < minIntervalMs) {
+            val remainingSec = ((minIntervalMs - (now - lastShownAt)) / 1000L).coerceAtLeast(0L)
+            Log.d(TAG, "App Open ad blocked: cooldown active (${remainingSec}s remaining)")
+            return false
+        }
+
+        if (!isDebugMode) {
+            val dailyCount = normalizeAppOpenDailyCounter(prefs)
+            if (dailyCount >= APP_OPEN_DAILY_CAP_FREE_USER) {
+                Log.d(TAG, "App Open ad blocked: daily cap reached ($dailyCount/$APP_OPEN_DAILY_CAP_FREE_USER)")
+                return false
+            }
+        }
+
+        Log.d(TAG, "App Open ad eligible: opens=$appOpenCount, debug=$isDebugMode")
+        return true
+    }
+
     private fun loadAppOpenAd() {
         if (isLoadingAppOpenAd || appOpenAd != null) return
-        if (hasEffectivePremium()) return
+        if (hasEffectivePremium()) {
+            Log.d(TAG, "App Open ad blocked: effective premium user")
+            return
+        }
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        if (prefs.getInt(PREF_APP_OPEN_COUNT, 0) < APP_OPEN_ELIGIBLE_AFTER_COUNT) return
         val now = System.currentTimeMillis()
-        if (now - prefs.getLong(PREF_LAST_APP_OPEN_AD_SHOWN_AT, 0L) < APP_OPEN_MIN_INTERVAL_MS) return
-        if (now - prefs.getLong(PREF_LAST_FULL_SCREEN_AD_SHOWN_AT, 0L) < FULL_SCREEN_AD_COOLDOWN_MS) return
+        if (!isAppOpenAdEligible(prefs, now)) return
 
         isLoadingAppOpenAd = true
         AppOpenAd.load(
@@ -707,13 +777,28 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun showAppOpenAdIfReady() {
         if (!isSplashActive) return
+        if (startupEntitlementResolution == StartupEntitlementResolution.UNKNOWN) {
+            Log.d(TAG, "Deferring App Open ad display until billing entitlement resolves")
+            return
+        }
+        if (startupEntitlementResolution == StartupEntitlementResolution.TIMED_OUT) {
+            Log.w(TAG, "Skipping App Open ad after startup billing timeout")
+            appOpenAd = null
+            hideSplash()
+            return
+        }
         val ad = appOpenAd ?: return
-        if (hasEffectivePremium()) return
+        if (hasEffectivePremium()) {
+            appOpenAd = null
+            hideSplash()
+            return
+        }
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        if (prefs.getInt(PREF_APP_OPEN_COUNT, 0) < APP_OPEN_ELIGIBLE_AFTER_COUNT) return
         val now = System.currentTimeMillis()
-        if (now - prefs.getLong(PREF_LAST_APP_OPEN_AD_SHOWN_AT, 0L) < APP_OPEN_MIN_INTERVAL_MS) return
-        if (now - prefs.getLong(PREF_LAST_FULL_SCREEN_AD_SHOWN_AT, 0L) < FULL_SCREEN_AD_COOLDOWN_MS) return
+        if (!isAppOpenAdEligible(prefs, now)) {
+            hideSplash()
+            return
+        }
 
         // Hold the splash until the ad is dismissed
         splashHandler?.removeCallbacks(splashRunnable!!)
@@ -723,8 +808,11 @@ class WebViewActivity : AppCompatActivity() {
                 val ts = System.currentTimeMillis()
                 prefs.edit()
                     .putLong(PREF_LAST_APP_OPEN_AD_SHOWN_AT, ts)
-                    .putLong(PREF_LAST_FULL_SCREEN_AD_SHOWN_AT, ts)
+                    .putLong(PREF_LAST_APP_OPEN_AD_COOLDOWN_AT, ts)
                     .apply()
+                if (!isDebugMode) {
+                    incrementAppOpenDailyCounter(prefs)
+                }
                 appOpenAd = null
                 hideSplash()
             }
@@ -903,6 +991,13 @@ class WebViewActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         hideSystemBars()
+
+        if (billingClient.isReady) {
+            queryPurchases()
+        } else {
+            startBillingConnection()
+        }
+
         // Show App Open ad if it loaded before onResume fired (edge case on cold start).
         // isSplashActive is false on every subsequent foreground resume, so this is a no-op then.
         showAppOpenAdIfReady()
@@ -939,6 +1034,8 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        startupBillingTimeoutRunnable?.let { mainHandler.removeCallbacks(it) }
+        startupBillingTimeoutRunnable = null
         textToSpeech?.shutdown()
         textToSpeech = null
         isTTSInitialized = false
@@ -987,6 +1084,32 @@ class WebViewActivity : AppCompatActivity() {
                 Log.e(TAG, "Error requesting review flow: ${task.exception}")
             }
         }
+    }
+
+    private fun startStartupEntitlementResolution() {
+        startupEntitlementResolution = StartupEntitlementResolution.UNKNOWN
+        startupBillingTimeoutRunnable?.let { mainHandler.removeCallbacks(it) }
+        startupBillingTimeoutRunnable = Runnable {
+            if (startupEntitlementResolution != StartupEntitlementResolution.UNKNOWN) {
+                return@Runnable
+            }
+            startupEntitlementResolution = StartupEntitlementResolution.TIMED_OUT
+            startupBillingTimeoutRunnable = null
+            Log.w(TAG, "Startup billing entitlement resolution timed out after ${STARTUP_BILLING_TIMEOUT_MS}ms")
+            showAppOpenAdIfReady()
+        }
+        mainHandler.postDelayed(startupBillingTimeoutRunnable!!, STARTUP_BILLING_TIMEOUT_MS)
+    }
+
+    private fun markStartupEntitlementResolved(source: String) {
+        if (startupEntitlementResolution != StartupEntitlementResolution.UNKNOWN) {
+            return
+        }
+        startupEntitlementResolution = StartupEntitlementResolution.RESOLVED
+        startupBillingTimeoutRunnable?.let { mainHandler.removeCallbacks(it) }
+        startupBillingTimeoutRunnable = null
+        Log.d(TAG, "Startup billing entitlement resolved via $source")
+        runOnUiThread { showAppOpenAdIfReady() }
     }
 
     private fun requestAudioFocus(): Int {
@@ -1374,7 +1497,8 @@ class WebViewActivity : AppCompatActivity() {
                 }
             }
             override fun onBillingServiceDisconnected() {
-                // Retry logic can be added here
+                Log.w(TAG, "Billing service disconnected, attempting reconnect")
+                startBillingConnection()
             }
         })
     }
@@ -1401,6 +1525,10 @@ class WebViewActivity : AppCompatActivity() {
                 if (hasPremium != isPremium) {
                     setPremiumStatus(hasPremium)
                 }
+
+                markStartupEntitlementResolved("queryPurchases")
+            } else {
+                Log.w(TAG, "queryPurchases failed during startup: ${billingResult.responseCode} ${billingResult.debugMessage}")
             }
         }
     }
@@ -1428,6 +1556,10 @@ class WebViewActivity : AppCompatActivity() {
         prefs.edit().putBoolean(PREF_IS_PREMIUM, isPremium).apply()
         
         updatePremiumUiState()
+
+        if (startupEntitlementResolution == StartupEntitlementResolution.UNKNOWN) {
+            markStartupEntitlementResolved("setPremiumStatus")
+        }
     }
 
     inner class BillingInterface {
@@ -1436,6 +1568,15 @@ class WebViewActivity : AppCompatActivity() {
             if (isPremium) {
                 runOnUiThread {
                     Toast.makeText(this@WebViewActivity, "You already have Premium!", Toast.LENGTH_SHORT).show()
+                }
+                return
+            }
+
+            if (!billingClient.isReady) {
+                Log.w(TAG, "Billing client not ready, attempting reconnect before purchase")
+                startBillingConnection()
+                runOnUiThread {
+                    Toast.makeText(this@WebViewActivity, "Billing is reconnecting. Please try again in a moment.", Toast.LENGTH_SHORT).show()
                 }
                 return
             }
@@ -1490,6 +1631,11 @@ class WebViewActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun checkDebugMode(): Boolean {
+            return isDebugMode
+        }
+
+        @JavascriptInterface
         fun isOnboardingCompleted(): Boolean {
             return this@WebViewActivity.isOnboardingCompleted()
         }
@@ -1502,6 +1648,8 @@ class WebViewActivity : AppCompatActivity() {
         @JavascriptInterface
         fun toggleDebugMode(enable: Boolean) {
             isDebugMode = enable
+            val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+            prefs.edit().putBoolean(PREF_IS_DEBUG_MODE, enable).apply()
             runOnUiThread {
                 Toast.makeText(this@WebViewActivity, "Debug Mode: ${if(enable) "Enabled" else "Disabled"}", Toast.LENGTH_SHORT).show()
             }

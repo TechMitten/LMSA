@@ -1,6 +1,7 @@
 // Import the checkAndShowWelcomeMessage function
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { showExternalSiteModal } from './external-site-confirmation-modal.js';
+import { setDebugEnabled } from './utils.js';
 
 // Get DOM elements
 const aboutButtonElement = document.getElementById('about-btn');
@@ -121,12 +122,90 @@ if (openHelpLink && helpModal) {
 // Debug Mode Trigger logic
 const versionBadge = document.querySelector('.version-badge');
 const WELCOME_SETTINGS_TAPPED_KEY = 'welcomeSettingsTapped';
+const DEBUG_MODE_STORAGE_KEY = 'lmsaDebugMode';
+const DEBUG_TAP_ARM_COUNT = 7;
+const DEBUG_TAP_TRIGGER_COUNT = 11;
+const DEBUG_TAP_TIMEOUT_MS = 450;
 let debugClickCount = 0;
 let debugClickTimer = null;
+let debugGestureArmed = false;
+
 // Initialize global debug state if not exists
 if (typeof window.isDebugMode === 'undefined') {
     window.isDebugMode = false;
 }
+
+function clearDebugTapProgress() {
+    debugClickCount = 0;
+    debugGestureArmed = false;
+    if (debugClickTimer) {
+        clearTimeout(debugClickTimer);
+        debugClickTimer = null;
+    }
+}
+
+function scheduleDebugTapReset() {
+    if (debugClickTimer) {
+        clearTimeout(debugClickTimer);
+    }
+    debugClickTimer = setTimeout(() => {
+        clearDebugTapProgress();
+    }, DEBUG_TAP_TIMEOUT_MS);
+}
+
+function confirmEnableDebugMode() {
+    if (typeof window.confirm === 'function') {
+        return window.confirm('Enable Debug Mode? This unlocks testing behavior intended for development use only.');
+    }
+    return true;
+}
+
+function updateWelcomeDebugIndicator(isEnabled) {
+    const indicator = document.getElementById('welcome-debug-indicator');
+    if (!indicator) {
+        return;
+    }
+    indicator.style.display = isEnabled ? 'block' : 'none';
+}
+
+function applyDebugModeState(enabled, syncNative = true) {
+    const isEnabled = !!enabled;
+    window.isDebugMode = isEnabled;
+    setDebugEnabled(isEnabled);
+    updateWelcomeDebugIndicator(isEnabled);
+
+    if (syncNative && window.AndroidBilling && typeof window.AndroidBilling.toggleDebugMode === 'function') {
+        window.AndroidBilling.toggleDebugMode(isEnabled);
+    } else if (!window.AndroidBilling || typeof window.AndroidBilling.toggleDebugMode !== 'function') {
+        localStorage.setItem(DEBUG_MODE_STORAGE_KEY, isEnabled ? 'true' : 'false');
+        if (typeof window.updateUiForPremium === 'function') {
+            window.updateUiForPremium(!isEnabled);
+        }
+    }
+
+    if (isEnabled) {
+        resetWelcomeSettingsFirstTapState();
+    }
+}
+
+function hydrateDebugModeState() {
+    let hydratedDebugMode = false;
+
+    if (window.AndroidBilling && typeof window.AndroidBilling.checkDebugMode === 'function') {
+        hydratedDebugMode = !!window.AndroidBilling.checkDebugMode();
+    } else {
+        hydratedDebugMode = localStorage.getItem(DEBUG_MODE_STORAGE_KEY) === 'true';
+        if (typeof window.updateUiForPremium === 'function') {
+            window.updateUiForPremium(!hydratedDebugMode);
+        }
+    }
+
+    window.isDebugMode = hydratedDebugMode;
+    setDebugEnabled(hydratedDebugMode);
+    updateWelcomeDebugIndicator(hydratedDebugMode);
+}
+
+hydrateDebugModeState();
 
 function resetWelcomeSettingsFirstTapState() {
     localStorage.removeItem(WELCOME_SETTINGS_TAPPED_KEY);
@@ -138,46 +217,48 @@ function resetWelcomeSettingsFirstTapState() {
 }
 
 if (versionBadge) {
-    // Add distinct cursor to hint interactivity for those who know
-    // versionBadge.style.cursor = 'pointer'; // Maybe keep it hidden/normal cursor to be truly hidden
-
-    versionBadge.addEventListener('click', (e) => {
-        // Prevent default double-tap zoom etc
+    const processVersionBadgeTap = (e) => {
         e.preventDefault();
-        
+        e.stopPropagation();
+
         debugClickCount++;
-        
-        if (debugClickTimer) clearTimeout(debugClickTimer);
-        
-        // Reset counter if too much time passes between clicks
-        debugClickTimer = setTimeout(() => {
-            debugClickCount = 0;
-        }, 500); // 500ms timeout for rapid clicking
-        
-        if (debugClickCount >= 7) {
-            debugClickCount = 0;
-            // Toggle logic
-            if (window.AndroidBilling && typeof window.AndroidBilling.toggleDebugMode === 'function') {
-                window.isDebugMode = !window.isDebugMode;
-                window.AndroidBilling.toggleDebugMode(window.isDebugMode);
-                if (window.isDebugMode) {
-                    resetWelcomeSettingsFirstTapState();
-                }
-                console.log(`Debug Mode toggled: ${window.isDebugMode}`);
-            } else {
-                console.warn('AndroidBilling interface not found or toggleDebugMode not supported');
-                // Fallback for browser testing
-                console.log('Debug mode trigger activated (mock)');
-                if (typeof window.updateUiForPremium === 'function') {
-                    window.isDebugMode = !window.isDebugMode;
-                    if (window.isDebugMode) {
-                        resetWelcomeSettingsFirstTapState();
-                    }
-                    // Mock the effect
-                    window.updateUiForPremium(!window.isDebugMode); // Assuming premium is true, so !debug is false (free)
-                    alert(`Debug Mode: ${window.isDebugMode ? 'Enabled' : 'Disabled'}`);
-                }
-            }
+        if (debugClickCount >= DEBUG_TAP_ARM_COUNT) {
+            debugGestureArmed = true;
         }
-    });
+
+        if (debugGestureArmed && debugClickCount >= DEBUG_TAP_TRIGGER_COUNT) {
+            const nextState = !window.isDebugMode;
+            if (nextState && !confirmEnableDebugMode()) {
+                clearDebugTapProgress();
+                return;
+            }
+            applyDebugModeState(nextState, true);
+            clearDebugTapProgress();
+            return;
+        }
+
+        scheduleDebugTapReset();
+    };
+
+    versionBadge.addEventListener('click', processVersionBadgeTap);
+    versionBadge.addEventListener('touchend', processVersionBadgeTap, { passive: false });
+}
+
+if (modalContent) {
+    const disableDebugByModalTap = (e) => {
+        if (!window.isDebugMode) {
+            return;
+        }
+
+        const target = e.target;
+        if (versionBadge && versionBadge.contains(target)) {
+            return;
+        }
+
+        applyDebugModeState(false, true);
+        clearDebugTapProgress();
+    };
+
+    modalContent.addEventListener('click', disableDebugByModalTap);
+    modalContent.addEventListener('touchend', disableDebugByModalTap, { passive: true });
 }

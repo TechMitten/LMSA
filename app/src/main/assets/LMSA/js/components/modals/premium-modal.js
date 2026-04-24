@@ -421,9 +421,11 @@ export function initPremiumModal() {
     if (upgradeButton) {
         upgradeButton.addEventListener('click', () => {
             closeModal();
-            // Call the existing removeAds function from android-interface.js
-            if (typeof removeAds === 'function') {
-                removeAds();
+            // Call the existing global removeAds bridge function from android-interface.js.
+            if (typeof window.removeAds === 'function') {
+                window.removeAds();
+            } else {
+                console.warn('Premium upgrade unavailable: window.removeAds is not defined');
             }
         });
     }
