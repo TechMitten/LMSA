@@ -66,6 +66,11 @@ export const helpModal = `
                                         <i class="fas fa-cloud mr-2 text-sm"></i>
                                         <span>OpenRouter Setup</span>
                                     </a>
+                                    <a href="#section-offline-use"
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
+                                        <i class="fas fa-server mr-2 text-sm"></i>
+                                        <span>Offline Use</span>
+                                    </a>
                                     <a href="#section-templates"
                                         class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-th-large mr-2 text-sm"></i>
@@ -486,6 +491,111 @@ export const helpModal = `
                                     <li><strong>Switching back to local</strong> — simply turn the OpenRouter
                                         toggle off in Settings to return to LM Studio or Ollama mode</li>
                                 </ul>
+                            </div>
+                        </section>
+
+                        <section id="section-offline-use">
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #10b981;"><i
+                                    class="fas fa-server mr-2"></i>Offline Use</h3>
+                            <p style="color: var(--text-primary); margin-bottom: 1rem;">Offline mode allows you to chat with AI models running on your own computer without requiring an internet connection. This feature is exclusive to Premium users.</p>
+
+                            <div class="mt-4 p-3 rounded-lg border"
+                                style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(34, 197, 94, 0.1) 100%); border: 1px solid rgba(16, 185, 129, 0.45);">
+                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                        class="fas fa-lock mr-2"></i>Premium Feature</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">Offline use is available to <strong>Premium users only</strong>. Free users are limited to cloud-based services and cannot access local servers. <a href="#" id="open-premium-modal-offline"
+                                        class="text-blue-400 hover:text-blue-300">Upgrade to Premium</a> to unlock offline mode.</p>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                        class="fas fa-server mr-2"></i>What's Available Offline</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.75rem;">When using offline mode with local servers, only the following features are available:</p>
+                                <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
+                                    <li><strong>Local LM Studio Models</strong> — Run models loaded in your LM Studio server on your computer</li>
+                                    <li><strong>Ollama Models</strong> — Use models from your Ollama installation</li>
+                                    <li><strong>Standard Chat</strong> — Send messages and receive responses from your local model</li>
+                                    <li><strong>File Attachments</strong> — Attach files to chats for analysis (Premium feature)</li>
+                                    <li><strong>Text-to-Speech</strong> — Synthesize AI responses using available voices</li>
+                                    <li><strong>Templates & Character Cards</strong> — Use system prompts and roleplay characters</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg border"
+                                style="background: var(--settings-label-bg); border: 1px solid rgba(239, 68, 68, 0.4);">
+                                <p class="font-medium flex items-center" style="color: #ef4444;"><i
+                                        class="fas fa-ban mr-2"></i>What's NOT Available Offline</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.75rem;">The following features require an internet connection and are not available when using local servers:</p>
+                                <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
+                                    <li><strong>OpenRouter Cloud Models</strong> — Cannot access remote cloud AI services without internet</li>
+                                    <li><strong>Web Search API</strong> — Web search is not available in offline mode; the feature requires internet connectivity to query search engines</li>
+                                    <li><strong>Model Catalog Downloads</strong> — Cannot browse or download new models from online sources without an internet connection</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                        class="fas fa-shield-alt mr-2"></i>Privacy Benefits of Offline Mode</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.75rem;">Offline mode provides maximum privacy for your conversations:</p>
+                                <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
+                                    <li><strong>Complete Privacy</strong> — Your conversations never leave your local network. No data is sent to cloud servers or third parties</li>
+                                    <li><strong>Full Control</strong> — You control all your data. Models run on hardware you own or control</li>
+                                    <li><strong>No Usage Tracking</strong> — Your chats are not monitored, logged, or analyzed by external services</li>
+                                    <li><strong>Sensitive Information Safe</strong> — Use LMSA offline for confidential documents, proprietary data, or personal information without privacy concerns</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                        class="fas fa-cogs mr-2"></i>Enabling Offline Mode</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.75rem;">To use LMSA in offline mode:</p>
+                                <ol class="list-decimal pl-5 space-y-2" style="color: var(--text-primary);">
+                                    <li><strong>Start your local server</strong> — Launch LM Studio on your computer and load a model, or start an Ollama server</li>
+                                    <li><strong>Connect in LMSA</strong> — Open LMSA Settings and configure your server's local IP address and port</li>
+                                    <li><strong>Disconnect from internet</strong> (optional) — LMSA works whether internet is available or not, but for true offline operation, you may want to disable network connectivity on your mobile device</li>
+                                    <li><strong>Chat locally</strong> — Select your local model and start chatting with zero data leaving your network</li>
+                                </ol>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                        class="fas fa-info-circle mr-2"></i>Offline vs. Online Mode Comparison</p>
+                                <div class="overflow-x-auto mt-2">
+                                    <table class="w-full text-sm" style="color: var(--text-primary);">
+                                        <tbody>
+                                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                                <td class="py-2 px-2 font-semibold">Feature</td>
+                                                <td class="py-2 px-2 font-semibold">Offline (Local)</td>
+                                                <td class="py-2 px-2 font-semibold">Online (Cloud)</td>
+                                            </tr>
+                                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                                <td class="py-2 px-2">Internet Required</td>
+                                                <td class="py-2 px-2" style="color: #22c55e;">✓ No</td>
+                                                <td class="py-2 px-2" style="color: #ef4444;">✓ Yes</td>
+                                            </tr>
+                                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                                <td class="py-2 px-2">Data Privacy</td>
+                                                <td class="py-2 px-2" style="color: #22c55e;">✓ Maximum</td>
+                                                <td class="py-2 px-2" style="color: #fbbf24;">~ Depends on provider</td>
+                                            </tr>
+                                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                                <td class="py-2 px-2">Model Variety</td>
+                                                <td class="py-2 px-2" style="color: #fbbf24;">~ Limited to your server</td>
+                                                <td class="py-2 px-2" style="color: #22c55e;">✓ Hundreds available</td>
+                                            </tr>
+                                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                                <td class="py-2 px-2">Web Search</td>
+                                                <td class="py-2 px-2" style="color: #ef4444;">✗ Not available</td>
+                                                <td class="py-2 px-2" style="color: #22c55e;">✓ Available</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-2 px-2">Speed</td>
+                                                <td class="py-2 px-2" style="color: #22c55e;">✓ Fast (local)</td>
+                                                <td class="py-2 px-2" style="color: #fbbf24;">~ Network dependent</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </section>
 
@@ -933,6 +1043,7 @@ export const helpModal = `
                                     <li><strong>Automatic Reset: Midnight (Local Time)</strong> — Your chat completion counts reset at midnight in your timezone, allowing you to chat freely again</li>
                                     <li><strong>Advertisements:</strong> Free users see advertisements throughout the app</li>
                                     <li><strong>File Attachments:</strong> Not available on the Free tier; upgrade to Premium to attach files to chats</li>
+                                    <li><strong>Offline Use (Local LM Studio/Ollama):</strong> Not available on the Free tier; upgrade to Premium for full offline access</li>
                                     <li><strong>TTS (Text-to-Speech):</strong> Unlimited with the default voice; upgrade to Premium to unlock alternate voices</li>
                                     <li><strong>Custom Templates and v2 Character Cards:</strong> Not available on the Free tier; upgrade to Premium to create, import, and use them</li>
                                 </ul>
@@ -947,6 +1058,7 @@ export const helpModal = `
                                     <li><strong>Unlimited Chat Completions</strong> — No daily limits or cooldown periods</li>
                                     <li><strong>Ad-Free Experience</strong> — No advertisements throughout the app</li>
                                     <li><strong>File Attachments:</strong> Attach files (documents, code, data) to chats for analysis</li>
+                                    <li><strong>Offline Use (Local LM Studio/Ollama):</strong> Full access to use local LM Studio and Ollama servers with no internet connection required</li>
                                     <li><strong>OpenRouter Access:</strong> Full access to cloud models via OpenRouter</li>
                                     <li><strong>TTS (Text-to-Speech):</strong> Hear AI responses with the default voice plus alternate premium voices</li>
                                     <li><strong>Custom Templates:</strong> Create, save, edit, and reuse prompt templates</li>

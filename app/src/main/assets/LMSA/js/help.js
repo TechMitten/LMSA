@@ -84,6 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const openSettingsLinks = helpModal
         ? helpModal.querySelectorAll('#open-settings-link, #open-settings-link-mcp')
         : [];
+    const openPremiumModalLinks = helpModal
+        ? helpModal.querySelectorAll('#open-premium-modal-offline')
+        : [];
     const settingsModal = document.getElementById('settings-modal');
 
     // Function to close help modal
@@ -170,6 +173,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     settingsModalContent.classList.add('animate-modal-in');
                     setTimeout(() => {
                         settingsModalContent.classList.remove('animate-modal-in');
+                    }, 300);
+                }
+            }));
+        }
+
+        // Premium modal link event listener
+        if (openPremiumModalLinks.length > 0) {
+            openPremiumModalLinks.forEach((link) => link.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Close help modal
+                closeHelpModal();
+
+                // Open premium modal
+                if (typeof window.openPremiumModal === 'function') {
+                    setTimeout(() => {
+                        window.openPremiumModal('Offline Use');
                     }, 300);
                 }
             }));
