@@ -18,7 +18,7 @@ android {
         minSdk = 23
         // Target 36 to stay current with Play Store 2026 requirements
         targetSdk = 36
-        versionCode = 297
+        versionCode = 299
         versionName = "10.14"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -58,7 +58,7 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.material)
+    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("com.google.android.play:review:2.0.2")
     implementation("com.google.android.play:review-ktx:2.0.2")

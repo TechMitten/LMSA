@@ -178,7 +178,8 @@ class WebViewActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
-        WindowCompat.enableEdgeToEdge(window)
+        // Draw app content behind system bars without calling deprecated bar color APIs.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         hideSystemBars()
         setContentView(R.layout.activity_webview)
         applySystemBarInsets()
