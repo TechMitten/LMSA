@@ -1274,6 +1274,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
         box-shadow:
             0 26px 70px rgba(2, 6, 23, 0.36),
             inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+        animation: welcomeFadeIn 0.6s ease-out;
     }
 
     body.light-theme .welcome-content {
@@ -3161,7 +3162,7 @@ body.light-theme .conn-modal-action-btn--cancel {
     min-width: 58px !important;
     min-height: 58px !important;
     padding: 10px !important;
-    margin: 0 auto 16px auto !important;
+    margin: 0 auto 20px auto !important;
     border-radius: 18px;
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)),
@@ -3169,7 +3170,9 @@ body.light-theme .conn-modal-action-btn--cancel {
     border: 1px solid rgba(148, 163, 184, 0.18);
     box-shadow:
         0 10px 22px rgba(2, 6, 23, 0.2),
+        0 0 20px rgba(96, 165, 250, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+    transition: transform 200ms ease, box-shadow 200ms ease;
 }
 
 #welcome-message .welcome-brand-mark img {
@@ -3179,11 +3182,19 @@ body.light-theme .conn-modal-action-btn--cancel {
     max-height: 39px !important;
 }
 
+#welcome-message .welcome-brand-mark:hover {
+    transform: scale(1.05);
+    box-shadow:
+        0 12px 28px rgba(2, 6, 23, 0.25),
+        0 0 30px rgba(96, 165, 250, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+}
+
 #welcome-message .welcome-title-block {
     width: 100%;
     max-width: 320px;
     text-align: center;
-    margin: 0 auto 16px auto;
+    margin: 0 auto 24px auto;
 }
 
 #welcome-message .welcome-title-block h1 {
@@ -3209,11 +3220,12 @@ body.light-theme .conn-modal-action-btn--cancel {
 
 #welcome-message .welcome-title-block p {
     margin: 0 auto !important;
-    color: #aeb8c7 !important;
+    color: #cbd5e1 !important;
     font-size: 0.95rem !important;
-    line-height: 1.38 !important;
+    line-height: 1.4 !important;
     letter-spacing: -0.01em !important;
-    max-width: 24ch;
+    max-width: 26ch;
+    font-weight: 500 !important;
 }
 
 #welcome-message .welcome-actions {
@@ -3224,9 +3236,9 @@ body.light-theme .conn-modal-action-btn--cancel {
 #welcome-message .welcome-action-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 14px;
     width: 100%;
-    margin-bottom: 12px !important;
+    margin-bottom: 16px !important;
 }
 
 #welcome-message .welcome-action-card,
@@ -3295,15 +3307,15 @@ body.light-theme .conn-modal-action-btn--cancel {
 
 #welcome-message .welcome-action-card:hover,
 #welcome-message .welcome-premium-action:hover {
-    transform: translateY(-1px);
-    border-color: rgba(94, 234, 212, 0.26) !important;
+    transform: translateY(-2px);
+    border-color: rgba(94, 234, 212, 0.3) !important;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.025)),
-        linear-gradient(180deg, rgba(35, 47, 63, 0.84), rgba(17, 24, 38, 0.92)) !important;
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
+        linear-gradient(180deg, rgba(35, 47, 63, 0.88), rgba(17, 24, 38, 0.95)) !important;
     box-shadow:
-        0 10px 22px rgba(2, 6, 23, 0.22),
-        0 0 0 1px rgba(94, 234, 212, 0.04),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+        0 12px 28px rgba(2, 6, 23, 0.25),
+        0 0 0 1px rgba(94, 234, 212, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
 #welcome-message .welcome-premium-row {
@@ -3501,6 +3513,17 @@ body.light-theme #welcome-message .welcome-premium-action.premium-activated {
     #welcome-message .welcome-action-card,
     #welcome-message .welcome-premium-action {
         min-height: 48px !important;
+    }
+}
+
+@keyframes welcomeFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
