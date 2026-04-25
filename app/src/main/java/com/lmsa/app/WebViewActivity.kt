@@ -3,6 +3,7 @@ package com.lmsa.app
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -54,6 +55,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
+import androidx.browser.customtabs.CustomTabColorSchemeParams
+import androidx.browser.customtabs.CustomTabsIntent
 import java.util.concurrent.Executor
 import java.net.HttpURLConnection
 import java.net.URL
@@ -130,7 +133,7 @@ class WebViewActivity : AppCompatActivity() {
     private var isDebugMode = false
     private var biometricPromptShowing = false
     private var shouldRequireBiometricReentryOnResume = false
-    private var suppressBiometricReentryForExternalPicker = false
+    private var suppressBiometricReentryForExternalLaunch = false
 
 
     private val purchasesUpdatedListener = PurchasesUpdatedListener { billingResult, purchases ->
@@ -433,6 +436,7 @@ class WebViewActivity : AppCompatActivity() {
         webView.addJavascriptInterface(PowerManagementInterface(), "AndroidPower")
         webView.addJavascriptInterface(HapticInterface(), "AndroidHaptics")
         webView.addJavascriptInterface(BiometricInterface(), "AndroidBiometrics")
+        webView.addJavascriptInterface(ExternalLinkInterface(), "AndroidExternalLinks")
 
         // Register native bridge for network requests (bypasses CORS)
         webView.addJavascriptInterface(NetworkInterface(), "AndroidNetwork")
@@ -528,7 +532,7 @@ class WebViewActivity : AppCompatActivity() {
 
                 try {
                     if (intent.resolveActivity(packageManager) != null) {
-                        markExternalPickerLaunch()
+                        markExternalLaunch()
                         fileChooserLauncher.launch(intent)
                     } else {
                         val fallbackIntent =
@@ -537,18 +541,18 @@ class WebViewActivity : AppCompatActivity() {
                                 type = "*/*"
                             }
                         if (fallbackIntent.resolveActivity(packageManager) != null) {
-                            markExternalPickerLaunch()
+                            markExternalLaunch()
                             fileChooserLauncher.launch(fallbackIntent)
                         } else {
                             Log.e(TAG, "No app available to handle file selection")
-                            clearExternalPickerLaunchMarker()
+                            clearExternalLaunchMarker()
                             filePathCallback?.onReceiveValue(null)
                             filePathCallback = null
                             return false
                         }
                     }
                 } catch (e: Exception) {
-                    clearExternalPickerLaunchMarker()
+                    clearExternalLaunchMarker()
                     Log.e(TAG, "Cannot open file chooser", e)
                     filePathCallback?.onReceiveValue(null)
                     filePathCallback = null
@@ -827,7 +831,7 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        if (!isChangingConfigurations && !biometricPromptShowing && !suppressBiometricReentryForExternalPicker) {
+        if (!isChangingConfigurations && !biometricPromptShowing && !suppressBiometricReentryForExternalLaunch) {
             shouldRequireBiometricReentryOnResume = true
             hasBackgroundedSinceInitialLaunch = true
             notifyAppBackgrounded()
@@ -865,8 +869,8 @@ class WebViewActivity : AppCompatActivity() {
             Log.d(TAG, "TTS engine re-initialization started on resume")
         }
 
-        if (suppressBiometricReentryForExternalPicker) {
-            suppressBiometricReentryForExternalPicker = false
+        if (suppressBiometricReentryForExternalLaunch) {
+            suppressBiometricReentryForExternalLaunch = false
             shouldRequireBiometricReentryOnResume = false
             return
         }
@@ -1192,12 +1196,51 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
-    private fun markExternalPickerLaunch() {
-        suppressBiometricReentryForExternalPicker = true
+    private fun markExternalLaunch() {
+        suppressBiometricReentryForExternalLaunch = true
     }
 
-    private fun clearExternalPickerLaunchMarker() {
-        suppressBiometricReentryForExternalPicker = false
+    private fun clearExternalLaunchMarker() {
+        suppressBiometricReentryForExternalLaunch = false
+    }
+
+    private fun openExternalUrl(url: String) {
+        val normalizedUrl = url.trim()
+        val uri = Uri.parse(normalizedUrl)
+        val scheme = uri.scheme?.lowercase(Locale.US)
+
+        if ((scheme != "http" && scheme != "https") || uri.host.isNullOrBlank()) {
+            Log.w(TAG, "Rejected unsupported external URL: $normalizedUrl")
+            return
+        }
+
+        val colorScheme = CustomTabColorSchemeParams.Builder()
+            .setToolbarColor(ContextCompat.getColor(this, R.color.splash_background))
+            .build()
+
+        val customTabsIntent = CustomTabsIntent.Builder()
+            .setShowTitle(true)
+            .setShareState(CustomTabsIntent.SHARE_STATE_OFF)
+            .setDefaultColorSchemeParams(colorScheme)
+            .build()
+
+        try {
+            markExternalLaunch()
+            customTabsIntent.launchUrl(this, uri)
+        } catch (customTabsError: ActivityNotFoundException) {
+            try {
+                markExternalLaunch()
+                startActivity(Intent(Intent.ACTION_VIEW, uri))
+            } catch (browserError: Exception) {
+                clearExternalLaunchMarker()
+                Log.e(TAG, "Unable to open external URL: $normalizedUrl", browserError)
+                Toast.makeText(this, "No browser is available to open this page.", Toast.LENGTH_SHORT).show()
+            }
+        } catch (unexpectedError: Exception) {
+            clearExternalLaunchMarker()
+            Log.e(TAG, "Unable to open external URL: $normalizedUrl", unexpectedError)
+            Toast.makeText(this, "Unable to open this page right now.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun getDisplayNameFromUri(uri: Uri): String? {
@@ -1307,10 +1350,10 @@ class WebViewActivity : AppCompatActivity() {
             }
 
             try {
-                markExternalPickerLaunch()
+                markExternalLaunch()
                 fileSaverLauncher.launch(intent)
             } catch (e: Exception) {
-                clearExternalPickerLaunchMarker()
+                clearExternalLaunchMarker()
                 Log.e(TAG, "Error launching file saver", e)
                 // Notify JavaScript that the save failed
                 val webView: WebView = findViewById(R.id.webView)
@@ -1356,10 +1399,10 @@ class WebViewActivity : AppCompatActivity() {
                     putExtra(Intent.EXTRA_TITLE, filename)
                 }
 
-                markExternalPickerLaunch()
+                markExternalLaunch()
                 fileSaverLauncher.launch(intent)
             } catch (e: Exception) {
-                clearExternalPickerLaunchMarker()
+                clearExternalLaunchMarker()
                 Log.e(TAG, "Error launching image file saver", e)
                 // Notify JavaScript that the save failed
                 val webView: WebView = findViewById(R.id.webView)
@@ -1386,10 +1429,10 @@ class WebViewActivity : AppCompatActivity() {
             }
 
             try {
-                markExternalPickerLaunch()
+                markExternalLaunch()
                 systemPromptImportLauncher.launch(intent)
             } catch (e: Exception) {
-                clearExternalPickerLaunchMarker()
+                clearExternalLaunchMarker()
                 Log.e(TAG, "Error launching LM Studio prompt picker", e)
                 notifyLmStudioSystemPromptImportResult(
                     success = false,
@@ -2490,6 +2533,16 @@ class WebViewActivity : AppCompatActivity() {
             performHaptic(type)
         }
     }
+
+    inner class ExternalLinkInterface {
+        @JavascriptInterface
+        fun openUrl(url: String) {
+            runOnUiThread {
+                openExternalUrl(url)
+            }
+        }
+    }
+
     inner class BiometricInterface {
         @JavascriptInterface
         fun isBiometricSupported(): Boolean {

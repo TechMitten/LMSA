@@ -10,6 +10,23 @@ function watchRewardedPremiumAd() {
     console.log('Rewarded ads have been removed.');
 }
 
+function openExternalUrl(url) {
+    const normalizedUrl = typeof url === 'string' ? url.trim() : '';
+    if (!/^https?:\/\//i.test(normalizedUrl)) {
+        return false;
+    }
+
+    if (window.AndroidExternalLinks && typeof window.AndroidExternalLinks.openUrl === 'function') {
+        window.AndroidExternalLinks.openUrl(normalizedUrl);
+        return true;
+    }
+
+    window.open(normalizedUrl, '_blank', 'noopener');
+    return true;
+}
+
+window.openExternalUrl = openExternalUrl;
+
 let restorePurchasesPending = false;
 
 function restorePurchases() {

@@ -58,6 +58,7 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
+    implementation("androidx.browser:browser:1.8.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("com.google.android.play:review:2.0.2")

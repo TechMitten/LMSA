@@ -33,4 +33,23 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }, { passive: false });
     }
+
+    document.addEventListener('click', function (event) {
+        const externalLink = event.target instanceof Element ? event.target.closest('a[target="_blank"]') : null;
+        if (!externalLink) {
+            return;
+        }
+
+        const href = externalLink.getAttribute('href');
+        if (!href || !/^https?:\/\//i.test(href)) {
+            return;
+        }
+
+        if (typeof window.openExternalUrl !== 'function') {
+            return;
+        }
+
+        event.preventDefault();
+        window.openExternalUrl(href);
+    });
 });

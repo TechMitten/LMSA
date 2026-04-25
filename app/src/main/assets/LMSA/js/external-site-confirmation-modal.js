@@ -136,7 +136,11 @@ function createExternalSiteModal() {
             hideExternalSiteModal();
             // Open the external URL if it was set
             if (pendingExternalUrl) {
-                window.open(pendingExternalUrl, '_blank');
+                if (typeof window.openExternalUrl === 'function') {
+                    window.openExternalUrl(pendingExternalUrl);
+                } else {
+                    window.open(pendingExternalUrl, '_blank', 'noopener');
+                }
                 pendingExternalUrl = null;
             }
         });

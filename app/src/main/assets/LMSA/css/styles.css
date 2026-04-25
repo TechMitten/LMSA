@@ -864,6 +864,10 @@ body.light-theme #loaded-model {
     visibility: visible;
 }
 
+body.sidebar-open.modal-keyboard-visible #sidebar.active {
+    bottom: calc(-1 * var(--android-keyboard-height, 0px));
+}
+
 #sidebar-overlay {
     position: fixed;
     top: 0;
