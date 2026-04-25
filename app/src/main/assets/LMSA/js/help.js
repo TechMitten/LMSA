@@ -92,7 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const helpScrollTop = document.getElementById('help-scroll-top');
     if (helpModalContent && helpScrollTop) {
         helpModalContent.addEventListener('scroll', function () {
-            if (helpModalContent.scrollTop > 300) {
+            // Only show button if the help modal is currently open
+            const isModalOpen = helpModal && !helpModal.classList.contains('hidden');
+            if (isModalOpen && helpModalContent.scrollTop > 300) {
                 helpScrollTop.style.opacity = '1';
                 helpScrollTop.style.visibility = 'visible';
                 helpScrollTop.style.pointerEvents = 'auto';
