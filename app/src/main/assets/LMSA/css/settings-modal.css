@@ -1,5 +1,3 @@
-/* Immersive Professional Settings Modal Theme */
-
 /* Modal background with rich visual backdrop */
 #settings-modal {
   background: var(--modal-overlay);
@@ -1341,10 +1339,12 @@ body.light-theme #settings-modal button[id^="to-"]:hover {
 #settings-content-wrapper {
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  max-height: calc(85vh - 160px);
+  max-height: none;
+  padding-bottom: 1rem;
   scrollbar-width: thin;
   scrollbar-color: rgba(59, 130, 246, 0.5) rgba(30, 41, 59, 0.2);
   scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   /* Enable touch scrolling on mobile devices */
   touch-action: pan-y !important;
@@ -1356,24 +1356,33 @@ body.light-theme #settings-modal button[id^="to-"]:hover {
   /* Critical: allows the element to shrink and scroll */
 }
 
+/* Hidden compatibility toggles can appear as stray dots in some WebView builds */
+#settings-step-connection #openrouter-toggle,
+#settings-step-connection #openai-compatible-toggle {
+  display: none !important;
+}
+
 /* When viewport is narrow (likely mobile with keyboard), be more aggressive with height */
 @media (max-height: 600px) {
   #settings-content-wrapper {
-    max-height: calc(100vh - 140px);
+    max-height: none;
+    padding-bottom: 0.9rem;
   }
 }
 
 /* Very constrained viewport (keyboard definitely open) */
 @media (max-height: 500px) {
   #settings-content-wrapper {
-    max-height: calc(100vh - 120px);
+    max-height: none;
+    padding-bottom: 0.8rem;
   }
 }
 
 /* Extreme constraint (small device, keyboard open, browser UI) */
 @media (max-height: 400px) {
   #settings-content-wrapper {
-    max-height: calc(100vh - 100px);
+    max-height: none;
+    padding-bottom: 0.7rem;
   }
 }
 
@@ -2570,13 +2579,36 @@ body.light-theme .connection-status-row .professional-button:hover {
 .connection-presets-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.45rem;
   margin-top: 0.9rem;
+  max-height: 38vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.4) rgba(30, 41, 59, 0.2);
+  padding-right: 2px;
+  padding-bottom: 4px;
+}
+
+.connection-presets-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.connection-presets-list::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.2);
+  border-radius: 4px;
+}
+
+.connection-presets-list::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.4);
+  border-radius: 4px;
 }
 
 .connection-preset-item {
-  padding: 0.9rem;
-  border-radius: 16px;
+  padding: 0.55rem 0.65rem;
+  border-radius: 12px;
   border: 1px solid rgba(148, 163, 184, 0.16);
   background: rgba(15, 23, 42, 0.32);
 }
@@ -2588,23 +2620,32 @@ body.light-theme .connection-status-row .professional-button:hover {
 
 .connection-preset-item-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.5rem;
+}
+
+.connection-preset-item-header>div:first-child {
+  flex: 1;
+  min-width: 0;
 }
 
 .connection-preset-item-title {
   margin: 0;
-  font-size: 0.94rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #f8fafc;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .connection-preset-item-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 0.45rem;
+  gap: 0.3rem;
+  margin-top: 0.22rem;
 }
 
 .connection-preset-type-pill,
@@ -2612,11 +2653,11 @@ body.light-theme .connection-status-row .professional-button:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.34rem 0.62rem;
+  padding: 0.2rem 0.42rem;
   border-radius: 999px;
   background: rgba(59, 130, 246, 0.18);
   color: #dbeafe;
-  font-size: 0.72rem;
+  font-size: 0.64rem;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -2627,16 +2668,23 @@ body.light-theme .connection-status-row .professional-button:hover {
 }
 
 .connection-preset-summary {
-  margin: 0.7rem 0 0;
-  font-size: 0.84rem;
-  line-height: 1.45;
+  margin: 0.3rem 0 0;
+  font-size: 0.73rem;
+  line-height: 1.3;
   color: rgba(203, 213, 225, 0.86);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .connection-preset-actions {
   display: flex;
-  gap: 0.65rem;
-  margin-top: 0.85rem;
+  gap: 0.4rem;
+  margin-top: 0;
+}
+
+.connection-preset-actions--inline {
+  flex: 0 0 auto;
 }
 
 .connection-preset-action-btn {
@@ -2649,6 +2697,14 @@ body.light-theme .connection-status-row .professional-button:hover {
   font-size: 0.82rem;
   font-weight: 700;
   transition: transform 0.12s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.connection-preset-action-btn--compact {
+  flex: 0 0 auto;
+  min-height: 29px;
+  padding: 0 0.58rem;
+  border-radius: 9px;
+  font-size: 0.7rem;
 }
 
 .connection-preset-action-btn:hover {
@@ -2715,8 +2771,16 @@ body.light-theme .connection-preset-action-btn {
 }
 
 @media (max-width: 480px) {
-  .connection-preset-actions {
-    flex-direction: column;
+  .connection-preset-item {
+    padding: 0.5rem 0.56rem;
+  }
+
+  .connection-preset-item-title {
+    font-size: 0.79rem;
+  }
+
+  .connection-preset-summary {
+    font-size: 0.7rem;
   }
 }
 

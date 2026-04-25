@@ -126,8 +126,7 @@ export const settingsModal = `
                     <div class="connection-presets-card mt-4">
                         <div class="connection-presets-header">
                             <div>
-                                <p class="connection-presets-eyebrow">Saved Connection Presets</p>
-                                <h3 class="connection-presets-title">Quick Switch</h3>
+                                <h3 class="connection-presets-title">Saved Presets</h3>
                             </div>
                             <span id="settings-connection-presets-active-type" class="connection-preset-type-pill">Local Server</span>
                         </div>
@@ -144,7 +143,7 @@ export const settingsModal = `
                         </div>
 
                         <div id="settings-connection-presets-empty-state" class="connection-presets-empty-state">
-                            No saved connection presets yet.
+                            No Saved Presets yet.
                         </div>
                         <div id="settings-connection-presets-list" class="connection-presets-list hidden"></div>
                     </div>
@@ -412,82 +411,79 @@ export const settingsModal = `
                         </button>
                     </div>
                 </div>
-            </div>
+                <!-- Navigation buttons container -->
+                <div id="settings-navigation-buttons" class="mt-5 mb-2">
+                    <!-- Connection step buttons -->
+                    <div class="flex justify-end navigation-buttons" id="connection-step-buttons">
+                        <button id="to-prompt-step-btn"
+                            class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                            <i class="fas fa-arrow-right text-sm"></i>
+                            <span class="button-text">Next</span>
+                        </button>
+                    </div>
 
-            <!-- Navigation buttons container (static, above save button) -->
-            <div id="settings-navigation-buttons" class="mt-5 mb-2">
-                <!-- Connection step buttons -->
-                <div class="flex justify-end navigation-buttons" id="connection-step-buttons">
-                    <button id="to-prompt-step-btn"
-                        class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
-                        <i class="fas fa-arrow-right text-sm"></i>
-                        <span class="button-text">Next</span>
-                    </button>
+                    <!-- Prompt step buttons -->
+                    <div class="justify-between navigation-buttons hidden" id="prompt-step-buttons">
+                        <button id="back-to-connection-btn"
+                            class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                            <i class="fas fa-arrow-left text-sm"></i>
+                            <span class="button-text">Back</span>
+                        </button>
+                        <button id="to-options-step-btn"
+                            class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                            <i class="fas fa-arrow-right text-sm"></i>
+                            <span class="button-text">Next</span>
+                        </button>
+                    </div>
+
+                    <!-- Options step buttons -->
+                    <div class="justify-between navigation-buttons hidden" id="options-step-buttons">
+                        <button id="back-to-prompt-btn"
+                            class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                            <i class="fas fa-arrow-left text-sm"></i>
+                            <span class="button-text">Back</span>
+                        </button>
+                        <button id="to-font-step-btn"
+                            class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                            <i class="fas fa-arrow-right text-sm"></i>
+                            <span class="button-text">Next</span>
+                        </button>
+                    </div>
+
+                    <!-- Font step buttons -->
+                    <div class="justify-between navigation-buttons hidden" id="font-step-buttons">
+                        <button id="back-to-options-btn"
+                            class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                            <i class="fas fa-arrow-left text-sm"></i>
+                            <span class="button-text">Back</span>
+                        </button>
+                        <button id="to-actions-step-btn"
+                            class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                            <i class="fas fa-arrow-right text-sm"></i>
+                            <span class="button-text">Next</span>
+                        </button>
+                    </div>
+
+                    <!-- Actions step buttons -->
+                    <div class="navigation-buttons hidden" id="actions-step-buttons">
+                        <button id="back-to-font-btn"
+                            class="professional-button flex items-center justify-center gap-3 w-full h-[48px]">
+                            <i class="fas fa-arrow-left text-sm"></i>
+                            <span class="button-text">Back</span>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Prompt step buttons -->
-                <div class="justify-between navigation-buttons hidden" id="prompt-step-buttons">
-                    <button id="back-to-connection-btn"
-                        class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
-                        <i class="fas fa-arrow-left text-sm"></i>
-                        <span class="button-text">Back</span>
+                <div class="mt-2">
+                    <button id="close-settings"
+                        class="professional-button flex items-center justify-center gap-3 w-full h-[52px]">
+                        <i class="fas fa-check text-sm"></i>
+                        <span>Apply Changes</span>
                     </button>
-                    <button id="to-options-step-btn"
-                        class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
-                        <i class="fas fa-arrow-right text-sm"></i>
-                        <span class="button-text">Next</span>
-                    </button>
-                </div>
 
-                <!-- Options step buttons -->
-                <div class="justify-between navigation-buttons hidden" id="options-step-buttons">
-                    <button id="back-to-prompt-btn"
-                        class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
-                        <i class="fas fa-arrow-left text-sm"></i>
-                        <span class="button-text">Back</span>
-                    </button>
-                    <button id="to-font-step-btn"
-                        class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
-                        <i class="fas fa-arrow-right text-sm"></i>
-                        <span class="button-text">Next</span>
-                    </button>
-                </div>
-
-                <!-- Font step buttons -->
-                <div class="justify-between navigation-buttons hidden" id="font-step-buttons">
-                    <button id="back-to-options-btn"
-                        class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
-                        <i class="fas fa-arrow-left text-sm"></i>
-                        <span class="button-text">Back</span>
-                    </button>
-                    <button id="to-actions-step-btn"
-                        class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
-                        <i class="fas fa-arrow-right text-sm"></i>
-                        <span class="button-text">Next</span>
-                    </button>
-                </div>
-
-                <!-- Actions step buttons -->
-                <div class="navigation-buttons hidden" id="actions-step-buttons">
-                    <button id="back-to-font-btn"
-                        class="professional-button flex items-center justify-center gap-3 w-full h-[48px]">
-                        <i class="fas fa-arrow-left text-sm"></i>
-                        <span class="button-text">Back</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Save button (always visible) -->
-            <div class="mt-2">
-                <button id="close-settings"
-                    class="professional-button flex items-center justify-center gap-3 w-full h-[52px]">
-                    <i class="fas fa-check text-sm"></i>
-                    <span>Apply Changes</span>
-                </button>
-
-                <!-- Simple divider -->
-                <div class="flex justify-center mt-3">
-                    <div class="h-[1px] w-1/2 bg-gray-600/30"></div>
+                    <div class="flex justify-center mt-3">
+                        <div class="h-[1px] w-1/2 bg-gray-600/30"></div>
+                    </div>
                 </div>
             </div>
 
@@ -510,6 +506,38 @@ export const settingsModal = `
                 });
             </script>
 
+        </div>
+    </div>
+
+    <!-- Saved Preset Delete Confirmation Modal -->
+    <div id="delete-connection-preset-modal"
+        class="fixed inset-0 items-center justify-center hidden modal-container"
+        style="z-index: 2300; background: rgba(0,0,0,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);"
+        role="dialog" aria-modal="true" aria-labelledby="delete-connection-preset-title">
+        <div class="connection-input-modal-box animate-modal-in" style="max-width: 420px;">
+            <div class="connection-input-modal-accent connection-input-modal-accent--red"></div>
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="delete-connection-preset-title" class="text-lg font-bold flex items-center" style="color: var(--settings-title-color, #f1f5f9);">
+                    <i class="fas fa-trash-alt text-red-400 mr-2"></i>Delete Saved Preset
+                </h3>
+                <button id="close-delete-connection-preset-modal" type="button" class="conn-modal-close-btn" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <p id="delete-connection-preset-message" class="text-sm mb-5" style="color: var(--settings-help-text, #9ca3af);">
+                Delete this saved preset? This cannot be undone.
+            </p>
+
+            <div class="flex justify-end gap-2">
+                <button id="cancel-delete-connection-preset" type="button" class="professional-button px-4 h-[40px]">
+                    Cancel
+                </button>
+                <button id="confirm-delete-connection-preset" type="button"
+                    class="professional-button px-4 h-[40px] bg-red-600 hover:bg-red-700 border-red-500 text-white">
+                    Delete
+                </button>
+            </div>
         </div>
     </div>
 

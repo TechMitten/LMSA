@@ -27,6 +27,7 @@ let _navigateToStep = null;
 let _currentSettingsStep = 'connection';
 let _openModelInfoAfterSettingsClose = false;
 let _openRouterKeyBeforeEditing = '';
+let _pendingConnectionPresetDeletion = null;
 
 const CONNECTION_PRESET_TYPE_LABELS = {
     local: 'Local Server',
@@ -301,20 +302,14 @@ function renderConnectionPresetList() {
 
         titleGroup.appendChild(meta);
         header.appendChild(titleGroup);
-        item.appendChild(header);
-
-        const summary = document.createElement('p');
-        summary.className = 'connection-preset-summary';
-        summary.textContent = summarizeConnectionPreset(preset);
-        item.appendChild(summary);
 
         const actions = document.createElement('div');
-        actions.className = 'connection-preset-actions';
+        actions.className = 'connection-preset-actions connection-preset-actions--inline';
 
         const applyButton = document.createElement('button');
         applyButton.type = 'button';
-        applyButton.className = 'connection-preset-action-btn';
-        applyButton.textContent = 'Apply';
+        applyButton.className = 'connection-preset-action-btn connection-preset-action-btn--compact';
+        applyButton.textContent = 'Use';
         applyButton.addEventListener('click', () => {
             applySavedConnectionPreset(preset).catch(error => {
                 showConnectionPresetNotice(error?.message || 'Failed to apply preset.', 'error');
@@ -324,22 +319,126 @@ function renderConnectionPresetList() {
 
         const deleteButton = document.createElement('button');
         deleteButton.type = 'button';
-        deleteButton.className = 'connection-preset-action-btn connection-preset-action-btn--danger';
-        deleteButton.textContent = 'Delete';
+        deleteButton.className = 'connection-preset-action-btn connection-preset-action-btn--danger connection-preset-action-btn--compact';
+        deleteButton.textContent = 'Del';
         deleteButton.addEventListener('click', () => {
-            const deleted = deleteConnectionPreset(preset.id);
-            if (!deleted) {
-                showConnectionPresetNotice('Failed to delete preset.', 'error');
-                return;
-            }
-
-            renderConnectionPresetList();
-            showConnectionPresetNotice(`Deleted ${preset.name}.`);
+            showDeleteConnectionPresetModal(preset);
         });
         actions.appendChild(deleteButton);
 
-        item.appendChild(actions);
+        header.appendChild(actions);
+        item.appendChild(header);
+
+        const summary = document.createElement('p');
+        summary.className = 'connection-preset-summary';
+        summary.textContent = summarizeConnectionPreset(preset);
+        item.appendChild(summary);
+
         list.appendChild(item);
+    });
+}
+
+function showDeleteConnectionPresetModal(preset) {
+    const modal = document.getElementById('delete-connection-preset-modal');
+    const message = document.getElementById('delete-connection-preset-message');
+    if (!modal || !preset || !preset.id) {
+        return;
+    }
+
+    _pendingConnectionPresetDeletion = preset;
+
+    if (message) {
+        const safeName = typeof preset.name === 'string' && preset.name.trim()
+            ? preset.name.trim()
+            : 'this preset';
+        message.textContent = `Delete \"${safeName}\"? This cannot be undone.`;
+    }
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+}
+
+function hideDeleteConnectionPresetModal() {
+    const modal = document.getElementById('delete-connection-preset-modal');
+    if (!modal) {
+        _pendingConnectionPresetDeletion = null;
+        return;
+    }
+
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+    _pendingConnectionPresetDeletion = null;
+}
+
+function confirmDeleteConnectionPreset() {
+    const targetPreset = _pendingConnectionPresetDeletion;
+    if (!targetPreset || !targetPreset.id) {
+        hideDeleteConnectionPresetModal();
+        return;
+    }
+
+    const deleted = deleteConnectionPreset(targetPreset.id);
+    hideDeleteConnectionPresetModal();
+
+    if (!deleted) {
+        showConnectionPresetNotice('Failed to delete preset.', 'error');
+        return;
+    }
+
+    renderConnectionPresetList();
+    showConnectionPresetNotice(`Deleted ${targetPreset.name}.`);
+}
+
+function initializeDeleteConnectionPresetModal() {
+    const modal = document.getElementById('delete-connection-preset-modal');
+    const cancelButton = document.getElementById('cancel-delete-connection-preset');
+    const closeButton = document.getElementById('close-delete-connection-preset-modal');
+    const confirmButton = document.getElementById('confirm-delete-connection-preset');
+
+    if (!modal || !cancelButton || !closeButton || !confirmButton) {
+        return;
+    }
+
+    cancelButton.addEventListener('click', event => {
+        event.preventDefault();
+        hideDeleteConnectionPresetModal();
+    });
+
+    closeButton.addEventListener('click', event => {
+        event.preventDefault();
+        hideDeleteConnectionPresetModal();
+    });
+
+    confirmButton.addEventListener('click', event => {
+        event.preventDefault();
+        confirmDeleteConnectionPreset();
+    });
+
+    modal.addEventListener('click', event => {
+        if (event.target === modal) {
+            hideDeleteConnectionPresetModal();
+        }
+    });
+}
+
+function revealConnectionPresetList() {
+    const wrapper = document.getElementById('settings-content-wrapper');
+    const list = document.getElementById('settings-connection-presets-list');
+    if (!wrapper || !list || list.classList.contains('hidden')) {
+        return;
+    }
+
+    requestAnimationFrame(() => {
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const listRect = list.getBoundingClientRect();
+        const footerTop = document.getElementById('settings-navigation-buttons')?.getBoundingClientRect().top ?? wrapperRect.bottom;
+        const visibleBottom = Math.min(wrapperRect.bottom, footerTop) - 12;
+
+        if (listRect.top < wrapperRect.top + 12) {
+            wrapper.scrollTop -= wrapperRect.top + 12 - listRect.top;
+        } else if (listRect.top > visibleBottom || listRect.bottom > visibleBottom) {
+            wrapper.scrollTop += listRect.top - wrapperRect.top - 12;
+        }
     });
 }
 
@@ -446,6 +545,7 @@ function initializeConnectionPresetList() {
                 }
 
                 renderConnectionPresetList();
+                revealConnectionPresetList();
                 showConnectionPresetNotice(`Saved ${savedPreset.name}.`);
             } catch (error) {
                 showConnectionPresetNotice(error?.message || 'Failed to save preset.', 'error');
@@ -3256,8 +3356,11 @@ export function initializeSettingsModal() {
     // Initialize collapse connection input sub-modals (IP/Port and OpenRouter key)
     initializeConnectionInputModals();
 
-    // Initialize saved connection presets list
+    // Initialize Saved Presets list
     initializeConnectionPresetList();
+
+    // Initialize delete confirmation modal for Saved Presets
+    initializeDeleteConnectionPresetModal();
 
     // Initialize the system prompt overlay editor
     initializeSystemPromptOverlay();
