@@ -81,6 +81,55 @@ function ensureFirstMessageInitialized() {
     }
 }
 
+function getHttpErrorFallback(response) {
+    return `HTTP Error: ${response.status} ${response.statusText}`;
+}
+
+async function parseApiErrorResponse(response) {
+    const fallback = getHttpErrorFallback(response);
+
+    try {
+        const contentType = response.headers.get('content-type') || '';
+
+        if (contentType.includes('application/json')) {
+            const errorData = await response.json();
+            console.error('Error data from API:', errorData);
+
+            const rawError = errorData.error || errorData.message || errorData.detail;
+            if (rawError && typeof rawError === 'object') {
+                return rawError.message || rawError.detail || fallback;
+            }
+
+            if (typeof rawError === 'string' && rawError.trim()) {
+                return rawError.trim();
+            }
+        } else {
+            const errorText = await response.text();
+            if (errorText && errorText.trim()) {
+                return errorText.trim();
+            }
+        }
+    } catch (error) {
+        console.error('Failed to parse error response:', error);
+    }
+
+    if (response.status === 429 && getUseOpenAICompatible()) {
+        return 'The configured OpenAI-compatible endpoint rate-limited this request (429 Too Many Requests).';
+    }
+
+    return fallback;
+}
+
+async function throwForApiErrorResponse(response) {
+    const errorText = await parseApiErrorResponse(response);
+
+    if (response.status === 429 && getUseOpenRouter()) {
+        throw new Error('OPENROUTER_RATE_LIMITED');
+    }
+
+    throw new Error(errorText);
+}
+
 function createEmptyChatImageStore() {
     return {
         version: CHAT_IMAGE_STORE_VERSION,
@@ -1900,27 +1949,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
 
         if (!response.ok) {
             console.error('API request failed with status:', response.status, response.statusText);
-            // Handle 429 Rate Limit specifically before reading the body
-            if (response.status === 429) {
-                throw new Error('OPENROUTER_RATE_LIMITED');
-            }
-            let errorText;
-            try {
-                const errorData = await response.json();
-                console.error('Error data from API:', errorData);
-                const rawError = errorData.error || errorData.message;
-                if (rawError && typeof rawError === 'object') {
-                    errorText = rawError.message || `HTTP Error: ${response.status} ${response.statusText}`;
-                } else {
-                    errorText = rawError || `HTTP Error: ${response.status} ${response.statusText}`;
-                }
-            } catch (jsonError) {
-                console.error('Failed to parse error response:', jsonError);
-                errorText = `HTTP Error: ${response.status} ${response.statusText}`;
-            }
-
-            console.error('Throwing error:', errorText);
-            throw new Error(errorText);
+            await throwForApiErrorResponse(response);
         }
 
         const reader = response.body.getReader();
@@ -4783,23 +4812,7 @@ export async function regenerateLastResponse(isRetry = false) {
             }
 
             if (!response.ok) {
-                if (response.status === 429) {
-                    throw new Error('OPENROUTER_RATE_LIMITED');
-                }
-                let errorText;
-                try {
-                    const errorData = await response.json();
-                    const rawError = errorData.error || errorData.message;
-                    if (rawError && typeof rawError === 'object') {
-                        errorText = rawError.message || `HTTP Error: ${response.status} ${response.statusText}`;
-                    } else {
-                        errorText = rawError || `HTTP Error: ${response.status} ${response.statusText}`;
-                    }
-                } catch (jsonError) {
-                    errorText = `HTTP Error: ${response.status} ${response.statusText}`;
-                }
-
-                throw new Error(errorText);
+                await throwForApiErrorResponse(response);
             }
 
             const reader = response.body.getReader();
