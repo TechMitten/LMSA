@@ -3903,18 +3903,6 @@ export function activatePendingTemplateCharacterCard() {
     return true;
 }
 
-/**
- * Creates a new chat (ad removed - ads now show after model load)
- * @returns {string} - The ID of the new chat
- */
-export function createNewChatWithAd() {
-    // Stop any ongoing TTS playback
-    if (window.TTSService && typeof window.TTSService.stop === 'function') {
-        window.TTSService.stop('create-new-chat-with-ad', true);
-    }
-
-    createNewChat();
-}
 
 /**
  * Saves the chat history to localStorage

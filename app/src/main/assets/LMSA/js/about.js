@@ -121,7 +121,6 @@ if (openHelpLink && helpModal) {
 
 // Debug Mode Trigger logic
 const versionBadge = document.querySelector('.version-badge');
-const WELCOME_SETTINGS_TAPPED_KEY = 'welcomeSettingsTapped';
 const DEBUG_MODE_STORAGE_KEY = 'lmsaDebugMode';
 const DEBUG_TAP_ARM_COUNT = 7;
 const DEBUG_TAP_TRIGGER_COUNT = 11;
@@ -184,7 +183,7 @@ function applyDebugModeState(enabled, syncNative = true) {
     }
 
     if (isEnabled) {
-        resetWelcomeSettingsFirstTapState();
+        // Removed resetWelcomeSettingsFirstTapState();
     }
 }
 
@@ -207,14 +206,7 @@ function hydrateDebugModeState() {
 
 hydrateDebugModeState();
 
-function resetWelcomeSettingsFirstTapState() {
-    localStorage.removeItem(WELCOME_SETTINGS_TAPPED_KEY);
-    const getStartedBtn = document.getElementById('get-started-btn');
-    const getStartedLabel = getStartedBtn ? getStartedBtn.querySelector('span') : null;
-    if (getStartedLabel) {
-        getStartedLabel.textContent = 'Start Here';
-    }
-}
+
 
 if (versionBadge) {
     const processVersionBadgeTap = (e) => {

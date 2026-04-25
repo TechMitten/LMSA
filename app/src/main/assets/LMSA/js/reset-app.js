@@ -6,7 +6,6 @@ import { setActionToPerform } from './shared-state.js';
 
 const INTRO_COMPLETED_KEY = 'lmsa_intro_completed';
 const INTRO_VERSION_KEY = 'lmsa_intro_version';
-const WELCOME_SETTINGS_TAPPED_KEY = 'welcomeSettingsTapped';
 
 /**
  * Resets the entire application to its default state
@@ -59,8 +58,7 @@ export function resetApp() {
             'openRouterApiKey',
             'openRouterSelectedModel',
             INTRO_COMPLETED_KEY,
-            INTRO_VERSION_KEY,
-            WELCOME_SETTINGS_TAPPED_KEY
+            INTRO_VERSION_KEY
         ];
 
         console.log('RESET APP: Clearing localStorage items...');

@@ -770,8 +770,6 @@ export async function initializeApp() {
     updateConfirmationModalTheme();
     updateExportImportModalsTheme();
 
-    // Preload interstitial ad for faster display
-    preloadInterstitialAd();
 
     // Initialize scroll button state - ensure it's hidden on startup
     const messagesContainer = document.getElementById('messages');

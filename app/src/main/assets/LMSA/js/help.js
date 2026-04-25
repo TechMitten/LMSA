@@ -44,6 +44,14 @@ export function openHelpModal() {
         if (scrollableContent) {
             scrollableContent.scrollTop = 0;
         }
+
+        // Ensure scroll-to-top button is hidden when modal opens
+        const helpScrollTop = document.getElementById('help-scroll-top');
+        if (helpScrollTop) {
+            helpScrollTop.style.opacity = '0';
+            helpScrollTop.style.visibility = 'hidden';
+            helpScrollTop.style.pointerEvents = 'none';
+        }
     }
 }
 
@@ -79,6 +87,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const helpModal = document.getElementById('help-modal');
     const closeHelpBtn = document.getElementById('close-help');
 
+    // --- Scroll-to-top button ---
+    const helpModalContent = document.getElementById('help-modal-content');
+    const helpScrollTop = document.getElementById('help-scroll-top');
+    if (helpModalContent && helpScrollTop) {
+        helpModalContent.addEventListener('scroll', function () {
+            if (helpModalContent.scrollTop > 300) {
+                helpScrollTop.style.opacity = '1';
+                helpScrollTop.style.visibility = 'visible';
+                helpScrollTop.style.pointerEvents = 'auto';
+            } else {
+                helpScrollTop.style.opacity = '0';
+                helpScrollTop.style.visibility = 'hidden';
+                helpScrollTop.style.pointerEvents = 'none';
+            }
+        }, { passive: true });
+
+        helpScrollTop.addEventListener('click', function () {
+            helpModalContent.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+    // ----------------------------
+
     const sidebarElement = document.getElementById('sidebar');
     const modalContent = helpModal ? helpModal.querySelector('.modal-content') : null;
     const openSettingsLinks = helpModal
@@ -100,6 +130,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Re-enable scrolling
             document.body.style.overflow = 'auto';
+
+            // Hide scroll-to-top button immediately
+            const helpScrollTopBtn = document.getElementById('help-scroll-top');
+            if (helpScrollTopBtn) {
+                helpScrollTopBtn.style.opacity = '0';
+                helpScrollTopBtn.style.visibility = 'hidden';
+                helpScrollTopBtn.style.pointerEvents = 'none';
+            }
 
             setTimeout(() => {
                 helpModal.classList.add('hidden');

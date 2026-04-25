@@ -517,47 +517,10 @@ async function loadModel(modelId) {
 
         // OpenRouter: model selection
         if (getUseOpenRouter()) {
-            const showAdDuringLoad = false;
-
-            if (showAdDuringLoad) {
-                console.log('Showing interstitial ad during OpenRouter model load for:', modelId);
-
-                if (currentModelDisplay) {
-                    currentModelDisplay.innerHTML = `
-                        <div class="flex items-center text-yellow-500">
-                            <i class="fas fa-spinner fa-spin mr-2 flex-shrink-0"></i>
-                            <span class="truncate">Switching to: ${modelId}</span>
-                        </div>
-                    `;
-                }
-
-                let modelResult = null;
-
-                const adPromise = new Promise((resolve) => {
-                    setTimeout(() => {
-                        showInterstitialAd('modelLoad', () => {
-                            console.log('Ad dismissed during OpenRouter model load');
-                            resolve();
-                        });
-                    }, 2500);
-                });
-
-                const modelPromise = apiLoadModel(modelId).then(success => {
-                    modelResult = success;
-                    return success;
-                });
-
-                await Promise.all([adPromise, modelPromise]);
-
-                await updateModelDisplay(modelId);
-
+            await apiLoadModel(modelId);
+            await updateModelDisplay(modelId);
+            if (!isAutoLoadingDefaultModel) {
                 showOpenRouterModelSelectedModal(modelId);
-            } else {
-                await apiLoadModel(modelId);
-                await updateModelDisplay(modelId);
-                if (!isAutoLoadingDefaultModel) {
-                    showOpenRouterModelSelectedModal(modelId);
-                }
             }
 
             if (isAutoLoadingDefaultModel) {
@@ -569,9 +532,6 @@ async function loadModel(modelId) {
             enableLoadButtons();
             return true;
         }
-
-        // Determine if we should show an ad during loading
-        const showAdDuringLoad = !isAutoLoadingDefaultModel && shouldShowAds();
 
         if (isAutoLoadingDefaultModel) {
             console.log('Auto-loading default model without extra transition UI');
@@ -591,86 +551,29 @@ async function loadModel(modelId) {
 
         console.log(`Requesting to load model: ${modelId}`);
 
-        // --- Ad + model loading in parallel for non-premium users ---
-        if (showAdDuringLoad) {
-            console.log('Showing interstitial ad during model load for:', modelId);
+        const success = await apiLoadModel(modelId);
 
-            // Track completion of both ad and model loading
-            let modelResult = null; // null = pending, true = success, false = failure
-
-            // Create a promise that resolves when the ad is dismissed
-            const adPromise = new Promise((resolve) => {
-                // Delay before showing the interstitial while model loading continues in parallel
-                setTimeout(() => {
-                    showInterstitialAd('modelLoad', () => {
-                        console.log('Ad dismissed during model load');
-
-                        resolve();
-                    });
-                }, 2500);
-            });
-
-            // Start model loading in parallel
-            const modelPromise = apiLoadModel(modelId).then(success => {
-                modelResult = success;
-                console.log('Model load completed during ad, success:', success);
-                return success;
-            });
-
-            // Wait for both to complete
-            await Promise.all([adPromise, modelPromise]);
-
-            // Both ad and model loading are done — now handle the result
-            const success = modelResult;
-
-            if (!success) {
-                console.log(`Failed to load model: ${modelId}`);
-                showActionError(modelId, 'Failed to load');
-                pendingModelActionId = null;
-                await updateModelDisplay(null);
-                isModelLoading = false;
-                enableLoadButtons();
-                if (isAutoLoadingDefaultModel) {
-                    isAutoLoadingDefaultModel = false;
-                }
-                return false;
-            }
-
-            console.log(`Successfully loaded model: ${modelId} (with ad)`);
-
-            if (!isAutoLoadingDefaultModel) {
-                console.log('Model loaded successfully with ad');
-                showLocalModelLoadedModal(modelId);
-            }
+        if (!success) {
+            console.log(`Failed to load model: ${modelId}`);
+            showActionError(modelId, 'Failed to load');
+            pendingModelActionId = null;
+            await updateModelDisplay(null);
+            isModelLoading = false;
+            enableLoadButtons();
             if (isAutoLoadingDefaultModel) {
                 isAutoLoadingDefaultModel = false;
             }
+            return false;
+        }
+
+        console.log(`Successfully loaded model: ${modelId}`);
+
+        if (!isAutoLoadingDefaultModel) {
+            console.log('Model loaded successfully');
+            showLocalModelLoadedModal(modelId);
         } else {
-            // --- Standard flow (premium users or auto-load) ---
-            const success = await apiLoadModel(modelId);
-
-            if (!success) {
-                console.log(`Failed to load model: ${modelId}`);
-                showActionError(modelId, 'Failed to load');
-                pendingModelActionId = null;
-                await updateModelDisplay(null);
-                isModelLoading = false;
-                enableLoadButtons();
-                if (isAutoLoadingDefaultModel) {
-                    isAutoLoadingDefaultModel = false;
-                }
-                return false;
-            }
-
-            console.log(`Successfully loaded model: ${modelId}`);
-
-            if (!isAutoLoadingDefaultModel) {
-                console.log('Model loaded successfully');
-                showLocalModelLoadedModal(modelId);
-            } else {
-                console.log('Auto-load complete without UI interruption');
-                isAutoLoadingDefaultModel = false;
-            }
+            console.log('Auto-load complete without UI interruption');
+            isAutoLoadingDefaultModel = false;
         }
 
         // Update global variable immediately to ensure consistency

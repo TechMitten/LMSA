@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Get all TOC links
     const tocLinks = document.querySelectorAll('.toc-link');
     const helpModalContent = document.getElementById('help-modal-content');
-    const scrollToTopBtn = document.getElementById('help-scroll-to-top');
 
     // Table of Contents smooth scrolling
     tocLinks.forEach(link => {
@@ -56,33 +55,4 @@ document.addEventListener('DOMContentLoaded', function () {
         }, { passive: true });
     });
 
-    // Scroll to Top Button functionality
-    const scrollToTopContainer = document.getElementById('help-scroll-to-top-container');
-
-    if (scrollToTopBtn && helpModalContent && scrollToTopContainer) {
-        // Show/hide button based on scroll position
-        // Require scrolling down at least 600px (significant amount) before showing
-        helpModalContent.addEventListener('scroll', function () {
-            if (this.scrollTop > 600) {
-                scrollToTopContainer.style.display = 'flex';
-                scrollToTopContainer.classList.add('show');
-            } else {
-                scrollToTopContainer.classList.remove('show');
-                // Delay hiding to allow fade out animation
-                setTimeout(() => {
-                    if (!scrollToTopContainer.classList.contains('show')) {
-                        scrollToTopContainer.style.display = 'none';
-                    }
-                }, 300);
-            }
-        }, { passive: true });
-
-        // Scroll to top when button is clicked
-        scrollToTopBtn.addEventListener('click', function () {
-            helpModalContent.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        });
-    }
 });

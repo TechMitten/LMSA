@@ -42,11 +42,11 @@ export const premiumModal = `
                         <div class="benefit-item" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%); padding: 0.625rem; border-radius: 0.75rem; border: 1px solid rgba(59, 130, 246, 0.2); transition: all 0.3s ease;">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 <div class="benefit-icon" style="width: 1.75rem; height: 1.75rem; background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); border-radius: 0.55rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                    <i class="fas fa-ban" style="color: white; font-size: 0.8rem;"></i>
+                                    <i class="fas fa-wifi" style="color: white; font-size: 0.8rem;"></i>
                                 </div>
                                 <div style="text-align: left; min-width: 0;">
-                                    <p class="benefit-title" style="color: var(--text-primary); font-weight: 600; font-size: 0.8rem; margin: 0;">No Ads, Ever</p>
-                                    <p class="benefit-subtitle" style="color: var(--text-secondary); font-size: 0.7rem; margin: 0.1rem 0 0 0; word-break: break-word;">Uninterrupted chat</p>
+                                    <p class="benefit-title" style="color: var(--text-primary); font-weight: 600; font-size: 0.8rem; margin: 0;">Offline Access</p>
+                                    <p class="benefit-subtitle" style="color: var(--text-secondary); font-size: 0.7rem; margin: 0.1rem 0 0 0; word-break: break-word;">Use without internet</p>
                                 </div>
                             </div>
                         </div>

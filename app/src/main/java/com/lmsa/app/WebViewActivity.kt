@@ -63,13 +63,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.google.android.play.core.review.ReviewManagerFactory
-import com.google.android.gms.ads.AdError
-import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.FullScreenContentCallback
-import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.appopen.AppOpenAd
 import org.json.JSONObject
 
 import android.widget.FrameLayout
@@ -88,32 +81,10 @@ class WebViewActivity : AppCompatActivity() {
     private var isImageFile: Boolean = false
     private var exitConfirmationDialog: AlertDialog? = null
     
-    // App Open Ad
-    private val APP_OPEN_AD_UNIT_ID_PROD = "ca-app-pub-1388425042154340/2733504962"
-    private val APP_OPEN_AD_UNIT_ID_TEST = "ca-app-pub-3940256099942544/9257395921"
-    private val WARM_START_AD_OPPORTUNITY_MS = 3000L
-    private val APP_OPEN_AD_MAX_AGE_MS = 4 * 60 * 60 * 1000L
-    private val APP_OPEN_ELIGIBLE_AFTER_COUNT = 4 // First eligible on the 4th load
-    private val APP_OPEN_MIN_INTERVAL_FREE_USER_MS = 0L // Removed interval as we now use "every other load" logic
-    private val APP_OPEN_MIN_INTERVAL_AFTER_FOURTH_DAILY_AD_MS = 0L
-    private val APP_OPEN_MIN_INTERVAL_DEBUG_MS = 1 * 60 * 1000L
-    private val APP_OPEN_DAILY_CAP_FREE_USER = 8
-    private var appOpenAd: AppOpenAd? = null
-    private var appOpenAdLoadedAtMs = 0L
-    private var isLoadingAppOpenAd = false
     private var isSplashOverlayVisible = true
     private var hasStartupPageFinished = false
     private var hasCompletedInitialResume = false
     private var hasBackgroundedSinceInitialLaunch = false
-    private var warmStartAdOpportunityActive = false
-    private var warmStartAdOpportunityDeadlineAtMs = 0L
-    private var warmStartAdTimeoutRunnable: Runnable? = null
-    private val PREF_APP_OPEN_COUNT = "app_open_count"
-    private val PREF_LAST_APP_OPEN_AD_SHOWN_AT = "last_app_open_ad_shown_at"
-    private val PREF_LAST_APP_OPEN_AD_COOLDOWN_AT = "last_app_open_ad_cooldown_at"
-    private val PREF_LAST_FULL_SCREEN_AD_SHOWN_AT_LEGACY = "last_full_screen_ad_shown_at"
-    private val PREF_APP_OPEN_AD_DAILY_DATE = "app_open_ad_daily_date"
-    private val PREF_APP_OPEN_AD_DAILY_COUNT = "app_open_ad_daily_count"
     private val STARTUP_BILLING_TIMEOUT_MS = 3000L
     private enum class StartupEntitlementResolution { UNKNOWN, RESOLVED, TIMED_OUT }
     private var startupEntitlementResolution = StartupEntitlementResolution.UNKNOWN
@@ -189,22 +160,10 @@ class WebViewActivity : AppCompatActivity() {
         setContentView(R.layout.activity_webview)
         applySystemBarInsets()
 
-        // Set up global exception handler to catch ad-related crashes
+        // Set up global exception handler
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-            // Log the exception
             Log.e(TAG, "Uncaught exception in thread ${thread.name}", throwable)
-
-            // Check if it's an ad-related error
-            if (throwable.stackTraceToString().contains("2mdn.net") ||
-                throwable.stackTraceToString().contains("googleads") ||
-                throwable.stackTraceToString().contains("doubleclick")) {
-                Log.w(TAG, "Ad-related crash detected, suppressing")
-                // Don't crash the app for ad errors
-                return@setDefaultUncaughtExceptionHandler
-            }
-
-            // For other exceptions, use the default handler
             defaultHandler?.uncaughtException(thread, throwable)
         }
 
@@ -217,26 +176,11 @@ class WebViewActivity : AppCompatActivity() {
         startStartupEntitlementResolution()
         startBillingConnection()
         
-        // Check if premium before loading ads
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        // Increment cold-start counter (used for App Open ad eligibility)
-        val appOpenCount = prefs.getInt(PREF_APP_OPEN_COUNT, 0) + 1
-        prefs.edit().putInt(PREF_APP_OPEN_COUNT, appOpenCount).apply()
         isPremium = prefs.getBoolean(PREF_IS_PREMIUM, false)
         isDebugMode = prefs.getBoolean(PREF_IS_DEBUG_MODE, false)
         
         updatePremiumUiState()
-        beginWarmStartAdOpportunity()
-
-        // Initialize Mobile Ads only when network is available so offline startup stays responsive.
-        // This also prevents ad SDK connection delays from affecting cold starts.
-        if (isNetworkAvailable()) {
-            MobileAds.initialize(this) {
-                loadAppOpenAd()
-            }
-        } else {
-            Log.d(TAG, "Network unavailable at startup; skipping ad initialization")
-        }
 
         // Initialize AudioManager for TTS audio focus management
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -701,236 +645,11 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // App Open Ad
-    // -------------------------------------------------------------------------
-
-    private fun appOpenDailyKey(): String {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        return dateFormat.format(Date())
-    }
-
-    private fun normalizeAppOpenDailyCounter(prefs: android.content.SharedPreferences): Int {
-        val todayKey = appOpenDailyKey()
-        val storedDate = prefs.getString(PREF_APP_OPEN_AD_DAILY_DATE, "") ?: ""
-        if (storedDate != todayKey) {
-            prefs.edit()
-                .putString(PREF_APP_OPEN_AD_DAILY_DATE, todayKey)
-                .putInt(PREF_APP_OPEN_AD_DAILY_COUNT, 0)
-                .apply()
-            return 0
-        }
-        return prefs.getInt(PREF_APP_OPEN_AD_DAILY_COUNT, 0)
-    }
-
-    private fun incrementAppOpenDailyCounter(prefs: android.content.SharedPreferences) {
-        val todayCount = normalizeAppOpenDailyCounter(prefs)
-        prefs.edit().putInt(PREF_APP_OPEN_AD_DAILY_COUNT, todayCount + 1).apply()
-    }
-
-    private fun getCurrentAppOpenMinIntervalMs(dailyCount: Int): Long {
-        if (isDebugMode) {
-            return APP_OPEN_MIN_INTERVAL_DEBUG_MS
-        }
-        return if (dailyCount >= 4) {
-            APP_OPEN_MIN_INTERVAL_AFTER_FOURTH_DAILY_AD_MS
-        } else {
-            APP_OPEN_MIN_INTERVAL_FREE_USER_MS
-        }
-    }
-
-    private fun getAppOpenAdUnitId(): String {
-        return if (isDebugMode) APP_OPEN_AD_UNIT_ID_TEST else APP_OPEN_AD_UNIT_ID_PROD
-    }
-
-    private fun isAppOpenAdFresh(now: Long = System.currentTimeMillis()): Boolean {
-        if (appOpenAd == null || appOpenAdLoadedAtMs <= 0L) {
-            return false
-        }
-        val ageMs = now - appOpenAdLoadedAtMs
-        return ageMs in 0..APP_OPEN_AD_MAX_AGE_MS
-    }
-
-    private fun clearCachedAppOpenAd(reason: String) {
-        if (appOpenAd != null) {
-            Log.d(TAG, "Clearing cached App Open ad: $reason")
-        }
-        appOpenAd = null
-        appOpenAdLoadedAtMs = 0L
-    }
-
-    private fun showPostAppOpenPremiumCta() {
-        runOnUiThread {
-            val webView: WebView = findViewById(R.id.webView)
-            webView.evaluateJavascript(
-                "if (typeof window.showPostAppOpenPremiumCta === 'function') { window.showPostAppOpenPremiumCta(); }",
-                null
-            )
-        }
-    }
-
-    private fun isAppOpenAdEligible(prefs: android.content.SharedPreferences, now: Long): Boolean {
-        val appOpenCount = prefs.getInt(PREF_APP_OPEN_COUNT, 0)
-        
-        // Rule 1: Start appearing only after the user has opened the app 3 times (starting on the 4th load)
-        if (appOpenCount < APP_OPEN_ELIGIBLE_AFTER_COUNT) {
-            Log.d(TAG, "App Open ad blocked: grace period active (load $appOpenCount < $APP_OPEN_ELIGIBLE_AFTER_COUNT)")
-            return false
-        }
-
-        // Daily cap check removed per user request.
-        Log.d(TAG, "App Open ad eligible: load=$appOpenCount, debug=$isDebugMode")
-        return true
-    }
-
-    private fun loadAppOpenAd() {
-        if (isLoadingAppOpenAd) return
-        if (hasEffectivePremium()) {
-            Log.d(TAG, "App Open ad blocked: effective premium user")
-            return
-        }
-        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        val now = System.currentTimeMillis()
-        if (appOpenAd != null) {
-            if (isAppOpenAdFresh(now)) {
-                return
-            }
-            clearCachedAppOpenAd("cached ad expired before reload")
-        }
-        if (!isAppOpenAdEligible(prefs, now)) return
-
-        isLoadingAppOpenAd = true
-        val appOpenAdUnitId = getAppOpenAdUnitId()
-
-        AppOpenAd.load(
-            this,
-            appOpenAdUnitId,
-            AdRequest.Builder().build(),
-            object : AppOpenAd.AppOpenAdLoadCallback() {
-                override fun onAdLoaded(ad: AppOpenAd) {
-                    appOpenAd = ad
-                    appOpenAdLoadedAtMs = System.currentTimeMillis()
-                    isLoadingAppOpenAd = false
-                    Log.d(TAG, "App Open ad loaded (unit=${if (isDebugMode) "TEST" else "PROD"})")
-                    runOnUiThread {
-                        showAppOpenAdIfReady()
-                        maybeHideStartupSplash("onAppOpenAdLoaded")
-                    }
-                }
-
-                override fun onAdFailedToLoad(adError: LoadAdError) {
-                    isLoadingAppOpenAd = false
-                    Log.e(TAG, "App Open ad failed to load: ${adError.message}")
-                    runOnUiThread { maybeHideStartupSplash("onAppOpenAdFailedToLoad") }
-                }
-            }
-        )
-    }
-
-    private fun beginWarmStartAdOpportunity() {
-        warmStartAdOpportunityActive = true
-        warmStartAdOpportunityDeadlineAtMs = SystemClock.elapsedRealtime() + WARM_START_AD_OPPORTUNITY_MS
-        warmStartAdTimeoutRunnable?.let { mainHandler.removeCallbacks(it) }
-        warmStartAdTimeoutRunnable = Runnable {
-            if (!warmStartAdOpportunityActive) {
-                return@Runnable
-            }
-            warmStartAdOpportunityActive = false
-            warmStartAdTimeoutRunnable = null
-            Log.d(TAG, "Skipping App Open ad: warm-start opportunity expired after ${WARM_START_AD_OPPORTUNITY_MS}ms")
-        }
-        mainHandler.postDelayed(warmStartAdTimeoutRunnable!!, WARM_START_AD_OPPORTUNITY_MS)
-        Log.d(TAG, "App Open warm-start opportunity started")
-    }
-
-    private fun clearWarmStartAdOpportunity() {
-        warmStartAdOpportunityActive = false
-        warmStartAdOpportunityDeadlineAtMs = 0L
-        warmStartAdTimeoutRunnable?.let { mainHandler.removeCallbacks(it) }
-        warmStartAdTimeoutRunnable = null
-    }
-
-    private fun showAppOpenAdIfReady() {
-        if (!warmStartAdOpportunityActive) {
-            return
-        }
-        if (SystemClock.elapsedRealtime() > warmStartAdOpportunityDeadlineAtMs) {
-            clearWarmStartAdOpportunity()
-            Log.d(TAG, "Skipping App Open ad: warm-start deadline already passed")
-            return
-        }
-        if (startupEntitlementResolution == StartupEntitlementResolution.UNKNOWN) {
-            Log.d(TAG, "Deferring App Open ad display until billing entitlement resolves")
-            return
-        }
-        if (startupEntitlementResolution == StartupEntitlementResolution.TIMED_OUT) {
-            Log.w(TAG, "Skipping App Open ad after startup billing timeout")
-            appOpenAd = null
-            clearWarmStartAdOpportunity()
-            return
-        }
-        val now = System.currentTimeMillis()
-        val ad = appOpenAd ?: return
-        if (!isAppOpenAdFresh(now)) {
-            clearCachedAppOpenAd("cached ad expired before show")
-            if (isNetworkAvailable()) {
-                loadAppOpenAd()
-            }
-            return
-        }
-        if (hasEffectivePremium()) {
-            clearCachedAppOpenAd("effective premium user")
-            clearWarmStartAdOpportunity()
-            return
-        }
-        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        if (!isAppOpenAdEligible(prefs, now)) {
-            clearWarmStartAdOpportunity()
-            return
-        }
-        clearWarmStartAdOpportunity()
-
-        ad.fullScreenContentCallback = object : FullScreenContentCallback() {
-            override fun onAdShowedFullScreenContent() {
-                hideSplash()
-            }
-
-            override fun onAdDismissedFullScreenContent() {
-                val ts = System.currentTimeMillis()
-                prefs.edit()
-                    .putLong(PREF_LAST_APP_OPEN_AD_SHOWN_AT, ts)
-                    .putLong(PREF_LAST_APP_OPEN_AD_COOLDOWN_AT, ts)
-                    .apply()
-                if (!isDebugMode) {
-                    incrementAppOpenDailyCounter(prefs)
-                }
-                // showPostAppOpenPremiumCta() // Removed per user request to reduce spam
-                clearCachedAppOpenAd("ad dismissed")
-                if (isNetworkAvailable()) {
-                    loadAppOpenAd()
-                }
-                hideSplash()
-            }
-
-            override fun onAdFailedToShowFullScreenContent(adError: AdError) {
-                Log.e(TAG, "App Open ad failed to show: ${adError.message}")
-                clearCachedAppOpenAd("failed to show")
-                if (isNetworkAvailable()) {
-                    loadAppOpenAd()
-                }
-                maybeHideStartupSplash("onAppOpenAdFailedToShow")
-            }
-        }
-
-        ad.show(this)
-    }
-
     private fun maybeHideStartupSplash(source: String) {
         if (!isSplashOverlayVisible) return
         if (!hasStartupPageFinished) return
         if (startupEntitlementResolution == StartupEntitlementResolution.UNKNOWN) return
-        if (warmStartAdOpportunityActive && isLoadingAppOpenAd) return
-        Log.d(TAG, "Hiding splash early from $source (billing resolved and no ad loading)")
+        Log.d(TAG, "Hiding splash early from $source (billing resolved)")
         hideSplash()
     }
 
@@ -1120,28 +839,11 @@ class WebViewActivity : AppCompatActivity() {
         super.onResume()
         hideSystemBars()
 
-        // Warm starts are disabled per user request. Ads only appear on cold starts.
-        /*
-        val isWarmStart = hasCompletedInitialResume && hasBackgroundedSinceInitialLaunch
-        if (isWarmStart) {
-            beginWarmStartAdOpportunity()
-            hasBackgroundedSinceInitialLaunch = false
-        }
-        */
-        
         if (billingClient.isReady) {
             queryPurchases()
         } else {
             startBillingConnection()
         }
-
-        /*
-        if (isWarmStart && isNetworkAvailable()) {
-            loadAppOpenAd()
-        }
-        */
-
-        showAppOpenAdIfReady()
         updatePremiumUiState()
         val webView: WebView = findViewById(R.id.webView)
         webView.onResume()
@@ -1178,8 +880,6 @@ class WebViewActivity : AppCompatActivity() {
     override fun onDestroy() {
         startupBillingTimeoutRunnable?.let { mainHandler.removeCallbacks(it) }
         startupBillingTimeoutRunnable = null
-        warmStartAdTimeoutRunnable?.let { mainHandler.removeCallbacks(it) }
-        warmStartAdTimeoutRunnable = null
         textToSpeech?.shutdown()
         textToSpeech = null
         isTTSInitialized = false
@@ -1316,7 +1016,6 @@ class WebViewActivity : AppCompatActivity() {
             startupEntitlementResolution = StartupEntitlementResolution.TIMED_OUT
             startupBillingTimeoutRunnable = null
             Log.w(TAG, "Startup billing entitlement resolution timed out after ${STARTUP_BILLING_TIMEOUT_MS}ms")
-            showAppOpenAdIfReady()
             hideSplash()
         }
         mainHandler.postDelayed(startupBillingTimeoutRunnable!!, STARTUP_BILLING_TIMEOUT_MS)
@@ -1331,7 +1030,6 @@ class WebViewActivity : AppCompatActivity() {
         startupBillingTimeoutRunnable = null
         Log.d(TAG, "Startup billing entitlement resolved via $source")
         runOnUiThread {
-            showAppOpenAdIfReady()
             maybeHideStartupSplash("billingResolved:$source")
         }
     }
@@ -1912,10 +1610,7 @@ class WebViewActivity : AppCompatActivity() {
             val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             prefs.edit().putBoolean(PREF_IS_DEBUG_MODE, enable).apply()
             syncWebContentsDebuggingState()
-            clearCachedAppOpenAd("debug mode toggled")
-            if (isNetworkAvailable()) {
-                loadAppOpenAd()
-            }
+
             runOnUiThread {
                 Toast.makeText(this@WebViewActivity, "Debug Mode: ${if(enable) "Enabled" else "Disabled"}", Toast.LENGTH_SHORT).show()
             }

@@ -143,47 +143,7 @@ function updateUiForPremium(isPremium) {
 window.showPostAppOpenPremiumCta = function() { console.log('Post-ad CTA disabled.'); };
 window.hidePostAppOpenPremiumCta = function() { };
 
-/**
- * Shows interstitial ad and executes callback when dismissed
- * @param {string} action - The action to perform after ad (e.g., 'newChat')
- * @param {Function} callback - Function to call after ad is dismissed
- */
-function showInterstitialAd(action, callback) {
-    // Globably stop any playing TTS audio before showing a fullscreen ad
-    if (window.TTSService && typeof window.TTSService.stop === 'function') {
-        window.TTSService.stop('before-interstitial-ad', true);
-    }
 
-    // We no longer show interstitial ads, just execute callback
-    console.log('Ad interface requested interstitial, but they are removed. Proceeding directly.');
-    if (callback) callback();
-}
-
-/**
- * Preloads interstitial ad for faster display
- */
-function preloadInterstitialAd() {
-    // No-op since interstitial ads are removed
-}
-
-/**
- * Callback function called by Android after ad is dismissed
- */
-function createNewChatAfterAd() {
-    if (window._pendingAdCallback) {
-        window._pendingAdCallback();
-        window._pendingAdCallback = null;
-    }
-}
-
-/**
- * Checks if user should see ads (non-premium)
- * @returns {boolean} - True if ads should be shown
- */
-function shouldShowAds() {
-    // Native/interstitial ad surfaces are disabled. App Open ads are handled natively.
-    return false;
-}
 
 /**
  * Checks if a model is currently loaded

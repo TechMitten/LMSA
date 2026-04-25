@@ -2,7 +2,7 @@ export const helpModal = `
     <!-- Help modal -->
     <div id="help-modal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center hidden modal-container"
         aria-labelledby="help-title" role="dialog" aria-modal="true">
-        <div class="p-0 rounded-lg w-[800px] max-w-[95%] max-h-[90vh] shadow-lg overflow-hidden flex flex-col modal-content"
+        <div class="p-0 rounded-lg w-[800px] max-w-[95%] max-h-[90vh] shadow-lg overflow-hidden flex flex-col modal-content relative"
             style="background: var(--modal-bg);">
             <div class="p-6 pb-4 border-b sticky top-0 z-10 flex justify-between"
                 style="border-color: var(--border-color);">
@@ -22,7 +22,7 @@ export const helpModal = `
                 </div>
             </div>
             <div class="overflow-y-auto flex-grow p-6 pt-4"
-                style="-webkit-overflow-scrolling: touch; touch-action: auto; overscroll-behavior: contain; background: var(--modal-bg);"
+                style="-webkit-overflow-scrolling: touch; touch-action: auto; overscroll-behavior: contain;"
                 id="help-modal-content">
                 <div class="space-y-6">
                     <!-- Table of Contents -->
@@ -108,8 +108,8 @@ export const helpModal = `
                                         <span>Biometric Unlock</span>
                                     </a>
                                     <a href="#section-ads-privacy" class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
-                                        <i class="fas fa-ad mr-2 text-sm"></i>
-                                        <span>Ads & Privacy</span>
+                                        <i class="fas fa-shield-alt mr-2 text-sm"></i>
+                                        <span>Privacy</span>
                                     </a>
                                 </div>
                             </details>
@@ -969,36 +969,20 @@ export const helpModal = `
                     </section>
                     <section id="section-ads-privacy">
                         <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa;"><i
-                                class="fas fa-ad mr-2"></i>Ads & Privacy</h3>
+                                class="fas fa-shield-alt mr-2"></i>Privacy</h3>
                         <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                            <p class="font-medium flex items-center" style="color: var(--success-color);"><i
-                                    class="fas fa-shield-alt mr-2"></i></p>
                             <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
-                                While LMSA displays ads to support development, your chat messages remain completely
-                                private:</p>
+                                Your chat messages remain completely private:</p>
                             <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
                                 <li><strong>No chat data is sent to us</strong> - The developer cannot see your
                                     conversations</li>
-                                <li><strong>No chat data is sent to AdMob</strong> - Google's ad service does not
-                                    receive your messages</li>
-                                <li><strong>Ads are generic</strong> - They are not based on your chat content</li>
                                 <li><strong>All messages stay local</strong> - Your chats are stored only on your
                                     device</li>
                                 <li><strong>Direct LM Studio connection</strong> - Messages go straight from LMSA to
                                     your LM Studio server</li>
                             </ul>
-                            <p style="color: var(--text-primary); margin-top: 1rem;">The ads help keep LMSA free
-                                while respecting your privacy. We believe in transparency and your right to private
-                                conversations.</p>
-
-                            <div class="mt-4 p-2 rounded" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #a78bfa;"><i
-                                        class="fas fa-crown mr-2"></i>LMSA Premium</p>
-                                <p style="color: var(--text-primary); margin-top: 0.5rem;">Prefer an ad-free
-                                    experience? Tap the <strong>Remove Ads</strong> button on the main page to
-                                    upgrade to LMSA Premium with a one-time lifetime purchase that removes all ads
-                                    from the app forever.</p>
-                            </div>
+                            <p style="color: var(--text-primary); margin-top: 1rem;">We believe in transparency and your right to private conversations.</p>
+                        </div>
 
                             <div id="section-legacy-access" class="mt-4 p-2 rounded"
                                 style="background: var(--settings-label-bg);">
@@ -1019,7 +1003,7 @@ export const helpModal = `
                                         <li>Email <strong>support@lmsa.app</strong> and include your order number (and any
                                             purchase date or receipt details you still have).</li>
                                         <li>We will verify your legacy purchase and reply with a one-time promo code and
-                                            instructions to apply it in the app to restore your premium (ad-free)
+                                            instructions to apply it in the app to restore your premium
                                             access.</li>
                                     </ol>
                                     <p style="color: var(--text-primary); margin-top: 0.5rem;">If you need help locating your
@@ -1047,7 +1031,7 @@ export const helpModal = `
                                     <li><strong>Local Chat Limit: 15 per day</strong> — After reaching this limit, you'll enter a cooldown period</li>
                                     <li><strong>Web Search Limit: 2 per day</strong> — Free users can augment two prompts per day with real-time web results</li>
                                     <li><strong>Automatic Reset: Midnight (Local Time)</strong> — Your chat completion counts reset at midnight in your timezone, allowing you to chat freely again</li>
-                                    <li><strong>Advertisements:</strong> Free users see advertisements throughout the app</li>
+
                                     <li><strong>File Attachments:</strong> Not available on the Free tier; upgrade to Premium to attach files to chats</li>
                                     <li><strong>Offline Use (Local LM Studio/Ollama):</strong> Not available on the Free tier; upgrade to Premium for full offline access</li>
                                     <li><strong>TTS (Text-to-Speech):</strong> Unlimited with the default voice; upgrade to Premium to unlock alternate voices</li>
@@ -1063,7 +1047,7 @@ export const helpModal = `
                                     <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
                                     <li><strong>Unlimited Chat Completions</strong> — No daily limits or cooldown periods</li>
                                     <li><strong>Unlimited Web Search</strong> — No daily cap on real-time web-augmented prompts</li>
-                                    <li><strong>Ad-Free Experience</strong> — No advertisements throughout the app</li>
+
                                     <li><strong>File Attachments:</strong> Attach files (documents, code, data) to chats for analysis</li>
                                     <li><strong>Offline Use (Local LM Studio/Ollama):</strong> Full access to use local LM Studio and Ollama servers with no internet connection required</li>
                                     <li><strong>OpenRouter Access:</strong> Full access to cloud models via OpenRouter</li>
@@ -1079,9 +1063,9 @@ export const helpModal = `
                                         class="fas fa-lightbulb mr-2"></i>How to Upgrade</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">To unlock Premium benefits and remove the chat completion limit:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
-                                    <li>Tap the <strong>Remove Ads</strong> button on the main page</li>
+                                    <li>Tap the <strong>Unlock Premium</strong> button in the Premium Settings menu</li>
                                     <li>Complete a one-time lifetime purchase</li>
-                                    <li>Enjoy unlimited chats with no ads forever</li>
+                                    <li>Enjoy unlimited chats forever</li>
                                 </ul>
                             </div>
                         </div>
@@ -1249,27 +1233,12 @@ export const helpModal = `
                 </div>
             </div>
 
-            <!-- Static Spacer Divider -->
-            <div class="px-6 py-2 flex justify-center" style="background: var(--modal-bg);">
-            <div class="w-full max-w-md flex items-center justify-center">
-                <div class="h-[1px] flex-grow bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-60">
-                </div>
-                <div class="mx-4">
-                    <div class="w-2 h-2 rounded-full bg-blue-500 opacity-80"></div>
-                </div>
-                <div class="h-[1px] flex-grow bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-60">
-                </div>
-            </div>
-        </div>
-            <!-- Scroll to Top Button -->
-            <div class="flex justify-center" id="help-scroll-to-top-container" style="display: none;">
-                <button id="help-scroll-to-top"
-                    class="professional-button flex items-center justify-center gap-3 w-full md:w-auto md:px-8 h-[48px]">
-                    <i class="fas fa-arrow-up text-sm"></i>
-                    <span>Scroll to Top</span>
-                </button>
-            </div>
         </div>
     </div>
-</div>
+    <!-- Scroll to top button (fixed, outside modal-content to avoid overflow-hidden clipping) -->
+    <button id="help-scroll-top" 
+        class="fixed w-12 h-12 rounded-full flex items-center justify-center shadow-2xl"
+        style="bottom: 2.5rem; right: 1.5rem; z-index: 9999; background: rgba(59, 130, 246, 0.55); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.25); color: white; cursor: pointer; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.25s ease, visibility 0.25s ease;">
+        <i class="fas fa-chevron-up" style="font-size: 1rem;"></i>
+    </button>
 `;

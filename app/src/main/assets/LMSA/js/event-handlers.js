@@ -26,7 +26,6 @@ import {
     abortGeneration,
     setAbortController,
     createNewChat,
-    createNewChatWithAd,
     isFirstMessage,
     setIsFirstMessage,
     addTopicBoundary,
@@ -55,7 +54,6 @@ import { debugLog, debugError, formatDate, closeApplication, copyToClipboard, sa
 
 let abortController = null;
 let sidebar = document.getElementById('sidebar');
-const WELCOME_SETTINGS_TAPPED_KEY = 'welcomeSettingsTapped';
 const OFFLINE_ACCESS_LOCK_REASON = 'offline-access';
 const OFFLINE_ACCESS_NOTICE_HTML = 'Only premium users can use the app offline. Free users need an active internet connection.';
 
@@ -271,25 +269,10 @@ export function initializeEventHandlers() {
     // Settings button in welcome message
     const getStartedBtn = document.getElementById('get-started-btn');
     if (getStartedBtn) {
-        const getStartedBtnLabel = getStartedBtn.querySelector('span');
-        const hasTappedWelcomeSettings = localStorage.getItem(WELCOME_SETTINGS_TAPPED_KEY) === 'true';
-
-        if (getStartedBtnLabel) {
-            getStartedBtnLabel.textContent = hasTappedWelcomeSettings ? 'Settings' : 'Start Here';
-        }
 
         // Function to open settings modal
         const openSettingsModal = () => {
             debugLog('Settings button clicked, opening settings modal');
-
-            if (localStorage.getItem(WELCOME_SETTINGS_TAPPED_KEY) !== 'true') {
-                localStorage.setItem(WELCOME_SETTINGS_TAPPED_KEY, 'true');
-                const currentGetStartedBtn = document.getElementById('get-started-btn');
-                const currentGetStartedBtnLabel = currentGetStartedBtn?.querySelector('span');
-                if (currentGetStartedBtnLabel) {
-                    currentGetStartedBtnLabel.textContent = 'Settings';
-                }
-            }
 
             // Remove sidebar click handler while modal is open
             document.body.removeEventListener('click', handleSidebarOutsideClick);
@@ -746,13 +729,13 @@ export function initializeEventHandlers() {
         bindPressInFeedback(newChatButton);
 
         newChatButton.addEventListener('click', () => {
-            createNewChatWithAd();
+            createNewChat();
         });
 
         newChatButton.addEventListener('touchend', (e) => {
             e.preventDefault();
             runAfterPressIn(newChatButton, () => {
-                createNewChatWithAd();
+                createNewChat();
                 newChatButton.blur();
             });
         }, { passive: false });
@@ -3474,8 +3457,8 @@ function handleNewChatButtonClick() {
         optionsContainer.classList.remove('animate-fade-in');
     }
 
-    // Create a new chat (with interstitial ad for non-premium users)
-    createNewChatWithAd();
+    // Create a new chat
+    createNewChat();
 
     // Remove focus to prevent the button from staying highlighted
     if (newChatHeaderButton) {
