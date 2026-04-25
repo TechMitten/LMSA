@@ -91,11 +91,11 @@ class WebViewActivity : AppCompatActivity() {
     // App Open Ad
     private val APP_OPEN_AD_UNIT_ID_PROD = "ca-app-pub-1388425042154340/2733504962"
     private val APP_OPEN_AD_UNIT_ID_TEST = "ca-app-pub-3940256099942544/9257395921"
-    private val WARM_START_AD_OPPORTUNITY_MS = 1500L
+    private val WARM_START_AD_OPPORTUNITY_MS = 3000L
     private val APP_OPEN_AD_MAX_AGE_MS = 4 * 60 * 60 * 1000L
-    private val APP_OPEN_ELIGIBLE_AFTER_COUNT = 3
-    private val APP_OPEN_MIN_INTERVAL_FREE_USER_MS = 15 * 60 * 1000L
-    private val APP_OPEN_MIN_INTERVAL_AFTER_FOURTH_DAILY_AD_MS = 10 * 60 * 1000L
+    private val APP_OPEN_ELIGIBLE_AFTER_COUNT = 4 // First eligible on the 4th load
+    private val APP_OPEN_MIN_INTERVAL_FREE_USER_MS = 0L // Removed interval as we now use "every other load" logic
+    private val APP_OPEN_MIN_INTERVAL_AFTER_FOURTH_DAILY_AD_MS = 0L
     private val APP_OPEN_MIN_INTERVAL_DEBUG_MS = 1 * 60 * 1000L
     private val APP_OPEN_DAILY_CAP_FREE_USER = 8
     private var appOpenAd: AppOpenAd? = null
@@ -114,7 +114,7 @@ class WebViewActivity : AppCompatActivity() {
     private val PREF_LAST_FULL_SCREEN_AD_SHOWN_AT_LEGACY = "last_full_screen_ad_shown_at"
     private val PREF_APP_OPEN_AD_DAILY_DATE = "app_open_ad_daily_date"
     private val PREF_APP_OPEN_AD_DAILY_COUNT = "app_open_ad_daily_count"
-    private val STARTUP_BILLING_TIMEOUT_MS = 1500L
+    private val STARTUP_BILLING_TIMEOUT_MS = 3000L
     private enum class StartupEntitlementResolution { UNKNOWN, RESOLVED, TIMED_OUT }
     private var startupEntitlementResolution = StartupEntitlementResolution.UNKNOWN
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -771,31 +771,15 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun isAppOpenAdEligible(prefs: android.content.SharedPreferences, now: Long): Boolean {
         val appOpenCount = prefs.getInt(PREF_APP_OPEN_COUNT, 0)
+        
+        // Rule 1: Start appearing only after the user has opened the app 3 times (starting on the 4th load)
         if (appOpenCount < APP_OPEN_ELIGIBLE_AFTER_COUNT) {
-            Log.d(TAG, "App Open ad blocked: app open count $appOpenCount < $APP_OPEN_ELIGIBLE_AFTER_COUNT")
+            Log.d(TAG, "App Open ad blocked: grace period active (load $appOpenCount < $APP_OPEN_ELIGIBLE_AFTER_COUNT)")
             return false
         }
 
-        val dailyCount = normalizeAppOpenDailyCounter(prefs)
-        val minIntervalMs = getCurrentAppOpenMinIntervalMs(dailyCount)
-        val lastShownAt = maxOf(
-            prefs.getLong(PREF_LAST_APP_OPEN_AD_COOLDOWN_AT, 0L),
-            prefs.getLong(PREF_LAST_FULL_SCREEN_AD_SHOWN_AT_LEGACY, 0L)
-        )
-        if (now - lastShownAt < minIntervalMs) {
-            val remainingSec = ((minIntervalMs - (now - lastShownAt)) / 1000L).coerceAtLeast(0L)
-            Log.d(TAG, "App Open ad blocked: cooldown active (${remainingSec}s remaining, dailyCount=$dailyCount)")
-            return false
-        }
-
-        if (!isDebugMode) {
-            if (dailyCount >= APP_OPEN_DAILY_CAP_FREE_USER) {
-                Log.d(TAG, "App Open ad blocked: daily cap reached ($dailyCount/$APP_OPEN_DAILY_CAP_FREE_USER)")
-                return false
-            }
-        }
-
-        Log.d(TAG, "App Open ad eligible: opens=$appOpenCount, dailyCount=$dailyCount, debug=$isDebugMode")
+        // Daily cap check removed per user request.
+        Log.d(TAG, "App Open ad eligible: load=$appOpenCount, debug=$isDebugMode")
         return true
     }
 
@@ -920,7 +904,7 @@ class WebViewActivity : AppCompatActivity() {
                 if (!isDebugMode) {
                     incrementAppOpenDailyCounter(prefs)
                 }
-                showPostAppOpenPremiumCta()
+                // showPostAppOpenPremiumCta() // Removed per user request to reduce spam
                 clearCachedAppOpenAd("ad dismissed")
                 if (isNetworkAvailable()) {
                     loadAppOpenAd()
@@ -1136,21 +1120,26 @@ class WebViewActivity : AppCompatActivity() {
         super.onResume()
         hideSystemBars()
 
+        // Warm starts are disabled per user request. Ads only appear on cold starts.
+        /*
         val isWarmStart = hasCompletedInitialResume && hasBackgroundedSinceInitialLaunch
         if (isWarmStart) {
             beginWarmStartAdOpportunity()
             hasBackgroundedSinceInitialLaunch = false
         }
-
+        */
+        
         if (billingClient.isReady) {
             queryPurchases()
         } else {
             startBillingConnection()
         }
 
+        /*
         if (isWarmStart && isNetworkAvailable()) {
             loadAppOpenAd()
         }
+        */
 
         showAppOpenAdIfReady()
         updatePremiumUiState()
