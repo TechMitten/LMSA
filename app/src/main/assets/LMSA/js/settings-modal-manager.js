@@ -1867,10 +1867,14 @@ function initializeConnectionInputModals() {
         configOpenAICompatibleBtn.addEventListener('click', () => {
             const endpointInput = document.getElementById('openai-compatible-endpoint');
             const keyInput = document.getElementById('openai-compatible-api-key');
+            const modelInput = document.getElementById('openai-compatible-model-name');
             if (endpointInput) endpointInput.value = localStorage.getItem('openAICompatibleEndpoint') || '';
             if (keyInput) {
                 keyInput.value = localStorage.getItem('openAICompatibleApiKey') || '';
                 keyInput.type = 'password';
+            }
+            if (modelInput) {
+                modelInput.value = localStorage.getItem('openAICompatibleManualModel') || '';
             }
             const revealBtn = document.getElementById('openai-compatible-api-key-reveal');
             if (revealBtn) revealBtn.innerHTML = '<i class="fas fa-eye"></i>';
@@ -1885,10 +1889,14 @@ function initializeConnectionInputModals() {
     const dismissOpenAICompatibleModal = () => {
         const endpointInput = document.getElementById('openai-compatible-endpoint');
         const keyInput = document.getElementById('openai-compatible-api-key');
+        const modelInput = document.getElementById('openai-compatible-model-name');
         if (endpointInput) endpointInput.value = localStorage.getItem('openAICompatibleEndpoint') || '';
         if (keyInput) {
             keyInput.value = localStorage.getItem('openAICompatibleApiKey') || '';
             keyInput.type = 'password';
+        }
+        if (modelInput) {
+            modelInput.value = localStorage.getItem('openAICompatibleManualModel') || '';
         }
         const revealBtn = document.getElementById('openai-compatible-api-key-reveal');
         if (revealBtn) revealBtn.innerHTML = '<i class="fas fa-eye"></i>';
@@ -1902,14 +1910,25 @@ function initializeConnectionInputModals() {
         saveOpenAICompatibleBtn.addEventListener('click', () => {
             const endpointInput = document.getElementById('openai-compatible-endpoint');
             const keyInput = document.getElementById('openai-compatible-api-key');
+            const modelInput = document.getElementById('openai-compatible-model-name');
             const endpoint = endpointInput ? endpointInput.value.trim() : '';
             const apiKey = keyInput ? keyInput.value.trim() : '';
+            const manualModel = modelInput ? modelInput.value.trim() : '';
 
             localStorage.setItem('openAICompatibleEndpoint', endpoint);
             localStorage.setItem('openAICompatibleApiKey', apiKey);
 
+            if (manualModel) {
+                localStorage.setItem('openAICompatibleManualModel', manualModel);
+                localStorage.setItem('openAICompatibleSelectedModel', manualModel);
+                window.currentLoadedModel = manualModel;
+            } else {
+                localStorage.removeItem('openAICompatibleManualModel');
+            }
+
             if (endpointInput) endpointInput.dispatchEvent(new Event('input', { bubbles: true }));
             if (keyInput) keyInput.dispatchEvent(new Event('input', { bubbles: true }));
+            if (modelInput) modelInput.dispatchEvent(new Event('input', { bubbles: true }));
 
             updateConnectionStatusDisplays();
             hideInputModal(openAICompatibleModal);

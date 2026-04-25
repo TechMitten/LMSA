@@ -591,6 +591,13 @@ export const settingsModal = `
                 </div>
                 <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);"><i class="fas fa-lock mr-1"></i>Stored locally on your device only.</p>
             </div>
+            <div class="mb-5">
+                <label for="openai-compatible-model-name" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Manual Model Name (optional)</label>
+                <input type="text" id="openai-compatible-model-name"
+                    class="connection-modal-input w-full"
+                    placeholder="e.g. gpt-4o-mini, qwen3-235b-a22b" autocomplete="off" data-form-type="other" style="width: 100%;">
+                <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);"><i class="fas fa-info-circle mr-1"></i>Use this when your endpoint does not support model auto-discovery.</p>
+            </div>
             <div class="flex gap-3">
                 <button id="cancel-openai-compatible-input-modal" type="button"
                     class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">

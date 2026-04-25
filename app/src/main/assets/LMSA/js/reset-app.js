@@ -60,6 +60,7 @@ export function resetApp() {
             'useOpenAICompatible',
             'openAICompatibleEndpoint',
             'openAICompatibleApiKey',
+            'openAICompatibleManualModel',
             'openAICompatibleSelectedModel',
             INTRO_COMPLETED_KEY,
             INTRO_VERSION_KEY

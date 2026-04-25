@@ -58,6 +58,10 @@ function getCloudSelectedModelKey() {
     return null;
 }
 
+function getOpenAICompatibleManualModel() {
+    return (localStorage.getItem('openAICompatibleManualModel') || '').trim();
+}
+
 function normalizeOpenAICompatibleBaseUrl(rawValue = '') {
     let value = (rawValue || '').trim();
     if (!value) {
@@ -364,9 +368,26 @@ export async function fetchAvailableModels(options = {}) {
             const configuredEndpoint = getOpenAICompatibleEndpoint();
             const apiKey = getOpenAICompatibleApiKey();
             const modelUrls = getOpenAICompatibleModelUrls(configuredEndpoint);
+            const selectedModelKey = 'openAICompatibleSelectedModel';
+            const manualModel = getOpenAICompatibleManualModel();
+
+            const applyManualOpenAISelection = () => {
+                if (!manualModel) {
+                    return false;
+                }
+
+                localStorage.setItem(selectedModelKey, manualModel);
+                window.currentLoadedModel = manualModel;
+                availableModels = [manualModel];
+                console.log('OpenAI-compatible manual model active:', manualModel);
+                return true;
+            };
 
             if (modelUrls.length === 0) {
                 console.error('OpenAI-compatible endpoint is not configured');
+                if (applyManualOpenAISelection()) {
+                    return [{ id: manualModel }];
+                }
                 availableModels = [];
                 return [];
             }
@@ -400,6 +421,9 @@ export async function fetchAvailableModels(options = {}) {
 
                 if (!response || !response.ok || !data || !Array.isArray(data.data)) {
                     console.error('OpenAI-compatible models fetch failed or returned an unexpected payload');
+                    if (applyManualOpenAISelection()) {
+                        return [{ id: manualModel }];
+                    }
                     availableModels = [];
                     return [];
                 }
@@ -409,12 +433,19 @@ export async function fetchAvailableModels(options = {}) {
                     .filter(m => Boolean(m.id))
                     .map(m => ({ id: m.id }));
 
-                const selectedModelKey = 'openAICompatibleSelectedModel';
                 const DUMMY_NO_MODEL = 'dummy/no-model-selected';
                 const savedSelection = localStorage.getItem(selectedModelKey);
-                const activeModel = (savedSelection && allModelIds.includes(savedSelection))
-                    ? savedSelection
-                    : DUMMY_NO_MODEL;
+                let activeModel = DUMMY_NO_MODEL;
+
+                if (savedSelection && allModelIds.includes(savedSelection)) {
+                    activeModel = savedSelection;
+                } else if (manualModel) {
+                    activeModel = manualModel;
+                    if (!allModelIds.includes(manualModel)) {
+                        modelObjects.unshift({ id: manualModel });
+                    }
+                    localStorage.setItem(selectedModelKey, manualModel);
+                }
 
                 if (activeModel === DUMMY_NO_MODEL) {
                     modelObjects.unshift({ id: DUMMY_NO_MODEL });
@@ -425,7 +456,7 @@ export async function fetchAvailableModels(options = {}) {
                     availableModels = [activeModel];
                 }
 
-                if (savedSelection && !allModelIds.includes(savedSelection)) {
+                if (savedSelection && !allModelIds.includes(savedSelection) && savedSelection !== manualModel) {
                     localStorage.removeItem(selectedModelKey);
                 }
 
@@ -433,6 +464,9 @@ export async function fetchAvailableModels(options = {}) {
                 return modelObjects;
             } catch (err) {
                 console.error('Error fetching OpenAI-compatible models:', err);
+                if (applyManualOpenAISelection()) {
+                    return [{ id: manualModel }];
+                }
                 availableModels = [];
                 return [];
             }
