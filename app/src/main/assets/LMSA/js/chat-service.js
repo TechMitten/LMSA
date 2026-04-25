@@ -130,6 +130,47 @@ async function throwForApiErrorResponse(response) {
     throw new Error(errorText);
 }
 
+function readCompleteSseLines(lineBuffer, chunkText = '', flush = false) {
+    lineBuffer.value += chunkText;
+
+    const lines = lineBuffer.value.split(/\r?\n/);
+    if (flush) {
+        lineBuffer.value = '';
+        return lines;
+    }
+
+    lineBuffer.value = lines.pop() || '';
+    return lines;
+}
+
+function parseOpenAiCompatibleSseLines(lines) {
+    const parsedEvents = [];
+
+    lines.forEach(line => {
+        const trimmedLine = line.trim();
+        if (!trimmedLine || trimmedLine === 'data: [DONE]' || trimmedLine === 'data:' || trimmedLine === 'data: ' || trimmedLine.startsWith(':')) {
+            return;
+        }
+
+        if (!line.startsWith('data:')) {
+            return;
+        }
+
+        const jsonData = line.replace(/^data:\s?/, '');
+        if (!jsonData.trim() || jsonData.trim() === '[DONE]') {
+            return;
+        }
+
+        try {
+            parsedEvents.push(JSON.parse(jsonData));
+        } catch (error) {
+            debugLog('Error parsing complete SSE JSON line:', error);
+        }
+    });
+
+    return parsedEvents;
+}
+
 function createEmptyChatImageStore() {
     return {
         version: CHAT_IMAGE_STORE_VERSION,
@@ -1898,6 +1939,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         // Create decoder for handling streamed UTF-8 data
         const decoder = new TextDecoder('utf-8');
         let incompleteChunk = new Uint8Array();
+        const sseLineBuffer = { value: '' };
 
         // Determine the API URL based on server type
         const apiUrl = getApiUrl();
@@ -2053,27 +2095,12 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                 continue;
             }
 
-            // Handle the data stream based on format (OpenAI, Anthropic, etc.)
-            // Split on both \r\n and \n to handle all SSE line endings.
-            // Do NOT gate on startsWith('data: ') — OpenRouter (and other APIs) may
-            // prefix chunks with SSE comments (e.g. ": OPENROUTER PROCESSING") or
-            // leading newlines between events, which would cause the entire chunk to
-            // be silently discarded. The inner line-level check is sufficient.
+            // Buffer SSE lines across network chunks before JSON parsing. Providers
+            // can split a single `data: {...}` line anywhere, including inside code.
             {
-                const lines = chunkText.split(/\r?\n/);
+                const events = parseOpenAiCompatibleSseLines(readCompleteSseLines(sseLineBuffer, chunkText));
 
-                for (const line of lines) {
-                    // Skip empty lines, SSE comments, and terminal [DONE] markers
-                    if (!line.trim() || line === 'data: [DONE]' || line === 'data: ' || line.startsWith(': ')) {
-                        continue;
-                    }
-
-                    // Only process lines that start with 'data: '
-                    if (line.startsWith('data: ')) {
-                        try {
-                            // Extract the data portion
-                            const jsonData = line.substring(6);
-                            const data = JSON.parse(jsonData);
+                for (const data of events) {
 
                             // Check if this is a valid chunk with content
                             if (data.choices && data.choices[0] && data.choices[0].delta) {
@@ -2255,13 +2282,36 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                     }
                                 }
                             }
-                        } catch (error) {
-                            debugLog('Error parsing JSON:', error);
-                        }
-                    }
                 }
             }
         }
+
+        parseOpenAiCompatibleSseLines(readCompleteSseLines(sseLineBuffer, '', true)).forEach(data => {
+            const delta = data.choices && data.choices[0] && data.choices[0].delta;
+            if (!delta) return;
+
+            let chunkContent = '';
+            if (delta.reasoning) {
+                if (!isHandlingOpenRouterReasoning) {
+                    chunkContent += '<think>\n';
+                    isHandlingOpenRouterReasoning = true;
+                }
+                chunkContent += delta.reasoning;
+            }
+
+            if (delta.content !== undefined && delta.content !== null && delta.content !== '') {
+                if (isHandlingOpenRouterReasoning) {
+                    chunkContent += '\n</think>\n';
+                    isHandlingOpenRouterReasoning = false;
+                }
+                chunkContent += delta.content;
+            }
+
+            if (chunkContent) {
+                aiMessage += chunkContent;
+                aiMessage = normalizeMalformedCodeFences(normalizeToolCallTags(aiMessage));
+            }
+        });
 
         // Final decoding to ensure all UTF-8 sequences are properly handled
         try {
@@ -3416,6 +3466,9 @@ export function loadChat(id, isFirstMessageReload = false) {
         return;
     }
 
+    // Always stop active generation before switching to another chat.
+    abortGenerationForChatSwitch('load-chat');
+
     // Check if this is an explicit first message reload or if the flag is set in localStorage
     isFirstMessageReload = isFirstMessageReload || localStorage.getItem('isFirstMessageReload') === 'true';
 
@@ -3724,6 +3777,9 @@ export function createNewChat(options = {}) {
     const {
         skipActiveTemplateGreeting = false
     } = options;
+
+    // Always stop active generation before creating a new chat.
+    abortGenerationForChatSwitch('create-new-chat');
 
     // Stop any ongoing TTS playback
     if (window.TTSService && typeof window.TTSService.stop === 'function') {
@@ -4296,6 +4352,54 @@ function cleanupIncompleteAIResponse() {
 }
 
 /**
+ * Silently aborts active generation when switching chat context.
+ * This avoids cross-chat streaming without adding a "Generation stopped by user" message.
+ */
+function abortGenerationForChatSwitch(reason = 'chat-switch') {
+    if (smartReplyAbortController) {
+        try {
+            smartReplyAbortController.abort();
+        } catch (error) {
+            debugLog('Error aborting smart reply generation during chat switch:', error);
+        }
+        smartReplyAbortController = null;
+    }
+
+    if (abortController) {
+        debugLog(`Aborting active generation due to ${reason}`);
+
+        const controller = abortController;
+        abortController = null;
+
+        try {
+            controller.abort();
+            setTimeout(() => {
+                try {
+                    controller.abort();
+                } catch (e) {
+                    // Ignore second abort errors
+                }
+            }, 50);
+        } catch (error) {
+            debugLog('Error aborting active generation during chat switch:', error);
+        }
+    }
+
+    if (isGenerating) {
+        isGenerating = false;
+    }
+
+    hideLoadingIndicator();
+
+    const stopButton = document.getElementById('stop-button');
+    if (stopButton && !stopButton.classList.contains('hidden')) {
+        toggleSendStopButton();
+    }
+
+    cleanupIncompleteAIResponse();
+}
+
+/**
  * Aborts the current AI response generation
  */
 export function abortGeneration() {
@@ -4760,6 +4864,7 @@ export async function regenerateLastResponse(isRetry = false) {
             // Create decoder for handling streamed data
             const decoder = new TextDecoder('utf-8');
             let incompleteChunk = new Uint8Array();
+            const sseLineBuffer = { value: '' };
 
             // Track whether we've already initialized code blocks
             let hasInitializedCodeBlocks = false;
@@ -4875,19 +4980,9 @@ export async function regenerateLastResponse(isRetry = false) {
                     continue;
                 }
 
-                // Process the chunk line by line (SSE format)
-                if (chunkText.startsWith('data: ')) {
-                    const lines = chunkText.split('\n');
+                const events = parseOpenAiCompatibleSseLines(readCompleteSseLines(sseLineBuffer, chunkText));
 
-                    for (const line of lines) {
-                        if (!line.trim() || line === 'data: [DONE]' || line === 'data: ') {
-                            continue;
-                        }
-
-                        if (line.startsWith('data: ')) {
-                            try {
-                                const jsonData = line.substring(6);
-                                const data = JSON.parse(jsonData);
+                for (const data of events) {
 
                                 if (data.choices && data.choices[0] && data.choices[0].delta) {
                                     const delta = data.choices[0].delta;
@@ -5051,13 +5146,16 @@ export async function regenerateLastResponse(isRetry = false) {
                                         }
                                     }
                                 }
-                            } catch (error) {
-                                debugLog('Error parsing JSON:', error);
-                            }
-                        }
-                    }
                 }
             }
+
+            parseOpenAiCompatibleSseLines(readCompleteSseLines(sseLineBuffer, '', true)).forEach(data => {
+                const delta = data.choices && data.choices[0] && data.choices[0].delta;
+                if (delta && delta.content) {
+                    aiMessage += delta.content;
+                    aiMessage = normalizeMalformedCodeFences(normalizeToolCallTags(aiMessage));
+                }
+            });
 
             // Handle any remaining UTF-8 data
             if (incompleteChunk.length > 0) {

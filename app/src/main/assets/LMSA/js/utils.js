@@ -348,8 +348,12 @@ function restoreMathPlaceholders(sanitized, displayPlaceholders, inlinePlacehold
     return sanitized;
 }
 
+function isCodeBlockPlaceholder(line) {
+    return /^LMSACODEBLOCKPLACEHOLDER\d+ENDLMSA$/.test(line);
+}
+
 function isBlockLevelHtmlLine(line) {
-    return /^<(h[1-6]|div|ul|ol|li|pre|blockquote|table|thead|tbody|tr|td|th|hr|section)\b/i.test(line);
+    return /^<(h[1-6]|div|ul|ol|li|pre|blockquote|table|thead|tbody|tr|td|th|hr|section)\b/i.test(line) || isCodeBlockPlaceholder(line);
 }
 
 function mergeSoftLineBreaks(text) {
@@ -384,27 +388,58 @@ function mergeSoftLineBreaks(text) {
     return merged.join('\n');
 }
 
+function decodeHtmlOnce(html) {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = String(html || '');
+    return textarea.value;
+}
+
 function renderCodeBlockHtml(language, code, extraAttributes = '') {
     const normalizedLanguage = language || 'plaintext';
-    const safeCode = String(code || '').replace(/\r\n?/g, '\n').replace(/\n$/, '');
-    const formattedCode = safeCode.split('\n').join('<br>');
+    const rawCode = decodeHtmlOnce(code).replace(/\r\n?/g, '\n').replace(/\n$/, '');
+    const formattedCode = escapeHtml(rawCode).split('\n').join('<br>');
     const attributeSuffix = extraAttributes ? ' ' + extraAttributes : '';
     return `<pre data-multiline="true" data-language="${normalizedLanguage}"${attributeSuffix}><code class="language-${normalizedLanguage}">${formattedCode}</code></pre>`;
 }
 
-function replaceMarkdownCodeBlocks(sanitized, extraAttributes = '') {
-    let rendered = sanitized.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
-        return renderCodeBlockHtml(language, code, extraAttributes);
+function createCodeBlockPlaceholder(codeBlockHtml, codeBlockPlaceholders) {
+    if (!codeBlockPlaceholders) return codeBlockHtml;
+
+    const placeholder = `LMSACODEBLOCKPLACEHOLDER${codeBlockPlaceholders.length}ENDLMSA`;
+    codeBlockPlaceholders.push({ placeholder, html: codeBlockHtml });
+    return `\n${placeholder}\n`;
+}
+
+function replaceMarkdownCodeBlocks(sanitized, extraAttributes = '', codeBlockPlaceholders = null) {
+    let rendered = sanitized.replace(/```([A-Za-z0-9+#_-]+)?[ \t]*\r?\n([\s\S]*?)```/g, (match, language, code) => {
+        return createCodeBlockPlaceholder(
+            renderCodeBlockHtml(language, code, extraAttributes),
+            codeBlockPlaceholders
+        );
     });
 
     // While streaming, an opening fence can arrive before the closing fence.
     // Keep the trailing content inside a provisional code block so lines don't
     // jump in and out of the snippet as more chunks arrive.
-    rendered = rendered.replace(/(^|\n)```(\w+)?\n([\s\S]*)$/g, (match, prefix, language, code) => {
-        return prefix + renderCodeBlockHtml(language, code, extraAttributes);
+    rendered = rendered.replace(/(^|\n)```([A-Za-z0-9+#_-]+)?[ \t]*\r?\n([\s\S]*)$/g, (match, prefix, language, code) => {
+        return prefix + createCodeBlockPlaceholder(
+            renderCodeBlockHtml(language, code, extraAttributes),
+            codeBlockPlaceholders
+        );
     });
 
     return rendered;
+}
+
+function restoreCodeBlockPlaceholders(sanitized, codeBlockPlaceholders) {
+    if (!codeBlockPlaceholders || codeBlockPlaceholders.length === 0) return sanitized;
+
+    codeBlockPlaceholders.forEach(({ placeholder, html }) => {
+        sanitized = sanitized.replace(new RegExp('<p>\\s*' + placeholder + '\\s*<\\/p>', 'g'), html);
+        sanitized = sanitized.replace(new RegExp(placeholder, 'g'), html);
+    });
+
+    return sanitized;
 }
 
 /**
@@ -415,6 +450,7 @@ function replaceMarkdownCodeBlocks(sanitized, extraAttributes = '') {
 export function basicSanitizeInput(input) {
     // First, remove any <think> tags that might be present
     let processedInput = normalizeMalformedCodeFences(stripReasoningSections(input));
+    const codeBlockPlaceholders = [];
 
     // Extract math expressions before HTML escaping to prevent paragraph fragmentation
     const mathDisplayPlaceholders = [];
@@ -458,7 +494,7 @@ export function basicSanitizeInput(input) {
     // Handle code blocks with language specification. The whole message has
     // already been escaped above, so code fence content is safe here and
     // should not be entity-escaped a second time.
-    sanitized = replaceMarkdownCodeBlocks(sanitized);
+    sanitized = replaceMarkdownCodeBlocks(sanitized, '', codeBlockPlaceholders);
 
     // Handle inline code
     sanitized = sanitized.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -544,6 +580,7 @@ export function basicSanitizeInput(input) {
         }
     }).join('\n');
 
+    sanitized = restoreCodeBlockPlaceholders(sanitized, codeBlockPlaceholders);
     sanitized = restoreMathPlaceholders(sanitized, mathDisplayPlaceholders, mathInlinePlaceholders);
     return sanitized;
 }
@@ -556,6 +593,7 @@ export function basicSanitizeInput(input) {
 export function sanitizeInput(input) {
     // First extract all <think> tag contents before any HTML escaping
     let processedInput = normalizeMalformedCodeFences(normalizeReasoningTags(input));
+    const codeBlockPlaceholders = [];
 
     // Extract math expressions before anything else to prevent fragmentation
     const mathDisplayPlaceholders = [];
@@ -698,7 +736,11 @@ export function sanitizeInput(input) {
 
     // Handle code blocks with language specification. The full message has
     // already been HTML-escaped, so preserve the code text as-is here.
-    sanitized = replaceMarkdownCodeBlocks(sanitized, `data-has-thinking="${hasThinkTag ? 'true' : 'false'}"`);
+    sanitized = replaceMarkdownCodeBlocks(
+        sanitized,
+        `data-has-thinking="${hasThinkTag ? 'true' : 'false'}"`,
+        codeBlockPlaceholders
+    );
 
     // Handle inline code
     sanitized = sanitized.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -789,6 +831,7 @@ export function sanitizeInput(input) {
         sanitized += '</div>';
     }
 
+    sanitized = restoreCodeBlockPlaceholders(sanitized, codeBlockPlaceholders);
     sanitized = restoreMathPlaceholders(sanitized, mathDisplayPlaceholders, mathInlinePlaceholders);
     return sanitized;
 }
