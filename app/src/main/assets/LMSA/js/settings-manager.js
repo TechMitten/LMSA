@@ -1287,7 +1287,7 @@ function syncModeIndicator() {
     statusText.textContent = "OPENROUTER";
     modeIndicator.title = "Current AI Mode: Cloud (OpenRouter)";
   } else if (useOpenAICompatible) {
-    statusText.textContent = "OPENAI ENDPOINT";
+    statusText.textContent = "Custom Endpoint";
     modeIndicator.title = "Current AI Mode: OpenAI-Compatible Endpoint";
   } else {
     statusText.textContent = "LOCAL SERVER";

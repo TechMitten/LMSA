@@ -46,7 +46,7 @@ export const settingsModal = `
                         </button>
                         <button id="select-openai-compatible" class="connection-type-btn" type="button" aria-pressed="false">
                             <div class="connection-type-icon"><i class="fas fa-link"></i></div>
-                            <span class="connection-type-name">OpenAI Endpoint</span>
+                            <span class="connection-type-name">Custom Endpoint</span>
                         </button>
                     </div>
 

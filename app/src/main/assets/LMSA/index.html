@@ -322,7 +322,7 @@
                         style="transform: none !important; left: 0; right: 0; color: var(--text-muted);">
                         <div class="welcome-content glass-card p-8 sm:p-10 max-w-md mx-auto">
                             <div class="welcome-content-inner">
-                                <div class="relative mx-auto mb-4 sm:mb-6 mt-2 flex items-center justify-center icon-container"
+                                <div class="relative mx-auto mb-4 sm:mb-6 mt-2 flex items-center justify-center icon-container welcome-brand-mark"
                                     style="width: 5.5rem; height: 5.5rem; min-height: 5rem; min-width: 5rem; padding: 0.75rem;">
                                     <img src="icon.png" alt="LMSA Icon" class="relative z-10 object-contain"
                                         style="width: 3.5rem; height: 3.5rem; max-width: 75%; max-height: 75%;">
@@ -337,11 +337,13 @@
                                     </div>
                                 </div>
 
-                                <h1 class="text-xl sm:text-2xl font-bold mb-2 tracking-tight header-title">Local Model
-                                    Server Access</h1>
-                                <p class="mb-5 sm:mb-7 opacity-90 leading-relaxed text-sm sm:text-base">
-                                    Ollama & LM Studio Android Remote
-                                </p>
+                                <div class="welcome-title-block">
+                                    <h1 class="text-xl sm:text-2xl font-bold mb-2 tracking-tight">Local Model
+                                        Server Access</h1>
+                                    <p class="mb-5 sm:mb-7 opacity-90 leading-relaxed text-sm sm:text-base">
+                                        Ollama & LM Studio Android Remote
+                                    </p>
+                                </div>
                                 <div id="welcome-debug-indicator" class="mb-4" style="display: none;">
                                     <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
                                         style="background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.45); color: #f59e0b;">
@@ -349,40 +351,34 @@
                                     </span>
                                 </div>
 
-                                <div class="mb-8">
-                                    <div class="grid grid-cols-2 gap-3 w-full mb-3">
-                                        <!-- Settings Button - Professional styling -->
+                                <div class="welcome-actions mb-8">
+                                    <div class="welcome-action-grid w-full mb-3">
                                         <button id="get-started-btn"
-                                            class="professional-button flex items-center justify-center gap-3 w-full h-12"
-                                            style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
+                                            class="professional-button welcome-action-card flex items-center justify-center gap-3 w-full h-12">
+                                            <i class="fas fa-sliders-h" aria-hidden="true"></i>
                                             <span>Settings</span>
                                         </button>
-                                        <!-- Models Button - Professional styling -->
                                         <button id="welcome-models-btn"
-                                            class="professional-button flex items-center justify-center gap-3 w-full h-12"
-                                            style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
+                                            class="professional-button welcome-action-card flex items-center justify-center gap-3 w-full h-12">
+                                            <i class="fas fa-microchip" aria-hidden="true"></i>
                                             <span>Models</span>
                                         </button>
-                                        <!-- Templates Button - Professional styling -->
                                         <button id="welcome-templates-btn"
-                                            class="professional-button flex items-center justify-center gap-3 w-full h-12"
-                                            style="border: 2px solid rgba(16, 185, 129, 0.45) !important;"
+                                            class="professional-button welcome-action-card flex items-center justify-center gap-3 w-full h-12"
                                             onclick="window.location.href='templates.html'">
+                                            <i class="fas fa-layer-group" aria-hidden="true"></i>
                                             <span>Templates</span>
                                         </button>
-                                        <!-- Help Button - Professional styling -->
                                         <button id="welcome-help-btn"
-                                            class="professional-button flex items-center justify-center gap-2 w-full h-12"
-                                            style="border: 2px solid rgba(16, 185, 129, 0.45) !important;">
+                                            class="professional-button welcome-action-card flex items-center justify-center gap-2 w-full h-12">
+                                            <i class="fas fa-question-circle" aria-hidden="true"></i>
                                             <span>Help</span>
                                         </button>
                                     </div>
 
-                                    <!-- Premium Button - Professional styling -->
-                                    <div id="remove-ads-banner" class="w-full" style="display: none;">
+                                    <div id="remove-ads-banner" class="welcome-premium-row w-full" style="display: none;">
                                         <button id="remove-ads-banner-button"
-                                            class="professional-button flex items-center justify-center gap-2 w-full h-12"
-                                            style="border: 2px solid rgba(59, 130, 246, 0.45) !important;">
+                                            class="professional-button welcome-premium-action flex items-center justify-center gap-2 w-full h-12">
                                             <i class="fas fa-crown" style="color: #fbbf24;"></i>
                                             <span>Unlock Premium</span>
                                         </button>
