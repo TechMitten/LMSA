@@ -2550,6 +2550,59 @@ body.android-webview.light-theme #lmstudio-mcp-input-modal {
   opacity: 0.9;
 }
 
+#lmstudio-mcp-input-modal .professional-button,
+#lmstudio-mcp-input-modal .professional-button span,
+#lmstudio-mcp-input-modal .conn-modal-action-btn,
+#lmstudio-mcp-input-modal .conn-modal-action-btn span,
+#lmstudio-mcp-input-modal .conn-modal-close-btn {
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv02" 1, "cv03" 1, "cv11" 1, "ss01" 1;
+}
+
+#lmstudio-mcp-input-modal .professional-button,
+#lmstudio-mcp-input-modal .professional-button span,
+#lmstudio-mcp-input-modal .conn-modal-action-btn,
+#lmstudio-mcp-input-modal .conn-modal-action-btn span {
+  text-shadow: none !important;
+  text-transform: none;
+}
+
+#lmstudio-mcp-input-modal .professional-button {
+  font-variation-settings: "wght" 650;
+  font-weight: 650 !important;
+  font-size: 0.96rem !important;
+  letter-spacing: -0.026em !important;
+  line-height: 1.02;
+}
+
+#lmstudio-mcp-input-modal .professional-button span {
+  font-variation-settings: "wght" 650;
+  font-weight: 650 !important;
+  letter-spacing: -0.026em !important;
+}
+
+#lmstudio-mcp-input-modal [data-mcp-tool-suggestion].professional-button {
+  font-size: 0.84rem !important;
+  letter-spacing: -0.03em !important;
+}
+
+#lmstudio-mcp-input-modal #add-lmstudio-mcp-integration-btn,
+#lmstudio-mcp-input-modal #add-lmstudio-mcp-tool-btn {
+  font-variation-settings: "wght" 670;
+  font-weight: 670 !important;
+  letter-spacing: -0.03em !important;
+}
+
+#lmstudio-mcp-input-modal .conn-modal-action-btn {
+  font-variation-settings: "wght" 680;
+  font-weight: 680 !important;
+  font-size: 1rem !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1;
+}
+
 /* Light theme overrides */
 body.light-theme .connection-input-modal-box {
   background: linear-gradient(to bottom, rgba(255,255,255,0.98), rgba(248,250,252,0.95));

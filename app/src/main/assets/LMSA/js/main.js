@@ -938,6 +938,16 @@ function initializeAndroidKeyboardFix() {
         return isVisibleTextEntryField(active);
     }
 
+    function getFocusedVisibleModal() {
+        const active = document.activeElement;
+        if (!(active instanceof HTMLElement)) {
+            return null;
+        }
+
+        const modal = active.closest('.modal-container:not(.hidden)');
+        return modal instanceof HTMLElement ? modal : null;
+    }
+
     function syncVisibleModalContainers(keyboardOpen) {
         // Native (WebViewActivity.applySystemBarInsets) consumes the IME inset and
         // shrinks the WebView above the keyboard, so the visual viewport already
@@ -984,12 +994,17 @@ function initializeAndroidKeyboardFix() {
 
         lastAppliedKeyboardState = keyboardOpen;
         window.androidKeyboardVisible = keyboardOpen;
+        document.documentElement.style.setProperty('--android-keyboard-height', `${androidKeyboardHeight}px`);
         syncVisibleModalContainers(keyboardOpen);
 
+        const focusedVisibleModal = getFocusedVisibleModal();
+        const keyboardInsideModal = Boolean(focusedVisibleModal);
+
         if (keyboardOpen) {
-            document.body.classList.add('keyboard-visible');
+            document.body.classList.toggle('keyboard-visible', !keyboardInsideModal);
+            document.body.classList.toggle('modal-keyboard-visible', keyboardInsideModal);
             if (mainAppContainer) {
-                mainAppContainer.classList.add('keyboard-visible');
+                mainAppContainer.classList.toggle('keyboard-visible', !keyboardInsideModal);
             }
 
             // Hide scroll-to-bottom button immediately
@@ -1011,6 +1026,7 @@ function initializeAndroidKeyboardFix() {
             }
         } else {
             document.body.classList.remove('keyboard-visible');
+            document.body.classList.remove('modal-keyboard-visible');
             if (mainAppContainer) {
                 mainAppContainer.classList.remove('keyboard-visible');
             }

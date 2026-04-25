@@ -2369,10 +2369,36 @@ function initializeConnectionInputModals() {
 
         const focusMcpBuilder = () => {
             setTimeout(() => {
-                if (mcpBuilderPanel && !mcpBuilderPanel.classList.contains('hidden') && mcpTargetInput) {
-                    mcpTargetInput.focus();
-                    mcpTargetInput.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+                if (!mcpBuilderPanel || mcpBuilderPanel.classList.contains('hidden') || !mcpTargetInput) {
+                    return;
                 }
+
+                const modalBox = lmMcpModal?.querySelector('.connection-input-modal-box');
+                if (modalBox instanceof HTMLElement) {
+                    const panelTop = Math.max(0, mcpBuilderPanel.offsetTop - 16);
+                    modalBox.scrollTop = panelTop;
+                }
+
+                const focusTargetInput = () => {
+                    try {
+                        mcpTargetInput.focus({ preventScroll: true });
+                    } catch (_) {
+                        mcpTargetInput.focus();
+                    }
+
+                    if (isAndroidWebView()) {
+                        setTimeout(() => keepModalInputVisible(lmMcpModal, mcpTargetInput), 140);
+                    }
+                };
+
+                if (isAndroidWebView()) {
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(focusTargetInput);
+                    });
+                    return;
+                }
+
+                focusTargetInput();
             }, 80);
         };
 
