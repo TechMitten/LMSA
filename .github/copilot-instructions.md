@@ -31,9 +31,7 @@ Nine JSInterface classes registered in `WebViewActivity.kt`:
 
 ### Key Features
 - **Monetization**: One-time purchase `"ad_removal"` → lifetime premium access stored in SharedPreferences
-- **Ad System**: Interstitial ads (`ca-app-pub-1388425042154340/3976255369`) + App Open Ads (`ca-app-pub-1388425042154340/2733504962`); both skipped if premium
-- **App Open Ad**: Shows after 5+ app opens, max once per 12 hours; 10-minute cooldown shared with interstitial ads
-- **State Sync**: Native calls JS via `evaluateJavascript()` to sync premium status, ads, etc.
+- **State Sync**: Native calls JS via `evaluateJavascript()` to sync premium status and app state
 - **Features Catalog**: Full user-facing feature inventory in [FEATURES_AND_OPTIONS_CATALOG.md](FEATURES_AND_OPTIONS_CATALOG.md)
 
 ---
@@ -52,7 +50,7 @@ Nine JSInterface classes registered in `WebViewActivity.kt`:
 ```
 
 ### Custom Tasks
-- **`modifyHtmlAndJs`** — Build-time preprocessor that injects native ad styling into web assets
+- No ad-specific build preprocessors are used.
 
 ### Key Build Files
 - Root: [build.gradle.kts](build.gradle.kts), [gradle.properties](gradle.properties), [settings.gradle.kts](settings.gradle.kts)
@@ -197,7 +195,6 @@ app/src/main/
 |---------|---------|---------|
 | Material Design | v1.12.0 | UI components, theming |
 | Google Play Billing | v7.0.0 | In-app purchases |
-| Google Play Ads | v23.6.0 | Interstitial ads |
 | Play Review API | v2.0.2 | In-app review prompt |
 | Core KTX | v1.17.0 | Modern Kotlin extensions |
 | AppCompat | v1.7.1 | Backward compatibility |
@@ -211,7 +208,6 @@ See [gradle/libs.versions.toml](gradle/libs.versions.toml) for complete dependen
 | Issue | Cause | Solution |
 |-------|-------|----------|
 | WebView collapsibles invisible | Transform + repaint sync issue | See "Sidebar Collapsible Rendering" above |
-| Ad doesn't show but interstitial click handler fires | Ad setup race condition | Preload ads via `AndroidBilling.preloadInterstitialAd()` after app init |
 | Premium status not persisted across restarts | SharedPreferences key mismatch | Verify `LMSA_PREFS`/`is_premium` key name in both Kotlin and JS |
 | TTS speech hangs or doesn't complete | TTS service timeout | Watchdog mechanism in `AndroidTTS` auto-recovers; check logcat for errors |
 | Gradle build fails with "duplicate class" | ProGuard conflicts | Check `app/proguard-rules.pro` for overly broad keep rules |
@@ -232,10 +228,10 @@ See [gradle/libs.versions.toml](gradle/libs.versions.toml) for complete dependen
 
 When working on LMSA, keep in mind:
 1. **Web-first design**: Most UI logic lives in JavaScript; native code is a bridge
-2. **Billing is critical**: Premium status gates core features (ads, usage limits)
+2. **Billing is critical**: Premium status gates core features and usage limits
 3. **Sync is king**: Android state → JS updates (via `evaluateJavascript()`) is the communication pattern
 4. **Testing on device**: WebView behavior differs significantly from desktop browsers; always test on Android
-5. **Build preprocessor**: `modifyHtmlAndJs` runs at build time; if you edit web assets, rebuild to see changes
+5. **Build process**: Rebuild the app after editing web assets to validate Android WebView behavior
 
 ---
 

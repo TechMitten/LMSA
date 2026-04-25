@@ -407,7 +407,7 @@ class WebViewActivity : AppCompatActivity() {
         webSettings.cacheMode = WebSettings.LOAD_DEFAULT
         @Suppress("DEPRECATION")
         webSettings.databaseEnabled = false
-        // Allow mixed content for ads (HTTP content in HTTPS pages)
+        // Keep compatibility mode for mixed-content pages opened inside WebView.
         @Suppress("DEPRECATION")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             webSettings.mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
@@ -459,7 +459,7 @@ class WebViewActivity : AppCompatActivity() {
                 updateOnboardingUiState()
             }
 
-            // Handle renderer crashes (e.g., from ad errors)
+            // Handle renderer crashes without terminating the app process.
             override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {
                 Log.w(TAG, "Renderer crashed, recovering...")
                 // Don't destroy the activity, just return true to indicate we handled it
@@ -474,15 +474,6 @@ class WebViewActivity : AppCompatActivity() {
                 if (consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.ERROR) {
                     val sourceId = consoleMessage.sourceId()
                     val lineNumber = consoleMessage.lineNumber()
-
-                    // Filter out ad-related errors that are common in test mode
-                    if (sourceId.contains("2mdn.net") ||
-                        sourceId.contains("googleads") ||
-                        sourceId.contains("doubleclick") ||
-                        consoleMessage.message().contains("setRushSimulatedLocalEvents")) {
-                        Log.w(TAG, "Ad JS error (ignored): ${consoleMessage.message()} at $sourceId:$lineNumber")
-                        return true // Suppress the error
-                    }
 
                     Log.e(TAG, "JS Error: ${consoleMessage.message()} at $sourceId:$lineNumber")
                 }

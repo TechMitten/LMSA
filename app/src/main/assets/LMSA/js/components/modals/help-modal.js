@@ -457,19 +457,6 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg border"
-                                style="background: var(--settings-label-bg); border-color: #f59e0b;">
-                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i
-                                        class="fas fa-ban mr-2"></i>Feature Disabled with OpenRouter:</p>
-                                <p style="color: var(--text-primary); margin-top: 0.5rem;">When OpenRouter is enabled, the following feature is automatically disabled to prevent unnecessary extra API calls:</p>
-                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
-                                    <li><strong>Smart Reply</strong> — Tap-to-reply suggestions are not generated, as they would require an additional API call for each conversation</li>
-                                </ul>
-                                <p style="color: var(--text-primary); margin-top: 0.75rem; font-size: 0.9em;">
-                                    Generate Chat Titles remains available because LMSA now stores the title from the first reply instead of sending a second title-only request. If you switch back to local mode, Smart Reply will re-enable automatically using your previous settings.
-                                </p>
-                            </div>
-
-                            <div class="mt-4 p-3 rounded-lg border"
                                 style="background: var(--settings-label-bg); border-color: #ef4444;">
                                 <p class="font-medium flex items-center" style="color: #ef4444;"><i
                                         class="fas fa-shield-alt mr-2"></i>Privacy Notice:</p>
@@ -968,7 +955,7 @@ export const helpModal = `
                         </div>
                     </section>
                     <section id="section-ads-privacy">
-                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa;"><i
+                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa; margin-bottom: 0.5rem;"><i
                                 class="fas fa-shield-alt mr-2"></i>Privacy</h3>
                         <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
                             <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
