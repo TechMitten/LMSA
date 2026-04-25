@@ -9,7 +9,7 @@ const INTRO_STEPS = [
         icon: 'fas fa-wand-magic-sparkles',
         theme: 'aurora',
         checklist: [
-            'Use Local Server or OpenRouter for your provider.',
+            'Use Local Server, OpenRouter, or OpenAI Endpoint for your provider.',
             'Keep your chats in one workspace on mobile.',
             'Use Settings for all connection setup options.'
         ]
@@ -21,7 +21,7 @@ const INTRO_STEPS = [
         theme: 'control-room',
         checklist: [
             'Tap Settings, then stay on Connection step.',
-            'Select Local Server or OpenRouter.',
+            'Select Local Server, OpenRouter, or OpenAI Endpoint.',
             'Use the Models screen after setup to select a model.'
         ]
     },

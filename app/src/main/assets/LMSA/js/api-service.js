@@ -1,6 +1,6 @@
 // API Service for handling server communication
 import { serverIpInput, serverPortInput, loadedModelDisplay } from './dom-elements.js';
-import { getUseOllama, getUseOpenRouter, getOpenRouterApiKey, getLMStudioApiToken } from './settings-manager.js';
+import { getUseOllama, getUseOpenRouter, getOpenRouterApiKey, getUseOpenAICompatible, getOpenAICompatibleEndpoint, getOpenAICompatibleApiKey, getLMStudioApiToken } from './settings-manager.js';
 import { showIpPortErrorModal, hideIpPortErrorModal } from './ui-manager.js';
 
 let API_URL = '';
@@ -40,6 +40,68 @@ function getLMStudioAuthHeaders() {
 
 function getLocalServerAuthHeaders() {
     return getUseOllama() ? {} : getLMStudioAuthHeaders();
+}
+
+function isCloudProviderActive() {
+    return getUseOpenRouter() || getUseOpenAICompatible();
+}
+
+function getCloudSelectedModelKey() {
+    if (getUseOpenRouter()) {
+        return 'openRouterSelectedModel';
+    }
+
+    if (getUseOpenAICompatible()) {
+        return 'openAICompatibleSelectedModel';
+    }
+
+    return null;
+}
+
+function normalizeOpenAICompatibleBaseUrl(rawValue = '') {
+    let value = (rawValue || '').trim();
+    if (!value) {
+        return '';
+    }
+
+    value = value.replace(/\/+$/, '');
+
+    // Allow pasting a full chat completions URL and normalize it to provider base.
+    if (/\/chat\/completions$/i.test(value)) {
+        value = value.replace(/\/chat\/completions$/i, '');
+    }
+
+    if (/\/chat$/i.test(value)) {
+        value = value.replace(/\/chat$/i, '');
+    }
+
+    return value;
+}
+
+function getOpenAICompatibleModelUrls(baseUrl) {
+    const cleanBase = normalizeOpenAICompatibleBaseUrl(baseUrl);
+    if (!cleanBase) {
+        return [];
+    }
+
+    if (/\/v\d+$/i.test(cleanBase)) {
+        return [`${cleanBase}/models`];
+    }
+
+    return [`${cleanBase}/models`, `${cleanBase}/v1/models`];
+}
+
+function getOpenAICompatibleChatCompletionsUrl(baseUrl) {
+    const cleanBase = normalizeOpenAICompatibleBaseUrl(baseUrl);
+    if (!cleanBase) {
+        return '';
+    }
+
+    if (/\/v\d+$/i.test(cleanBase)) {
+        return `${cleanBase}/chat/completions`;
+    }
+
+    return `${cleanBase}/v1/chat/completions`;
 }
 
 /**
@@ -292,6 +354,85 @@ export async function fetchAvailableModels(options = {}) {
                 return modelObjects;
             } catch (err) {
                 console.error('Error fetching OpenRouter models:', err);
+                availableModels = [];
+                return [];
+            }
+        }
+
+        // OpenAI-compatible branch: fetch models from custom endpoint
+        if (getUseOpenAICompatible()) {
+            const configuredEndpoint = getOpenAICompatibleEndpoint();
+            const apiKey = getOpenAICompatibleApiKey();
+            const modelUrls = getOpenAICompatibleModelUrls(configuredEndpoint);
+
+            if (modelUrls.length === 0) {
+                console.error('OpenAI-compatible endpoint is not configured');
+                availableModels = [];
+                return [];
+            }
+
+            try {
+                let response = null;
+                let data = null;
+
+                for (const modelUrl of modelUrls) {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
+                    const nextResponse = await fetch(modelUrl, {
+                        headers: apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {},
+                        signal: controller.signal
+                    }).catch(() => null);
+                    clearTimeout(timeoutId);
+
+                    if (!nextResponse || !nextResponse.ok) {
+                        continue;
+                    }
+
+                    const nextData = await nextResponse.json().catch(() => null);
+                    if (!nextData || !Array.isArray(nextData.data)) {
+                        continue;
+                    }
+
+                    response = nextResponse;
+                    data = nextData;
+                    break;
+                }
+
+                if (!response || !response.ok || !data || !Array.isArray(data.data)) {
+                    console.error('OpenAI-compatible models fetch failed or returned an unexpected payload');
+                    availableModels = [];
+                    return [];
+                }
+
+                const allModelIds = data.data.map(m => m.id).filter(Boolean);
+                const modelObjects = data.data
+                    .filter(m => Boolean(m.id))
+                    .map(m => ({ id: m.id }));
+
+                const selectedModelKey = 'openAICompatibleSelectedModel';
+                const DUMMY_NO_MODEL = 'dummy/no-model-selected';
+                const savedSelection = localStorage.getItem(selectedModelKey);
+                const activeModel = (savedSelection && allModelIds.includes(savedSelection))
+                    ? savedSelection
+                    : DUMMY_NO_MODEL;
+
+                if (activeModel === DUMMY_NO_MODEL) {
+                    modelObjects.unshift({ id: DUMMY_NO_MODEL });
+                    window.currentLoadedModel = null;
+                    availableModels = [];
+                } else {
+                    window.currentLoadedModel = activeModel;
+                    availableModels = [activeModel];
+                }
+
+                if (savedSelection && !allModelIds.includes(savedSelection)) {
+                    localStorage.removeItem(selectedModelKey);
+                }
+
+                console.log('OpenAI-compatible models loaded - active model:', activeModel);
+                return modelObjects;
+            } catch (err) {
+                console.error('Error fetching OpenAI-compatible models:', err);
                 availableModels = [];
                 return [];
             }
@@ -758,7 +899,7 @@ export function updateLoadedModelDisplay(modelName, forceShow = false) {
     if (loadedModelDisplay) {
         // Always update global variable with current model name
         window.currentLoadedModel = modelName;
-        if (!getUseOpenRouter()) {
+        if (!isCloudProviderActive()) {
             setPersistedLocalSelectedModel(modelName);
         }
 
@@ -819,6 +960,31 @@ export async function isServerRunning() {
         // OpenRouter: server is "running" when a non-empty API key is configured
         if (getUseOpenRouter()) {
             return getOpenRouterApiKey().trim().length > 0;
+        }
+
+        if (getUseOpenAICompatible()) {
+            const endpoint = getOpenAICompatibleEndpoint().trim();
+            const apiKey = getOpenAICompatibleApiKey().trim();
+            const modelUrls = getOpenAICompatibleModelUrls(endpoint);
+            if (!endpoint || modelUrls.length === 0) {
+                return false;
+            }
+
+            for (const modelUrl of modelUrls) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                const response = await fetch(modelUrl, {
+                    method: 'GET',
+                    signal: controller.signal,
+                    headers: apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {}
+                }).catch(() => ({ ok: false }));
+                clearTimeout(timeoutId);
+                if (response.ok) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         if (!serverIpInput || !serverPortInput) {
@@ -1043,11 +1209,14 @@ async function forceLoadModel(ip, port, modelId) {
  */
 export async function loadModel(modelId) {
     try {
-        // OpenRouter: no model loading needed — models are cloud-resident
-        if (getUseOpenRouter()) {
+        // Hosted providers: no local model loading needed — models are cloud-resident.
+        if (isCloudProviderActive()) {
             window.currentLoadedModel = modelId;
             availableModels = [modelId]; // keep getAvailableModels() in sync with selection
-            localStorage.setItem('openRouterSelectedModel', modelId);
+            const cloudModelKey = getCloudSelectedModelKey();
+            if (cloudModelKey) {
+                localStorage.setItem(cloudModelKey, modelId);
+            }
             updateLoadedModelDisplay(modelId);
             try {
                 const { updateFileUploadCapabilities } = await import('./file-upload.js');
@@ -1204,8 +1373,8 @@ export async function loadModel(modelId) {
  */
 export async function ejectModel() {
     try {
-        // OpenRouter: nothing to eject
-        if (getUseOpenRouter()) {
+        // Hosted providers: nothing to eject
+        if (isCloudProviderActive()) {
             return true;
         }
 
@@ -1356,6 +1525,10 @@ export function getApiUrl(options = {}) {
 
     if (getUseOpenRouter()) {
         return 'https://openrouter.ai/api/v1/chat/completions';
+    }
+
+    if (getUseOpenAICompatible()) {
+        return getOpenAICompatibleChatCompletionsUrl(getOpenAICompatibleEndpoint());
     }
 
     const ip = serverIpInput ? serverIpInput.value.trim() : '';

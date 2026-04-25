@@ -7,6 +7,9 @@ import {
   ollamaToggleCheckbox,
   openRouterToggleCheckbox,
   openRouterApiKeyInput,
+  openAICompatibleToggleCheckbox,
+  openAICompatibleEndpointInput,
+  openAICompatibleApiKeyInput,
   showModelLabelCheckbox,
   modeIndicator,
 } from "./dom-elements.js";
@@ -56,6 +59,9 @@ let defaultModelId = null; // Default model to auto-select when models load
 let selectedTTSVoice = null; // Selected TTS voice name
 let useOpenRouter = false; // Use OpenRouter cloud API
 let openRouterApiKey = ''; // OpenRouter API key
+let useOpenAICompatible = false; // Use custom OpenAI-compatible endpoint
+let openAICompatibleEndpoint = ''; // Base URL or chat completions URL
+let openAICompatibleApiKey = ''; // Optional API key for custom endpoint
 let lmStudioApiToken = ''; // Optional LM Studio API token for authenticated servers
 let lmStudioMcpIntegrations = []; // Optional LM Studio native chat integrations payload
 let showModelLabel = true; // Show model name on AI message bubbles
@@ -766,7 +772,7 @@ export function saveAutoSmartReplySetting() {
  * @returns {boolean} - True if auto-smart reply is enabled and OpenRouter is not active
  */
 export function getAutoSmartReply() {
-  if (useOpenRouter) return false;
+  if (useOpenRouter || useOpenAICompatible) return false;
   return autoSmartReply;
 }
 
@@ -776,8 +782,8 @@ export function getAutoSmartReply() {
  * @param {Event} event - The change event from the checkbox
  */
 function handleAutoSmartReplyToggle(event) {
-  // Smart Reply is unavailable when OpenRouter is active
-  if (useOpenRouter) {
+  // Smart Reply is unavailable with hosted providers
+  if (useOpenRouter || useOpenAICompatible) {
     event.target.checked = false;
     return;
   }
@@ -1246,14 +1252,15 @@ export function saveOllamaSetting() {
   if (ollamaToggleCheckbox) {
     useOllama = ollamaToggleCheckbox.checked;
     localStorage.setItem("useOllama", useOllama);
-    // Mutual exclusivity: disable OpenRouter when Ollama is enabled
-    if (useOllama && useOpenRouter) {
+    // Mutual exclusivity: disable hosted providers when Ollama is enabled
+    if (useOllama && (useOpenRouter || useOpenAICompatible)) {
       useOpenRouter = false;
-      openRouterApiKey = '';
+      useOpenAICompatible = false;
       localStorage.setItem("useOpenRouter", 'false');
+      localStorage.setItem("useOpenAICompatible", 'false');
       if (openRouterToggleCheckbox) openRouterToggleCheckbox.checked = false;
-      updateOpenRouterUI(false);
-      // Restore last used local model since OpenRouter was just disabled
+      if (openAICompatibleToggleCheckbox) openAICompatibleToggleCheckbox.checked = false;
+      updateProviderUI();
       window.currentLoadedModel = localStorage.getItem('localSelectedModel') || null;
     }
   }
@@ -1269,18 +1276,19 @@ export function getUseOllama() {
 
 /**
  * Synchronizes the mode indicator icon in the header with the current provider state.
- * Displays "C" for Cloud (OpenRouter) or "L" for Local Server.
- * @param {boolean} isCloudMode
  */
-function syncModeIndicator(isCloudMode) {
+function syncModeIndicator() {
   if (!modeIndicator) return;
 
   const statusText = modeIndicator.querySelector('.status-text');
   if (!statusText) return;
 
-  if (isCloudMode) {
+  if (useOpenRouter) {
     statusText.textContent = "OPENROUTER";
     modeIndicator.title = "Current AI Mode: Cloud (OpenRouter)";
+  } else if (useOpenAICompatible) {
+    statusText.textContent = "OPENAI ENDPOINT";
+    modeIndicator.title = "Current AI Mode: OpenAI-Compatible Endpoint";
   } else {
     statusText.textContent = "LOCAL SERVER";
     modeIndicator.title = "Current AI Mode: Local Server";
@@ -1288,37 +1296,51 @@ function syncModeIndicator(isCloudMode) {
 }
 
 /**
- * Updates the OpenRouter UI: shows/hides connection panels and selector button states,
- * and disables Smart Reply when OpenRouter is enabled (incompatible features).
- * @param {boolean} isEnabled
+ * Updates connection provider panels and button active states.
  */
-function updateOpenRouterUI(isEnabled) {
+function updateProviderUI() {
+  const isCloudMode = useOpenRouter || useOpenAICompatible;
   const localPanel = document.getElementById('local-server-settings');
   const openRouterPanel = document.getElementById('openrouter-settings');
+  const openAICompatiblePanel = document.getElementById('openai-compatible-settings');
   const localBtn = document.getElementById('select-local-server');
   const openRouterBtn = document.getElementById('select-openrouter');
+  const openAICompatibleBtn = document.getElementById('select-openai-compatible');
 
-  // Update header mode indicator
-  syncModeIndicator(isEnabled);
+  syncModeIndicator();
 
-  if (isEnabled) {
+  if (useOpenRouter) {
     if (localPanel) localPanel.classList.add('hidden');
     if (openRouterPanel) openRouterPanel.classList.remove('hidden');
+    if (openAICompatiblePanel) openAICompatiblePanel.classList.add('hidden');
     if (localBtn) { localBtn.classList.remove('active'); localBtn.setAttribute('aria-pressed', 'false'); }
     if (openRouterBtn) { openRouterBtn.classList.add('active'); openRouterBtn.setAttribute('aria-pressed', 'true'); }
-    // Pulse the input wrapper if no key has been entered yet
+    if (openAICompatibleBtn) { openAICompatibleBtn.classList.remove('active'); openAICompatibleBtn.setAttribute('aria-pressed', 'false'); }
+
     const wrapper = document.querySelector('.openrouter-key-input-wrapper');
     if (wrapper) {
       const hasKey = (openRouterApiKeyInput && openRouterApiKeyInput.value.trim().length > 0)
         || (localStorage.getItem('openRouterApiKey') || '').length > 0;
       if (!hasKey) wrapper.classList.add('key-required');
     }
+  } else if (useOpenAICompatible) {
+    if (localPanel) localPanel.classList.add('hidden');
+    if (openRouterPanel) openRouterPanel.classList.add('hidden');
+    if (openAICompatiblePanel) openAICompatiblePanel.classList.remove('hidden');
+    if (localBtn) { localBtn.classList.remove('active'); localBtn.setAttribute('aria-pressed', 'false'); }
+    if (openRouterBtn) { openRouterBtn.classList.remove('active'); openRouterBtn.setAttribute('aria-pressed', 'false'); }
+    if (openAICompatibleBtn) { openAICompatibleBtn.classList.add('active'); openAICompatibleBtn.setAttribute('aria-pressed', 'true'); }
+
+    const wrapper = document.querySelector('.openrouter-key-input-wrapper');
+    if (wrapper) wrapper.classList.remove('key-required');
   } else {
     if (localPanel) localPanel.classList.remove('hidden');
     if (openRouterPanel) openRouterPanel.classList.add('hidden');
+    if (openAICompatiblePanel) openAICompatiblePanel.classList.add('hidden');
     if (localBtn) { localBtn.classList.add('active'); localBtn.setAttribute('aria-pressed', 'true'); }
     if (openRouterBtn) { openRouterBtn.classList.remove('active'); openRouterBtn.setAttribute('aria-pressed', 'false'); }
-    // Remove pulse when OpenRouter panel is hidden
+    if (openAICompatibleBtn) { openAICompatibleBtn.classList.remove('active'); openAICompatibleBtn.setAttribute('aria-pressed', 'false'); }
+
     const wrapper = document.querySelector('.openrouter-key-input-wrapper');
     if (wrapper) wrapper.classList.remove('key-required');
   }
@@ -1327,7 +1349,7 @@ function updateOpenRouterUI(isEnabled) {
   // ride along with the first reply, so only Smart Reply needs OpenRouter gating.
   const smartReplyContainer = document.getElementById('smart-reply-setting');
   const smartReplyDesc = document.getElementById('smart-reply-description');
-  if (isEnabled) {
+  if (isCloudMode) {
     // Visually disable and uncheck Smart Reply; don't overwrite localStorage so preference is restored later
     if (autoSmartReplyCheckbox) {
       autoSmartReplyCheckbox.checked = false;
@@ -1335,7 +1357,7 @@ function updateOpenRouterUI(isEnabled) {
     }
     autoSmartReply = false;
     if (smartReplyContainer) smartReplyContainer.style.opacity = '0.4';
-    if (smartReplyDesc) smartReplyDesc.textContent = 'Not available when OpenRouter is enabled. Smart Reply requires a local LLM connection.';
+    if (smartReplyDesc) smartReplyDesc.textContent = 'Not available with hosted providers. Smart Reply requires a local LLM connection.';
     
     // Generate Chat Titles stays available with OpenRouter because it no longer
     // requires a separate title-only request.
@@ -1360,11 +1382,24 @@ function updateOpenRouterUI(isEnabled) {
  */
 export function loadOpenRouterSettings() {
   const savedUseOpenRouter = localStorage.getItem('useOpenRouter');
+  const savedUseOpenAICompatible = localStorage.getItem('useOpenAICompatible');
   useOpenRouter = (savedUseOpenRouter === 'true');
+  useOpenAICompatible = (savedUseOpenAICompatible === 'true');
+
+  // Keep provider selection mutually exclusive in case stale keys exist.
+  if (useOpenRouter && useOpenAICompatible) {
+    useOpenAICompatible = false;
+    localStorage.setItem('useOpenAICompatible', 'false');
+  }
 
   if (openRouterToggleCheckbox) {
     openRouterToggleCheckbox.checked = useOpenRouter;
     openRouterToggleCheckbox.addEventListener('change', saveOpenRouterSettings);
+  }
+
+  if (openAICompatibleToggleCheckbox) {
+    openAICompatibleToggleCheckbox.checked = useOpenAICompatible;
+    openAICompatibleToggleCheckbox.addEventListener('change', saveOpenAICompatibleSettings);
   }
 
   const savedKey = localStorage.getItem('openRouterApiKey');
@@ -1385,15 +1420,42 @@ export function loadOpenRouterSettings() {
     });
   }
 
+  const savedOpenAIEndpoint = localStorage.getItem('openAICompatibleEndpoint') || '';
+  openAICompatibleEndpoint = savedOpenAIEndpoint;
+  if (openAICompatibleEndpointInput) {
+    openAICompatibleEndpointInput.value = savedOpenAIEndpoint;
+    openAICompatibleEndpointInput.addEventListener('input', () => {
+      openAICompatibleEndpoint = openAICompatibleEndpointInput.value;
+      localStorage.setItem('openAICompatibleEndpoint', openAICompatibleEndpoint);
+    });
+  }
+
+  const savedOpenAIKey = localStorage.getItem('openAICompatibleApiKey') || '';
+  openAICompatibleApiKey = savedOpenAIKey;
+  if (openAICompatibleApiKeyInput) {
+    openAICompatibleApiKeyInput.value = savedOpenAIKey;
+    openAICompatibleApiKeyInput.addEventListener('input', () => {
+      openAICompatibleApiKey = openAICompatibleApiKeyInput.value;
+      localStorage.setItem('openAICompatibleApiKey', openAICompatibleApiKey);
+    });
+  }
+
   // Click handlers for the connection type selector buttons
   const localServerBtn = document.getElementById('select-local-server');
   const openRouterSelectorBtn = document.getElementById('select-openrouter');
+  const openAICompatibleSelectorBtn = document.getElementById('select-openai-compatible');
 
   if (localServerBtn) {
     localServerBtn.addEventListener('click', () => {
-      if (useOpenRouter) {
+      if (useOpenRouter || useOpenAICompatible) {
         if (openRouterToggleCheckbox) openRouterToggleCheckbox.checked = false;
-        saveOpenRouterSettings();
+        if (openAICompatibleToggleCheckbox) openAICompatibleToggleCheckbox.checked = false;
+        useOpenRouter = false;
+        useOpenAICompatible = false;
+        localStorage.setItem('useOpenRouter', 'false');
+        localStorage.setItem('useOpenAICompatible', 'false');
+        updateProviderUI();
+        window.currentLoadedModel = localStorage.getItem('localSelectedModel') || null;
       }
     });
   }
@@ -1407,7 +1469,16 @@ export function loadOpenRouterSettings() {
     });
   }
 
-  updateOpenRouterUI(useOpenRouter);
+  if (openAICompatibleSelectorBtn) {
+    openAICompatibleSelectorBtn.addEventListener('click', () => {
+      if (!useOpenAICompatible) {
+        if (openAICompatibleToggleCheckbox) openAICompatibleToggleCheckbox.checked = true;
+        saveOpenAICompatibleSettings();
+      }
+    });
+  }
+
+  updateProviderUI();
 }
 
 /**
@@ -1426,11 +1497,14 @@ export function saveOpenRouterSettings() {
         openRouterToggleCheckbox.checked = true;
         useOpenRouter = true;
         localStorage.setItem('useOpenRouter', 'true');
+        useOpenAICompatible = false;
+        localStorage.setItem('useOpenAICompatible', 'false');
+        if (openAICompatibleToggleCheckbox) openAICompatibleToggleCheckbox.checked = false;
         if (openRouterApiKeyInput) {
           openRouterApiKey = openRouterApiKeyInput.value;
           localStorage.setItem('openRouterApiKey', openRouterApiKey);
         }
-        updateOpenRouterUI(true);
+        updateProviderUI();
         // Mutual exclusivity: disable Ollama when OpenRouter is enabled
         if (useOllama) {
           useOllama = false;
@@ -1453,8 +1527,52 @@ export function saveOpenRouterSettings() {
       openRouterApiKey = openRouterApiKeyInput.value;
       localStorage.setItem('openRouterApiKey', openRouterApiKey);
     }
-    updateOpenRouterUI(false);
-    // Restore last used local model so the next message uses the correct model ID
+
+    if (useOpenAICompatible) {
+      window.currentLoadedModel = localStorage.getItem('openAICompatibleSelectedModel') || null;
+    } else {
+      window.currentLoadedModel = localStorage.getItem('localSelectedModel') || null;
+    }
+    updateProviderUI();
+  }
+}
+
+export function saveOpenAICompatibleSettings() {
+  const isEnabling = openAICompatibleToggleCheckbox && openAICompatibleToggleCheckbox.checked;
+
+  if (isEnabling) {
+    useOpenAICompatible = true;
+    localStorage.setItem('useOpenAICompatible', 'true');
+    useOpenRouter = false;
+    localStorage.setItem('useOpenRouter', 'false');
+    if (openRouterToggleCheckbox) openRouterToggleCheckbox.checked = false;
+    if (openAICompatibleEndpointInput) {
+      openAICompatibleEndpoint = openAICompatibleEndpointInput.value;
+      localStorage.setItem('openAICompatibleEndpoint', openAICompatibleEndpoint);
+    }
+    if (openAICompatibleApiKeyInput) {
+      openAICompatibleApiKey = openAICompatibleApiKeyInput.value;
+      localStorage.setItem('openAICompatibleApiKey', openAICompatibleApiKey);
+    }
+    if (useOllama) {
+      useOllama = false;
+      localStorage.setItem('useOllama', 'false');
+      if (ollamaToggleCheckbox) ollamaToggleCheckbox.checked = false;
+    }
+    updateProviderUI();
+    window.currentLoadedModel = localStorage.getItem('openAICompatibleSelectedModel') || null;
+  } else {
+    useOpenAICompatible = false;
+    localStorage.setItem('useOpenAICompatible', 'false');
+    if (openAICompatibleEndpointInput) {
+      openAICompatibleEndpoint = openAICompatibleEndpointInput.value;
+      localStorage.setItem('openAICompatibleEndpoint', openAICompatibleEndpoint);
+    }
+    if (openAICompatibleApiKeyInput) {
+      openAICompatibleApiKey = openAICompatibleApiKeyInput.value;
+      localStorage.setItem('openAICompatibleApiKey', openAICompatibleApiKey);
+    }
+    updateProviderUI();
     window.currentLoadedModel = localStorage.getItem('localSelectedModel') || null;
   }
 }
@@ -1467,12 +1585,28 @@ export function getUseOpenRouter() {
   return useOpenRouter;
 }
 
+export function getUseOpenAICompatible() {
+  return useOpenAICompatible;
+}
+
+export function getIsCloudProviderActive() {
+  return useOpenRouter || useOpenAICompatible;
+}
+
 /**
  * Gets the current OpenRouter API key
  * @returns {string}
  */
 export function getOpenRouterApiKey() {
   return openRouterApiKey;
+}
+
+export function getOpenAICompatibleEndpoint() {
+  return openAICompatibleEndpoint;
+}
+
+export function getOpenAICompatibleApiKey() {
+  return openAICompatibleApiKey;
 }
 
 /**

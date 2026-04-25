@@ -1,7 +1,7 @@
 // File Upload functionality
 import { fileUploadInput as importedFileUploadInput } from './dom-elements.js';
 import { appendMessage } from './ui-manager.js';
-import { getUseOpenRouter, getUseOllama, getLMStudioApiToken } from './settings-manager.js';
+import { getUseOpenRouter, getUseOpenAICompatible, getUseOllama, getLMStudioApiToken } from './settings-manager.js';
 import { openPremiumModal } from './components/modals/premium-modal.js';
 // Optimization modules removed
 
@@ -66,7 +66,7 @@ export async function isVisionModel() {
         }
 
         // If using OpenRouter, models are cloud-based so local API checks will fail.
-        if (typeof getUseOpenRouter === 'function' && getUseOpenRouter()) {
+        if ((typeof getUseOpenRouter === 'function' && getUseOpenRouter()) || (typeof getUseOpenAICompatible === 'function' && getUseOpenAICompatible())) {
             const result = fallbackNameBasedDetection();
             updateVisionCache(modelId, result);
             return result;

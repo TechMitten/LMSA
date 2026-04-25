@@ -6,7 +6,7 @@ import { debugLog, getDebugEnabled, isAndroidWebView } from './utils.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { getApiUrl, getAvailableModels, isServerRunning, validateIpPort, saveServerSettings } from './api-service.js';
 import { showOpenRouterKeyRequiredModal, initOpenRouterKeyRequiredModal } from './components/modals/openrouter-key-required-modal.js';
-import { getUseOpenRouter, getOpenRouterApiKey, requireSystemPromptPremiumAccess, updateSystemPromptPremiumState } from './settings-manager.js';
+import { getUseOpenRouter, getOpenRouterApiKey, getUseOpenAICompatible, getOpenAICompatibleApiKey, requireSystemPromptPremiumAccess, updateSystemPromptPremiumState } from './settings-manager.js';
 import { interceptIpPortChanges } from './ip-port-confirmation-modal.js';
 
 // Holds a reference to the internal showStep function once the modal is initialised
@@ -1208,6 +1208,9 @@ function initializeSystemPromptOverlay() {
                 if (getUseOpenRouter()) {
                     const apiKey = getOpenRouterApiKey();
                     if (apiKey) requestHeaders['Authorization'] = `Bearer ${apiKey}`;
+                } else if (getUseOpenAICompatible()) {
+                    const apiKey = getOpenAICompatibleApiKey();
+                    if (apiKey) requestHeaders['Authorization'] = `Bearer ${apiKey}`;
                 }
 
                 const response = await fetch(apiUrl, {
@@ -1510,6 +1513,7 @@ function initializeClearSystemPromptModal() {
 export function updateConnectionStatusDisplays() {
     const localStatusEl = document.getElementById('local-server-status-text');
     const orKeyStatusEl = document.getElementById('openrouter-key-status-text');
+    const openAIEndpointStatusEl = document.getElementById('openai-compatible-endpoint-status-text');
     const lmTokenStatusEl = document.getElementById('lmstudio-token-status-text');
     const lmMcpStatusEl = document.getElementById('lmstudio-mcp-status-text');
 
@@ -1536,6 +1540,19 @@ export function updateConnectionStatusDisplays() {
         } else {
             orKeyStatusEl.textContent = 'No API key saved';
             orKeyStatusEl.style.color = '';
+        }
+    }
+
+    if (openAIEndpointStatusEl) {
+        const endpoint = (localStorage.getItem('openAICompatibleEndpoint') || '').trim();
+        const key = (localStorage.getItem('openAICompatibleApiKey') || '').trim();
+        if (endpoint) {
+            const endpointDisplay = endpoint.length > 42 ? `${endpoint.slice(0, 39)}...` : endpoint;
+            openAIEndpointStatusEl.textContent = key ? `${endpointDisplay} (key set)` : `${endpointDisplay} (no key)`;
+            openAIEndpointStatusEl.style.color = 'var(--accent-green, #10b981)';
+        } else {
+            openAIEndpointStatusEl.textContent = 'No endpoint configured';
+            openAIEndpointStatusEl.style.color = '';
         }
     }
 
@@ -1585,10 +1602,11 @@ export function updateConnectionStatusDisplays() {
 function initializeConnectionInputModals() {
     const ipPortModal = document.getElementById('ip-port-input-modal');
     const orKeyModal = document.getElementById('openrouter-key-input-modal');
+    const openAICompatibleModal = document.getElementById('openai-compatible-input-modal');
     const lmTokenModal = document.getElementById('lmstudio-token-input-modal');
     const lmMcpModal = document.getElementById('lmstudio-mcp-input-modal');
 
-    if (!ipPortModal || !orKeyModal) {
+    if (!ipPortModal || !orKeyModal || !openAICompatibleModal) {
         debugLog('Connection input modals not found');
         return;
     }
@@ -1830,6 +1848,75 @@ function initializeConnectionInputModals() {
             setTimeout(() => keepModalInputVisible(orKeyModal, orKeyInput), 50);
         });
     }
+
+    // ----- LM Studio API Token modal -----
+
+    // ----- OpenAI-compatible endpoint modal -----
+
+    const configOpenAICompatibleBtn = document.getElementById('configure-openai-compatible-btn');
+    if (configOpenAICompatibleBtn) {
+        configOpenAICompatibleBtn.addEventListener('click', () => {
+            const endpointInput = document.getElementById('openai-compatible-endpoint');
+            const keyInput = document.getElementById('openai-compatible-api-key');
+            if (endpointInput) endpointInput.value = localStorage.getItem('openAICompatibleEndpoint') || '';
+            if (keyInput) {
+                keyInput.value = localStorage.getItem('openAICompatibleApiKey') || '';
+                keyInput.type = 'password';
+            }
+            const revealBtn = document.getElementById('openai-compatible-api-key-reveal');
+            if (revealBtn) revealBtn.innerHTML = '<i class="fas fa-eye"></i>';
+            showInputModal(openAICompatibleModal);
+        });
+    }
+
+    const closeOpenAICompatibleBtnX = document.getElementById('close-openai-compatible-input-modal');
+    const cancelOpenAICompatibleBtn = document.getElementById('cancel-openai-compatible-input-modal');
+    const saveOpenAICompatibleBtn = document.getElementById('save-openai-compatible-input-modal');
+
+    const dismissOpenAICompatibleModal = () => {
+        const endpointInput = document.getElementById('openai-compatible-endpoint');
+        const keyInput = document.getElementById('openai-compatible-api-key');
+        if (endpointInput) endpointInput.value = localStorage.getItem('openAICompatibleEndpoint') || '';
+        if (keyInput) {
+            keyInput.value = localStorage.getItem('openAICompatibleApiKey') || '';
+            keyInput.type = 'password';
+        }
+        const revealBtn = document.getElementById('openai-compatible-api-key-reveal');
+        if (revealBtn) revealBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        hideInputModal(openAICompatibleModal);
+    };
+
+    if (closeOpenAICompatibleBtnX) closeOpenAICompatibleBtnX.addEventListener('click', dismissOpenAICompatibleModal);
+    if (cancelOpenAICompatibleBtn) cancelOpenAICompatibleBtn.addEventListener('click', dismissOpenAICompatibleModal);
+
+    if (saveOpenAICompatibleBtn) {
+        saveOpenAICompatibleBtn.addEventListener('click', () => {
+            const endpointInput = document.getElementById('openai-compatible-endpoint');
+            const keyInput = document.getElementById('openai-compatible-api-key');
+            const endpoint = endpointInput ? endpointInput.value.trim() : '';
+            const apiKey = keyInput ? keyInput.value.trim() : '';
+
+            localStorage.setItem('openAICompatibleEndpoint', endpoint);
+            localStorage.setItem('openAICompatibleApiKey', apiKey);
+
+            if (endpointInput) endpointInput.dispatchEvent(new Event('input', { bubbles: true }));
+            if (keyInput) keyInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+            updateConnectionStatusDisplays();
+            hideInputModal(openAICompatibleModal);
+        });
+    }
+
+    openAICompatibleModal.addEventListener('click', e => {
+        if (e.target === openAICompatibleModal) dismissOpenAICompatibleModal();
+    });
+
+    const openAICompatibleInputs = openAICompatibleModal.querySelectorAll('input');
+    openAICompatibleInputs.forEach(input => {
+        input.addEventListener('focus', () => {
+            setTimeout(() => keepModalInputVisible(openAICompatibleModal, input), 50);
+        });
+    });
 
     // ----- LM Studio API Token modal -----
 

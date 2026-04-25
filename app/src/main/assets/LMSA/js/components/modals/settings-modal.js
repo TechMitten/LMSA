@@ -32,6 +32,7 @@ export const settingsModal = `
                 <div id="settings-step-connection" class="settings-step active" data-step-name="Connection">
                     <!-- Hidden checkbox retained for JS/event compatibility -->
                     <input type="checkbox" id="openrouter-toggle" class="sr-only" aria-hidden="true" tabindex="-1">
+                    <input type="checkbox" id="openai-compatible-toggle" class="sr-only" aria-hidden="true" tabindex="-1">
 
                     <!-- Connection Type Selector -->
                     <div class="connection-type-selector mb-4">
@@ -42,6 +43,10 @@ export const settingsModal = `
                         <button id="select-openrouter" class="connection-type-btn" type="button" aria-pressed="false">
                             <div class="connection-type-icon"><i class="fas fa-cloud"></i></div>
                             <span class="connection-type-name">OpenRouter</span>
+                        </button>
+                        <button id="select-openai-compatible" class="connection-type-btn" type="button" aria-pressed="false">
+                            <div class="connection-type-icon"><i class="fas fa-link"></i></div>
+                            <span class="connection-type-name">OpenAI Endpoint</span>
                         </button>
                     </div>
 
@@ -95,6 +100,22 @@ export const settingsModal = `
                                 <span id="openrouter-key-status-text" class="connection-status-text">No API key saved</span>
                             </div>
                             <button id="configure-openrouter-key-btn" type="button"
+                                class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
+                                <i class="fas fa-pencil-alt text-xs"></i>
+                                <span>Configure</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- OpenAI-Compatible Panel -->
+                    <div id="openai-compatible-settings" class="connection-settings-panel hidden">
+                        <p class="text-xs text-gray-400 mb-3">Use any OpenAI-compatible API endpoint (self-hosted or cloud). Smart Reply is unavailable with hosted endpoints.</p>
+                        <div class="connection-status-row">
+                            <div class="connection-status-info">
+                                <i class="fas fa-link connection-status-icon"></i>
+                                <span id="openai-compatible-endpoint-status-text" class="connection-status-text">No endpoint configured</span>
+                            </div>
+                            <button id="configure-openai-compatible-btn" type="button"
                                 class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
                                 <i class="fas fa-pencil-alt text-xs"></i>
                                 <span>Configure</span>
@@ -526,6 +547,56 @@ export const settingsModal = `
                     Cancel
                 </button>
                 <button id="save-openrouter-key-input-modal" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
+                    <i class="fas fa-check mr-2"></i>Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- OpenAI-Compatible Endpoint Input Modal -->
+    <div id="openai-compatible-input-modal"
+        class="fixed inset-0 items-center justify-center hidden modal-container"
+        style="z-index: 2500; background: rgba(0,0,0,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);"
+        role="dialog" aria-modal="true" aria-labelledby="openai-compatible-input-title">
+        <div class="connection-input-modal-box animate-modal-in">
+            <div class="connection-input-modal-accent connection-input-modal-accent--blue"></div>
+            <div class="flex justify-between items-center mb-5">
+                <h3 id="openai-compatible-input-title" class="text-lg font-bold flex items-center" style="color: var(--settings-title-color, #f1f5f9);">
+                    <i class="fas fa-link text-blue-400 mr-2"></i>OpenAI-Compatible Endpoint
+                </h3>
+                <button id="close-openai-compatible-input-modal" type="button" class="conn-modal-close-btn" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <p class="text-sm mb-4" style="color: var(--settings-help-text, #9ca3af);">Set your endpoint and API key for any OpenAI-compatible server.</p>
+            <div class="mb-4">
+                <label for="openai-compatible-endpoint" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Base URL or Chat Completions URL</label>
+                <input type="text" id="openai-compatible-endpoint"
+                    class="connection-modal-input w-full"
+                    placeholder="e.g. https://api.example.com/v1" autocomplete="off" data-form-type="other" style="width: 100%;">
+                <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);"><i class="fas fa-info-circle mr-1"></i>Can be a base URL (recommended) or a full chat/completions endpoint.</p>
+            </div>
+            <div class="mb-5">
+                <label for="openai-compatible-api-key" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">API Key (optional)</label>
+                <div class="openrouter-key-input-wrapper">
+                    <input type="password" id="openai-compatible-api-key"
+                        placeholder="sk-..." autocomplete="off" data-form-type="other">
+                    <button type="button" id="openai-compatible-api-key-reveal"
+                        class="openrouter-key-reveal-btn"
+                        title="Show/hide API key"
+                        onclick="(function(){var i=document.getElementById('openai-compatible-api-key'),b=document.getElementById('openai-compatible-api-key-reveal');if(i.type==='password'){i.type='text';b.innerHTML='<i class=&quot;fas fa-eye-slash&quot;></i>';}else{i.type='password';b.innerHTML='<i class=&quot;fas fa-eye&quot;></i>';}})()">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);"><i class="fas fa-lock mr-1"></i>Stored locally on your device only.</p>
+            </div>
+            <div class="flex gap-3">
+                <button id="cancel-openai-compatible-input-modal" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    Cancel
+                </button>
+                <button id="save-openai-compatible-input-modal" type="button"
                     class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
                     <i class="fas fa-check mr-2"></i>Save
                 </button>

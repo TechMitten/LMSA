@@ -3,7 +3,7 @@ import { messagesContainer, userInput, loadedModelDisplay } from './dom-elements
 import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll, renderSmartReplies, hideSmartReplies, showSmartRepliesLoading, addWebSearchIndicator } from './ui-manager.js';
 import { openHelpModal } from './help.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
-import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOllama, getOpenRouterApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations, getWebSearchEnabled } from './settings-manager.js';
+import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOpenAICompatible, getUseOllama, getOpenRouterApiKey, getOpenAICompatibleApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations, getWebSearchEnabled } from './settings-manager.js';
 import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags, normalizeMalformedCodeFences, isAndroidWebView } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
 import { canSendCompletion, recordCompletion, canSendOpenRouterCompletion, recordOpenRouterCompletion, canUseWebSearch, recordWebSearch } from './usage-limiter.js';
@@ -702,7 +702,7 @@ function appendRequestSystemPrompts(targetMessages, baseSystemPrompt, shouldInli
 }
 
 function shouldUseLmStudioNativeMcpChat() {
-    return !getUseOpenRouter() && !getUseOllama() && hasLMStudioMcpIntegrations();
+    return !getUseOpenRouter() && !getUseOpenAICompatible() && !getUseOllama() && hasLMStudioMcpIntegrations();
 }
 
 function buildNativeSystemPrompt(shouldInlineChatTitle) {
@@ -1399,9 +1399,9 @@ function stripInjectedWebSearchContext(content) {
  * @param {Array} fileContents - Optional array of file contents
  */
 export async function generateAIResponse(userMessage, fileContents = []) {
-    const isUsingOpenRouter = getUseOpenRouter();
+    const isUsingHostedProvider = getUseOpenRouter() || getUseOpenAICompatible();
 
-    if (isUsingOpenRouter) {
+    if (isUsingHostedProvider) {
         if (!canSendOpenRouterCompletion()) {
             document.dispatchEvent(new CustomEvent('openRouterLimitReached'));
             hideLoadingIndicator();
@@ -1879,6 +1879,9 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             requestHeaders['Authorization'] = `Bearer ${getOpenRouterApiKey()}`;
             requestHeaders['HTTP-Referer'] = 'https://lmsa.app';
             requestHeaders['X-Title'] = 'LMSA';
+        } else if (getUseOpenAICompatible()) {
+            const apiKey = getOpenAICompatibleApiKey();
+            if (apiKey) requestHeaders['Authorization'] = `Bearer ${apiKey}`;
         } else {
             const lmToken = getUseOllama() ? '' : getLMStudioApiToken();
             if (lmToken) requestHeaders['Authorization'] = `Bearer ${lmToken}`;
@@ -4413,7 +4416,7 @@ export async function regenerateLastResponse(isRetry = false) {
         }
 
         // Usage limits check
-        if (getUseOpenRouter()) {
+        if (getUseOpenRouter() || getUseOpenAICompatible()) {
             if (!canSendOpenRouterCompletion()) {
                 document.dispatchEvent(new CustomEvent('openRouterLimitReached'));
                 isGenerating = false;
@@ -4753,6 +4756,11 @@ export async function regenerateLastResponse(isRetry = false) {
                 regenHeaders['Authorization'] = `Bearer ${getOpenRouterApiKey()}`;
                 regenHeaders['HTTP-Referer'] = 'https://lmsa.app';
                 regenHeaders['X-Title'] = 'LMSA';
+            } else if (getUseOpenAICompatible()) {
+                const apiKey = getOpenAICompatibleApiKey();
+                if (apiKey) {
+                    regenHeaders['Authorization'] = `Bearer ${apiKey}`;
+                }
             } else if (!getUseOllama()) {
                 const lmToken = getLMStudioApiToken();
                 if (lmToken) {
@@ -5482,7 +5490,7 @@ async function generateSmartReplies(userMessage, aiMessage) {
         };
 
         const requestHeaders = { 'Content-Type': 'application/json' };
-        if (!getUseOpenRouter() && !getUseOllama()) {
+        if (!getUseOpenRouter() && !getUseOpenAICompatible() && !getUseOllama()) {
             const lmToken = getLMStudioApiToken();
             if (lmToken) {
                 requestHeaders['Authorization'] = `Bearer ${lmToken}`;
@@ -5603,7 +5611,7 @@ async function generateSmartRepliesAPI(userMessage, contextSnippet, model) {
         smartReplyAbortController = new AbortController();
 
         const requestHeaders = { 'Content-Type': 'application/json' };
-        if (!getUseOpenRouter() && !getUseOllama()) {
+        if (!getUseOpenRouter() && !getUseOpenAICompatible() && !getUseOllama()) {
             const lmToken = getLMStudioApiToken();
             if (lmToken) {
                 requestHeaders['Authorization'] = `Bearer ${lmToken}`;

@@ -16,7 +16,7 @@ import {
 } from './dom-elements.js';
 import { fetchAvailableModels, getAvailableModels, isServerRunning, loadModel as apiLoadModel } from './api-service.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
-import { getDefaultModelId, setDefaultModelId, getUseOpenRouter } from './settings-manager.js';
+import { getDefaultModelId, setDefaultModelId, getUseOpenRouter, getUseOpenAICompatible } from './settings-manager.js';
 
 // Flag to track if a model is actually loaded
 let isModelLoaded = false;
@@ -141,7 +141,7 @@ export function showModelModal() {
         }
 
         // Show mobile instructions on smartphones (hide for OpenRouter - stacking tip doesn't apply)
-        if (!getUseOpenRouter()) {
+        if (!getUseOpenRouter() && !getUseOpenAICompatible()) {
             showMobileInstructionsIfNeeded();
         } else {
             const mobileInstructionsEl = document.getElementById('mobile-instructions');
@@ -151,7 +151,7 @@ export function showModelModal() {
         // Update section heading to match mode
         const currentModelSectionHeading = modelModal.querySelector('.mb-6.p-5 h3');
         if (currentModelSectionHeading) {
-            currentModelSectionHeading.innerHTML = getUseOpenRouter()
+            currentModelSectionHeading.innerHTML = (getUseOpenRouter() || getUseOpenAICompatible())
                 ? '<i class="fas fa-check-circle mr-2"></i>Active Model'
                 : '<i class="fas fa-check-circle mr-2"></i>Currently Loaded Model';
         }
@@ -211,7 +211,7 @@ async function loadModelInformation(silent = false) {
         }
 
         // For OpenRouter, no local server IP/port is needed — models are cloud-resident
-        if (!getUseOpenRouter()) {
+        if (!getUseOpenRouter() && !getUseOpenAICompatible()) {
             // Fetch all models from the server
             const serverIp = document.getElementById('server-ip')?.value.trim() || '';
             const serverPort = document.getElementById('server-port')?.value.trim() || '';
@@ -515,8 +515,8 @@ async function loadModel(modelId) {
         pendingModelActionId = modelId;
         disableLoadButtons();
 
-        // OpenRouter: model selection
-        if (getUseOpenRouter()) {
+        // Hosted provider model selection
+        if (getUseOpenRouter() || getUseOpenAICompatible()) {
             await apiLoadModel(modelId);
             await updateModelDisplay(modelId);
             if (!isAutoLoadingDefaultModel) {
@@ -853,7 +853,7 @@ function displayAvailableModels(models, loadedModelId) {
         availableModelsList.appendChild(titleElement);
 
         // Inject live search bar for OpenRouter (catalog can have hundreds of models)
-        if (getUseOpenRouter()) {
+        if (getUseOpenRouter() || getUseOpenAICompatible()) {
             attachModelSearch(availableModelsList);
 
             // Restore the previous search query (and re-apply the filter) so that
@@ -925,7 +925,7 @@ function displayAvailableModels(models, loadedModelId) {
 
                 // Immediately apply the active search filter so items appended
                 // in later chunks are correctly hidden if they don't match.
-                if (getUseOpenRouter()) {
+                if (getUseOpenRouter() || getUseOpenAICompatible()) {
                     const si = availableModelsList.querySelector('#or-model-search');
                     if (si) {
                         const q = si.value.toLowerCase().trim();
@@ -979,7 +979,7 @@ function displayAvailableModels(models, loadedModelId) {
                 }
             }
             // Update the search count display after each chunk
-            if (getUseOpenRouter()) {
+            if (getUseOpenRouter() || getUseOpenAICompatible()) {
                 const si = availableModelsList.querySelector('#or-model-search');
                 if (si && si.value.trim()) si.dispatchEvent(new Event('input'));
             }
@@ -1025,7 +1025,7 @@ function displayPotentialModels(models) {
         availableModelsList.appendChild(titleElement);
 
         // Inject live search bar for OpenRouter (catalog can have hundreds of models)
-        if (getUseOpenRouter()) {
+        if (getUseOpenRouter() || getUseOpenAICompatible()) {
             attachModelSearch(availableModelsList);
         }
 
@@ -1076,7 +1076,7 @@ function displayPotentialModels(models) {
 
                 // Immediately apply the active search filter so items appended
                 // in later chunks are correctly hidden if they don't match.
-                if (getUseOpenRouter()) {
+                if (getUseOpenRouter() || getUseOpenAICompatible()) {
                     const si = availableModelsList.querySelector('#or-model-search');
                     if (si) {
                         const q = si.value.toLowerCase().trim();
@@ -1128,7 +1128,7 @@ function displayPotentialModels(models) {
                 }
             }
             // Update the search count display after each chunk
-            if (getUseOpenRouter()) {
+            if (getUseOpenRouter() || getUseOpenAICompatible()) {
                 const si = availableModelsList.querySelector('#or-model-search');
                 if (si && si.value.trim()) si.dispatchEvent(new Event('input'));
             }
@@ -1168,7 +1168,7 @@ function displayNoModelsLoaded() {
                     <i class="fas fa-exclamation-triangle text-sm"></i>
                 </div>
                 <div class="flex-1 min-w-0 current-model-name-container">
-                    <span class="break-words current-model-name">${getUseOpenRouter() ? 'No model selected' : 'No model loaded'}</span>
+                    <span class="break-words current-model-name">${(getUseOpenRouter() || getUseOpenAICompatible()) ? 'No model selected' : 'No model loaded'}</span>
                 </div>
             </div>
         `;

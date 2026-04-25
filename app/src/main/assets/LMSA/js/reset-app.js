@@ -57,6 +57,10 @@ export function resetApp() {
             'useOpenRouter',
             'openRouterApiKey',
             'openRouterSelectedModel',
+            'useOpenAICompatible',
+            'openAICompatibleEndpoint',
+            'openAICompatibleApiKey',
+            'openAICompatibleSelectedModel',
             INTRO_COMPLETED_KEY,
             INTRO_VERSION_KEY
         ];
