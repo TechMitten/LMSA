@@ -985,6 +985,7 @@ function initializeAndroidKeyboardFix() {
         lastAppliedKeyboardState = keyboardOpen;
         window.androidKeyboardVisible = keyboardOpen;
         syncVisibleModalContainers(keyboardOpen);
+
         if (keyboardOpen) {
             document.body.classList.add('keyboard-visible');
             if (mainAppContainer) {

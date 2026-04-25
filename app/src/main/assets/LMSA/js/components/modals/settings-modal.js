@@ -58,7 +58,7 @@ export const settingsModal = `
                                 <i class="fas fa-network-wired connection-status-icon"></i>
                                 <span id="local-server-status-text" class="connection-status-text">Not configured</span>
                             </div>
-                            <button id="configure-local-server-btn" type="button"
+                            <button id="configure-local-server-btn" type="button" data-haptic="light"
                                 class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
                                 <i class="fas fa-pencil-alt text-xs"></i>
                                 <span>Configure</span>
@@ -70,7 +70,7 @@ export const settingsModal = `
                                 <i class="fas fa-key connection-status-icon"></i>
                                 <span id="lmstudio-token-status-text" class="connection-status-text">No token (optional)</span>
                             </div>
-                            <button id="configure-lmstudio-token-btn" type="button"
+                            <button id="configure-lmstudio-token-btn" type="button" data-haptic="light"
                                 class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
                                 <i class="fas fa-pencil-alt text-xs"></i>
                                 <span>Token</span>
@@ -81,7 +81,7 @@ export const settingsModal = `
                                 <i class="fas fa-plug connection-status-icon"></i>
                                 <span id="lmstudio-mcp-status-text" class="connection-status-text">No MCP integrations configured</span>
                             </div>
-                            <button id="configure-lmstudio-mcp-btn" type="button"
+                            <button id="configure-lmstudio-mcp-btn" type="button" data-haptic="light"
                                 class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
                                 <i class="fas fa-pencil-alt text-xs"></i>
                                 <span>MCP</span>
@@ -99,7 +99,7 @@ export const settingsModal = `
                                 <i class="fas fa-key connection-status-icon"></i>
                                 <span id="openrouter-key-status-text" class="connection-status-text">No API key saved</span>
                             </div>
-                            <button id="configure-openrouter-key-btn" type="button"
+                            <button id="configure-openrouter-key-btn" type="button" data-haptic="light"
                                 class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
                                 <i class="fas fa-pencil-alt text-xs"></i>
                                 <span>Configure</span>
@@ -115,7 +115,7 @@ export const settingsModal = `
                                 <i class="fas fa-link connection-status-icon"></i>
                                 <span id="openai-compatible-endpoint-status-text" class="connection-status-text">No endpoint configured</span>
                             </div>
-                            <button id="configure-openai-compatible-btn" type="button"
+                            <button id="configure-openai-compatible-btn" type="button" data-haptic="light"
                                 class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
                                 <i class="fas fa-pencil-alt text-xs"></i>
                                 <span>Configure</span>

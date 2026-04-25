@@ -1958,34 +1958,41 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 
     #configure-local-server-btn,
     #configure-lmstudio-token-btn,
-    #configure-openrouter-key-btn {
-        width: auto !important;
-        min-width: 104px !important;
-        max-width: 118px !important;
+    #configure-lmstudio-mcp-btn,
+    #configure-openrouter-key-btn,
+    #configure-openai-compatible-btn {
+        width: 116px !important;
+        min-width: 116px !important;
+        max-width: 116px !important;
         min-height: 40px !important;
         height: 40px !important;
-        padding: 0.5rem 0.8rem !important;
-        gap: 0.4rem !important;
-        border-radius: 0.85rem !important;
-        font-size: 0.82rem !important;
+        padding: 0.45rem 0.85rem !important;
+        gap: 0.45rem !important;
+        border-radius: 0.9rem !important;
+        font-size: 0.88rem !important;
+        font-weight: 700 !important;
         line-height: 1 !important;
         flex: 0 0 auto !important;
         box-shadow:
-            0 6px 18px rgba(0, 0, 0, 0.12),
+            0 8px 18px rgba(0, 0, 0, 0.14),
             0 2px 8px rgba(0, 0, 0, 0.08),
-            inset 0 1px 0 rgba(255, 255, 255, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.12),
             inset 0 -1px 0 rgba(0, 0, 0, 0.08) !important;
     }
 
     #configure-local-server-btn i,
     #configure-lmstudio-token-btn i,
-    #configure-openrouter-key-btn i {
+    #configure-lmstudio-mcp-btn i,
+    #configure-openrouter-key-btn i,
+    #configure-openai-compatible-btn i {
         font-size: 0.72rem !important;
     }
 
     #configure-local-server-btn span,
     #configure-lmstudio-token-btn span,
-    #configure-openrouter-key-btn span {
+    #configure-lmstudio-mcp-btn span,
+    #configure-openrouter-key-btn span,
+    #configure-openai-compatible-btn span {
         font-size: inherit !important;
     }
 }

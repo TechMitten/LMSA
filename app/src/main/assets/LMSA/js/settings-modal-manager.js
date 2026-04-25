@@ -1628,6 +1628,14 @@ function initializeConnectionInputModals() {
         }) || null;
     }
 
+    function modalHasTextEntryInput(modal) {
+        if (!modal) {
+            return false;
+        }
+
+        return !!findFirstVisibleModalInput(modal);
+    }
+
     function keepModalInputVisible(modal, input) {
         if (!modal || !input) {
             return;
@@ -1666,30 +1674,37 @@ function initializeConnectionInputModals() {
             return null;
         }
 
+        let pendingScrollTimeout = null;
+
         const scrollFocusedInputIntoView = () => {
+            if (modal.classList.contains('hidden')) {
+                return;
+            }
+
             const active = document.activeElement;
             if (!active || !box.contains(active)) return;
-            // Small delay lets the viewport finish resizing
-            setTimeout(() => {
+
+            // Small delay lets the viewport finish resizing before measuring.
+            if (pendingScrollTimeout !== null) {
+                clearTimeout(pendingScrollTimeout);
+            }
+
+            pendingScrollTimeout = setTimeout(() => {
                 keepModalInputVisible(modal, active);
-                active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                pendingScrollTimeout = null;
             }, 120);
         };
 
         const onFocusIn = () => scrollFocusedInputIntoView();
-        const onResize = () => scrollFocusedInputIntoView();
 
         modal.addEventListener('focusin', onFocusIn);
-        window.addEventListener('resize', onResize, { passive: true });
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', onResize, { passive: true });
-        }
 
         return () => {
             modal.removeEventListener('focusin', onFocusIn);
-            window.removeEventListener('resize', onResize);
-            if (window.visualViewport) {
-                window.visualViewport.removeEventListener('resize', onResize);
+
+            if (pendingScrollTimeout !== null) {
+                clearTimeout(pendingScrollTimeout);
+                pendingScrollTimeout = null;
             }
         };
     }
@@ -1698,9 +1713,14 @@ function initializeConnectionInputModals() {
         modal.classList.remove('hidden');
         modal.style.display = 'flex';
         const box = modal.querySelector('.connection-input-modal-box');
+        const shouldAnimateModalIn = !(isAndroidWebView() && modalHasTextEntryInput(modal));
         if (box) {
             box.classList.remove('animate-modal-out');
-            box.classList.add('animate-modal-in');
+            if (shouldAnimateModalIn) {
+                box.classList.add('animate-modal-in');
+            } else {
+                box.classList.remove('animate-modal-in');
+            }
         }
 
         if (typeof modal._keyboardCleanup === 'function') {
@@ -1709,14 +1729,14 @@ function initializeConnectionInputModals() {
         modal._keyboardCleanup = setupInputModalKeyboardHandling(modal);
 
         // On Android, when the keyboard appears, focus events may be delayed.
-        // Use a small timeout to allow the modal to render, then focus the first input
+        // Use a small timeout to allow the modal to render, then focus the first input.
         setTimeout(() => {
             const firstInput = findFirstVisibleModalInput(modal);
             if (firstInput) {
                 firstInput.focus();
                 keepModalInputVisible(modal, firstInput);
             }
-        }, 100);
+        }, 90);
     }
 
     function hideInputModal(modal) {
