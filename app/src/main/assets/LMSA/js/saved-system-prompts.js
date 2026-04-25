@@ -5,6 +5,7 @@ import { debugLog } from './utils.js';
 import { closeSidebarExport } from './export-import.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { requireSystemPromptPremiumAccess } from './settings-manager.js';
+import { showSettingsModal, navigateSettingsModalToStep } from './settings-modal-manager.js';
 
 // Local storage key for saved system prompts
 const SAVED_PROMPTS_KEY = 'savedSystemPrompts';
@@ -209,11 +210,8 @@ function extractLmStudioPromptData(profile, fileName = '') {
     };
 }
 
-function refreshSavedPromptsModalIfOpen() {
-    const savedPromptsModal = document.getElementById('saved-prompts-modal');
-    if (savedPromptsModal && !savedPromptsModal.classList.contains('hidden')) {
-        populateSavedPromptsModal();
-    }
+function refreshSavedPromptsPanel() {
+    populateSavedPromptsModal();
 }
 
 function importLmStudioPromptFromJson(fileContent, fileName = '') {
@@ -222,7 +220,6 @@ function importLmStudioPromptFromJson(fileContent, fileName = '') {
         const importedPrompt = extractLmStudioPromptData(parsedProfile, fileName);
 
         if (saveSystemPrompt(importedPrompt.name, importedPrompt.content)) {
-            refreshSavedPromptsModalIfOpen();
             showSuccessMessage(`Imported "${importedPrompt.name}" to Saved Prompts.`);
         } else {
             showErrorMessage('Failed to save the imported system prompt. Please try again.');
@@ -344,6 +341,7 @@ export function saveSystemPrompt(name, content) {
         if (!success) {
             throw new Error('Failed to persist saved prompts');
         }
+        refreshSavedPromptsPanel();
         debugLog('System prompt saved successfully:', newPrompt.name);
         return true;
     } catch (error) {
@@ -365,6 +363,7 @@ export function deleteSystemPrompt(id) {
         if (!success) {
             throw new Error('Failed to persist saved prompts');
         }
+        refreshSavedPromptsPanel();
         debugLog('System prompt deleted successfully:', id);
         return true;
     } catch (error) {
@@ -400,6 +399,7 @@ export function updateSystemPrompt(id, name, content) {
         if (!success) {
             throw new Error('Failed to persist saved prompts');
         }
+        refreshSavedPromptsPanel();
         debugLog('System prompt updated successfully:', id);
         return true;
     } catch (error) {
@@ -434,60 +434,30 @@ export function restoreSavedSystemPrompts(prompts, replaceExisting = true) {
 }
 
 /**
- * Shows the saved system prompts modal
+ * Opens Settings to the system prompt step and focuses the saved prompts section
  */
 export function showSavedSystemPromptsModal() {
-    const modal = document.getElementById('saved-prompts-modal');
-    if (!modal) {
-        debugLog('Saved prompts modal not found');
-        return;
-    }
-
-    // Close sidebar first
     closeSidebarExport();
 
-    // Populate the modal with saved prompts
     populateSavedPromptsModal();
 
-    // Show the modal
-    modal.classList.remove('hidden');
-    const modalContent = modal.querySelector('.modal-content');
-    if (modalContent) {
-        modalContent.classList.add('animate-modal-in');
-        setTimeout(() => {
-            modalContent.classList.remove('animate-modal-in');
-        }, 300);
-    }
-
-    // Prevent body scrolling
-    document.body.style.overflow = 'hidden';
+    Promise.resolve(showSettingsModal()).finally(() => {
+        requestAnimationFrame(() => {
+            navigateSettingsModalToStep('prompt');
+            document.getElementById('saved-prompts-section')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        });
+    });
 }
 
 /**
- * Hides the saved system prompts modal
+ * Compatibility shim retained for callers from the previous modal-based flow
  */
 export function hideSavedSystemPromptsModal() {
-    const modal = document.getElementById('saved-prompts-modal');
-    if (!modal) return;
-
-    const modalContent = modal.querySelector('.modal-content');
-    if (modalContent) {
-        modalContent.classList.add('animate-modal-out');
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            modalContent.classList.remove('animate-modal-out');
-            document.body.style.overflow = '';
-            checkAndShowWelcomeMessage();
-        }, 300);
-    } else {
-        modal.classList.add('hidden');
-        document.body.style.overflow = '';
-        checkAndShowWelcomeMessage();
-    }
+    checkAndShowWelcomeMessage();
 }
 
 /**
- * Populates the saved prompts modal with current saved prompts
+ * Populates the saved prompts section with current saved prompts
  */
 function populateSavedPromptsModal() {
     const container = document.getElementById('saved-prompts-list');
@@ -497,10 +467,10 @@ function populateSavedPromptsModal() {
     
     if (savedPrompts.length === 0) {
         container.innerHTML = `
-            <div class="text-center py-8 text-gray-400">
+            <div class="saved-prompts-empty-state text-center py-8 text-gray-400">
                 <i class="fas fa-inbox text-4xl mb-4"></i>
                 <p>No saved system prompts yet.</p>
-                <p class="text-sm mt-2">Create and save prompts from the Settings modal.</p>
+                <p class="text-sm mt-2">Use + Add above to save your current system prompt here.</p>
             </div>
         `;
         return;
@@ -509,8 +479,8 @@ function populateSavedPromptsModal() {
     container.innerHTML = savedPrompts.map(prompt => `
         <div class="saved-prompt-item border rounded-lg p-4 mb-3" style="border-color: var(--border-color); background: var(--settings-label-bg);">
             <div class="flex justify-between items-start mb-2">
-                <h3 class="font-medium text-lg" style="color: var(--text-primary);">${escapeHtml(prompt.name)}</h3>
-                <div class="flex space-x-2">
+                <h3 class="saved-prompt-item-title font-medium text-lg" style="color: var(--text-primary);">${escapeHtml(prompt.name)}</h3>
+                <div class="saved-prompt-item-actions flex space-x-2">
                     <button class="restore-prompt-btn text-blue-400 hover:text-blue-300 p-1" data-id="${prompt.id}" title="Restore this prompt">
                         <i class="fas fa-undo"></i>
                     </button>
@@ -522,10 +492,10 @@ function populateSavedPromptsModal() {
                     </button>
                 </div>
             </div>
-            <div class="prompt-content text-sm mb-2" style="color: var(--text-secondary);">
+            <div class="prompt-content saved-prompt-item-content text-sm mb-2" style="color: var(--text-secondary);">
                 ${escapeHtml(prompt.content.length > 150 ? prompt.content.substring(0, 150) + '...' : prompt.content)}
             </div>
-            <div class="text-xs" style="color: var(--text-tertiary);">
+            <div class="saved-prompt-item-meta text-xs" style="color: var(--text-tertiary);">
                 Created: ${new Date(prompt.createdAt).toLocaleDateString()}
                 ${prompt.updatedAt !== prompt.createdAt ? `• Updated: ${new Date(prompt.updatedAt).toLocaleDateString()}` : ''}
             </div>
@@ -604,9 +574,6 @@ function restorePrompt(id) {
         if (previewDiv) {
             previewDiv.textContent = prompt.content;
         }
-
-        // Close the modal
-        hideSavedSystemPromptsModal();
         
         // Show success message
         showSuccessMessage(`System prompt "${prompt.name}" has been restored.`);
@@ -875,12 +842,6 @@ function saveNewPrompt() {
     if (saveSystemPrompt(name, content)) {
         hideSavePromptModal();
         showSuccessMessage('Prompt saved successfully.');
-        
-        // Refresh the saved prompts modal if it's currently open
-        const savedPromptsModal = document.getElementById('saved-prompts-modal');
-        if (savedPromptsModal && !savedPromptsModal.classList.contains('hidden')) {
-            populateSavedPromptsModal();
-        }
     } else {
         showErrorMessage('Failed to save prompt. Please try again.');
     }
@@ -891,6 +852,8 @@ function saveNewPrompt() {
  * @param {string} message - The success message to show
  */
 function showSuccessMessage(message) {
+    const previousBodyOverflow = document.body.style.overflow;
+
     // Create modal overlay
     const modalOverlay = document.createElement('div');
     modalOverlay.className = 'fixed inset-0 items-center justify-center modal-container';
@@ -932,7 +895,7 @@ function showSuccessMessage(message) {
         setTimeout(() => {
             if (modalOverlay.parentNode) {
                 modalOverlay.parentNode.removeChild(modalOverlay);
-                document.body.style.overflow = '';
+                document.body.style.overflow = previousBodyOverflow;
             }
         }, 300);
     }, 2000);
@@ -989,18 +952,7 @@ export function initializeSavedSystemPrompts() {
     debugLog('Initializing saved system prompts functionality');
 
     getSavedSystemPrompts();
-
-    // Add event listeners for the saved prompts modal
-    const savedPromptsButton = document.getElementById('saved-prompts-btn');
-    if (savedPromptsButton) {
-        savedPromptsButton.addEventListener('click', showSavedSystemPromptsModal);
-    }
-
-    // Close saved prompts modal
-    const closeSavedPromptsButton = document.getElementById('close-saved-prompts-modal');
-    if (closeSavedPromptsButton) {
-        closeSavedPromptsButton.addEventListener('click', hideSavedSystemPromptsModal);
-    }
+    populateSavedPromptsModal();
 
     // Save system prompt button from settings modal
     const saveSystemPromptButton = document.getElementById('save-system-prompt-btn');
@@ -1064,7 +1016,6 @@ export function initializeSavedSystemPrompts() {
 
     // Close modals when clicking outside
     const modals = [
-        'saved-prompts-modal',
         'save-prompt-modal', 
         'edit-prompt-modal',
         'delete-prompt-confirmation-modal'
@@ -1075,9 +1026,7 @@ export function initializeSavedSystemPrompts() {
         if (modal) {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
-                    if (modalId === 'saved-prompts-modal') {
-                        hideSavedSystemPromptsModal();
-                    } else if (modalId === 'save-prompt-modal') {
+                    if (modalId === 'save-prompt-modal') {
                         hideSavePromptModal();
                     } else if (modalId === 'edit-prompt-modal') {
                         hideEditPromptModal();
@@ -1098,9 +1047,7 @@ export function initializeSavedSystemPrompts() {
             });
 
             if (visibleModal) {
-                if (visibleModal === 'saved-prompts-modal') {
-                    hideSavedSystemPromptsModal();
-                } else if (visibleModal === 'save-prompt-modal') {
+                if (visibleModal === 'save-prompt-modal') {
                     hideSavePromptModal();
                 } else if (visibleModal === 'edit-prompt-modal') {
                     hideEditPromptModal();

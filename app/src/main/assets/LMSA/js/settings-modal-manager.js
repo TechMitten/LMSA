@@ -1013,6 +1013,16 @@ export function initializeSettingsModalNavigation() {
     });
 }
 
+export function navigateSettingsModalToStep(stepName = 'connection') {
+    if (typeof _navigateToStep === 'function') {
+        _navigateToStep(stepName);
+        return true;
+    }
+
+    _currentSettingsStep = stepName;
+    return false;
+}
+
 // Helper functions to disable/enable navigation
 function disableNavigation() {
     // Disable all navigation buttons to prevent accidental navigation

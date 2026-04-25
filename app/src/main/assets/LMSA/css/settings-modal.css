@@ -393,6 +393,98 @@
     0 0 0 1px var(--border-color) inset, 0 0 15px rgba(59, 130, 246, 0.2);
 }
 
+#settings-modal #saved-prompts-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--settings-border-quiet);
+  background: var(--settings-surface-raised);
+}
+
+#settings-modal .saved-prompts-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#settings-modal .saved-prompts-section-eyebrow {
+  margin: 0;
+  color: var(--settings-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#settings-modal .saved-prompts-section-title {
+  margin: 0.2rem 0 0;
+  color: var(--settings-text-strong);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+#settings-modal .saved-prompts-section-description {
+  margin: 0.45rem 0 0.85rem;
+  color: var(--settings-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+#settings-modal #saved-prompts-list {
+  max-height: min(34vh, 360px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.25rem;
+}
+
+#settings-modal #saved-prompts-list .saved-prompt-item {
+  margin-bottom: 0.75rem !important;
+  border-radius: 0.95rem;
+}
+
+#settings-modal #saved-prompts-list .saved-prompt-item:last-child {
+  margin-bottom: 0 !important;
+}
+
+#settings-modal #saved-prompts-list .saved-prompt-item-actions {
+  flex-shrink: 0;
+}
+
+#settings-modal #saved-prompts-list .saved-prompt-item-title {
+  padding-right: 0.75rem;
+}
+
+#settings-modal #saved-prompts-list .saved-prompt-item-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#settings-modal #saved-prompts-list .saved-prompt-item-meta {
+  line-height: 1.4;
+}
+
+#settings-modal #saved-prompts-list .restore-prompt-btn,
+#settings-modal #saved-prompts-list .edit-prompt-btn,
+#settings-modal #saved-prompts-list .delete-prompt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.7rem;
+}
+
+@media (max-width: 640px) {
+  #settings-modal #saved-prompts-section {
+    padding: 0.85rem;
+  }
+
+  #settings-modal #saved-prompts-list {
+    max-height: min(38vh, 320px);
+  }
+}
+
 /* Premium input fields with immersive styling */
 #settings-modal input[type="text"],
 #settings-modal input[type="number"],

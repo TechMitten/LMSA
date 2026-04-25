@@ -1,23 +1,4 @@
 export const promptModals = `
-    <!-- Saved System Prompts Modal -->
-    <div id="saved-prompts-modal" class="fixed inset-0 items-center justify-center hidden modal-container"
-        style="z-index: 1060; background: var(--modal-overlay); backdrop-filter: blur(12px) saturate(180%); -webkit-backdrop-filter: blur(12px) saturate(180%);"
-        aria-labelledby="saved-prompts-title" role="dialog" aria-modal="true">
-        <div
-            class="relative dark:bg-gradient-to-b dark:from-[#1e293b] dark:via-[#334155] dark:to-[#1e293b] light:bg-gradient-to-b light:from-[#f8fafc] light:via-[#f1f5f9] light:to-[#f8fafc] p-8 rounded-2xl w-[600px] max-w-[90%] h-[60vh] shadow-2xl overflow-hidden flex flex-col modal-content border border-blue-400/50 dark:border-blue-400/50 light:border-blue-400/30 backdrop-blur-sm">
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="saved-prompts-title" class="text-2xl font-bold text-gray-800 dark:text-gray-200">Saved System
-                    Prompts</h2>
-                <button id="close-saved-prompts-modal"
-                    class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-3xl font-bold"
-                    aria-label="Close modal">&times;</button>
-            </div>
-            <div id="saved-prompts-list" class="flex-1 overflow-y-auto">
-                <!-- Saved prompts will be dynamically inserted here -->
-            </div>
-        </div>
-    </div>
-
     <!-- Save System Prompt Modal -->
     <div id="save-prompt-modal" class="fixed inset-0 items-center justify-center hidden modal-container"
         style="z-index: 1070; background: var(--modal-overlay); backdrop-filter: blur(12px) saturate(180%); -webkit-backdrop-filter: blur(12px) saturate(180%);"

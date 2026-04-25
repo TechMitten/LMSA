@@ -282,7 +282,7 @@ export const helpModal = `
                                  style="color: #10b981;"><i class="fas fa-file-import mr-2"></i>Import LM Studio Prompts
                              </h3>
                              <p style="color: var(--text-primary); margin-bottom: 1rem;">
-                                 LMSA can import system prompts from LM Studio profile JSON files. After import, the prompt is saved inside LMSA so you can reopen it later from the Saved Prompts list.
+                                 LMSA can import system prompts from LM Studio profile JSON files. After import, the prompt is saved inside LMSA so you can reopen it later from the Saved Prompts section in Settings.
                              </p>
 
                              <div class="space-y-4">
@@ -315,8 +315,8 @@ export const helpModal = `
                                              class="fas fa-save mr-2"></i>Where to Find Imported Prompts</p>
                                      <ul class="list-disc pl-5 mt-2 space-y-1"
                                          style="color: var(--text-primary); font-size: 0.9em;">
-                                         <li>Imported prompts appear in <strong>Options &gt; Saved Prompts</strong>.</li>
-                                         <li>The <strong>Saved Prompts</strong> button opens the modal where you can review, edit, and reuse the prompts you imported.</li>
+                                         <li>Imported prompts appear in <strong>Settings &gt; System Prompt</strong>.</li>
+                                         <li>The <strong>Saved Prompts</strong> section below the editor lets you review, edit, and reuse the prompts you imported.</li>
                                          <li>If the LM Studio JSON includes a profile name, LMSA uses that as the saved prompt name. Otherwise it falls back to the JSON filename.</li>
                                          <li>After the import finishes and the prompt appears in Saved Prompts, you can delete the transferred JSON file from your phone if you no longer need it.</li>
                                      </ul>

@@ -176,9 +176,22 @@ export const settingsModal = `
                             <button id="save-system-prompt-btn"
                                 class="professional-button flex items-center justify-center gap-3 flex-1 h-[48px]">
                                 <i class="fas fa-save text-sm"></i>
-                                <span>+ Add</span>
+                                <span>Save</span>
                             </button>
                         </div>
+
+                        <section id="saved-prompts-section" class="mt-4" aria-labelledby="saved-prompts-section-title">
+                            <div class="saved-prompts-section-header">
+                                <div>
+                                    <p class="saved-prompts-section-eyebrow">Saved Prompts</p>
+                                    <h3 id="saved-prompts-section-title" class="saved-prompts-section-title">Reusable System Prompts</h3>
+                                </div>
+                            </div>
+                            <p class="saved-prompts-section-description">Restore, edit, or delete saved prompts without leaving this page.</p>
+                            <div id="saved-prompts-list" class="saved-prompts-section-list" aria-live="polite">
+                                <!-- Saved prompts will be dynamically inserted here -->
+                            </div>
+                        </section>
                     </div>
                 </div>
 
