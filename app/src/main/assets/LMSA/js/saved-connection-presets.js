@@ -96,6 +96,26 @@ function normalizeOpenAICompatiblePresetData(data = {}) {
     };
 }
 
+function normalizeEndpointForComparison(endpoint) {
+    const normalizedEndpoint = normalizeString(endpoint);
+    if (!normalizedEndpoint) {
+        return '';
+    }
+
+    try {
+        const url = new URL(normalizedEndpoint);
+        url.hash = '';
+
+        if (url.pathname && url.pathname !== '/') {
+            url.pathname = url.pathname.replace(/\/+$/, '');
+        }
+
+        return url.toString().replace(/\/+$/, '');
+    } catch (_) {
+        return normalizedEndpoint.replace(/\/+$/, '');
+    }
+}
+
 function normalizePresetType(type) {
     if (type === 'openrouter' || type === 'openai-compatible' || type === 'local') {
         return type;
@@ -181,6 +201,18 @@ export function saveConnectionPreset(preset) {
     }
 
     const existingPresets = getSavedConnectionPresets();
+    const duplicateEndpointPreset = normalizedPreset.type === 'openai-compatible'
+        ? existingPresets.find(existingPreset =>
+            existingPreset.type === 'openai-compatible' &&
+            existingPreset.id !== normalizedPreset.id &&
+            normalizeEndpointForComparison(existingPreset.data?.endpoint) === normalizeEndpointForComparison(normalizedPreset.data?.endpoint)
+        )
+        : null;
+
+    if (duplicateEndpointPreset) {
+        throw new Error(`A saved preset already uses this endpoint URL${duplicateEndpointPreset.name ? ` (${duplicateEndpointPreset.name})` : ''}.`);
+    }
+
     const matchingIndex = existingPresets.findIndex(existingPreset =>
         existingPreset.id === normalizedPreset.id || (
             existingPreset.type === normalizedPreset.type &&

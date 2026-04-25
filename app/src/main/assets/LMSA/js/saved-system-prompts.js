@@ -6,6 +6,7 @@ import { closeSidebarExport } from './export-import.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { requireSystemPromptPremiumAccess } from './settings-manager.js';
 import { showSettingsModal, navigateSettingsModalToStep } from './settings-modal-manager.js';
+import { showToastNotice } from './toast-notice.js';
 
 // Local storage key for saved system prompts
 const SAVED_PROMPTS_KEY = 'savedSystemPrompts';
@@ -906,30 +907,7 @@ function showSuccessMessage(message) {
  * @param {string} message - The error message to show
  */
 function showErrorMessage(message) {
-    // Create a temporary error notification
-    const notification = document.createElement('div');
-    notification.className = 'fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300';
-    notification.style.zIndex = '9999';
-    notification.textContent = message;
-    
-    document.body.appendChild(notification);
-    
-    // Animate in
-    setTimeout(() => {
-        notification.style.transform = 'translateX(0)';
-        notification.style.opacity = '1';
-    }, 10);
-    
-    // Remove after 4 seconds
-    setTimeout(() => {
-        notification.style.transform = 'translateX(100%)';
-        notification.style.opacity = '0';
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    }, 4000);
+    showToastNotice({ message, tone: 'error', duration: 4000 });
 }
 
 window.onLmStudioSystemPromptImportResult = handleNativeLmStudioSystemPromptImportResult;

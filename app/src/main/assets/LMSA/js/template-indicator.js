@@ -3,6 +3,7 @@
 
 import { debugLog } from './utils.js';
 import { resetSystemPrompt } from './settings-manager.js';
+import { showToastNotice } from './toast-notice.js';
 
 const CUSTOM_TEMPLATE_STORAGE_KEY = 'customTemplates';
 
@@ -112,66 +113,12 @@ export function disableTemplate() {
  * Show a notification that the template has been disabled
  */
 function showTemplateDisabledNotification() {
-    // Create a temporary notification element
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 0.75rem;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-weight: 500;
-        animation: slideInRight 0.3s ease-out;
-    `;
-
-    notification.innerHTML = `
-        <i class="fas fa-check-circle" style="font-size: 1.25rem;"></i>
-        <span>Template disabled. Using default system prompt.</span>
-    `;
-
-    // Add animation keyframes
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        @keyframes slideOutRight {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-        }
-    `;
-    document.head.appendChild(style);
-
-    document.body.appendChild(notification);
-
-    // Remove the notification after 3 seconds
-    setTimeout(() => {
-        notification.style.animation = 'slideOutRight 0.3s ease-out';
-        setTimeout(() => {
-            notification.remove();
-            style.remove();
-        }, 300);
-    }, 3000);
+    showToastNotice({
+        message: 'Template disabled. Using default system prompt.',
+        tone: 'success',
+        iconClass: 'fas fa-check-circle',
+        duration: 3000
+    });
 }
 
 /**

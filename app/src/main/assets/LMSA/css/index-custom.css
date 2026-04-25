@@ -394,6 +394,79 @@ body.keyboard-visible #chat-form,
         border-color: #e2e8f0;
     }
 
+    .app-toast-layer {
+        position: fixed;
+        top: calc(env(safe-area-inset-top, 0px) + 16px);
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(calc(100vw - 24px), 560px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 0 12px;
+        z-index: 9999;
+        pointer-events: none;
+    }
+    .app-toast-notice {
+        width: min(100%, 420px);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0.9rem 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: #f8fafc;
+        background: rgba(15, 23, 42, 0.92);
+        box-shadow: 0 20px 45px -28px rgba(2, 6, 23, 0.92);
+        backdrop-filter: blur(18px) saturate(160%);
+        -webkit-backdrop-filter: blur(18px) saturate(160%);
+        opacity: 0;
+        transform: translate3d(0, -10px, 0) scale(0.98);
+        transition: opacity 0.22s ease, transform 0.22s ease;
+        pointer-events: auto;
+    }
+    .app-toast-notice.is-visible {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    .app-toast-notice.is-exiting {
+        opacity: 0;
+        transform: translate3d(0, -8px, 0) scale(0.985);
+    }
+    .app-toast-notice--success {
+        background: linear-gradient(180deg, rgba(5, 150, 105, 0.94), rgba(4, 120, 87, 0.94));
+        border-color: rgba(110, 231, 183, 0.2);
+    }
+    .app-toast-notice--error {
+        background: linear-gradient(180deg, rgba(220, 38, 38, 0.95), rgba(185, 28, 28, 0.95));
+        border-color: rgba(254, 202, 202, 0.2);
+    }
+    body.light-theme .app-toast-notice {
+        color: #0f172a;
+        background: rgba(255, 255, 255, 0.94);
+        border-color: rgba(148, 163, 184, 0.24);
+        box-shadow: 0 20px 45px -30px rgba(15, 23, 42, 0.28);
+    }
+    body.light-theme .app-toast-notice--success {
+        background: linear-gradient(180deg, rgba(209, 250, 229, 0.98), rgba(167, 243, 208, 0.98));
+        border-color: rgba(16, 185, 129, 0.18);
+    }
+    body.light-theme .app-toast-notice--error {
+        background: linear-gradient(180deg, rgba(254, 226, 226, 0.98), rgba(254, 202, 202, 0.98));
+        border-color: rgba(239, 68, 68, 0.18);
+    }
+    .app-toast-notice__icon {
+        flex-shrink: 0;
+        font-size: 1rem;
+    }
+    .app-toast-notice__text {
+        min-width: 0;
+        flex: 1;
+        line-height: 1.45;
+        font-size: 0.95rem;
+    }
+
     /* Transient model confirmation cards */
     .model-toast-modal {
         align-items: flex-start;
@@ -417,7 +490,7 @@ body.keyboard-visible #chat-form,
     @media (min-width: 640px) {
         .model-toast-modal {
             align-items: flex-start;
-            justify-content: flex-end;
+            justify-content: center;
             padding: calc(env(safe-area-inset-top, 0px) + 24px) 24px 24px;
         }
     }
@@ -3357,25 +3430,7 @@ body.light-theme .conn-modal-action-btn--cancel {
     text-align: left;
     justify-content: flex-start !important;
     transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease, background 150ms ease, filter 150ms ease;
-    animation: welcomeButtonSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) calc(0.9s + var(--button-delay, 0s)) both;
 }
-
-@keyframes welcomeButtonSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-/* Stagger button animations */
-#welcome-message .welcome-action-grid > :nth-child(1) { --button-delay: 0s; }
-#welcome-message .welcome-action-grid > :nth-child(2) { --button-delay: 0.1s; }
-#welcome-message .welcome-action-grid > :nth-child(3) { --button-delay: 0.2s; }
-#welcome-message .welcome-action-grid > :nth-child(4) { --button-delay: 0.3s; }
 
 #welcome-message .welcome-action-card::before,
 #welcome-message .welcome-premium-action::before {
@@ -3432,18 +3487,6 @@ body.light-theme .conn-modal-action-btn--cancel {
 #welcome-message .welcome-premium-row {
     width: 100%;
     margin-top: 2px;
-    animation: welcomePremiumFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.3s both;
-}
-
-@keyframes welcomePremiumFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 #welcome-message .welcome-premium-action {

@@ -3,6 +3,7 @@
 
 import { settingsModal, getStartedBtn } from './dom-elements.js';
 import { debugLog, getDebugEnabled, isAndroidWebView } from './utils.js';
+import { showToastNotice } from './toast-notice.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { getApiUrl, getAvailableModels, isServerRunning, validateIpPort, saveServerSettings, fetchAvailableModels } from './api-service.js';
 import { showOpenRouterKeyRequiredModal, initOpenRouterKeyRequiredModal } from './components/modals/openrouter-key-required-modal.js';
@@ -197,33 +198,34 @@ function isPresetCurrentlyApplied(preset) {
 }
 
 function showConnectionPresetNotice(message, tone = 'success') {
-    const notification = document.createElement('div');
-    notification.textContent = message;
-    notification.style.position = 'fixed';
-    notification.style.top = '1rem';
-    notification.style.right = '1rem';
-    notification.style.zIndex = '9999';
-    notification.style.maxWidth = 'min(88vw, 320px)';
-    notification.style.padding = '0.85rem 1rem';
-    notification.style.borderRadius = '14px';
-    notification.style.color = '#ffffff';
-    notification.style.background = tone === 'error' ? 'rgba(220, 38, 38, 0.96)' : 'rgba(16, 185, 129, 0.96)';
-    notification.style.boxShadow = '0 18px 40px -24px rgba(15, 23, 42, 0.85)';
-    notification.style.opacity = '0';
-    notification.style.transform = 'translateY(-8px)';
-    notification.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-    document.body.appendChild(notification);
+    showToastNotice({ message, tone, duration: 2400 });
+}
 
-    requestAnimationFrame(() => {
-        notification.style.opacity = '1';
-        notification.style.transform = 'translateY(0)';
-    });
+function updateConnectionPresetSaveState() {
+    const saveButton = document.getElementById('save-connection-preset-btn');
+    const nameInput = document.getElementById('settings-connection-preset-name');
+    const nameHint = document.getElementById('settings-connection-preset-name-hint');
 
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateY(-8px)';
-        setTimeout(() => notification.remove(), 220);
-    }, 2400);
+    if (!saveButton || !nameInput) {
+        return false;
+    }
+
+    const hasName = !!nameInput.value.trim();
+    const shouldShowMissingState = nameInput.dataset.touched === 'true' && !hasName;
+
+    saveButton.disabled = !hasName;
+    saveButton.setAttribute('aria-disabled', hasName ? 'false' : 'true');
+
+    nameInput.classList.toggle('is-missing', shouldShowMissingState);
+    nameInput.setAttribute('aria-invalid', shouldShowMissingState ? 'true' : 'false');
+
+    if (nameHint) {
+        nameHint.textContent = shouldShowMissingState
+            ? 'Preset name is required before saving.'
+            : 'Enter a preset name to enable saving.';
+    }
+
+    return hasName;
 }
 
 function syncConnectionPresetComposer() {
@@ -249,6 +251,8 @@ function syncConnectionPresetComposer() {
     if (saveLabel) {
         saveLabel.textContent = `Save ${providerLabel}`;
     }
+
+    updateConnectionPresetSaveState();
 }
 
 function renderConnectionPresetList() {
@@ -531,9 +535,17 @@ function initializeConnectionPresetList() {
             }
 
             try {
-                const presetName = nameInput && nameInput.value.trim()
-                    ? nameInput.value.trim()
-                    : buildDefaultConnectionPresetName(presetDraft.type);
+                const presetName = nameInput?.value.trim() || '';
+                if (!presetName) {
+                    if (nameInput) {
+                        nameInput.dataset.touched = 'true';
+                        updateConnectionPresetSaveState();
+                        nameInput.focus();
+                    }
+                    showConnectionPresetNotice('Preset name is required before saving.', 'error');
+                    return;
+                }
+
                 const savedPreset = saveConnectionPreset({
                     name: presetName,
                     type: presetDraft.type,
@@ -541,8 +553,11 @@ function initializeConnectionPresetList() {
                 });
 
                 if (nameInput) {
+                    nameInput.dataset.touched = 'false';
                     nameInput.value = '';
                 }
+
+                updateConnectionPresetSaveState();
 
                 renderConnectionPresetList();
                 revealConnectionPresetList();
@@ -554,9 +569,25 @@ function initializeConnectionPresetList() {
     }
 
     if (nameInput) {
+        nameInput.addEventListener('input', () => {
+            nameInput.dataset.touched = 'true';
+            updateConnectionPresetSaveState();
+        });
+
+        nameInput.addEventListener('blur', () => {
+            nameInput.dataset.touched = 'true';
+            updateConnectionPresetSaveState();
+        });
+
         nameInput.addEventListener('keydown', event => {
             if (event.key === 'Enter') {
                 event.preventDefault();
+                nameInput.dataset.touched = 'true';
+                if (!updateConnectionPresetSaveState()) {
+                    showConnectionPresetNotice('Preset name is required before saving.', 'error');
+                    nameInput.focus();
+                    return;
+                }
                 saveButton?.click();
             }
         });
@@ -571,6 +602,7 @@ function initializeConnectionPresetList() {
     });
 
     renderConnectionPresetList();
+    updateConnectionPresetSaveState();
 }
 
 

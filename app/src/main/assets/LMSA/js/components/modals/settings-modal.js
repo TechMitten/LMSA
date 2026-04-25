@@ -133,9 +133,16 @@ export const settingsModal = `
                         <p id="settings-connection-preset-helper" class="connection-presets-description">Save the active connection setup and switch between providers without retyping credentials or endpoints.</p>
 
                         <div class="connection-presets-toolbar">
-                            <input type="text" id="settings-connection-preset-name" class="connection-preset-name-input"
-                                placeholder="Name this Local Server preset" maxlength="50" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-form-type="other">
-                            <button id="save-connection-preset-btn" type="button" data-haptic="light"
+                            <div class="connection-preset-name-field">
+                                <label for="settings-connection-preset-name" class="connection-preset-name-label">
+                                    Preset Name
+                                    <span class="connection-preset-name-required">Required</span>
+                                </label>
+                                <input type="text" id="settings-connection-preset-name" class="connection-preset-name-input"
+                                    placeholder="Name this Local Server preset" maxlength="50" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-form-type="other" required aria-required="true" aria-describedby="settings-connection-preset-name-hint" enterkeyhint="done">
+                                <p id="settings-connection-preset-name-hint" class="connection-preset-name-hint">Enter a preset name to enable saving.</p>
+                            </div>
+                            <button id="save-connection-preset-btn" type="button" data-haptic="light" disabled aria-disabled="true"
                                 class="professional-button flex items-center justify-center gap-2 h-[44px] px-4">
                                 <i class="fas fa-save text-xs"></i>
                                 <span id="save-connection-preset-label">Save Current</span>
