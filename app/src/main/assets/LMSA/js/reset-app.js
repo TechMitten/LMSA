@@ -62,6 +62,7 @@ export function resetApp() {
             'openAICompatibleApiKey',
             'openAICompatibleManualModel',
             'openAICompatibleSelectedModel',
+            'savedConnectionPresets',
             INTRO_COMPLETED_KEY,
             INTRO_VERSION_KEY
         ];
@@ -88,6 +89,7 @@ export function resetApp() {
             if (window.AndroidFileOps && typeof window.AndroidFileOps.deleteData === 'function') {
                 window.AndroidFileOps.deleteData('chatHistory');
                 window.AndroidFileOps.deleteData('savedSystemPrompts');
+                window.AndroidFileOps.deleteData('savedConnectionPresets');
                 console.log('RESET APP: Cleared chat history from Android internal storage');
             }
         } catch (error) {

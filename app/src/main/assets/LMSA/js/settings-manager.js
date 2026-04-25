@@ -1577,6 +1577,44 @@ export function saveOpenAICompatibleSettings() {
   }
 }
 
+export function applyConnectionProviderSelection(provider) {
+  const normalizedProvider = provider === 'openrouter' || provider === 'openai-compatible'
+    ? provider
+    : 'local';
+
+  useOpenRouter = normalizedProvider === 'openrouter';
+  useOpenAICompatible = normalizedProvider === 'openai-compatible';
+
+  localStorage.setItem('useOpenRouter', useOpenRouter ? 'true' : 'false');
+  localStorage.setItem('useOpenAICompatible', useOpenAICompatible ? 'true' : 'false');
+
+  if (openRouterToggleCheckbox) {
+    openRouterToggleCheckbox.checked = useOpenRouter;
+  }
+
+  if (openAICompatibleToggleCheckbox) {
+    openAICompatibleToggleCheckbox.checked = useOpenAICompatible;
+  }
+
+  if ((useOpenRouter || useOpenAICompatible) && useOllama) {
+    useOllama = false;
+    localStorage.setItem('useOllama', 'false');
+    if (ollamaToggleCheckbox) {
+      ollamaToggleCheckbox.checked = false;
+    }
+  }
+
+  updateProviderUI();
+
+  if (useOpenRouter) {
+    window.currentLoadedModel = localStorage.getItem('openRouterSelectedModel') || null;
+  } else if (useOpenAICompatible) {
+    window.currentLoadedModel = localStorage.getItem('openAICompatibleSelectedModel') || null;
+  } else {
+    window.currentLoadedModel = localStorage.getItem('localSelectedModel') || null;
+  }
+}
+
 /**
  * Gets the current OpenRouter enabled state
  * @returns {boolean}
@@ -1601,12 +1639,51 @@ export function getOpenRouterApiKey() {
   return openRouterApiKey;
 }
 
+export function setOpenRouterApiKey(apiKey) {
+  openRouterApiKey = typeof apiKey === 'string' ? apiKey : '';
+  if (openRouterApiKey) {
+    localStorage.setItem('openRouterApiKey', openRouterApiKey);
+  } else {
+    localStorage.removeItem('openRouterApiKey');
+  }
+
+  if (openRouterApiKeyInput) {
+    openRouterApiKeyInput.value = openRouterApiKey;
+  }
+}
+
 export function getOpenAICompatibleEndpoint() {
   return openAICompatibleEndpoint;
 }
 
+export function setOpenAICompatibleEndpoint(endpoint) {
+  openAICompatibleEndpoint = typeof endpoint === 'string' ? endpoint : '';
+  if (openAICompatibleEndpoint) {
+    localStorage.setItem('openAICompatibleEndpoint', openAICompatibleEndpoint);
+  } else {
+    localStorage.removeItem('openAICompatibleEndpoint');
+  }
+
+  if (openAICompatibleEndpointInput) {
+    openAICompatibleEndpointInput.value = openAICompatibleEndpoint;
+  }
+}
+
 export function getOpenAICompatibleApiKey() {
   return openAICompatibleApiKey;
+}
+
+export function setOpenAICompatibleApiKey(apiKey) {
+  openAICompatibleApiKey = typeof apiKey === 'string' ? apiKey : '';
+  if (openAICompatibleApiKey) {
+    localStorage.setItem('openAICompatibleApiKey', openAICompatibleApiKey);
+  } else {
+    localStorage.removeItem('openAICompatibleApiKey');
+  }
+
+  if (openAICompatibleApiKeyInput) {
+    openAICompatibleApiKeyInput.value = openAICompatibleApiKey;
+  }
 }
 
 /**

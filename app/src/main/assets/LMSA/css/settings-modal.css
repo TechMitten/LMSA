@@ -2393,6 +2393,241 @@ body.light-theme .connection-status-row .professional-button:hover {
     linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(148, 163, 184, 0.14));
 }
 
+.connection-presets-card {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(96, 165, 250, 0.16);
+  background:
+    radial-gradient(140% 120% at 10% 0%, rgba(59, 130, 246, 0.14) 0%, rgba(59, 130, 246, 0) 52%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.54), rgba(15, 23, 42, 0.3));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.connection-presets-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.connection-presets-eyebrow {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(147, 197, 253, 0.82);
+}
+
+.connection-presets-title {
+  margin: 0.2rem 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.connection-presets-description {
+  margin: 0.7rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(203, 213, 225, 0.82);
+}
+
+.connection-presets-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.connection-preset-name-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.85rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.4);
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.connection-preset-name-input::placeholder {
+  color: rgba(148, 163, 184, 0.78);
+}
+
+.connection-preset-name-input:focus {
+  outline: none;
+  border-color: rgba(96, 165, 250, 0.62);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
+  background: rgba(15, 23, 42, 0.54);
+}
+
+.connection-presets-empty-state {
+  margin-top: 0.9rem;
+  padding: 0.95rem 1rem;
+  border-radius: 14px;
+  border: 1px dashed rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.24);
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 0.83rem;
+  text-align: center;
+}
+
+.connection-presets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.connection-preset-item {
+  padding: 0.9rem;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.32);
+}
+
+.connection-preset-item.is-current {
+  border-color: rgba(96, 165, 250, 0.34);
+  box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.12);
+}
+
+.connection-preset-item-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.connection-preset-item-title {
+  margin: 0;
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.connection-preset-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+}
+
+.connection-preset-type-pill,
+.connection-preset-item-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.34rem 0.62rem;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.18);
+  color: #dbeafe;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.connection-preset-item-tag.connection-preset-item-tag--current {
+  background: rgba(16, 185, 129, 0.16);
+  color: #d1fae5;
+}
+
+.connection-preset-summary {
+  margin: 0.7rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: rgba(203, 213, 225, 0.86);
+}
+
+.connection-preset-actions {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+}
+
+.connection-preset-action-btn {
+  flex: 1;
+  min-height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(30, 41, 59, 0.5);
+  color: #e2e8f0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: transform 0.12s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.connection-preset-action-btn:hover {
+  border-color: rgba(96, 165, 250, 0.42);
+  background: rgba(37, 99, 235, 0.18);
+}
+
+.connection-preset-action-btn:active {
+  transform: scale(0.98);
+}
+
+.connection-preset-action-btn.connection-preset-action-btn--danger:hover {
+  border-color: rgba(248, 113, 113, 0.44);
+  background: rgba(220, 38, 38, 0.16);
+}
+
+body.light-theme .connection-presets-card {
+  border-color: rgba(59, 130, 246, 0.16);
+  background:
+    radial-gradient(140% 120% at 10% 0%, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0) 52%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 18px 34px -30px rgba(15, 23, 42, 0.22);
+}
+
+body.light-theme .connection-presets-title,
+body.light-theme .connection-preset-item-title {
+  color: #0f172a;
+}
+
+body.light-theme .connection-presets-description,
+body.light-theme .connection-preset-summary {
+  color: rgba(51, 65, 85, 0.82);
+}
+
+body.light-theme .connection-preset-name-input {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(255, 255, 255, 0.94);
+  color: #0f172a;
+}
+
+body.light-theme .connection-presets-empty-state,
+body.light-theme .connection-preset-item {
+  background: rgba(255, 255, 255, 0.8);
+  color: #334155;
+}
+
+body.light-theme .connection-preset-action-btn {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(255, 255, 255, 0.92);
+  color: #1e293b;
+}
+
+@media (min-width: 640px) {
+  .connection-presets-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .connection-presets-toolbar .professional-button {
+    min-width: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .connection-preset-actions {
+    flex-direction: column;
+  }
+}
+
 @media (max-width: 480px) {
   .connection-status-row .professional-button {
     inline-size: 116px;

@@ -4,16 +4,35 @@
 import { settingsModal, getStartedBtn } from './dom-elements.js';
 import { debugLog, getDebugEnabled, isAndroidWebView } from './utils.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
-import { getApiUrl, getAvailableModels, isServerRunning, validateIpPort, saveServerSettings } from './api-service.js';
+import { getApiUrl, getAvailableModels, isServerRunning, validateIpPort, saveServerSettings, fetchAvailableModels } from './api-service.js';
 import { showOpenRouterKeyRequiredModal, initOpenRouterKeyRequiredModal } from './components/modals/openrouter-key-required-modal.js';
-import { getUseOpenRouter, getOpenRouterApiKey, getUseOpenAICompatible, getOpenAICompatibleApiKey, requireSystemPromptPremiumAccess, updateSystemPromptPremiumState } from './settings-manager.js';
+import {
+    getUseOpenRouter,
+    getOpenRouterApiKey,
+    getUseOpenAICompatible,
+    getOpenAICompatibleApiKey,
+    requireSystemPromptPremiumAccess,
+    updateSystemPromptPremiumState,
+    applyConnectionProviderSelection,
+    setOpenRouterApiKey,
+    setOpenAICompatibleEndpoint,
+    setOpenAICompatibleApiKey,
+    setLMStudioApiToken
+} from './settings-manager.js';
 import { interceptIpPortChanges } from './ip-port-confirmation-modal.js';
+import { getSavedConnectionPresets, saveConnectionPreset, deleteConnectionPreset } from './saved-connection-presets.js';
 
 // Holds a reference to the internal showStep function once the modal is initialised
 let _navigateToStep = null;
 let _currentSettingsStep = 'connection';
 let _openModelInfoAfterSettingsClose = false;
 let _openRouterKeyBeforeEditing = '';
+
+const CONNECTION_PRESET_TYPE_LABELS = {
+    local: 'Local Server',
+    openrouter: 'OpenRouter',
+    'openai-compatible': 'Custom Endpoint'
+};
 
 function getBiometricBridge() {
     if (typeof AndroidBiometrics !== 'undefined') {
@@ -33,6 +52,425 @@ function getBiometricBridge() {
     }
 
     return null;
+}
+
+function getActiveConnectionProvider() {
+    if (getUseOpenRouter()) {
+        return 'openrouter';
+    }
+
+    if (getUseOpenAICompatible()) {
+        return 'openai-compatible';
+    }
+
+    return 'local';
+}
+
+function maskSecret(secret, leading = 6, trailing = 4) {
+    const normalizedSecret = typeof secret === 'string' ? secret.trim() : '';
+    if (!normalizedSecret) {
+        return 'Not saved';
+    }
+
+    if (normalizedSecret.length <= leading + trailing) {
+        return 'Saved';
+    }
+
+    return `${normalizedSecret.slice(0, leading)}...${normalizedSecret.slice(-trailing)}`;
+}
+
+function countSavedMcpIntegrations(rawValue) {
+    const normalizedValue = typeof rawValue === 'string' ? rawValue.trim() : '';
+    if (!normalizedValue) {
+        return 0;
+    }
+
+    try {
+        const parsed = JSON.parse(normalizedValue);
+        const entries = Array.isArray(parsed) ? parsed : [parsed];
+        return entries.filter(entry => entry && typeof entry === 'object').length;
+    } catch (_) {
+        return 0;
+    }
+}
+
+function getCurrentConnectionPresetDraft() {
+    const provider = getActiveConnectionProvider();
+
+    if (provider === 'openrouter') {
+        return {
+            type: provider,
+            data: {
+                openRouterApiKey: localStorage.getItem('openRouterApiKey') || ''
+            }
+        };
+    }
+
+    if (provider === 'openai-compatible') {
+        return {
+            type: provider,
+            data: {
+                endpoint: localStorage.getItem('openAICompatibleEndpoint') || '',
+                apiKey: localStorage.getItem('openAICompatibleApiKey') || '',
+                manualModel: localStorage.getItem('openAICompatibleManualModel') || ''
+            }
+        };
+    }
+
+    return {
+        type: provider,
+        data: {
+            serverIp: localStorage.getItem('serverIp') || '',
+            serverPort: localStorage.getItem('serverPort') || '',
+            lmStudioApiToken: localStorage.getItem('lmStudioApiToken') || '',
+            lmStudioMcpIntegrations: localStorage.getItem('lmStudioMcpIntegrations') || ''
+        }
+    };
+}
+
+function hasSavableConnectionPresetData(presetDraft) {
+    if (!presetDraft || !presetDraft.data) {
+        return false;
+    }
+
+    if (presetDraft.type === 'openrouter') {
+        return !!presetDraft.data.openRouterApiKey;
+    }
+
+    if (presetDraft.type === 'openai-compatible') {
+        return !!presetDraft.data.endpoint;
+    }
+
+    return !!(presetDraft.data.serverIp && presetDraft.data.serverPort);
+}
+
+function buildDefaultConnectionPresetName(provider) {
+    const label = CONNECTION_PRESET_TYPE_LABELS[provider] || 'Connection';
+    return `${label} ${new Date().toLocaleDateString()}`;
+}
+
+function summarizeConnectionPreset(preset) {
+    if (preset.type === 'openrouter') {
+        return `API key ${maskSecret(preset.data.openRouterApiKey, 8, 4)}`;
+    }
+
+    if (preset.type === 'openai-compatible') {
+        const endpoint = preset.data.endpoint || 'No endpoint';
+        const modelSuffix = preset.data.manualModel ? `, model ${preset.data.manualModel}` : '';
+        const keySuffix = preset.data.apiKey ? ', key saved' : ', no key';
+        return `${endpoint}${modelSuffix}${keySuffix}`;
+    }
+
+    const address = preset.data.serverIp && preset.data.serverPort
+        ? `${preset.data.serverIp}:${preset.data.serverPort}`
+        : 'No address';
+    const tokenSuffix = preset.data.lmStudioApiToken ? ', token saved' : ', no token';
+    const mcpCount = countSavedMcpIntegrations(preset.data.lmStudioMcpIntegrations);
+    const mcpSuffix = mcpCount > 0 ? `, ${mcpCount} MCP ${mcpCount === 1 ? 'integration' : 'integrations'}` : '';
+        return `${address}${tokenSuffix}${mcpSuffix}`;
+}
+
+function isPresetCurrentlyApplied(preset) {
+    if (!preset) {
+        return false;
+    }
+
+    if (preset.type !== getActiveConnectionProvider()) {
+        return false;
+    }
+
+    if (preset.type === 'openrouter') {
+        return (localStorage.getItem('openRouterApiKey') || '') === preset.data.openRouterApiKey;
+    }
+
+    if (preset.type === 'openai-compatible') {
+        return (localStorage.getItem('openAICompatibleEndpoint') || '') === preset.data.endpoint &&
+            (localStorage.getItem('openAICompatibleApiKey') || '') === preset.data.apiKey &&
+            (localStorage.getItem('openAICompatibleManualModel') || '') === preset.data.manualModel;
+    }
+
+    return (localStorage.getItem('serverIp') || '') === preset.data.serverIp &&
+        (localStorage.getItem('serverPort') || '') === preset.data.serverPort &&
+        (localStorage.getItem('lmStudioApiToken') || '') === preset.data.lmStudioApiToken &&
+        (localStorage.getItem('lmStudioMcpIntegrations') || '') === preset.data.lmStudioMcpIntegrations;
+}
+
+function showConnectionPresetNotice(message, tone = 'success') {
+    const notification = document.createElement('div');
+    notification.textContent = message;
+    notification.style.position = 'fixed';
+    notification.style.top = '1rem';
+    notification.style.right = '1rem';
+    notification.style.zIndex = '9999';
+    notification.style.maxWidth = 'min(88vw, 320px)';
+    notification.style.padding = '0.85rem 1rem';
+    notification.style.borderRadius = '14px';
+    notification.style.color = '#ffffff';
+    notification.style.background = tone === 'error' ? 'rgba(220, 38, 38, 0.96)' : 'rgba(16, 185, 129, 0.96)';
+    notification.style.boxShadow = '0 18px 40px -24px rgba(15, 23, 42, 0.85)';
+    notification.style.opacity = '0';
+    notification.style.transform = 'translateY(-8px)';
+    notification.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+    document.body.appendChild(notification);
+
+    requestAnimationFrame(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateY(0)';
+    });
+
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-8px)';
+        setTimeout(() => notification.remove(), 220);
+    }, 2400);
+}
+
+function syncConnectionPresetComposer() {
+    const activeTypeLabel = document.getElementById('settings-connection-presets-active-type');
+    const helper = document.getElementById('settings-connection-preset-helper');
+    const nameInput = document.getElementById('settings-connection-preset-name');
+    const saveLabel = document.getElementById('save-connection-preset-label');
+    const provider = getActiveConnectionProvider();
+    const providerLabel = CONNECTION_PRESET_TYPE_LABELS[provider] || 'Connection';
+
+    if (activeTypeLabel) {
+        activeTypeLabel.textContent = providerLabel;
+    }
+
+    if (helper) {
+        helper.textContent = `Save the active ${providerLabel} setup and reuse it later from this shared list.`;
+    }
+
+    if (nameInput) {
+        nameInput.placeholder = `Name this ${providerLabel} preset`;
+    }
+
+    if (saveLabel) {
+        saveLabel.textContent = `Save ${providerLabel}`;
+    }
+}
+
+function renderConnectionPresetList() {
+    syncConnectionPresetComposer();
+
+    const list = document.getElementById('settings-connection-presets-list');
+    const emptyState = document.getElementById('settings-connection-presets-empty-state');
+    if (!list || !emptyState) {
+        return;
+    }
+
+    const presets = getSavedConnectionPresets();
+    list.replaceChildren();
+
+    if (presets.length === 0) {
+        emptyState.classList.remove('hidden');
+        list.classList.add('hidden');
+        return;
+    }
+
+    emptyState.classList.add('hidden');
+    list.classList.remove('hidden');
+
+    presets.forEach(preset => {
+        const item = document.createElement('article');
+        item.className = `connection-preset-item${isPresetCurrentlyApplied(preset) ? ' is-current' : ''}`;
+
+        const header = document.createElement('div');
+        header.className = 'connection-preset-item-header';
+
+        const titleGroup = document.createElement('div');
+        const title = document.createElement('h4');
+        title.className = 'connection-preset-item-title';
+        title.textContent = preset.name;
+        titleGroup.appendChild(title);
+
+        const meta = document.createElement('div');
+        meta.className = 'connection-preset-item-meta';
+
+        const typeTag = document.createElement('span');
+        typeTag.className = 'connection-preset-item-tag';
+        typeTag.textContent = CONNECTION_PRESET_TYPE_LABELS[preset.type] || 'Connection';
+        meta.appendChild(typeTag);
+
+        if (isPresetCurrentlyApplied(preset)) {
+            const currentTag = document.createElement('span');
+            currentTag.className = 'connection-preset-item-tag connection-preset-item-tag--current';
+            currentTag.textContent = 'Current';
+            meta.appendChild(currentTag);
+        }
+
+        titleGroup.appendChild(meta);
+        header.appendChild(titleGroup);
+        item.appendChild(header);
+
+        const summary = document.createElement('p');
+        summary.className = 'connection-preset-summary';
+        summary.textContent = summarizeConnectionPreset(preset);
+        item.appendChild(summary);
+
+        const actions = document.createElement('div');
+        actions.className = 'connection-preset-actions';
+
+        const applyButton = document.createElement('button');
+        applyButton.type = 'button';
+        applyButton.className = 'connection-preset-action-btn';
+        applyButton.textContent = 'Apply';
+        applyButton.addEventListener('click', () => {
+            applySavedConnectionPreset(preset).catch(error => {
+                showConnectionPresetNotice(error?.message || 'Failed to apply preset.', 'error');
+            });
+        });
+        actions.appendChild(applyButton);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'connection-preset-action-btn connection-preset-action-btn--danger';
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', () => {
+            const deleted = deleteConnectionPreset(preset.id);
+            if (!deleted) {
+                showConnectionPresetNotice('Failed to delete preset.', 'error');
+                return;
+            }
+
+            renderConnectionPresetList();
+            showConnectionPresetNotice(`Deleted ${preset.name}.`);
+        });
+        actions.appendChild(deleteButton);
+
+        item.appendChild(actions);
+        list.appendChild(item);
+    });
+}
+
+async function applySavedConnectionPreset(preset) {
+    if (!preset || !preset.type || !preset.data) {
+        throw new Error('The selected preset is invalid.');
+    }
+
+    if (preset.type === 'local') {
+        const ipInput = document.getElementById('server-ip');
+        const portInput = document.getElementById('server-port');
+        const tokenInput = document.getElementById('lmstudio-api-token');
+
+        if (ipInput) {
+            ipInput.value = preset.data.serverIp || '';
+        }
+        if (portInput) {
+            portInput.value = preset.data.serverPort || '';
+        }
+        if (tokenInput) {
+            tokenInput.value = preset.data.lmStudioApiToken || '';
+        }
+
+        localStorage.setItem('serverIp', preset.data.serverIp || '');
+        localStorage.setItem('serverPort', preset.data.serverPort || '');
+        if (preset.data.lmStudioMcpIntegrations) {
+            localStorage.setItem('lmStudioMcpIntegrations', preset.data.lmStudioMcpIntegrations);
+        } else {
+            localStorage.removeItem('lmStudioMcpIntegrations');
+        }
+
+        setLMStudioApiToken(preset.data.lmStudioApiToken || '');
+        applyConnectionProviderSelection('local');
+        saveServerSettings();
+    } else if (preset.type === 'openrouter') {
+        setOpenRouterApiKey(preset.data.openRouterApiKey || '');
+        applyConnectionProviderSelection('openrouter');
+        await fetchAvailableModels().catch(() => []);
+    } else {
+        const endpointInput = document.getElementById('openai-compatible-endpoint');
+        const keyInput = document.getElementById('openai-compatible-api-key');
+        const modelInput = document.getElementById('openai-compatible-model-name');
+
+        if (endpointInput) {
+            endpointInput.value = preset.data.endpoint || '';
+        }
+        if (keyInput) {
+            keyInput.value = preset.data.apiKey || '';
+        }
+        if (modelInput) {
+            modelInput.value = preset.data.manualModel || '';
+        }
+
+        setOpenAICompatibleEndpoint(preset.data.endpoint || '');
+        setOpenAICompatibleApiKey(preset.data.apiKey || '');
+
+        if (preset.data.manualModel) {
+            localStorage.setItem('openAICompatibleManualModel', preset.data.manualModel);
+            localStorage.setItem('openAICompatibleSelectedModel', preset.data.manualModel);
+            window.currentLoadedModel = preset.data.manualModel;
+        } else {
+            localStorage.removeItem('openAICompatibleManualModel');
+            localStorage.removeItem('openAICompatibleSelectedModel');
+        }
+
+        applyConnectionProviderSelection('openai-compatible');
+        await fetchAvailableModels().catch(() => []);
+    }
+
+    updateConnectionStatusDisplays();
+    renderConnectionPresetList();
+    showConnectionPresetNotice(`Applied ${preset.name}.`);
+}
+
+function initializeConnectionPresetList() {
+    const saveButton = document.getElementById('save-connection-preset-btn');
+    const nameInput = document.getElementById('settings-connection-preset-name');
+    const providerButtons = [
+        document.getElementById('select-local-server'),
+        document.getElementById('select-openrouter'),
+        document.getElementById('select-openai-compatible')
+    ].filter(Boolean);
+
+    if (saveButton) {
+        saveButton.addEventListener('click', () => {
+            const presetDraft = getCurrentConnectionPresetDraft();
+            if (!hasSavableConnectionPresetData(presetDraft)) {
+                showConnectionPresetNotice(`Configure the active ${CONNECTION_PRESET_TYPE_LABELS[presetDraft.type] || 'connection'} before saving a preset.`, 'error');
+                return;
+            }
+
+            try {
+                const presetName = nameInput && nameInput.value.trim()
+                    ? nameInput.value.trim()
+                    : buildDefaultConnectionPresetName(presetDraft.type);
+                const savedPreset = saveConnectionPreset({
+                    name: presetName,
+                    type: presetDraft.type,
+                    data: presetDraft.data
+                });
+
+                if (nameInput) {
+                    nameInput.value = '';
+                }
+
+                renderConnectionPresetList();
+                showConnectionPresetNotice(`Saved ${savedPreset.name}.`);
+            } catch (error) {
+                showConnectionPresetNotice(error?.message || 'Failed to save preset.', 'error');
+            }
+        });
+    }
+
+    if (nameInput) {
+        nameInput.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                saveButton?.click();
+            }
+        });
+    }
+
+    providerButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            setTimeout(() => {
+                renderConnectionPresetList();
+            }, 0);
+        });
+    });
+
+    renderConnectionPresetList();
 }
 
 
@@ -151,6 +589,7 @@ export async function showSettingsModal() {
 
     // Refresh the connection status displays with current saved values
     updateConnectionStatusDisplays();
+    renderConnectionPresetList();
 
     // Always use mobile/tablet stepped navigation for all device types
     {
@@ -2806,6 +3245,9 @@ export function initializeSettingsModal() {
 
     // Initialize collapse connection input sub-modals (IP/Port and OpenRouter key)
     initializeConnectionInputModals();
+
+    // Initialize saved connection presets list
+    initializeConnectionPresetList();
 
     // Initialize the system prompt overlay editor
     initializeSystemPromptOverlay();

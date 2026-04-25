@@ -122,6 +122,32 @@ export const settingsModal = `
                             </button>
                         </div>
                     </div>
+
+                    <div class="connection-presets-card mt-4">
+                        <div class="connection-presets-header">
+                            <div>
+                                <p class="connection-presets-eyebrow">Saved Connection Presets</p>
+                                <h3 class="connection-presets-title">Quick Switch</h3>
+                            </div>
+                            <span id="settings-connection-presets-active-type" class="connection-preset-type-pill">Local Server</span>
+                        </div>
+                        <p id="settings-connection-preset-helper" class="connection-presets-description">Save the active connection setup and switch between providers without retyping credentials or endpoints.</p>
+
+                        <div class="connection-presets-toolbar">
+                            <input type="text" id="settings-connection-preset-name" class="connection-preset-name-input"
+                                placeholder="Name this Local Server preset" maxlength="50" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-form-type="other">
+                            <button id="save-connection-preset-btn" type="button" data-haptic="light"
+                                class="professional-button flex items-center justify-center gap-2 h-[44px] px-4">
+                                <i class="fas fa-save text-xs"></i>
+                                <span id="save-connection-preset-label">Save Current</span>
+                            </button>
+                        </div>
+
+                        <div id="settings-connection-presets-empty-state" class="connection-presets-empty-state">
+                            No saved connection presets yet.
+                        </div>
+                        <div id="settings-connection-presets-list" class="connection-presets-list hidden"></div>
+                    </div>
                 </div>
 
                 <!-- Step 2: System Prompt -->
