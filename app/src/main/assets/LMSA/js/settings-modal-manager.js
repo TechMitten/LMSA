@@ -11,6 +11,7 @@ import { interceptIpPortChanges } from './ip-port-confirmation-modal.js';
 
 // Holds a reference to the internal showStep function once the modal is initialised
 let _navigateToStep = null;
+let _currentSettingsStep = 'connection';
 let _openModelInfoAfterSettingsClose = false;
 let _openRouterKeyBeforeEditing = '';
 
@@ -41,6 +42,8 @@ function getBiometricBridge() {
  */
 export async function showSettingsModal() {
     if (!settingsModal) return;
+
+    _currentSettingsStep = 'connection';
 
     debugLog('Opening settings modal');
 
@@ -351,6 +354,7 @@ export function initializeSettingsModalNavigation() {
     function showStep(stepName, direction = null) {
         // Expose to module scope so hideSettingsModal can use it
         _navigateToStep = showStep;
+        _currentSettingsStep = stepName;
         // Get current active step
         const currentActiveStep = document.querySelector('.settings-step.active');
         const currentStepName = currentActiveStep ? currentActiveStep.getAttribute('data-step-name').toLowerCase() : '';
@@ -540,6 +544,8 @@ export function initializeSettingsModalNavigation() {
     // Handle window resize to toggle between mobile and desktop views
     window.addEventListener('resize', () => {
         const navButtons = document.getElementById('settings-navigation-buttons');
+        const activeStep = document.querySelector('#settings-modal .settings-step.active');
+        const stepToShow = activeStep?.getAttribute('data-step-name')?.toLowerCase() || _currentSettingsStep || 'connection';
         
         // Clear any conflicting inline styles on resize
         if (settingsModal && !settingsModal.classList.contains('hidden')) {
@@ -558,31 +564,12 @@ export function initializeSettingsModalNavigation() {
             }
         }
 
-        // Always use stepped navigation regardless of screen size
-        showStep('connection');
+        // Preserve the current step across viewport changes such as Android IME open/close.
+        showStep(stepToShow);
 
         // Show navigation buttons on all screen sizes
         if (navButtons) {
             navButtons.classList.remove('hidden');
-
-            // Show only connection step buttons
-            const connectionButtons = document.getElementById('connection-step-buttons');
-            const promptButtons = document.getElementById('prompt-step-buttons');
-            const optionsButtons = document.getElementById('options-step-buttons');
-            const fontButtons = document.getElementById('font-step-buttons');
-            const actionsButtons = document.getElementById('actions-step-buttons');
-
-            // Hide all button containers first
-            [promptButtons, optionsButtons, fontButtons, actionsButtons].forEach(container => {
-                if (container) {
-                    container.classList.add('hidden');
-                }
-            });
-
-            // Show connection buttons
-            if (connectionButtons) {
-                connectionButtons.classList.remove('hidden');
-            }
         }
     });
 }
@@ -612,6 +599,8 @@ function enableNavigation() {
  * Resets the modal state to ensure it opens correctly next time
  */
 function resetModalState() {
+    _currentSettingsStep = 'connection';
+
     // Get all steps
     const steps = {
         connection: document.getElementById('settings-step-connection'),

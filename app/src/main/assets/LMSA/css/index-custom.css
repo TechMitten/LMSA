@@ -2170,6 +2170,8 @@ body.light-theme #settings-modal {
 #settings-modal .modal-content {
     width: min(720px, calc(100vw - 36px)) !important;
     max-width: min(720px, calc(100vw - 36px)) !important;
+    height: min(760px, calc(100dvh - 36px)) !important;
+    min-height: min(760px, calc(100dvh - 36px)) !important;
     max-height: calc(100vh - 36px) !important;
     max-height: calc(100dvh - 36px) !important;
     padding: 0 !important;
@@ -2180,6 +2182,8 @@ body.light-theme #settings-modal {
         linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0)),
         var(--settings-surface) !important;
     border: 1px solid var(--settings-border-strong) !important;
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto auto !important;
     box-shadow:
         0 28px 70px rgba(0, 0, 0, 0.42),
         0 1px 0 rgba(255, 255, 255, 0.06) inset !important;
@@ -2299,6 +2303,7 @@ body.light-theme #settings-modal > .modal-content > .flex.flex-col {
 #settings-content-wrapper {
     flex: 1 1 auto !important;
     min-height: 0 !important;
+    height: 100% !important;
     max-height: none !important;
     padding: 18px 22px !important;
     margin: 0 !important;
@@ -2327,6 +2332,54 @@ body.light-theme #settings-modal > .modal-content > .flex.flex-col {
     display: grid !important;
     gap: 12px !important;
     padding: 0 !important;
+}
+
+/* Subtle step-to-step transition using existing classes from settings-modal-manager.js */
+#settings-modal .settings-step.active.slide-in-right,
+#settings-modal .settings-step.active.slide-in-left {
+    will-change: transform, opacity;
+    animation-duration: 170ms;
+    animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+    animation-fill-mode: both;
+}
+
+#settings-modal .settings-step.active.slide-in-right {
+    animation-name: settingsStepEnterFromRight;
+}
+
+#settings-modal .settings-step.active.slide-in-left {
+    animation-name: settingsStepEnterFromLeft;
+}
+
+@keyframes settingsStepEnterFromRight {
+    from {
+        opacity: 0;
+        transform: translate3d(16px, 0, 0);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes settingsStepEnterFromLeft {
+    from {
+        opacity: 0;
+        transform: translate3d(-16px, 0, 0);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #settings-modal .settings-step.active.slide-in-right,
+    #settings-modal .settings-step.active.slide-in-left {
+        animation: none !important;
+    }
 }
 
 #settings-step-connection.active,
@@ -2938,6 +2991,8 @@ body.light-theme .conn-modal-action-btn--cancel {
     #settings-modal .modal-content {
         width: calc(100vw - 16px) !important;
         max-width: calc(100vw - 16px) !important;
+        height: calc(100dvh - 16px) !important;
+        min-height: calc(100dvh - 16px) !important;
         max-height: calc(100vh - 16px) !important;
         max-height: calc(100dvh - 16px) !important;
         border-radius: 14px !important;
