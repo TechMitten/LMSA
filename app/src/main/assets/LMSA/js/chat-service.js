@@ -3,7 +3,7 @@ import { messagesContainer, userInput, loadedModelDisplay } from './dom-elements
 import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll, renderSmartReplies, hideSmartReplies, showSmartRepliesLoading, addWebSearchIndicator } from './ui-manager.js';
 import { openHelpModal } from './help.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
-import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOpenAICompatible, getUseOllama, getOpenRouterApiKey, getOpenAICompatibleApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations, getWebSearchEnabled } from './settings-manager.js';
+import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOpenAICompatible, getUseOllama, getOpenRouterApiKey, getOpenAICompatibleApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations, getWebSearchEnabled, getConfiguredMaxTokens } from './settings-manager.js';
 import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags, normalizeMalformedCodeFences, isAndroidWebView } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
 import { canSendCompletion, recordCompletion, canSendOpenRouterCompletion, recordOpenRouterCompletion, canUseWebSearch, recordWebSearch } from './usage-limiter.js';
@@ -534,17 +534,6 @@ function getSelectedModel() {
     return availableModels.length > 0 ? availableModels[0] : 'unknown_model';
 }
 
-/**
- * Gets the maximum tokens value from settings
- * @returns {number} - The maximum tokens value or 0 if not set
- */
-function getMaxTokens() {
-    // Try to get the value from localStorage
-    const savedMaxTokens = localStorage.getItem('maxTokens');
-    // Convert to number, use 0 if not set or invalid
-    return savedMaxTokens ? parseInt(savedMaxTokens, 10) || 0 : 0;
-}
-
 function getLocalConnectionErrorHtml() {
     if (getUseOllama()) {
         return '<div class="error-message-content">' +
@@ -969,7 +958,7 @@ function buildLmStudioMcpRequest(messages, shouldInlineChatTitle) {
         requestBody.previous_response_id = previousResponseId;
     }
 
-    const maxTokens = getMaxTokens();
+    const maxTokens = getConfiguredMaxTokens();
     if (maxTokens > 0) {
         requestBody.max_output_tokens = maxTokens;
     }
@@ -1926,7 +1915,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         }
 
         // Add max_tokens only if it's set to a valid value
-        const maxTokens = getMaxTokens();
+        const maxTokens = getConfiguredMaxTokens();
         if (maxTokens > 0) {
             requestBody.max_tokens = maxTokens;
         }
@@ -4854,7 +4843,7 @@ export async function regenerateLastResponse(isRetry = false) {
             };
 
             // Add max_tokens if set
-            const maxTokens = getMaxTokens();
+            const maxTokens = getConfiguredMaxTokens();
             if (maxTokens > 0) {
                 requestBody.max_tokens = maxTokens;
             }

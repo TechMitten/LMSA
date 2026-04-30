@@ -41,6 +41,7 @@ export function resetApp() {
             'isUserCreatedSystemPrompt',
             'savedSystemPrompts',
             'temperature',
+            'maxTokens',
             'hideThinking',
             'autoGenerateTitles',
             'serverIp',

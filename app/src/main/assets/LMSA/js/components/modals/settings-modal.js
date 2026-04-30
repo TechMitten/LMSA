@@ -130,7 +130,7 @@ export const settingsModal = `
                             </div>
                             <span id="settings-connection-presets-active-type" class="connection-preset-type-pill">Local Server</span>
                         </div>
-                        <p id="settings-connection-preset-helper" class="connection-presets-description">Save the active connection setup and switch between providers without retyping credentials or endpoints.</p>
+                        <p id="settings-connection-preset-helper" class="connection-presets-description">Save, update, and switch between connection setups without retyping credentials or endpoints.</p>
 
                         <div class="connection-presets-toolbar">
                             <div class="connection-preset-name-field">
@@ -216,6 +216,22 @@ export const settingsModal = `
                                 <i class="fas fa-lock text-red-400"></i>
                             </button>
                         </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <label for="max-tokens-input" class="block text-sm font-medium mb-2">
+                            <i class="fas fa-text-width mr-2 text-blue-400"></i>Max Output Tokens: <span id="max-tokens-value">Server Default</span></label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="max-tokens-input" min="1" step="1"
+                                class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500"
+                                placeholder="Leave blank to use server default" inputmode="numeric" autocomplete="off" data-form-type="other">
+                            <button id="clear-max-tokens-btn" type="button"
+                                class="professional-button flex items-center justify-center gap-2 px-4 h-[42px] shrink-0">
+                                <i class="fas fa-rotate-left text-xs"></i>
+                                <span>Default</span>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Applies to main chat requests. Leave blank to use the provider or model default.</p>
                     </div>
                     
                     <div class="mb-5" id="biometric-setting-container">
@@ -513,6 +529,136 @@ export const settingsModal = `
                 });
             </script>
 
+        </div>
+    </div>
+
+    <!-- Saved Preset Edit Modal -->
+    <div id="edit-connection-preset-modal"
+        class="fixed inset-0 items-center justify-center hidden modal-container"
+        style="z-index: 2300; background: rgba(0,0,0,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);"
+        role="dialog" aria-modal="true" aria-labelledby="edit-connection-preset-title">
+        <div class="connection-input-modal-box animate-modal-in" style="max-width: 460px;">
+            <div id="edit-connection-preset-accent" class="connection-input-modal-accent connection-input-modal-accent--blue"></div>
+            <div class="flex justify-between items-start mb-4 gap-3">
+                <div class="min-w-0 flex-1">
+                    <div class="connection-preset-edit-meta-row">
+                        <p class="connection-preset-edit-eyebrow">Saved Preset</p>
+                        <span id="edit-connection-preset-type-pill" class="connection-preset-type-pill">Local Server</span>
+                    </div>
+                    <h3 id="edit-connection-preset-title" class="text-lg font-bold flex items-center mt-2" style="color: var(--settings-title-color, #f1f5f9);">
+                        <i class="fas fa-pen-to-square text-blue-400 mr-2"></i>Edit Saved Preset
+                    </h3>
+                </div>
+                <button id="close-edit-connection-preset-modal" type="button" class="conn-modal-close-btn" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <p id="edit-connection-preset-helper" class="text-sm mb-4" style="color: var(--settings-help-text, #9ca3af);">
+                Update this preset without changing your current active connection.
+            </p>
+
+            <div id="edit-connection-preset-error" class="connection-preset-edit-error hidden" role="alert"></div>
+
+            <div class="mb-4">
+                <label for="edit-connection-preset-name" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Preset Name</label>
+                <input type="text" id="edit-connection-preset-name"
+                    class="connection-modal-input w-full"
+                    placeholder="Preset name" maxlength="50" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-form-type="other" style="width: 100%;">
+            </div>
+
+            <div id="edit-connection-preset-local-fields" class="connection-preset-edit-section hidden">
+                <div class="connection-preset-edit-grid mb-4">
+                    <div class="min-w-0">
+                        <label for="edit-connection-preset-local-ip" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Hostname / IP</label>
+                        <input type="text" id="edit-connection-preset-local-ip"
+                            class="connection-modal-input w-full"
+                            placeholder="e.g. 192.168.1.100" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-form-type="other" style="width: 100%;">
+                    </div>
+                    <div class="connection-preset-edit-port-column">
+                        <label for="edit-connection-preset-local-port" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Port</label>
+                        <input type="text" id="edit-connection-preset-local-port"
+                            class="connection-modal-input w-full"
+                            placeholder="1234" pattern="^[0-9]*$" inputmode="numeric" autocomplete="off" data-form-type="other" style="width: 100%;">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="edit-connection-preset-local-token" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">LM Studio API Token (optional)</label>
+                    <div class="openrouter-key-input-wrapper">
+                        <input type="password" id="edit-connection-preset-local-token"
+                            placeholder="sk-lm-xxxx:yyyy" autocomplete="off" data-form-type="other">
+                        <button type="button" id="edit-connection-preset-local-token-reveal"
+                            class="openrouter-key-reveal-btn"
+                            title="Show/hide token"
+                            data-edit-preset-secret-toggle="edit-connection-preset-local-token">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-1">
+                    <label for="edit-connection-preset-local-mcp" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">MCP Integrations JSON (optional)</label>
+                    <textarea id="edit-connection-preset-local-mcp"
+                        class="connection-modal-input connection-preset-edit-textarea w-full"
+                        placeholder='[{"name":"filesystem"}]' autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-form-type="other" style="width: 100%;"></textarea>
+                    <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);">Leave blank to remove MCP integrations from this preset.</p>
+                </div>
+            </div>
+
+            <div id="edit-connection-preset-openrouter-fields" class="connection-preset-edit-section hidden">
+                <div class="mb-1">
+                    <label for="edit-connection-preset-openrouter-key" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">OpenRouter API Key</label>
+                    <div class="openrouter-key-input-wrapper">
+                        <input type="password" id="edit-connection-preset-openrouter-key"
+                            placeholder="sk-or-v1-..." autocomplete="off" data-form-type="other">
+                        <button type="button" id="edit-connection-preset-openrouter-key-reveal"
+                            class="openrouter-key-reveal-btn"
+                            title="Show/hide API key"
+                            data-edit-preset-secret-toggle="edit-connection-preset-openrouter-key">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);"><i class="fas fa-lock mr-1"></i>Stored only inside this preset until you choose to use it.</p>
+                </div>
+            </div>
+
+            <div id="edit-connection-preset-openai-compatible-fields" class="connection-preset-edit-section hidden">
+                <div class="mb-4">
+                    <label for="edit-connection-preset-openai-endpoint" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Base URL or Chat Completions URL</label>
+                    <input type="text" id="edit-connection-preset-openai-endpoint"
+                        class="connection-modal-input w-full"
+                        placeholder="e.g. https://api.example.com/v1" autocomplete="off" data-form-type="other" style="width: 100%;">
+                </div>
+                <div class="mb-4">
+                    <label for="edit-connection-preset-openai-key" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">API Key (optional)</label>
+                    <div class="openrouter-key-input-wrapper">
+                        <input type="password" id="edit-connection-preset-openai-key"
+                            placeholder="sk-..." autocomplete="off" data-form-type="other">
+                        <button type="button" id="edit-connection-preset-openai-key-reveal"
+                            class="openrouter-key-reveal-btn"
+                            title="Show/hide API key"
+                            data-edit-preset-secret-toggle="edit-connection-preset-openai-key">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-1">
+                    <label for="edit-connection-preset-openai-model" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Manual Model Name (optional)</label>
+                    <input type="text" id="edit-connection-preset-openai-model"
+                        class="connection-modal-input w-full"
+                        placeholder="e.g. gpt-4o-mini" autocomplete="off" data-form-type="other" style="width: 100%;">
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-5">
+                <button id="cancel-edit-connection-preset-modal" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    Cancel
+                </button>
+                <button id="save-edit-connection-preset-modal" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
+                    <i class="fas fa-check mr-2"></i>Update Preset
+                </button>
+            </div>
         </div>
     </div>
 

@@ -2907,6 +2907,56 @@ body.light-theme .connection-preset-action-btn {
   }
 }
 
+.connection-preset-edit-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.connection-preset-edit-eyebrow {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(147, 197, 253, 0.82);
+}
+
+.connection-preset-edit-error {
+  margin-bottom: 0.95rem;
+  padding: 0.78rem 0.9rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(248, 113, 113, 0.34);
+  background: rgba(127, 29, 29, 0.18);
+  color: rgba(254, 202, 202, 0.96);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.connection-preset-edit-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.connection-preset-edit-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px;
+  gap: 0.75rem;
+}
+
+.connection-preset-edit-port-column {
+  min-width: 0;
+}
+
+.connection-preset-edit-textarea {
+  min-height: 120px;
+  resize: vertical;
+  font-family: "Consolas", "SFMono-Regular", "Cascadia Code", monospace;
+  line-height: 1.45;
+}
+
 @media (max-width: 480px) {
   .connection-preset-item {
     padding: 0.5rem 0.56rem;
@@ -2968,7 +3018,8 @@ body.android-webview #ip-port-input-modal,
 body.android-webview #openrouter-key-input-modal,
 body.android-webview #openai-compatible-input-modal,
 body.android-webview #lmstudio-token-input-modal,
-body.android-webview #lmstudio-mcp-input-modal {
+body.android-webview #lmstudio-mcp-input-modal,
+body.android-webview #edit-connection-preset-modal {
   background: rgba(2, 6, 23, 0.88) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -2978,7 +3029,8 @@ body.android-webview.light-theme #ip-port-input-modal,
 body.android-webview.light-theme #openrouter-key-input-modal,
 body.android-webview.light-theme #openai-compatible-input-modal,
 body.android-webview.light-theme #lmstudio-token-input-modal,
-body.android-webview.light-theme #lmstudio-mcp-input-modal {
+body.android-webview.light-theme #lmstudio-mcp-input-modal,
+body.android-webview.light-theme #edit-connection-preset-modal {
   background: rgba(15, 23, 42, 0.58) !important;
 }
 
@@ -3161,6 +3213,16 @@ body.light-theme .conn-modal-action-btn--cancel {
   border-color: rgba(203, 213, 225, 0.7);
 }
 
+body.light-theme .connection-preset-edit-eyebrow {
+  color: rgba(37, 99, 235, 0.82);
+}
+
+body.light-theme .connection-preset-edit-error {
+  border-color: rgba(239, 68, 68, 0.24);
+  background: rgba(254, 226, 226, 0.88);
+  color: rgba(153, 27, 27, 0.92);
+}
+
 /* OpenRouter key input wrapper with reveal button */
 .openrouter-key-input-wrapper {
   display: flex;
@@ -3215,6 +3277,10 @@ body.light-theme .openrouter-key-input-wrapper input {
     border-radius: 1rem;
     max-width: 96vw;
     max-height: calc(100% - 16px);
+  }
+
+  .connection-preset-edit-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   /* Increase button sizes slightly for easier tapping on mobile */

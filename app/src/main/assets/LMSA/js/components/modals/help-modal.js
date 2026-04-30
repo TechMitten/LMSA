@@ -66,6 +66,11 @@ export const helpModal = `
                                         <i class="fas fa-cloud mr-2 text-sm"></i>
                                         <span>OpenRouter Setup</span>
                                     </a>
+                                    <a href="#section-max-output-tokens"
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
+                                        <i class="fas fa-text-width mr-2 text-sm"></i>
+                                        <span>Max Output Tokens</span>
+                                    </a>
                                     <a href="#section-offline-use"
                                         class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-server mr-2 text-sm"></i>
@@ -483,6 +488,76 @@ export const helpModal = `
                                     <li><strong>Switching back to local</strong> — simply turn the OpenRouter
                                         toggle off in Settings to return to LM Studio or Ollama mode</li>
                                 </ul>
+                            </div>
+                        </section>
+
+                        <section id="section-max-output-tokens">
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa;"><i
+                                    class="fas fa-text-width mr-2"></i>Max Output Tokens</h3>
+                            <p style="color: var(--text-primary); margin-bottom: 1rem;">
+                                LMSA includes a <strong>Max Output Tokens</strong> setting in <strong>Settings &gt; Options</strong>.
+                                It gives you a simple way to cap how long the model is allowed to keep generating during normal chat.
+                            </p>
+
+                            <div class="space-y-4">
+                                <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                    <p class="font-medium flex items-center" style="color: #22c55e;"><i
+                                            class="fas fa-sliders-h mr-2"></i>How to Use It</p>
+                                    <ul class="list-disc pl-5 mt-2 space-y-1"
+                                        style="color: var(--text-primary); font-size: 0.9em;">
+                                        <li>Open <strong>Settings</strong>, go to <strong>Options</strong>, and find <strong>Max Output Tokens</strong>.</li>
+                                        <li>Enter a whole number greater than <strong>0</strong> to set a hard ceiling for the model's reply length.</li>
+                                        <li>Tap <strong>Default</strong>, or leave the field blank, to remove LMSA's override and let the active provider decide.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                    <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                            class="fas fa-network-wired mr-2"></i>Where It Applies</p>
+                                    <ul class="list-disc pl-5 mt-2 space-y-1"
+                                        style="color: var(--text-primary); font-size: 0.9em;">
+                                        <li><strong>Local Server</strong>: affects normal chat requests, including LM Studio native MCP chat.</li>
+                                        <li><strong>OpenRouter</strong>: affects main chat requests sent through OpenRouter.</li>
+                                        <li><strong>Custom Endpoint</strong>: affects main chat requests sent to your OpenAI-compatible endpoint.</li>
+                                        <li>It is mainly for your regular chat replies and regeneration requests.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: #60a5fa;">
+                                    <p class="font-medium flex items-center" style="color: #60a5fa;"><i
+                                            class="fas fa-info-circle mr-2"></i>What "Default" Means</p>
+                                    <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                        <strong>Default</strong> does not mean LMSA uses one fixed fallback number.
+                                        It means LMSA stops sending its own max-token cap for normal chat.
+                                    </p>
+                                    <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                        On <strong>OpenRouter</strong> or a <strong>Custom Endpoint</strong>, the real limit then depends on that provider, server, and model.
+                                        On local chat, the local server or model decides unless that API path has its own separate native rules.
+                                    </p>
+                                </div>
+
+                                <div class="p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: #a78bfa;">
+                                    <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                            class="fas fa-lightbulb mr-2"></i>When This Setting Is Useful</p>
+                                    <ul class="list-disc pl-5 mt-2 space-y-1"
+                                        style="color: var(--text-primary); font-size: 0.9em;">
+                                        <li>Lower it if replies are too long, too slow, or too expensive on cloud models.</li>
+                                        <li>Raise it if answers keep cutting off before they finish.</li>
+                                        <li>Use <strong>Default</strong> if you switch models often and want each provider to manage its own normal behavior.</li>
+                                        <li>Reasoning-heavy models usually need a larger token budget than simple chat models.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: #ef4444;">
+                                    <p class="font-medium flex items-center" style="color: #ef4444;"><i
+                                            class="fas fa-exclamation-circle mr-2"></i>Good to Know</p>
+                                    <ul class="list-disc pl-5 mt-2 space-y-1"
+                                        style="color: var(--text-primary); font-size: 0.9em;">
+                                        <li>This setting does <strong>not</strong> change the separate hardcoded token budgets used by <strong>Smart Reply</strong>.</li>
+                                        <li>It also does <strong>not</strong> change the separate hardcoded token budgets used by <strong>template generation</strong> tools.</li>
+                                        <li>LM Studio native MCP requests may still use other native parameters, such as a separate context-length value.</li>
+                                    </ul>
+                                </div>
                             </div>
                         </section>
 

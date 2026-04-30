@@ -48,6 +48,7 @@ const DEFAULT_SYSTEM_PROMPT = "";
 let systemPrompt = DEFAULT_SYSTEM_PROMPT;
 let isUserCreatedSystemPrompt = false; // Flag to track if the system prompt was created by the user
 let temperature = 0.3;
+let maxTokens = 0;
 let hideThinking = false;
 let autoGenerateTitles = false;
 let autoSmartReply = false;
@@ -73,6 +74,33 @@ let requireBiometric = false; // Require biometric unlock on app start
 let webSearchEnabled = false;
 
 const ALLOWED_CHAT_FONT_SIZES = ['12px', '14px', '16px', '20px', '24px'];
+
+function parseStoredMaxTokens(rawValue) {
+  if (typeof rawValue !== "string" || rawValue.trim() === "") {
+    return 0;
+  }
+
+  if (!/^\d+$/.test(rawValue.trim())) {
+    return 0;
+  }
+
+  const parsedValue = parseInt(rawValue, 10);
+  return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 0;
+}
+
+function updateMaxTokensUI(maxTokensInput, maxTokensValue) {
+  const effectiveInput = maxTokensInput || document.getElementById("max-tokens-input");
+  const effectiveValue = maxTokensValue || document.getElementById("max-tokens-value");
+  const hasCustomValue = Number.isInteger(maxTokens) && maxTokens > 0;
+
+  if (effectiveInput) {
+    effectiveInput.value = hasCustomValue ? String(maxTokens) : "";
+  }
+
+  if (effectiveValue) {
+    effectiveValue.textContent = hasCustomValue ? String(maxTokens) : "Server Default";
+  }
+}
 
 /**
  * Initializes temperature settings
@@ -240,6 +268,73 @@ export function initializeTemperature() {
       temperatureInput.offsetHeight;
     }, 50); // Longer delay to ensure DOM is fully ready
   }
+}
+
+export function loadMaxTokensSetting() {
+  const maxTokensInput = document.getElementById("max-tokens-input");
+  const maxTokensValue = document.getElementById("max-tokens-value");
+  const clearMaxTokensButton = document.getElementById("clear-max-tokens-btn");
+
+  if (!maxTokensInput || !maxTokensValue) {
+    return;
+  }
+
+  const savedMaxTokens = localStorage.getItem("maxTokens");
+  maxTokens = parseStoredMaxTokens(savedMaxTokens);
+
+  if (savedMaxTokens !== null && maxTokens === 0) {
+    localStorage.removeItem("maxTokens");
+  }
+
+  updateMaxTokensUI(maxTokensInput, maxTokensValue);
+
+  if (maxTokensInput.dataset.maxTokensListenerAttached !== "true") {
+    maxTokensInput.addEventListener("input", saveMaxTokensSetting);
+    maxTokensInput.addEventListener("change", saveMaxTokensSetting);
+    maxTokensInput.dataset.maxTokensListenerAttached = "true";
+  }
+
+  if (clearMaxTokensButton && clearMaxTokensButton.dataset.maxTokensClearListenerAttached !== "true") {
+    clearMaxTokensButton.addEventListener("click", () => {
+      maxTokens = 0;
+      localStorage.removeItem("maxTokens");
+      updateMaxTokensUI(maxTokensInput, maxTokensValue);
+    });
+    clearMaxTokensButton.dataset.maxTokensClearListenerAttached = "true";
+  }
+}
+
+export function saveMaxTokensSetting() {
+  const maxTokensInput = document.getElementById("max-tokens-input");
+  const maxTokensValue = document.getElementById("max-tokens-value");
+
+  if (!maxTokensInput) {
+    return;
+  }
+
+  const rawValue = maxTokensInput.value.trim();
+
+  if (rawValue === "") {
+    maxTokens = 0;
+    localStorage.removeItem("maxTokens");
+    updateMaxTokensUI(maxTokensInput, maxTokensValue);
+    return;
+  }
+
+  const parsedValue = parseStoredMaxTokens(rawValue);
+
+  if (parsedValue === 0) {
+    updateMaxTokensUI(maxTokensInput, maxTokensValue);
+    return;
+  }
+
+  maxTokens = parsedValue;
+  localStorage.setItem("maxTokens", String(maxTokens));
+  updateMaxTokensUI(maxTokensInput, maxTokensValue);
+}
+
+export function getConfiguredMaxTokens() {
+  return maxTokens;
 }
 
 /**
@@ -2078,6 +2173,7 @@ export function getChatFontSize() {
 export function loadSettings() {
   initializeSystemPrompt();
   initializeTemperature();
+  loadMaxTokensSetting();
   loadHideThinkingSetting();
   loadAutoGenerateTitlesSetting();
   loadWebSearchSetting();

@@ -2626,13 +2626,18 @@ body.light-theme #settings-step-connection.active > .connection-settings-panel {
 }
 
 #settings-modal .connection-type-btn {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: center !important;
     min-height: 88px !important;
-    padding: 13px 10px !important;
+    padding: 13px 10px 12px !important;
     border-radius: var(--settings-radius) !important;
     border: 1px solid var(--settings-border-quiet) !important;
     background: var(--settings-surface-raised) !important;
     box-shadow: none !important;
-    gap: 9px !important;
+    gap: 10px !important;
 }
 
 #settings-modal .connection-type-btn.active,
@@ -2652,6 +2657,7 @@ body.light-theme #settings-step-connection.active > .connection-settings-panel {
 #settings-modal .connection-type-icon {
     width: 38px !important;
     height: 38px !important;
+    margin: 0 !important;
     border-radius: var(--settings-radius) !important;
     background: var(--settings-surface-subtle) !important;
     color: var(--settings-text-muted) !important;
@@ -2665,6 +2671,11 @@ body.light-theme #settings-step-connection.active > .connection-settings-panel {
 }
 
 #settings-modal .connection-type-name {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    min-height: 2.5em !important;
+    max-width: 100% !important;
     padding: 0 !important;
     color: var(--settings-text) !important;
     font-size: 0.82rem !important;
@@ -3111,8 +3122,9 @@ body.light-theme .conn-modal-action-btn--cancel {
     }
 
     #settings-modal .connection-type-btn {
-        min-height: 76px !important;
+        min-height: 82px !important;
         padding: 10px 6px !important;
+        gap: 8px !important;
     }
 
     #settings-modal .connection-type-icon {
@@ -3122,6 +3134,7 @@ body.light-theme .conn-modal-action-btn--cancel {
 
     #settings-modal .connection-type-name {
         font-size: 0.76rem !important;
+        min-height: 2.45em !important;
     }
 
     #settings-modal .connection-status-row {
@@ -3380,6 +3393,11 @@ body.light-theme .conn-modal-action-btn--cancel {
     letter-spacing: -0.01em !important;
     max-width: 26ch;
     font-weight: 500 !important;
+}
+
+#welcome-message .welcome-title-block .welcome-subtitle {
+    max-width: none;
+    white-space: nowrap;
 }
 
 #welcome-message .welcome-actions {
