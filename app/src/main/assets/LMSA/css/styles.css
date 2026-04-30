@@ -8462,15 +8462,18 @@ body.modal-open {
         align-items: center;
         transition: all 0.2s ease;
         border: 1px solid transparent;
+            color: var(--text-primary);
     }
 
     #help-modal .toc-link:hover {
         transform: translateX(4px);
         border-color: var(--border-color);
+            color: var(--text-primary);
     }
 
     #help-modal .toc-link:active {
         transform: scale(0.98);
+            color: var(--text-primary);
     }
 
     #help-modal .toc-link i {
@@ -8480,15 +8483,15 @@ body.modal-open {
         text-align: center;
     }
 
-    #help-modal .toc-group-setup .toc-link {
+        #help-modal .toc-group-setup .toc-link i {
         color: #f59e0b;
     }
 
-    #help-modal .toc-group-privacy .toc-link {
+        #help-modal .toc-group-privacy .toc-link i {
         color: #60a5fa;
     }
 
-    #help-modal .toc-group-management .toc-link {
+        #help-modal .toc-group-management .toc-link i {
         color: #22c55e;
     }
 
