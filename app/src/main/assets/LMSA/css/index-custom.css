@@ -137,6 +137,37 @@ body.light-theme header::before {
     background: rgba(255, 255, 255, 0.03);
 }
 
+/* Provider-specific icon accents (fallback when utility classes are unavailable) */
+#setup-local-btn .provider-icon-wrapper {
+    background: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+}
+
+#setup-openrouter-btn .provider-icon-wrapper {
+    background: rgba(168, 85, 247, 0.12);
+    color: #c084fc;
+}
+
+#setup-custom-btn .provider-icon-wrapper {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+}
+
+body.light-theme #setup-local-btn .provider-icon-wrapper {
+    background: rgba(59, 130, 246, 0.14);
+    color: #2563eb;
+}
+
+body.light-theme #setup-openrouter-btn .provider-icon-wrapper {
+    background: rgba(168, 85, 247, 0.14);
+    color: #9333ea;
+}
+
+body.light-theme #setup-custom-btn .provider-icon-wrapper {
+    background: rgba(16, 185, 129, 0.14);
+    color: #059669;
+}
+
 .welcome-content {
     background: rgba(15, 23, 42, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.08);
