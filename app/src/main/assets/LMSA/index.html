@@ -122,56 +122,70 @@
 
                 <!-- New Chat Section -->
                 <div class="sidebar-section">
-                    <button id="new-chat" class="menu-item w-full text-left">
-                        <i class="fas fa-plus-circle"
-                            style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                        <span style="color: #f1f5f9;">New Chat</span>
+                    <button id="new-chat" class="menu-item w-full text-left flex items-center">
+                        <div class="flex items-center">
+                            <i class="fas fa-plus-circle"
+                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                            <span style="color: #f1f5f9;">New Chat</span>
+                        </div>
                     </button>
 
                     <!-- Web Search -->
-                    <button id="web-search-header-button" class="menu-item w-full text-left" title="Toggle Web Search">
-                        <span class="inline-flex items-center" style="width: 1.5rem; margin-right: 0.75rem;">
-                            <svg id="web-search-header-icon" class="w-5 h-5 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke="#60a5fa" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
-                            </svg>
-                        </span>
-                        <span style="color: #f1f5f9;">Web Search</span>
+                    <button id="web-search-header-button" class="menu-item w-full text-left flex items-center" title="Toggle Web Search">
+                        <div class="flex items-center">
+                            <span class="inline-flex items-center" style="width: 1.5rem; margin-right: 0.75rem;">
+                                <svg id="web-search-header-icon" class="w-5 h-5 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                                </svg>
+                            </span>
+                            <span style="color: #f1f5f9;">Web Search</span>
+                        </div>
                     </button>
 
                     <!-- Settings -->
-                    <button id="settings-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-cog"
-                            style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                        <span style="color: #f1f5f9;">Settings</span>
+                    <button id="settings-btn" class="menu-item w-full text-left flex items-center">
+                        <div class="flex items-center">
+                            <i class="fas fa-cog"
+                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                            <span style="color: #f1f5f9;">Settings</span>
+                        </div>
                     </button>
 
                     <!-- Model Settings -->
-                    <button id="model-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-robot"
-                            style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                        <span style="color: #f1f5f9;">Models</span>
+                    <button id="model-btn" class="menu-item w-full text-left flex items-center">
+                        <div class="flex items-center">
+                            <i class="fas fa-robot"
+                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                            <span style="color: #f1f5f9;">Models</span>
+                        </div>
                     </button>
 
                     <!-- Templates Button -->
-                    <button id="templates-btn" class="menu-item w-full text-left"
+                    <button id="templates-btn" class="menu-item w-full text-left flex items-center"
                         onclick="navigateToTemplates()">
-                        <i class="fas fa-th-large"
-                            style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                        <span style="color: #f1f5f9;">Templates</span>
+                        <div class="flex items-center">
+                            <i class="fas fa-th-large"
+                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                            <span style="color: #f1f5f9;">Templates</span>
+                        </div>
                     </button>
 
                     <!-- Help -->
-                    <button id="help-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-question-circle"
-                            style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                        <span style="color: #f1f5f9;">Help</span>
+                    <button id="help-btn" class="menu-item w-full text-left flex items-center">
+                        <div class="flex items-center">
+                            <i class="fas fa-question-circle"
+                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                            <span style="color: #f1f5f9;">Help</span>
+                        </div>
                     </button>
 
                     <!-- What's New -->
-                    <button id="whats-new-btn" class="menu-item w-full text-left">
-                        <i class="fas fa-wand-magic-sparkles"
-                            style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                        <span style="color: #f1f5f9;">What's New</span>
+                    <button id="whats-new-btn" class="menu-item w-full text-left flex items-center">
+                        <div class="flex items-center">
+                            <i class="fas fa-wand-magic-sparkles"
+                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                            <span style="color: #f1f5f9;">What's New</span>
+                        </div>
                     </button>
 
                     <!-- Import/Export -->
@@ -269,7 +283,7 @@
 
                 <!-- Chat History Section -->
                 <div class="sidebar-section">
-                    <div class="w-full text-left flex items-center py-2 px-3 mb-2">
+                    <div class="sidebar-section-header w-full text-left mb-2">
                         <i class="fas fa-comments w-6 mr-3 chat-history-icon"></i>
                         <span class="chat-history-title">CHAT HISTORY</span>
                     </div>

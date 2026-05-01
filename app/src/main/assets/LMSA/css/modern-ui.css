@@ -234,7 +234,7 @@ header {
 /* Sidebar Enhancements */
 #sidebar {
   background: linear-gradient(180deg, var(--modern-bg-primary) 0%, var(--modern-bg-secondary) 100%);
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: var(--modern-shadow-lg);
 }
 
@@ -248,8 +248,8 @@ body.light-theme #sidebar {
 /* Additional sidebar element light theme overrides */
 body.light-theme #sidebar {
   background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
-  border-right: 1px solid rgba(0, 0, 0, 0.1) !important;
-  box-shadow: 2px 0 15px rgba(0, 0, 0, 0.08) !important;
+  border-left: 1px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: -2px 0 15px rgba(0, 0, 0, 0.08) !important;
   color: #0f172a !important;
 }
 
@@ -343,32 +343,75 @@ body.light-theme .section-header:hover {
   background-color: rgba(59, 130, 246, 0.08);
 }
 
-.menu-item {
-  border-radius: 0.5rem;
-  margin: 0.25rem 0.5rem;
-  padding: 0.75rem 1rem;
+/* Sidebar Menu Items */
+#sidebar .menu-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    margin: 0.25rem 0.6rem !important;
+    padding: 0.75rem 0.4rem !important;
+    border-radius: 0.75rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    text-decoration: none !important;
+    width: calc(100% - 1.2rem) !important;
 }
 
-.menu-item:hover {
-  background-color: rgba(59, 130, 246, 0.1);
-  transform: translateX(4px);
+#sidebar .menu-item:hover {
+    background-color: rgba(59, 130, 246, 0.1);
 }
 
-body.light-theme .menu-item:hover {
-  background-color: rgba(59, 130, 246, 0.08);
+body.light-theme #sidebar .menu-item:hover {
+    background-color: rgba(59, 130, 246, 0.08);
 }
 
-body.light-theme .menu-item i {
-  color: var(--modern-light-text-secondary);
+#sidebar .menu-item:hover i {
+    color: var(--modern-accent-primary);
+    transform: scale(1.1);
 }
 
-.menu-item:hover i {
-  color: var(--modern-accent-primary);
-  transform: scale(1.1);
+#sidebar .menu-item > div.flex {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
 }
 
-body.light-theme .menu-item:hover i {
-  color: var(--modern-accent-primary);
+/* Main Sidebar Icons */
+#sidebar .menu-item > div.flex i,
+#sidebar .menu-item > div.flex .inline-flex {
+    width: 1.5rem !important;
+    margin-right: 0.75rem !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+}
+
+/* Sidebar Section Headers */
+#sidebar .sidebar-section-header,
+#sidebar .section-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 0.5rem 0.35rem !important;
+    margin: 0.7rem 0.65rem 0.45rem !important;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.5;
+    width: calc(100% - 1.3rem) !important;
+}
+
+#sidebar .sidebar-section-header i,
+#sidebar .section-header i {
+    width: 1.5rem !important;
+    margin-right: 0.75rem !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
 }
 
 /* Chat History Section Styling */

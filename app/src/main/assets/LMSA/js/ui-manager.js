@@ -306,7 +306,7 @@ function animateSidebarClosed() {
     requestAnimationFrame(() => {
         sidebar.classList.remove('active');
         sidebar.style.transition = SIDEBAR_CLOSE_TRANSITION;
-        sidebar.style.transform = `translate3d(-${sidebarWidth}px, 0, 0)`;
+        sidebar.style.transform = `translate3d(${sidebarWidth}px, 0, 0)`;
     });
 
     queueSidebarHide();

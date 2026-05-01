@@ -808,16 +808,18 @@ body.light-theme #loaded-model {
 /* Mobile-first sidebar styles */
 #sidebar {
     width: 280px;
-    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.4);
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.4);
     background-image: var(--sidebar-bg);
-    border-right: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-color);
     overflow: hidden;
     overflow-x: hidden;
     position: fixed;
     top: 0;
     bottom: 0;
+    right: 0;
+    left: auto;
     z-index: 50;
-    transform: translateX(-100%);
+    transform: translateX(100%);
     opacity: 1;
     visibility: hidden;
     display: flex;
@@ -1206,7 +1208,7 @@ body.sidebar-open.modal-keyboard-visible #sidebar.active {
 
 #sidebar .menu-item:hover {
     background: var(--sidebar-item-hover);
-    transform: translateX(4px);
+    transform: translateX(-4px);
 }
 
 #sidebar .menu-item:focus,
@@ -1417,7 +1419,7 @@ body.sidebar-open.modal-keyboard-visible #sidebar.active {
     }
 
     #sidebar:not(.active) {
-        transform: translateX(-100%);
+        transform: translateX(100%);
     }
 
     #sidebar .menu-item {
@@ -7207,7 +7209,7 @@ body.light-theme #whats-new-modal .flex.justify-between.items-center.pt-3.pb-2.m
     opacity: 0;
     transform: translateY(-10px);
     pointer-events: none;
-    margin-left: 1rem;
+    margin-left: 0.6rem;
     padding-left: 0.5rem;
     border-left: 2px solid rgba(96, 165, 250, 0.3);
     margin-bottom: 0.75rem;

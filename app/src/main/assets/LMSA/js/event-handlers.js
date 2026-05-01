@@ -3525,27 +3525,42 @@ function nudgeSidebarForExpandedGroup(groupButton, groupContainer) {
 
     const scrollContentRect = sidebarScrollContent.getBoundingClientRect();
     const buttonRect = groupButton.getBoundingClientRect();
-    const buttonTopWithinScroller = buttonRect.top - scrollContentRect.top + sidebarScrollContent.scrollTop;
-    const desiredTopPadding = 24;
-    const preferredButtonOffset = Math.max(desiredTopPadding, Math.round(sidebarScrollContent.clientHeight * 0.3));
-
-    // Keep the Premium Settings row comfortably above the newly revealed items.
-    let targetTop = sidebarScrollContent.scrollTop;
-    if (buttonTopWithinScroller > sidebarScrollContent.scrollTop + preferredButtonOffset) {
-        targetTop = buttonTopWithinScroller - preferredButtonOffset;
+    
+    // Relative position of button top within the scroll viewport
+    const buttonTopInViewport = buttonRect.top - scrollContentRect.top;
+    
+    // If the button is already above the viewport (shouldn't happen on expand)
+    if (buttonTopInViewport < 0) {
+        sidebarScrollContent.scrollBy({ top: buttonTopInViewport - 10, behavior: 'smooth' });
+        return;
     }
 
-    const expandedBottom = buttonTopWithinScroller + groupButton.offsetHeight + groupContainer.scrollHeight + 16;
-    const visibleBottom = targetTop + sidebarScrollContent.clientHeight;
-    if (expandedBottom > visibleBottom) {
-        targetTop = Math.max(targetTop, expandedBottom - sidebarScrollContent.clientHeight);
-    }
+    // Measure the full expanded height (button + revealed container + margin)
+    // We use scrollHeight for the container to get its full potential height
+    const revealedHeight = groupContainer.scrollHeight;
+    const totalExpandedHeight = groupButton.offsetHeight + revealedHeight + 16;
+    
+    // Check if the bottom of the expanded area is below the viewport
+    const bottomInViewport = buttonTopInViewport + totalExpandedHeight;
+    const viewportHeight = sidebarScrollContent.clientHeight;
 
-    const maxScrollTop = Math.max(0, sidebarScrollContent.scrollHeight - sidebarScrollContent.clientHeight);
-    sidebarScrollContent.scrollTo({
-        top: Math.min(Math.max(0, targetTop), maxScrollTop),
-        behavior: 'smooth'
-    });
+    if (bottomInViewport > viewportHeight) {
+        // We need to scroll down to show the content.
+        // Calculate the necessary scroll amount to bring the bottom into view
+        const overflow = bottomInViewport - viewportHeight;
+        
+        // Safety: Don't scroll so far that the button itself goes off the top
+        // Keep at least 12px of the button visible or 12px margin above it
+        const maxAllowedScroll = Math.max(0, buttonTopInViewport - 12);
+        const scrollAmount = Math.min(overflow, maxAllowedScroll);
+        
+        if (scrollAmount > 0) {
+            sidebarScrollContent.scrollBy({
+                top: scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+    }
 }
 
 function toggleSidebarGroupContainer(groupButtonId, containerId) {
