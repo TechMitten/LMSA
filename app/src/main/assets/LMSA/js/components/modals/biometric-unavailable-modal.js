@@ -3,6 +3,30 @@
  * Informs users that biometric authentication is not available and how to set it up
  */
 
+let biometricUnavailableHideTimer = null;
+
+function closeBiometricUnavailableModal(modal) {
+    if (!modal) {
+        return;
+    }
+
+    if (biometricUnavailableHideTimer) {
+        clearTimeout(biometricUnavailableHideTimer);
+        biometricUnavailableHideTimer = null;
+    }
+
+    modal.classList.remove('show');
+    modal.classList.add('hide');
+
+    biometricUnavailableHideTimer = setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('hide');
+        modal.classList.remove('flex');
+        biometricUnavailableHideTimer = null;
+        console.log('Biometric Unavailable Modal closed');
+    }, 400);
+}
+
 export const biometricUnavailableModal = `
     <!-- Biometric Unavailable Modal -->
     <div id="biometric-unavailable-modal"
@@ -99,9 +123,7 @@ export function initBiometricUnavailableModal() {
 
         // Function to close modal
         const closeModal = () => {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            console.log('Biometric Unavailable Modal closed');
+            closeBiometricUnavailableModal(modal);
         };
 
         // Close button handler
@@ -139,8 +161,19 @@ export function initBiometricUnavailableModal() {
 export function showBiometricUnavailableModal() {
     const modal = document.getElementById('biometric-unavailable-modal');
     if (modal) {
+        if (biometricUnavailableHideTimer) {
+            clearTimeout(biometricUnavailableHideTimer);
+            biometricUnavailableHideTimer = null;
+        }
+
         modal.classList.remove('hidden');
+        modal.classList.remove('hide');
         modal.classList.add('flex');
+
+        // Force reflow so fade-in transition starts from opacity 0.
+        void modal.offsetHeight;
+        modal.classList.add('show');
+
         console.log('Biometric Unavailable Modal shown');
     } else {
         console.error('Biometric Unavailable Modal not found');

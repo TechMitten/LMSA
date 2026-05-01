@@ -165,7 +165,7 @@
 
                         <!-- Templates Button -->
                         <button id="templates-btn" class="menu-item w-full text-left"
-                            onclick="window.location.href='templates.html'">
+                            onclick="navigateToTemplates()">
                             <i class="fas fa-th-large"
                                 style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
                             <span style="color: #f1f5f9;">Templates</span>
@@ -367,7 +367,7 @@
                                         </button>
                                         <button id="welcome-templates-btn"
                                             class="professional-button welcome-action-card flex items-center justify-center gap-2 w-full h-12"
-                                            onclick="window.location.href='templates.html'">
+                                            onclick="navigateToTemplates()">
                                             <i class="fas fa-layer-group" aria-hidden="true"></i>
                                             <span>Templates</span>
                                         </button>
@@ -1100,6 +1100,15 @@
 
     <!-- Android Interface -->
     <script src="js/android-interface.js"></script>
+    <script>
+        function navigateToTemplates() {
+            document.body.style.transition = 'opacity 0.4s ease';
+            document.body.style.opacity = '0';
+            setTimeout(function () {
+                window.location.href = 'templates.html';
+            }, 400);
+        }
+    </script>
 
 </body>
 

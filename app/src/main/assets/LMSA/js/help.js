@@ -28,6 +28,10 @@ export function openHelpModal() {
 
         // Show the help modal
         helpModal.classList.remove('hidden');
+        helpModal.classList.remove('hide');
+        // Force reflow so opacity transition runs from the initial state
+        void helpModal.offsetHeight;
+        helpModal.classList.add('show');
         resetHelpModalDemos();
 
         const modalContent = helpModal.querySelector('.modal-content');
@@ -124,6 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to close help modal
     function closeHelpModal() {
         if (helpModal && modalContent) {
+            helpModal.classList.remove('show');
+            helpModal.classList.add('hide');
             modalContent.classList.add('animate-modal-out');
             
             // Remove modal-open class from html and body
@@ -143,11 +149,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             setTimeout(() => {
                 helpModal.classList.add('hidden');
+                helpModal.classList.remove('hide');
                 modalContent.classList.remove('animate-modal-out');
 
                 // Check if welcome message should be shown
                 checkAndShowWelcomeMessage();
-            }, 300);
+            }, 400);
         }
     }
 
@@ -229,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (typeof window.openPremiumModal === 'function') {
                     setTimeout(() => {
                         window.openPremiumModal('Offline Use');
-                    }, 300);
+                    }, 400);
                 }
             }));
         }

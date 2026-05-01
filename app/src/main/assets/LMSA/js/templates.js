@@ -1267,6 +1267,11 @@ function openCreateModal(editMode = false, options = {}) {
     document.body.style.overflow = 'hidden';
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    modal.classList.remove('hide');
+
+    // Force reflow so the fade transition runs from the initial hidden state.
+    void modal.offsetHeight;
+    modal.classList.add('show');
 
     // Render Avatars Only Once or if empty
     if (document.getElementById('avatar-grid').children.length === 0) {
@@ -1303,9 +1308,7 @@ function openCreateModal(editMode = false, options = {}) {
         `;
     }
 
-    // Small delay to allow display:block to apply before opacity transition
     requestAnimationFrame(() => {
-        modal.classList.remove('opacity-0');
         modalContent.classList.remove('scale-95');
         modalContent.classList.add('scale-100');
     });
@@ -1313,12 +1316,14 @@ function openCreateModal(editMode = false, options = {}) {
 
 function closeCreateModal() {
     document.body.style.overflow = '';
-    modal.classList.add('opacity-0');
+    modal.classList.remove('show');
+    modal.classList.add('hide');
     modalContent.classList.remove('scale-100');
     modalContent.classList.add('scale-95');
     setTimeout(() => {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+        modal.classList.remove('hide');
         // Reset form
         resetTemplateForm();
         setTemplateEditorMode(BASIC_TEMPLATE_MODE, { syncFields: false });
@@ -1343,7 +1348,7 @@ function closeCreateModal() {
             <span class="material-symbols-outlined text-blue-400">add_circle</span>
             <span>New Template</span>
         `;
-    }, 300);
+    }, 400);
 }
 
 function saveNewTemplate() {

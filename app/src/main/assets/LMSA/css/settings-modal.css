@@ -25,6 +25,8 @@
   /* will-change removed - only apply during transitions */
   /* Allow touch events to propagate to scrollable children */
   touch-action: auto;
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
 /* Rich immersive background pattern with dynamic effects */
@@ -3066,6 +3068,37 @@ body.light-theme .connection-preset-action-btn {
   box-sizing: border-box;
   /* Push to top so bottom buttons don't get clipped by the keyboard */
   margin: 8px auto 0;
+}
+
+#ip-port-input-modal,
+#openrouter-key-input-modal,
+#openai-compatible-input-modal,
+#lmstudio-token-input-modal,
+#lmstudio-mcp-input-modal,
+#edit-connection-preset-modal {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+#ip-port-input-modal.show,
+#openrouter-key-input-modal.show,
+#openai-compatible-input-modal.show,
+#lmstudio-token-input-modal.show,
+#lmstudio-mcp-input-modal.show,
+#edit-connection-preset-modal.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+#ip-port-input-modal.hide,
+#openrouter-key-input-modal.hide,
+#openai-compatible-input-modal.hide,
+#lmstudio-token-input-modal.hide,
+#lmstudio-mcp-input-modal.hide,
+#edit-connection-preset-modal.hide {
+  opacity: 0;
+  pointer-events: none;
 }
 
 body.android-webview #ip-port-input-modal,

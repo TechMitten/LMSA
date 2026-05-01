@@ -60,7 +60,7 @@
         <header class="template-page-header flex items-center justify-between px-4 py-4 glass-header sticky top-0 z-30">
             <div class="flex items-center space-x-3">
                 <button type="button" class="p-2 -ml-2 rounded-full hover:bg-white/10 transition text-slate-200"
-                    onclick="window.location.href='index.html'">
+                    onclick="navigateBack()">
                     <span class="material-symbols-outlined text-2xl">arrow_back</span>
                 </button>
                 <div class="flex items-center gap-2.5">
@@ -589,6 +589,22 @@
     <input type="file" id="character-card-import-input" class="hidden" accept=".json,application/json,text/plain">
 
     <script src="js/android-interface.js"></script>
+    <script>
+        // Page fade-in on load
+        document.addEventListener('DOMContentLoaded', function () {
+            requestAnimationFrame(function () {
+                document.body.classList.add('page-visible');
+            });
+        });
+
+        // Fade-out before navigating back
+        function navigateBack() {
+            document.body.classList.remove('page-visible');
+            setTimeout(function () {
+                window.location.href = 'index.html';
+            }, 400);
+        }
+    </script>
     <script type="module">
         import { initializeHapticFeedback } from './js/haptics.js';
         initializeHapticFeedback();

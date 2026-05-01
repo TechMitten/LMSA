@@ -4019,6 +4019,22 @@ body.light-theme #clear-system-prompt-modal #close-clear-system-prompt-modal:hov
     -webkit-overflow-scrolling: touch;
 }
 
+#chat-rename-modal {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+#chat-rename-modal.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+#chat-rename-modal.hide {
+    opacity: 0;
+    pointer-events: none;
+}
+
 #chat-rename-modal.keyboard-visible {
     align-items: center !important;
     justify-content: center !important;
@@ -5867,6 +5883,22 @@ body.light-theme #whats-new-modal .modal-content {
 
 /* About modal specific styles */
 
+#about-modal {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+#about-modal.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+#about-modal.hide {
+    opacity: 0;
+    pointer-events: none;
+}
+
 #about-modal .modal-content {
     transform: translateY(20px);
     opacity: 0;
@@ -6903,6 +6935,22 @@ body.light-theme #whats-new-modal .flex.justify-between.items-center.pt-3.pb-2.m
     overflow-y: auto;
     scroll-behavior: smooth;
     touch-action: auto;
+}
+
+#help-modal {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+#help-modal.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+#help-modal.hide {
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* Help modal section headings for better visibility in both themes */
@@ -8770,6 +8818,38 @@ body.modal-open {
 
 #privacy-policy-btn:hover {
     opacity: 1 !important;
+}
+
+#privacy-policy-modal {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+#privacy-policy-modal.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+#privacy-policy-modal.hide {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#biometric-unavailable-modal {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+#biometric-unavailable-modal.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+#biometric-unavailable-modal.hide {
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* Template Indicator Banner Styles */

@@ -764,7 +764,8 @@ export async function showSettingsModal() {
 
 
 
-    // Add show class for animation
+    // Add show class for animation (force reflow first so fade-in transition fires)
+    void settingsModal.offsetHeight;
     settingsModal.classList.add('show');
 
     // Refresh the connection status displays with current saved values
@@ -1421,6 +1422,8 @@ function initializeSystemPromptOverlay() {
         return;
     }
 
+    let overlayHideTimer = null;
+
     // Ensure the overlay is hidden on initialization
     overlay.classList.add('hidden');
     overlay.style.display = 'none';
@@ -1605,6 +1608,11 @@ function initializeSystemPromptOverlay() {
             return;
         }
 
+        if (overlayHideTimer) {
+            clearTimeout(overlayHideTimer);
+            overlayHideTimer = null;
+        }
+
         // Copy content from hidden textarea to editor
         editor.value = hiddenTextarea.value || '';
 
@@ -1625,14 +1633,16 @@ function initializeSystemPromptOverlay() {
             applyOverlayKeyboardLayout(false);
         }
 
-        // Add a small delay to ensure smooth animation
-        setTimeout(() => {
+        // Force reflow so the fade starts from opacity: 0.
+        void overlay.offsetHeight;
+
+        requestAnimationFrame(() => {
+            // Add a class to indicate the overlay is active (for potential animations)
+            overlay.classList.add('active');
+
             // Focus the editor after the overlay is visible
             editor.focus();
-
-                    // Add a class to indicate the overlay is active (for potential animations)
-        overlay.classList.add('active');
-    }, 50);
+        });
 
     // Add keyboard event listener
     document.addEventListener('keydown', handleKeyDown);
@@ -1671,6 +1681,11 @@ function initializeSystemPromptOverlay() {
 
     // Function to hide the overlay
     function hideOverlay() {
+        if (overlayHideTimer) {
+            clearTimeout(overlayHideTimer);
+            overlayHideTimer = null;
+        }
+
         // Remove active class first (for animations if needed)
         overlay.classList.remove('active');
         applyOverlayKeyboardLayout(false);
@@ -1681,8 +1696,8 @@ function initializeSystemPromptOverlay() {
             overlay._keyboardCleanup = null;
         }
 
-        // Use a small timeout to allow for potential exit animations
-        setTimeout(() => {
+        // Delay hiding until fade-out animation completes.
+        overlayHideTimer = setTimeout(() => {
             overlay.classList.add('hidden');
             overlay.style.display = 'none';
 
@@ -1694,7 +1709,8 @@ function initializeSystemPromptOverlay() {
             overlay.style.left = '';
             overlay.style.right = '';
             overlay.style.bottom = '';
-        }, 50);
+            overlayHideTimer = null;
+        }, 400);
 
         // Re-enable scrolling
         document.body.style.overflow = '';
@@ -2071,11 +2087,14 @@ function clearSystemPrompt() {
     // Also hide the system prompt overlay since the user is done
     const overlay = document.getElementById('system-prompt-overlay');
     if (overlay && !overlay.classList.contains('hidden')) {
-        // Use the existing hideOverlay function if available, or hide manually
+        // Fade out first, then hide after the transition duration.
         setTimeout(() => {
-            overlay.classList.add('hidden');
-            overlay.style.display = 'none';
-            document.body.style.overflow = '';
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                overlay.style.display = 'none';
+                document.body.style.overflow = '';
+            }, 400);
         }, 100); // Small delay to let the confirmation modal close first
     }
 }
@@ -2340,8 +2359,19 @@ function initializeConnectionInputModals() {
     }
 
     function showInputModal(modal) {
+        if (modal._hideTimer) {
+            clearTimeout(modal._hideTimer);
+            modal._hideTimer = null;
+        }
+
         modal.classList.remove('hidden');
+        modal.classList.remove('hide');
         modal.style.display = 'flex';
+
+        // Force reflow so fade-in transition starts from opacity 0.
+        void modal.offsetHeight;
+        modal.classList.add('show');
+
         const box = modal.querySelector('.connection-input-modal-box');
         const shouldAnimateModalIn = !(isAndroidWebView() && modalHasTextEntryInput(modal));
         if (box) {
@@ -2370,18 +2400,32 @@ function initializeConnectionInputModals() {
     }
 
     function hideInputModal(modal) {
+        if (modal._hideTimer) {
+            clearTimeout(modal._hideTimer);
+            modal._hideTimer = null;
+        }
+
+        modal.classList.remove('show');
+        modal.classList.add('hide');
+
         const box = modal.querySelector('.connection-input-modal-box');
         if (box) {
             box.classList.remove('animate-modal-in');
             box.classList.add('animate-modal-out');
-            setTimeout(() => {
+            modal._hideTimer = setTimeout(() => {
                 modal.classList.add('hidden');
                 modal.style.display = 'none';
+                modal.classList.remove('hide');
                 box.classList.remove('animate-modal-out');
-            }, 280);
+                modal._hideTimer = null;
+            }, 400);
         } else {
-            modal.classList.add('hidden');
-            modal.style.display = 'none';
+            modal._hideTimer = setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+                modal.classList.remove('hide');
+                modal._hideTimer = null;
+            }, 400);
         }
         // Blur any focused input so the keyboard dismisses
         if (document.activeElement && document.activeElement.blur) {

@@ -377,7 +377,11 @@ export function initializeEventHandlers() {
             e.preventDefault();
             e.stopPropagation();
             runAfterPressIn(welcomeTemplatesBtn, () => {
-                window.location.href = 'templates.html';
+                if (typeof window.navigateToTemplates === 'function') {
+                    window.navigateToTemplates();
+                } else {
+                    window.location.href = 'templates.html';
+                }
             }, 110);
         }, { passive: false });
     }
@@ -966,8 +970,13 @@ export function initializeEventHandlers() {
     // Function to close privacy policy modal
     const closePrivacyPolicyModal = () => {
         if (privacyPolicyModal) {
-            privacyPolicyModal.classList.add('hidden');
-            privacyPolicyModal.style.display = 'none';
+            privacyPolicyModal.classList.remove('show');
+            privacyPolicyModal.classList.add('hide');
+
+            setTimeout(() => {
+                privacyPolicyModal.classList.add('hidden');
+                privacyPolicyModal.classList.remove('hide');
+            }, 400);
 
             // Restore body scroll
             document.body.style.overflow = '';
@@ -1004,7 +1013,10 @@ export function initializeEventHandlers() {
             const privacyPolicyContent = document.getElementById('privacy-policy-content');
             if (privacyPolicyModal) {
                 privacyPolicyModal.classList.remove('hidden');
-                privacyPolicyModal.style.display = 'flex';
+                privacyPolicyModal.classList.remove('hide');
+                // Force reflow so fade-in transition starts from opacity 0.
+                void privacyPolicyModal.offsetHeight;
+                privacyPolicyModal.classList.add('show');
 
                 // Prevent body scroll (match terms modal behavior)
                 document.body.style.overflow = 'hidden';
@@ -1480,6 +1492,10 @@ export function initializeEventHandlers() {
             const aboutModal = document.getElementById('about-modal');
             if (aboutModal) {
                 aboutModal.classList.remove('hidden');
+                aboutModal.classList.remove('hide');
+                // Force reflow so fade-in transition starts from opacity 0.
+                void aboutModal.offsetHeight;
+                aboutModal.classList.add('show');
                 const modalContent = aboutModal.querySelector('.modal-content');
                 if (modalContent) {
                     modalContent.classList.add('animate-modal-in');
@@ -2401,6 +2417,10 @@ function handleOptionsButtonClick() {
                     const aboutModal = document.getElementById('about-modal');
                     if (aboutModal) {
                         aboutModal.classList.remove('hidden');
+                        aboutModal.classList.remove('hide');
+                        // Force reflow so fade-in transition starts from opacity 0.
+                        void aboutModal.offsetHeight;
+                        aboutModal.classList.add('show');
                         const modalContent = aboutModal.querySelector('.modal-content');
                         if (modalContent) {
                             modalContent.classList.add('animate-modal-in');

@@ -333,6 +333,21 @@ body.keyboard-visible #chat-form,
 
     /* ─── Model Modal Design System ─── */
 
+    /* Fade in/out transitions for the overlay */
+    #model-modal {
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+    #model-modal.show {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+    #model-modal.hide {
+        opacity: 0;
+        pointer-events: none;
+    }
+
     /* Panel surface */
     .model-modal-panel {
         background: #0e1a2e;

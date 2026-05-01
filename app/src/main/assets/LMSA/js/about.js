@@ -59,18 +59,26 @@ if (closeAboutButton) {
     const handleClose = () => {
         if (aboutModal) {
             if (modalContent) {
+                aboutModal.classList.remove('show');
+                aboutModal.classList.add('hide');
                 modalContent.classList.add('animate-modal-out');
                 setTimeout(() => {
                     aboutModal.classList.add('hidden');
+                    aboutModal.classList.remove('hide');
                     modalContent.classList.remove('animate-modal-out');
 
                     // Check if welcome message should be shown
                     checkAndShowWelcomeMessage();
-                }, 300);
+                }, 400);
             } else {
                 // Fallback if modalContent is null
-                aboutModal.classList.add('hidden');
-                checkAndShowWelcomeMessage();
+                aboutModal.classList.remove('show');
+                aboutModal.classList.add('hide');
+                setTimeout(() => {
+                    aboutModal.classList.add('hidden');
+                    aboutModal.classList.remove('hide');
+                    checkAndShowWelcomeMessage();
+                }, 400);
             }
         }
     };
@@ -93,28 +101,27 @@ if (openHelpLink && helpModal) {
 
         // Close the about modal first
         if (aboutModal) {
-            modalContent.classList.add('animate-modal-out');
+            aboutModal.classList.remove('show');
+            aboutModal.classList.add('hide');
+
+            if (modalContent) {
+                modalContent.classList.add('animate-modal-out');
+            }
+
             setTimeout(() => {
                 aboutModal.classList.add('hidden');
-                modalContent.classList.remove('animate-modal-out');
-
-                // Then open the help modal
-                helpModal.classList.remove('hidden');
-                const helpModalContent = helpModal.querySelector('.modal-content');
-                if (helpModalContent) {
-                    helpModalContent.classList.add('animate-modal-in');
-
-                    // Reset scroll position to top
-                    const scrollableContent = helpModal.querySelector('.overflow-y-auto');
-                    if (scrollableContent) {
-                        scrollableContent.scrollTop = 0;
-                    }
-
-                    setTimeout(() => {
-                        helpModalContent.classList.remove('animate-modal-in');
-                    }, 300);
+                aboutModal.classList.remove('hide');
+                if (modalContent) {
+                    modalContent.classList.remove('animate-modal-out');
                 }
-            }, 300);
+
+                // Then open the help modal via the shared open handler.
+                if (typeof window.openHelpModal === 'function') {
+                    window.openHelpModal();
+                } else {
+                    helpModal.classList.remove('hidden');
+                }
+            }, 400);
         }
     });
 }

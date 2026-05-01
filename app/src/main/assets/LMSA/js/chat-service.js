@@ -21,6 +21,7 @@ let chatToRename = null;
 let renameModalEscapeHandler = null;
 let renameModalTouchMoveHandler = null;
 let renameModalViewportCleanup = null;
+let renameModalHideTimer = null;
 let suppressChatHistoryClickUntil = 0;
 const lmStudioThinkingCompatibilityCache = new Map();
 
@@ -4245,6 +4246,11 @@ function closeRenameChatModal() {
     const modal = document.getElementById('chat-rename-modal');
     if (!modal) return;
 
+    if (renameModalHideTimer) {
+        clearTimeout(renameModalHideTimer);
+        renameModalHideTimer = null;
+    }
+
     if (renameModalViewportCleanup) {
         renameModalViewportCleanup();
         renameModalViewportCleanup = null;
@@ -4255,9 +4261,16 @@ function closeRenameChatModal() {
         renameModalTouchMoveHandler = null;
     }
 
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+    modal.classList.remove('show');
+    modal.classList.add('hide');
     chatToRename = null;
+
+    renameModalHideTimer = setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('hide');
+        modal.classList.remove('flex');
+        renameModalHideTimer = null;
+    }, 400);
 
     if (renameModalEscapeHandler) {
         document.removeEventListener('keydown', renameModalEscapeHandler);
@@ -4413,8 +4426,17 @@ function openRenameChatModal(id, currentTitle) {
     input.value = currentTitle;
     errorText.classList.add('hidden');
 
+    if (renameModalHideTimer) {
+        clearTimeout(renameModalHideTimer);
+        renameModalHideTimer = null;
+    }
+
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    modal.classList.remove('hide');
+    // Force reflow so the fade transition starts from opacity 0.
+    void modal.offsetHeight;
+    modal.classList.add('show');
 
     if (renameModalViewportCleanup) {
         renameModalViewportCleanup();

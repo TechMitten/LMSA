@@ -1,8 +1,0 @@
-2026-05-01 02:38:32.630 [info] Starting server io.github.upstash/context7
-2026-05-01 02:38:32.631 [info] Connection state: Starting
-2026-05-01 02:38:32.631 [info] Starting server from LocalProcess extension host
-2026-05-01 02:38:32.641 [info] Connection state: Starting
-2026-05-01 02:38:32.641 [info] Connection state: Running
-2026-05-01 02:38:35.055 [warning] [server stderr] WARNING: Using default CLIENT_IP_ENCRYPTION_KEY.
-2026-05-01 02:38:36.419 [warning] [server stderr] Context7 Documentation MCP Server running on stdio
-2026-05-01 02:38:36.426 [info] Discovered 2 tools

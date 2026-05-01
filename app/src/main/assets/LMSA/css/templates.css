@@ -17,6 +17,15 @@
     --template-mobile-footer-height: 5.75rem;
 }
 
+/* Page fade transition */
+body {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+body.page-visible {
+    opacity: 1;
+}
+
 @supports (height: 100svh) {
     :root {
         --template-mobile-viewport-height: 100svh;
@@ -655,6 +664,22 @@
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
+}
+
+#create-modal {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+#create-modal.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+#create-modal.hide {
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* Mobile specific scrolling fixes */

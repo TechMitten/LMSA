@@ -108,6 +108,10 @@ export function showModelModal() {
     if (modelModal) {
         // Force showing the modal regardless of startup state
         modelModal.classList.remove('hidden');
+        modelModal.classList.remove('hide');
+        // Force reflow so the opacity: 0 base state is painted before the transition fires
+        void modelModal.offsetHeight;
+        modelModal.classList.add('show');
         const modalContent = modelModal.querySelector('.modal-content');
         if (modalContent) {
             modalContent.classList.add('animate-modal-in');
@@ -171,22 +175,25 @@ export function showModelModal() {
  */
 export function closeModelModal() {
     if (modelModal) {
+        // Fade out the overlay
+        modelModal.classList.remove('show');
+        modelModal.classList.add('hide');
+
         const modalContent = modelModal.querySelector('.modal-content');
         if (modalContent) {
             modalContent.classList.add('animate-modal-out');
-            setTimeout(() => {
-                modalContent.classList.remove('animate-modal-out');
-                modelModal.classList.add('hidden');
+        }
 
-                // Check if welcome message should be shown
-                checkAndShowWelcomeMessage();
-            }, 300);
-        } else {
+        setTimeout(() => {
+            if (modalContent) {
+                modalContent.classList.remove('animate-modal-out');
+            }
+            modelModal.classList.remove('hide');
             modelModal.classList.add('hidden');
 
             // Check if welcome message should be shown
             checkAndShowWelcomeMessage();
-        }
+        }, 400);
     }
 }
 
