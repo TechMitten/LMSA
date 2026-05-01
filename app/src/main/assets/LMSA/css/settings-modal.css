@@ -3255,9 +3255,15 @@ body.android-webview.light-theme #edit-connection-preset-modal {
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 3rem;
+  height: 3rem;
+  padding: 0 1rem;
+  box-sizing: border-box;
   border-radius: 0.75rem;
   font-weight: 600;
   font-size: 0.9375rem;
+  line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
   transition: opacity 0.2s ease, transform 0.1s ease;
   border: none;
