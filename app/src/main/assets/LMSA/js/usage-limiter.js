@@ -50,6 +50,41 @@ export function recordWebSearch() {
 }
 
 /**
+ * Returns today's free-tier usage counters and limits.
+ * Source of truth is the Android native bridge.
+ */
+export function getUsageStats() {
+    const fallback = {
+        chatCount: 0,
+        chatLimit: 15,
+        webSearchCount: 0,
+        webSearchLimit: 2
+    };
+
+    if (!window.AndroidUsageLimiter || typeof window.AndroidUsageLimiter.getUsageStats !== 'function') {
+        return fallback;
+    }
+
+    try {
+        const rawStats = window.AndroidUsageLimiter.getUsageStats();
+        if (!rawStats || typeof rawStats !== 'string') {
+            return fallback;
+        }
+
+        const parsedStats = JSON.parse(rawStats);
+        return {
+            chatCount: Number.isFinite(parsedStats.chatCount) ? parsedStats.chatCount : fallback.chatCount,
+            chatLimit: Number.isFinite(parsedStats.chatLimit) ? parsedStats.chatLimit : fallback.chatLimit,
+            webSearchCount: Number.isFinite(parsedStats.webSearchCount) ? parsedStats.webSearchCount : fallback.webSearchCount,
+            webSearchLimit: Number.isFinite(parsedStats.webSearchLimit) ? parsedStats.webSearchLimit : fallback.webSearchLimit
+        };
+    } catch (error) {
+        console.warn('Failed to parse usage stats from Android bridge:', error);
+        return fallback;
+    }
+}
+
+/**
  * Returns true if the user is allowed to send an OpenRouter completion request.
  * OpenRouter completions are not tier-limited in the app.
  */

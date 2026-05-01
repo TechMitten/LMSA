@@ -124,6 +124,11 @@ function updateUiForPremium(isPremium) {
         restorePurchasesBtn.style.display = isPremium ? 'none' : 'block';
     }
 
+    const usageStatsBtn = document.getElementById('usage-stats-btn');
+    if (usageStatsBtn) {
+        usageStatsBtn.style.display = isPremium ? 'none' : 'block';
+    }
+
     const legacyAccessBtn = document.getElementById('legacy-access-btn');
     if (legacyAccessBtn) {
         legacyAccessBtn.style.display = isPremium ? 'none' : 'block';

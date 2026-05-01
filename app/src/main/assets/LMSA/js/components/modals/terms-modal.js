@@ -14,7 +14,6 @@ export const termsModal = `
                         <p class="terms-modal-subtitle">Please accept to continue using LMSA</p>
                     </div>
                 </div>
-                <div class="terms-effective-date">Effective Date: November 7, 2025</div>
             </div>
 
             <!-- Terms Content -->

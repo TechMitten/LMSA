@@ -18,6 +18,7 @@ import { initializeSettingsModal } from './settings-modal-manager.js';
 import { initializeIpPortConfirmationModal } from './ip-port-confirmation-modal.js';
 import { initializeChatScrollbar, refreshChatScrollbar } from './chat-scrollbar.js';
 import { closePremiumModal, initPremiumModal, isPremiumModalLocked, openPremiumModal } from './components/modals/premium-modal.js';
+import { initUsageStatsModal, openUsageStatsModal } from './components/modals/usage-stats-modal.js';
 import { initSmartReplyWarningModal } from './components/modals/smart-reply-warning-modal.js';
 import { initOpenRouterWarningModal } from './components/modals/openrouter-warning-modal.js';
 import { initWebSearchWarningModal } from './components/modals/web-search-warning-modal.js';
@@ -45,6 +46,7 @@ let offlineGatePendingOverlayVisible = false;
 
 const OFFLINE_ACCESS_LOCK_REASON = 'offline-access';
 const OFFLINE_ACCESS_NOTICE_HTML = 'Only premium users can use the app offline. Free users need an active internet connection.';
+const OFFLINE_GATE_PENDING_OVERLAY_ENABLED = false;
 const OFFLINE_GATE_PENDING_OVERLAY_DELAY_MS = 420;
 const OFFLINE_GATE_PENDING_OVERLAY_FADE_MS = 220;
 
@@ -106,6 +108,10 @@ function ensureOfflineGatePendingOverlay() {
 }
 
 function shouldShowOfflineGatePendingOverlay() {
+    if (!OFFLINE_GATE_PENDING_OVERLAY_ENABLED) {
+        return false;
+    }
+
     if (isAppInitialized) {
         return false;
     }
@@ -118,8 +124,14 @@ function shouldShowOfflineGatePendingOverlay() {
 }
 
 function syncOfflineGatePendingOverlay() {
-    const overlay = ensureOfflineGatePendingOverlay();
     const shouldShow = shouldShowOfflineGatePendingOverlay();
+    const overlay = shouldShow
+        ? ensureOfflineGatePendingOverlay()
+        : document.getElementById('offline-gate-pending-overlay');
+
+    if (!overlay) {
+        return;
+    }
 
     if (shouldShow) {
         if (offlineGatePendingOverlayHideTimeout) {
@@ -723,7 +735,9 @@ export async function initializeApp() {
     initializeSettingsModal();
     initializeIpPortConfirmationModal();
     initPremiumModal();
+    initUsageStatsModal();
     window.openPremiumModal = openPremiumModal;
+    window.openUsageStatsModal = openUsageStatsModal;
     document.addEventListener('completionLimitReached', () => openPremiumModal('Chat Messages'));
     document.addEventListener('webSearchLimitReached', () => openPremiumModal('Web Search'));
     // OpenRouter is currently unmetered by app tier; keep listener for forward compatibility.

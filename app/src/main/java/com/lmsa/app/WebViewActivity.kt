@@ -1709,6 +1709,19 @@ class WebViewActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun getUsageStats(): String {
+            val completionCount = getUsageCountForToday("lmsa_completion_date", "lmsa_completion_count")
+            val webSearchCount = getUsageCountForToday("lmsa_web_search_date", "lmsa_web_search_count")
+
+            return JSONObject().apply {
+                put("chatCount", completionCount)
+                put("chatLimit", 15)
+                put("webSearchCount", webSearchCount)
+                put("webSearchLimit", 2)
+            }.toString()
+        }
+
+        @JavascriptInterface
         fun canSendOpenRouterCompletion(): Boolean {
             return true
         }

@@ -13,6 +13,7 @@ import {
 } from './dom-elements.js';
 import { showSettingsModal, hideSettingsModal } from './settings-modal-manager.js';
 import { openPremiumModal } from './components/modals/premium-modal.js';
+import { openUsageStatsModal } from './components/modals/usage-stats-modal.js';
 import {
     getEnterSendsNewline,
     clearOpenRouterApiKey,
@@ -417,6 +418,22 @@ export function initializeEventHandlers() {
                 window.restorePurchases();
             }
         });
+    }
+
+    const usageStatsBtn = document.getElementById('usage-stats-btn');
+    if (usageStatsBtn) {
+        const syncUsageStatsVisibility = () => {
+            usageStatsBtn.style.display = isPremiumUser() ? 'none' : 'block';
+        };
+
+        bindPressInFeedback(usageStatsBtn);
+        bindSidebarScrollableTap(usageStatsBtn, () => {
+            closeSidebar();
+            openUsageStatsModal();
+        });
+
+        syncUsageStatsVisibility();
+        document.addEventListener('premium-status-changed', syncUsageStatsVisibility);
     }
 
     // Welcome "Saved" button (previously used inline onclick)

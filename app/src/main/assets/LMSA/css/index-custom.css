@@ -3182,6 +3182,9 @@ body.light-theme .conn-modal-action-btn--cancel {
 /* Welcome screen polish layer */
 #welcome-message {
     padding: 18px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
     overflow: hidden;
     isolation: isolate;
     background:
@@ -3205,8 +3208,8 @@ body.light-theme .conn-modal-action-btn--cancel {
 #welcome-message .welcome-content {
     width: min(500px, calc(100% - 18px)) !important;
     max-width: none !important;
-    align-self: flex-end;
-    margin: 0 auto clamp(20px, 3.2vh, 38px) auto !important;
+    align-self: center;
+    margin: 0 auto !important;
     padding: 22px 22px 18px !important;
     border-radius: 24px !important;
     border: 1px solid rgba(71, 85, 105, 0.24) !important;
