@@ -65,6 +65,26 @@ let openAICompatibleEndpoint = ''; // Base URL or chat completions URL
 let openAICompatibleApiKey = ''; // Optional API key for custom endpoint
 let lmStudioApiToken = ''; // Optional LM Studio API token for authenticated servers
 let lmStudioMcpIntegrations = []; // Optional LM Studio native chat integrations payload
+
+/**
+ * Checks if the application has a valid connection configuration
+ * @returns {boolean}
+ */
+export function isAppConfigured() {
+  if (useOpenRouter) {
+    return !!openRouterApiKey && openRouterApiKey.trim().length > 0;
+  }
+  
+  if (useOpenAICompatible) {
+    return !!openAICompatibleEndpoint && openAICompatibleEndpoint.trim().length > 0;
+  }
+  
+  // Local server mode
+  const serverIp = localStorage.getItem('serverIp');
+  const serverPort = localStorage.getItem('serverPort');
+  return !!(serverIp && serverPort);
+}
+
 let showModelLabel = true; // Show model name on AI message bubbles
 let showChatScrollbar = false; // Show scrollbar in chat message area
 let showScrollToBottom = true; // Show scroll to bottom button in chat
@@ -2577,4 +2597,19 @@ export function loadDefaultModelSetting() {
     defaultModelId = null;
     debugLog("No default model set");
   }
+}
+/**
+ * Gets the current useOpenRouter setting
+ * @returns {boolean}
+ */
+export function getUseOpenRouter() {
+  return useOpenRouter;
+}
+
+/**
+ * Gets the current useOpenAICompatible setting
+ * @returns {boolean}
+ */
+export function getUseOpenAICompatible() {
+  return useOpenAICompatible;
 }

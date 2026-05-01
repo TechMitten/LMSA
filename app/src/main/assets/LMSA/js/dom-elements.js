@@ -208,10 +208,19 @@ export const modelLoadingMessage = document.getElementById('model-loading-messag
 export const modelLoadingName = document.getElementById('model-loading-name');
 
 // Welcome screen buttons
-export const getStartedBtn = document.getElementById('get-started-btn');
-export const welcomeModelsBtn = document.getElementById('welcome-models-btn');
-export const welcomeNewChatBtn = document.getElementById('welcome-new-chat-btn');
-export const welcomeHelpBtn = document.getElementById('welcome-help-btn');
+export const getStartedBtn = domCache.get('get-started-btn');
+export const welcomeModelsBtn = domCache.get('welcome-models-btn');
+export const welcomeTemplatesBtn = domCache.get('welcome-templates-btn');
+export const welcomeHelpBtn = domCache.get('welcome-help-btn');
+
+// Setup Dashboard elements
+export const setupDashboard = domCache.get('setup-dashboard');
+export const configuredActions = domCache.get('configured-actions');
+export const welcomeTitle = domCache.get('welcome-title');
+export const welcomeSubtitle = domCache.get('welcome-subtitle');
+export const setupLocalBtn = domCache.get('setup-local-btn');
+export const setupOpenRouterBtn = domCache.get('setup-openrouter-btn');
+export const setupCustomBtn = domCache.get('setup-custom-btn');
 
 // Saved System Prompts Elements
 export const savedPromptsButton = document.getElementById('saved-prompts-btn');

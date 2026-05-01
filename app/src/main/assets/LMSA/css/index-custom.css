@@ -100,6 +100,95 @@ body.light-theme header::before {
     animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* AI Provider Dashboard Styles */
+.provider-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(8px);
+}
+
+.provider-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.3);
+}
+
+.provider-card:active {
+    transform: translateY(0);
+}
+
+.provider-card.active {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.provider-card.active .current-provider-badge {
+    display: flex !important;
+}
+
+.provider-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.welcome-content {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.welcome-action-card {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.welcome-action-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Light theme support for provider cards */
+body.light-theme .provider-card {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .provider-card:hover {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .provider-card.active {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+body.light-theme .welcome-content {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.05);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .provider-card h3 {
+    color: #1e293b !important;
+}
+
+body.light-theme .welcome-header h1 {
+    color: #0f172a !important;
+}
+
+body.light-theme .welcome-action-card span {
+    color: #334155 !important;
+}
+
+/* AI Provider Dashboard Styles End */
+
 /* Custom styling for context menus */
 #context-menu,
 #send-context-menu {

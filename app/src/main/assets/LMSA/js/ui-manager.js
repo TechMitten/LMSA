@@ -2,10 +2,12 @@
 import {
     messagesContainer, welcomeMessage, sidebar, settingsModal,
     loadingIndicator, sendButton, stopButton, loadedModelDisplay,
-    smartRepliesContainer, userInput
+    smartRepliesContainer, userInput,
+    setupDashboard, configuredActions, welcomeTitle, welcomeSubtitle,
+    setupLocalBtn, setupOpenRouterBtn, setupCustomBtn
 } from './dom-elements.js';
 import { basicSanitizeInput, sanitizeInput, initializeCodeMirror, scrollToBottom, copyToClipboard, debugLog, debugError, processCodeBlocks, decodeHtmlEntities, htmlToFormattedText, getReasoningStreamState, normalizeReasoningTags, stripReasoningSections } from './utils.js';
-import { getHideThinking, getShowModelLabel, getWebSearchEnabled } from './settings-manager.js';
+import { getHideThinking, getShowModelLabel, getWebSearchEnabled, isAppConfigured, getUseOpenRouter, getUseOpenAICompatible } from './settings-manager.js';
 import { domBatcher, rafThrottle } from './optimized-utils.js';
 
 
@@ -134,6 +136,32 @@ export function showWelcomeMessage() {
             welcomeMessage.style.visibility = 'visible';
             welcomeMessage.style.pointerEvents = 'auto';
             welcomeMessage.style.opacity = '1';
+
+            // Toggle between setup dashboard and configured actions
+            const isConfigured = isAppConfigured();
+            if (setupDashboard && configuredActions) {
+                if (isConfigured) {
+                    setupDashboard.classList.remove('grid');
+                    setupDashboard.classList.add('flex', 'justify-center', 'gap-4', 'scale-90', 'opacity-80');
+                    configuredActions.classList.remove('hidden');
+                    if (welcomeTitle) welcomeTitle.textContent = 'Welcome to LMSA';
+                    if (welcomeSubtitle) welcomeSubtitle.textContent = 'Your AI workspace is ready';
+                } else {
+                    setupDashboard.classList.add('grid');
+                    setupDashboard.classList.remove('flex', 'justify-center', 'gap-4', 'scale-90', 'opacity-80');
+                    configuredActions.classList.add('hidden');
+                    if (welcomeTitle) welcomeTitle.textContent = 'Choose Your AI Provider';
+                    if (welcomeSubtitle) welcomeSubtitle.textContent = 'Select a connection method to start chatting';
+                }
+            }
+
+            // Update active provider indicator on cards
+            const useOpenRouter = getUseOpenRouter();
+            const useOpenAICompatible = getUseOpenAICompatible();
+            
+            if (setupLocalBtn) setupLocalBtn.classList.toggle('active', !useOpenRouter && !useOpenAICompatible);
+            if (setupOpenRouterBtn) setupOpenRouterBtn.classList.toggle('active', useOpenRouter);
+            if (setupCustomBtn) setupCustomBtn.classList.toggle('active', useOpenAICompatible);
         }
         if (messagesContainer) {
             messagesContainer.style.opacity = '0';
