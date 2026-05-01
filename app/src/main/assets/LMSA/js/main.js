@@ -45,8 +45,8 @@ let offlineGatePendingOverlayVisible = false;
 
 const OFFLINE_ACCESS_LOCK_REASON = 'offline-access';
 const OFFLINE_ACCESS_NOTICE_HTML = 'Only premium users can use the app offline. Free users need an active internet connection.';
-const OFFLINE_GATE_PENDING_OVERLAY_ENABLED = false;
-const OFFLINE_GATE_PENDING_OVERLAY_DELAY_MS = 420;
+const OFFLINE_GATE_PENDING_OVERLAY_ENABLED = true;
+const OFFLINE_GATE_PENDING_OVERLAY_DELAY_MS = 0;
 const OFFLINE_GATE_PENDING_OVERLAY_FADE_MS = 220;
 
 function ensureOfflineGatePendingOverlay() {

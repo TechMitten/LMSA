@@ -41,6 +41,11 @@ export const helpModal = `
                                 </summary>
                                 <div class="mt-2 pl-2 space-y-1"
                                     style="border-left: 1px solid rgba(255, 255, 255, 0.12);">
+                                     <a href="#section-app-setup"
+                                         class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
+                                         <i class="fas fa-wand-magic-sparkles mr-2 text-sm"></i>
+                                         <span>New UI & Setup</span>
+                                     </a>
                                      <a href="#section-quick-start"
                                          class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                          <i class="fas fa-rocket mr-2 text-sm"></i>
@@ -153,6 +158,25 @@ export const helpModal = `
                     </div>
 
                     <div class="space-y-4">
+                        <section id="section-app-setup" class="mb-8">
+                            <h3 class="text-lg font-semibold mb-3 flex items-center" style="color: #6366f1;">
+                                <i class="fas fa-wand-magic-sparkles mr-2"></i>New UI & Setup
+                            </h3>
+                            <div class="p-4 rounded-xl border border-indigo-500/30 bg-indigo-500/5 shadow-sm">
+                                <p class="mb-3" style="color: var(--text-primary);">
+                                    We've streamlined the interface to make it easier to use:
+                                </p>
+                                <ul class="list-disc pl-5 mb-4 space-y-2" style="color: var(--text-primary); font-size: 0.95em;">
+                                    <li><strong>The Side Menu</strong> now houses the <i class="fas fa-globe text-emerald-500 mx-1"></i> <strong>Web Search</strong> toggle and <i class="fas fa-plus text-blue-400 mx-1"></i> <strong>New Chat</strong> button.</li>
+                                    <li><strong>Initial Setup</strong>: Upon loading the app, you will be asked to choose your AI provider (Local Server, OpenRouter, etc.).</li>
+                                    <li><strong>Configuration</strong>: After selecting a provider, you'll confirm your server or API settings. Tap <strong>Apply</strong> and you're ready to start chatting!</li>
+                                </ul>
+                                <p class="text-xs italic opacity-80" style="color: var(--text-muted);">
+                                    Hint: You can change providers anytime by opening the Side Menu and tapping the provider name at the bottom.
+                                </p>
+                            </div>
+                        </section>
+
                         <section id="section-quick-start">
                             <h3 class="text-lg font-semibold mb-2 flex items-center"
                                 style="color: #f59e0b;"><i class="fas fa-rocket mr-2"></i>LM Studio Setup
@@ -912,7 +936,7 @@ export const helpModal = `
                                 <p class="font-medium flex items-center" style="color: #10b981;"><i
                                         class="fas fa-power-off mr-2"></i>How to Enable:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
-                                    <li>Tap the <strong>Globe icon</strong> in the top header next to the new chat button.</li>
+                                    <li>Open the <strong>Side Menu</strong> and tap the <strong>Globe icon</strong>.</li>
                                     <li>Alternatively, open <strong>Settings</strong> and toggle on <strong>Enable Web Search</strong>.</li>
                                     <li>When enabled, the Globe icon will turn <strong>emerald green</strong>.</li>
                                     <li>For privacy and security, this feature is <strong>ephemeral</strong> and will automatically turn off when you close or restart the app.</li>
