@@ -1306,9 +1306,27 @@ export async function loadModel(modelId) {
 
         console.log(`Attempting to load model: ${modelId}`);
 
+        // ── Skip reload if the model is already loaded ───────────────────────
+        // Reloading via API strips any custom settings (e.g. "Enable Thinking"
+        // for Qwen3) that the user configured in the LM Studio UI.  If LM
+        // Studio already has this model loaded we just adopt it as-is.
+        const currentlyLoaded = window.currentLoadedModel;
+        if (currentlyLoaded && currentlyLoaded === modelId) {
+            console.log(`Model "${modelId}" is already loaded — skipping reload to preserve LM Studio settings (e.g. thinking mode).`);
+            availableModels = [modelId];
+            setPersistedLocalSelectedModel(modelId);
+            updateLoadedModelDisplay(modelId);
+            try {
+                const { updateFileUploadCapabilities } = await import('./file-upload.js');
+                await updateFileUploadCapabilities();
+            } catch (error) {
+                console.error('Failed to update file upload capabilities:', error);
+            }
+            return true;
+        }
+
         // ── Unload the currently loaded model before loading a new one ──────
         // This is required for LM Studio to actually switch models.
-        const currentlyLoaded = window.currentLoadedModel;
         if (currentlyLoaded && currentlyLoaded !== modelId) {
             console.log(`Unloading current model "${currentlyLoaded}" before loading "${modelId}"...`);
             const apiVerUnload = await detectApiVersion(ip, port);

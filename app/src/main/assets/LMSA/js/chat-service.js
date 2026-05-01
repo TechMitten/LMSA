@@ -22,6 +22,7 @@ let renameModalEscapeHandler = null;
 let renameModalTouchMoveHandler = null;
 let renameModalViewportCleanup = null;
 let suppressChatHistoryClickUntil = 0;
+const lmStudioThinkingCompatibilityCache = new Map();
 
 // Maximum number of historical web search results to include in context (legacy)
 // This is deprecated - web search results are now scoped to current turn only
@@ -33,6 +34,9 @@ const CHAT_IMAGE_STORE_KEY = 'chatImageStore';
 const CHAT_IMAGE_STORE_VERSION = 1;
 const ACTIVE_TEMPLATE_CHARACTER_CARD_KEY = 'activeTemplateCharacterCard';
 const PENDING_TEMPLATE_CHARACTER_CARD_KEY = 'pendingTemplateCharacterCard';
+const DEFAULT_LMSTUDIO_THINKING_BUDGET = 2048;
+const MIN_LMSTUDIO_THINKING_BUDGET = 256;
+const MAX_LMSTUDIO_THINKING_BUDGET = 8192;
 const IMAGE_FILE_EXTENSION_PATTERN = /\.(?:apng|avif|bmp|gif|jpe?g|png|svg|webp)$/i;
 const WEB_SEARCH_STOP_WORDS = new Set([
     'a', 'an', 'and', 'are', 'as', 'at', 'be', 'because', 'briefly', 'by', 'can', 'could', 'do', 'does',
@@ -83,6 +87,112 @@ function ensureFirstMessageInitialized() {
 
 function getHttpErrorFallback(response) {
     return `HTTP Error: ${response.status} ${response.statusText}`;
+}
+
+function isLocalLmStudioProvider() {
+    return !getUseOpenRouter() && !getUseOpenAICompatible() && !getUseOllama();
+}
+
+function getLmStudioThinkingBudget(maxTokens) {
+    if (Number.isFinite(maxTokens) && maxTokens > 0) {
+        return Math.max(MIN_LMSTUDIO_THINKING_BUDGET, Math.min(maxTokens, MAX_LMSTUDIO_THINKING_BUDGET));
+    }
+    return DEFAULT_LMSTUDIO_THINKING_BUDGET;
+}
+
+function applyReasoningOptions(requestBody) {
+    if (!requestBody || typeof requestBody !== 'object') {
+        return requestBody;
+    }
+
+    if (getUseOpenRouter()) {
+        requestBody.include_reasoning = true;
+    }
+
+    if (!isLocalLmStudioProvider()) {
+        return requestBody;
+    }
+
+    const modelId = typeof requestBody.model === 'string' ? requestBody.model : '';
+    if (modelId && lmStudioThinkingCompatibilityCache.get(modelId) === false) {
+        return requestBody;
+    }
+
+    if (!requestBody.thinking || typeof requestBody.thinking !== 'object') {
+        requestBody.thinking = {
+            type: 'enabled',
+            budget_tokens: getLmStudioThinkingBudget(Number(requestBody.max_tokens))
+        };
+    }
+
+    return requestBody;
+}
+
+function shouldRetryWithoutThinking(response, errorText) {
+    if (!response || !isLocalLmStudioProvider()) {
+        return false;
+    }
+
+    if (response.status !== 400 && response.status !== 422) {
+        return false;
+    }
+
+    const message = String(errorText || '').toLowerCase();
+    if (!message) {
+        return false;
+    }
+
+    return (
+        message.includes('thinking') ||
+        message.includes('budget_tokens') ||
+        message.includes('additional properties') ||
+        message.includes('unknown field') ||
+        message.includes('unknown parameter') ||
+        message.includes('schema')
+    );
+}
+
+async function postChatCompletionWithReasoningFallback(url, headers, requestBody, signal) {
+    const firstAttemptBody = applyReasoningOptions({ ...requestBody });
+    const firstAttemptModel = typeof firstAttemptBody.model === 'string' ? firstAttemptBody.model : '';
+    let response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(firstAttemptBody),
+        signal
+    });
+
+    if (response.ok) {
+        if (firstAttemptModel && firstAttemptBody.thinking && typeof firstAttemptBody.thinking === 'object') {
+            lmStudioThinkingCompatibilityCache.set(firstAttemptModel, true);
+        }
+        return { response, requestBody: firstAttemptBody };
+    }
+
+    if (!firstAttemptBody.thinking || typeof firstAttemptBody.thinking !== 'object') {
+        return { response, requestBody: firstAttemptBody };
+    }
+
+    const errorText = await response.clone().text().catch(() => '');
+    if (!shouldRetryWithoutThinking(response, errorText)) {
+        return { response, requestBody: firstAttemptBody };
+    }
+
+    const fallbackBody = { ...firstAttemptBody };
+    delete fallbackBody.thinking;
+    if (firstAttemptModel) {
+        lmStudioThinkingCompatibilityCache.set(firstAttemptModel, false);
+    }
+
+    debugLog(`Retrying request without LM Studio thinking payload for model: ${firstAttemptModel || 'unknown model'}`);
+    response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(fallbackBody),
+        signal
+    });
+
+    return { response, requestBody: fallbackBody };
 }
 
 async function parseApiErrorResponse(response) {
@@ -169,6 +279,41 @@ function parseOpenAiCompatibleSseLines(lines) {
     });
 
     return parsedEvents;
+}
+
+function extractReasoningDeltaText(delta) {
+    if (!delta || typeof delta !== 'object') {
+        return '';
+    }
+
+    const candidates = [
+        delta.reasoning,
+        delta.reasoning_content,
+        delta.reasoningContent,
+        delta.thinking,
+        delta.thinking_content,
+        delta.thinkingContent
+    ];
+
+    for (const value of candidates) {
+        if (typeof value === 'string' && value.length > 0) {
+            return value;
+        }
+    }
+
+    return '';
+}
+
+function extractContentDeltaText(delta) {
+    if (!delta || typeof delta !== 'object') {
+        return '';
+    }
+
+    if (typeof delta.content === 'string' && delta.content.length > 0) {
+        return delta.content;
+    }
+
+    return '';
 }
 
 function createEmptyChatImageStore() {
@@ -1918,15 +2063,13 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             stream: true,
         };
 
-        if (getUseOpenRouter()) {
-            requestBody.include_reasoning = true;
-        }
-
         // Add max_tokens only if it's set to a valid value
         const maxTokens = getConfiguredMaxTokens();
         if (maxTokens > 0) {
             requestBody.max_tokens = maxTokens;
         }
+
+        applyReasoningOptions(requestBody);
 
         console.log('Preparing to send API request...');
         console.log('Request body messages count:', requestBody.messages.length);
@@ -1974,16 +2117,12 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             const lmToken = getUseOllama() ? '' : getLMStudioApiToken();
             if (lmToken) requestHeaders['Authorization'] = `Bearer ${lmToken}`;
         }
-        const fetchPromise = fetch(apiUrl, {
-            method: 'POST',
-            headers: requestHeaders,
-            body: JSON.stringify(requestBody),
-            signal: signal
-        });
+        const fetchPromise = postChatCompletionWithReasoningFallback(apiUrl, requestHeaders, requestBody, signal);
 
         // Race between fetch and timeout
         console.log('Waiting for API response...');
-        const response = await Promise.race([fetchPromise, timeoutPromise]);
+        const fetchResult = await Promise.race([fetchPromise, timeoutPromise]);
+        const response = fetchResult.response;
         console.log('Received response, status:', response.status, response.statusText);
 
         if (!response.ok) {
@@ -2104,20 +2243,22 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                 const delta = data.choices[0].delta;
 
                                 let chunkContent = '';
-                                if (delta.reasoning) {
+                                const reasoningDeltaText = extractReasoningDeltaText(delta);
+                                if (reasoningDeltaText) {
                                     if (!isHandlingOpenRouterReasoning) {
                                         chunkContent += '<think>\n';
                                         isHandlingOpenRouterReasoning = true;
                                     }
-                                    chunkContent += delta.reasoning;
+                                    chunkContent += reasoningDeltaText;
                                 }
 
-                                if (delta.content !== undefined && delta.content !== null && delta.content !== '') {
+                                const contentDeltaText = extractContentDeltaText(delta);
+                                if (contentDeltaText) {
                                     if (isHandlingOpenRouterReasoning) {
                                         chunkContent += '\n</think>\n';
                                         isHandlingOpenRouterReasoning = false;
                                     }
-                                    chunkContent += delta.content;
+                                    chunkContent += contentDeltaText;
                                 }
 
                                 // Add content if it exists in this chunk
@@ -2288,20 +2429,22 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             if (!delta) return;
 
             let chunkContent = '';
-            if (delta.reasoning) {
+            const reasoningDeltaText = extractReasoningDeltaText(delta);
+            if (reasoningDeltaText) {
                 if (!isHandlingOpenRouterReasoning) {
                     chunkContent += '<think>\n';
                     isHandlingOpenRouterReasoning = true;
                 }
-                chunkContent += delta.reasoning;
+                chunkContent += reasoningDeltaText;
             }
 
-            if (delta.content !== undefined && delta.content !== null && delta.content !== '') {
+            const contentDeltaText = extractContentDeltaText(delta);
+            if (contentDeltaText) {
                 if (isHandlingOpenRouterReasoning) {
                     chunkContent += '\n</think>\n';
                     isHandlingOpenRouterReasoning = false;
                 }
-                chunkContent += delta.content;
+                chunkContent += contentDeltaText;
             }
 
             if (chunkContent) {
@@ -4856,6 +4999,8 @@ export async function regenerateLastResponse(isRetry = false) {
                 requestBody.max_tokens = maxTokens;
             }
 
+            applyReasoningOptions(requestBody);
+
             debugLog('Regenerating with request:', requestBody);
 
             // Create decoder for handling streamed data
@@ -4898,15 +5043,11 @@ export async function regenerateLastResponse(isRetry = false) {
                     regenHeaders['Authorization'] = `Bearer ${lmToken}`;
                 }
             }
-            const fetchPromise = fetch(getApiUrl(), {
-                method: 'POST',
-                headers: regenHeaders,
-                body: JSON.stringify(requestBody),
-                signal: signal
-            });
+            const fetchPromise = postChatCompletionWithReasoningFallback(getApiUrl(), regenHeaders, requestBody, signal);
 
             // Race between fetch and timeout
-            const response = await Promise.race([fetchPromise, timeoutPromise]);
+            const fetchResult = await Promise.race([fetchPromise, timeoutPromise]);
+            const response = fetchResult.response;
 
             // Clear the initial timeout since we got a response
             if (streamingTimeoutId) {
@@ -4940,12 +5081,18 @@ export async function regenerateLastResponse(isRetry = false) {
             let isInThinkingProcess = false;
             let thinkingStartTime = null;
             let lastThinkingUiUpdateTime = 0;
+            let isHandlingOpenRouterReasoning = false;
 
             // Process the streaming response
             while (true) {
                 const { done, value } = await reader.read();
 
                 if (done) {
+                    if (isHandlingOpenRouterReasoning) {
+                        aiMessage += '\n</think>\n';
+                        isHandlingOpenRouterReasoning = false;
+                    }
+
                     // Clear chunk timeout when stream is complete
                     if (chunkTimeoutId) {
                         clearTimeout(chunkTimeoutId);
@@ -4983,8 +5130,27 @@ export async function regenerateLastResponse(isRetry = false) {
 
                                 if (data.choices && data.choices[0] && data.choices[0].delta) {
                                     const delta = data.choices[0].delta;
+                                    let chunkContent = '';
 
-                                    if (delta.content) {
+                                    const reasoningDeltaText = extractReasoningDeltaText(delta);
+                                    if (reasoningDeltaText) {
+                                        if (!isHandlingOpenRouterReasoning) {
+                                            chunkContent += '<think>\n';
+                                            isHandlingOpenRouterReasoning = true;
+                                        }
+                                        chunkContent += reasoningDeltaText;
+                                    }
+
+                                    const contentDeltaText = extractContentDeltaText(delta);
+                                    if (contentDeltaText) {
+                                        if (isHandlingOpenRouterReasoning) {
+                                            chunkContent += '\n</think>\n';
+                                            isHandlingOpenRouterReasoning = false;
+                                        }
+                                        chunkContent += contentDeltaText;
+                                    }
+
+                                    if (chunkContent) {
                                         // Create the AI message bubble on first content arrival
                                         if (!aiMessageElement) {
                                             // Hide loading indicator before showing the message
@@ -5001,7 +5167,7 @@ export async function regenerateLastResponse(isRetry = false) {
                                             }
                                         }
 
-                                        aiMessage += delta.content;
+                                        aiMessage += chunkContent;
                                         aiMessage = normalizeMalformedCodeFences(normalizeToolCallTags(aiMessage));
 
                                         // Track thinking process for progress indication (same as initial generation)
@@ -5028,7 +5194,7 @@ export async function regenerateLastResponse(isRetry = false) {
 
                                         // Check if this is a code block outside of think tags
                                         if (!hasCodeBlock &&
-                                            (delta.content.includes('```') ||
+                                            (chunkContent.includes('```') ||
                                                 aiMessage.includes('```'))) {
 
                                             // Only trigger reload for code blocks outside think tags
@@ -5148,8 +5314,31 @@ export async function regenerateLastResponse(isRetry = false) {
 
             parseOpenAiCompatibleSseLines(readCompleteSseLines(sseLineBuffer, '', true)).forEach(data => {
                 const delta = data.choices && data.choices[0] && data.choices[0].delta;
-                if (delta && delta.content) {
-                    aiMessage += delta.content;
+                if (!delta) {
+                    return;
+                }
+
+                let chunkContent = '';
+                const reasoningDeltaText = extractReasoningDeltaText(delta);
+                if (reasoningDeltaText) {
+                    if (!isHandlingOpenRouterReasoning) {
+                        chunkContent += '<think>\n';
+                        isHandlingOpenRouterReasoning = true;
+                    }
+                    chunkContent += reasoningDeltaText;
+                }
+
+                const contentDeltaText = extractContentDeltaText(delta);
+                if (contentDeltaText) {
+                    if (isHandlingOpenRouterReasoning) {
+                        chunkContent += '\n</think>\n';
+                        isHandlingOpenRouterReasoning = false;
+                    }
+                    chunkContent += contentDeltaText;
+                }
+
+                if (chunkContent) {
+                    aiMessage += chunkContent;
                     aiMessage = normalizeMalformedCodeFences(normalizeToolCallTags(aiMessage));
                 }
             });
@@ -5597,6 +5786,8 @@ async function generateSmartReplies(userMessage, aiMessage) {
             max_tokens: 500,
         };
 
+        applyReasoningOptions(requestBody);
+
         const requestHeaders = { 'Content-Type': 'application/json' };
         if (!getUseOpenRouter() && !getUseOpenAICompatible() && !getUseOllama()) {
             const lmToken = getLMStudioApiToken();
@@ -5605,11 +5796,7 @@ async function generateSmartReplies(userMessage, aiMessage) {
             }
         }
 
-        const response = await fetch(getApiUrl(), {
-            method: 'POST',
-            headers: requestHeaders,
-            body: JSON.stringify(requestBody),
-        });
+        const { response } = await postChatCompletionWithReasoningFallback(getApiUrl(), requestHeaders, requestBody);
 
         if (!response.ok) return;
 
@@ -5716,6 +5903,8 @@ async function generateSmartRepliesAPI(userMessage, contextSnippet, model) {
             max_tokens: 500,
         };
 
+        applyReasoningOptions(requestBody);
+
         smartReplyAbortController = new AbortController();
 
         const requestHeaders = { 'Content-Type': 'application/json' };
@@ -5726,12 +5915,12 @@ async function generateSmartRepliesAPI(userMessage, contextSnippet, model) {
             }
         }
 
-        const response = await fetch(getApiUrl(), {
-            method: 'POST',
-            headers: requestHeaders,
-            body: JSON.stringify(requestBody),
-            signal: smartReplyAbortController.signal
-        });
+        const { response } = await postChatCompletionWithReasoningFallback(
+            getApiUrl(),
+            requestHeaders,
+            requestBody,
+            smartReplyAbortController.signal
+        );
 
         if (!response.ok) {
             smartReplyAbortController = null;
