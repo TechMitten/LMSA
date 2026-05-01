@@ -916,11 +916,11 @@ export const settingsModal = `
                     </button>
                     <button type="button" class="professional-button justify-start px-4 h-[44px] text-left" data-mcp-template="brave">
                         <i class="fas fa-compass text-orange-300"></i>
-                        <span>Google Search (Brave)</span>
+                        <span>Web Search (Brave)</span>
                     </button>
                     <button type="button" class="professional-button justify-start px-4 h-[44px] text-left" data-mcp-template="serpapi">
                         <i class="fas fa-search text-emerald-300"></i>
-                        <span>Google Search (SerpApi)</span>
+                        <span>Web Search (SerpApi)</span>
                     </button>
                     <button type="button" class="professional-button justify-start px-4 h-[44px] text-left" data-mcp-template="playwright">
                         <i class="fas fa-globe text-blue-300"></i>

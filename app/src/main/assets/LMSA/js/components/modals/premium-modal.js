@@ -346,8 +346,11 @@ export const premiumModal = `
 let premiumModalInitialized = false;
 const OFFLINE_ACCESS_LOCK_REASON = 'offline-access';
 const OFFLINE_EXIT_COUNTDOWN_SECONDS = 10;
+const PREMIUM_MODAL_ANIMATION_MS = 200;
 let offlineExitCountdownIntervalId = null;
 let offlineExitCountdownRemainingSeconds = OFFLINE_EXIT_COUNTDOWN_SECONDS;
+let premiumModalCloseTimer = null;
+let premiumModalIsClosing = false;
 
 function getOfflineExitCountdownElement() {
     return document.getElementById('premium-offline-exit-countdown');
@@ -509,18 +512,38 @@ export function closePremiumModal(force = false) {
         return false;
     }
 
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-    modal.style.opacity = '0';
+    if (premiumModalIsClosing || modal.classList.contains('hidden')) {
+        return true;
+    }
 
-    setPremiumModalState({
-        locked: false,
-        lockReason: null,
-        hideUpgradeButton: false
-    });
-    applyPremiumModalLockState();
-    setPremiumFeatureNotice('');
-    stopOfflineExitCountdown();
+    premiumModalIsClosing = true;
+    const content = modal.querySelector('.modal-content');
+    modal.style.opacity = '0';
+    if (content) {
+        content.style.opacity = '0';
+        content.style.transform = 'translateY(10px) scale(0.985)';
+    }
+
+    if (premiumModalCloseTimer) {
+        clearTimeout(premiumModalCloseTimer);
+    }
+
+    premiumModalCloseTimer = setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+
+        setPremiumModalState({
+            locked: false,
+            lockReason: null,
+            hideUpgradeButton: false
+        });
+        applyPremiumModalLockState();
+        setPremiumFeatureNotice('');
+        stopOfflineExitCountdown();
+
+        premiumModalIsClosing = false;
+        premiumModalCloseTimer = null;
+    }, PREMIUM_MODAL_ANIMATION_MS);
 
     return true;
 }
@@ -528,6 +551,19 @@ export function closePremiumModal(force = false) {
 export function openPremiumModal(featureName, options = {}) {
     const modal = document.getElementById('premium-modal');
     if (!modal) return;
+
+    if (premiumModalCloseTimer) {
+        clearTimeout(premiumModalCloseTimer);
+        premiumModalCloseTimer = null;
+    }
+    premiumModalIsClosing = false;
+
+    const content = modal.querySelector('.modal-content');
+    modal.style.opacity = '0';
+    if (content) {
+        content.style.opacity = '0';
+        content.style.transform = 'translateY(10px) scale(0.985)';
+    }
 
     setPremiumModalState({
         locked: !!options.locked,
@@ -540,8 +576,13 @@ export function openPremiumModal(featureName, options = {}) {
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    modal.offsetHeight;
     requestAnimationFrame(() => {
         modal.style.opacity = '1';
+        if (content) {
+            content.style.opacity = '1';
+            content.style.transform = 'translateY(0) scale(1)';
+        }
     });
 }
 
@@ -562,6 +603,13 @@ export function initPremiumModal() {
     }
 
     premiumModalInitialized = true;
+
+    modal.style.transition = `opacity ${PREMIUM_MODAL_ANIMATION_MS}ms ease`;
+    const modalContent = modal.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.style.transition = `opacity ${PREMIUM_MODAL_ANIMATION_MS}ms ease, transform ${PREMIUM_MODAL_ANIMATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+    }
+
     applyPremiumModalLockState();
 
     // Close modal function

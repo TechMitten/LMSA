@@ -65,6 +65,10 @@ let hasBoundEvents = false;
 let completionResolver = null;
 let isStepTransitioning = false;
 const STEP_TRANSITION_MS = 220;
+const INTRO_MODAL_ANIMATION_MS = 220;
+
+let introModalCloseTimer = null;
+let isIntroModalClosing = false;
 
 function getIntroModalElement() {
     return document.getElementById('intro-modal');
@@ -125,7 +129,16 @@ function showIntroModal() {
     const modal = getIntroModalElement();
     if (!modal) return;
 
+    if (introModalCloseTimer) {
+        clearTimeout(introModalCloseTimer);
+        introModalCloseTimer = null;
+    }
+    isIntroModalClosing = false;
+
+    modal.classList.remove('intro-modal-closing', 'intro-modal-open');
     modal.classList.remove('hidden');
+    modal.classList.add('intro-modal-preopen');
+
     document.body.style.overflow = 'hidden';
 
     modal._touchMoveBlocker = (e) => {
@@ -134,29 +147,56 @@ function showIntroModal() {
         }
     };
     modal.addEventListener('touchmove', modal._touchMoveBlocker, { passive: false });
+
+    modal.offsetHeight;
+    requestAnimationFrame(() => {
+        modal.classList.remove('intro-modal-preopen');
+        modal.classList.add('intro-modal-open');
+    });
 }
 
 function hideIntroModal() {
     const modal = getIntroModalElement();
-    if (!modal) return;
+    if (!modal) return Promise.resolve();
 
-    if (modal._touchMoveBlocker) {
-        modal.removeEventListener('touchmove', modal._touchMoveBlocker);
-        modal._touchMoveBlocker = null;
+    if (isIntroModalClosing || modal.classList.contains('hidden')) {
+        return Promise.resolve();
     }
 
-    modal.classList.add('hidden');
-    document.body.style.overflow = '';
+    isIntroModalClosing = true;
+    modal.classList.remove('intro-modal-open', 'intro-modal-preopen');
+    modal.classList.add('intro-modal-closing');
+
+    if (introModalCloseTimer) {
+        clearTimeout(introModalCloseTimer);
+    }
+
+    return new Promise((resolve) => {
+        introModalCloseTimer = setTimeout(() => {
+            if (modal._touchMoveBlocker) {
+                modal.removeEventListener('touchmove', modal._touchMoveBlocker);
+                modal._touchMoveBlocker = null;
+            }
+
+            modal.classList.remove('intro-modal-closing', 'intro-modal-open', 'intro-modal-preopen');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+
+            introModalCloseTimer = null;
+            isIntroModalClosing = false;
+            resolve();
+        }, INTRO_MODAL_ANIMATION_MS);
+    });
 }
 
 function completeOnboardingFlow() {
     markOnboardingComplete();
-    hideIntroModal();
-
-    if (typeof completionResolver === 'function') {
-        completionResolver(true);
-        completionResolver = null;
-    }
+    hideIntroModal().finally(() => {
+        if (typeof completionResolver === 'function') {
+            completionResolver(true);
+            completionResolver = null;
+        }
+    });
 }
 
 function getStepElements() {

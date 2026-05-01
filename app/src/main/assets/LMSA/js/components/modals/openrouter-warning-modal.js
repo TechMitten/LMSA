@@ -91,6 +91,10 @@ let confirmationCallback = null;
 let cancellationCallback = null;
 // localStorage key for skipping this warning in future
 const OPENROUTER_WARNING_SKIP_KEY = 'openrouterWarningNeverShowAgain';
+const OPENROUTER_WARNING_ANIMATION_MS = 180;
+
+let openRouterCloseTimer = null;
+let openRouterIsClosing = false;
 
 /**
  * Initializes the OpenRouter Warning Modal event listeners.
@@ -110,24 +114,49 @@ export function initOpenRouterWarningModal() {
 
         console.log('Initializing OpenRouter Warning Modal...');
 
+        const content = modal.querySelector('.modal-content');
+        modal.style.transition = `opacity ${OPENROUTER_WARNING_ANIMATION_MS}ms ease`;
+        if (content) {
+            content.style.transition = `opacity ${OPENROUTER_WARNING_ANIMATION_MS}ms ease, transform ${OPENROUTER_WARNING_ANIMATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+        }
+
         const closeModal = (confirmed) => {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            if (openRouterIsClosing || modal.classList.contains('hidden')) {
+                return;
+            }
+            openRouterIsClosing = true;
 
-            if (confirmed && neverShowAgainCheckbox) {
-                localStorage.setItem(
-                    OPENROUTER_WARNING_SKIP_KEY,
-                    neverShowAgainCheckbox.checked ? 'true' : 'false'
-                );
+            modal.style.opacity = '0';
+            if (content) {
+                content.style.opacity = '0';
+                content.style.transform = 'translateY(8px) scale(0.98)';
             }
 
-            if (confirmed && confirmationCallback) {
-                confirmationCallback();
-            } else if (!confirmed && cancellationCallback) {
-                cancellationCallback();
+            if (openRouterCloseTimer) {
+                clearTimeout(openRouterCloseTimer);
             }
-            confirmationCallback = null;
-            cancellationCallback = null;
+
+            openRouterCloseTimer = setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+
+                if (confirmed && neverShowAgainCheckbox) {
+                    localStorage.setItem(
+                        OPENROUTER_WARNING_SKIP_KEY,
+                        neverShowAgainCheckbox.checked ? 'true' : 'false'
+                    );
+                }
+
+                if (confirmed && confirmationCallback) {
+                    confirmationCallback();
+                } else if (!confirmed && cancellationCallback) {
+                    cancellationCallback();
+                }
+                confirmationCallback = null;
+                cancellationCallback = null;
+                openRouterIsClosing = false;
+                openRouterCloseTimer = null;
+            }, OPENROUTER_WARNING_ANIMATION_MS);
         };
 
         if (closeButton) {
@@ -196,9 +225,31 @@ export function showOpenRouterWarningModal(onConfirm, onCancel) {
     console.log('Showing OpenRouter Warning Modal');
 
     setTimeout(() => {
+        if (openRouterCloseTimer) {
+            clearTimeout(openRouterCloseTimer);
+            openRouterCloseTimer = null;
+        }
+        openRouterIsClosing = false;
+
+        const content = modal.querySelector('.modal-content');
+
+        modal.style.opacity = '0';
+        if (content) {
+            content.style.opacity = '0';
+            content.style.transform = 'translateY(8px) scale(0.98)';
+        }
+
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         modal.offsetHeight; // force reflow
         modal.style.zIndex = '9999';
+
+        requestAnimationFrame(() => {
+            modal.style.opacity = '1';
+            if (content) {
+                content.style.opacity = '1';
+                content.style.transform = 'translateY(0) scale(1)';
+            }
+        });
     }, 50);
 }

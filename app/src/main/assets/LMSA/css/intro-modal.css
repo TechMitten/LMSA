@@ -12,6 +12,8 @@
     touch-action: none;
     overscroll-behavior: none;
     overflow: hidden;
+    opacity: 1;
+    transition: opacity 220ms ease;
 }
 
 .intro-modal.hidden {
@@ -26,6 +28,18 @@
         radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.2), transparent 55%),
         rgba(2, 6, 23, 0.75);
     backdrop-filter: blur(9px);
+    opacity: 1;
+    transition: opacity 220ms ease;
+}
+
+.intro-modal.intro-modal-preopen,
+.intro-modal.intro-modal-closing {
+    opacity: 0;
+}
+
+.intro-modal.intro-modal-preopen .intro-modal-overlay,
+.intro-modal.intro-modal-closing .intro-modal-overlay {
+    opacity: 0;
 }
 
 .intro-modal-card {
@@ -75,7 +89,15 @@
         linear-gradient(160deg, var(--intro-card-top, rgba(15, 23, 42, 0.97)), var(--intro-card-bottom, rgba(30, 41, 59, 0.97)));
     border: 1px solid var(--intro-card-border, rgba(148, 163, 184, 0.3));
     box-shadow: 0 30px 60px rgba(2, 6, 23, 0.6);
-    animation: introSlideIn 280ms ease;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition: opacity 220ms ease, transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.intro-modal.intro-modal-preopen .intro-modal-card,
+.intro-modal.intro-modal-closing .intro-modal-card {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
 }
 
 .intro-modal-card::before,

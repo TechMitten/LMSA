@@ -70,6 +70,10 @@ export const webSearchWarningModal = `
 
 // Global callback for user confirmation
 let confirmationCallback = null;
+const WEB_SEARCH_WARNING_ANIMATION_MS = 180;
+
+let webSearchCloseTimer = null;
+let webSearchIsClosing = false;
 
 /**
  * Initializes the Web Search Warning Modal
@@ -84,12 +88,37 @@ export function initWebSearchWarningModal() {
 
         const closeButton = document.getElementById('close-web-search-warning-modal');
         const confirmButton = document.getElementById('confirm-web-search-warning');
+        const content = modal.querySelector('.modal-content');
+
+        modal.style.transition = `opacity ${WEB_SEARCH_WARNING_ANIMATION_MS}ms ease`;
+        if (content) {
+            content.style.transition = `opacity ${WEB_SEARCH_WARNING_ANIMATION_MS}ms ease, transform ${WEB_SEARCH_WARNING_ANIMATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+        }
 
         // Function to close modal
         const closeModal = () => {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            confirmationCallback = null;
+            if (webSearchIsClosing || modal.classList.contains('hidden')) {
+                return;
+            }
+
+            webSearchIsClosing = true;
+            modal.style.opacity = '0';
+            if (content) {
+                content.style.opacity = '0';
+                content.style.transform = 'translateY(8px) scale(0.98)';
+            }
+
+            if (webSearchCloseTimer) {
+                clearTimeout(webSearchCloseTimer);
+            }
+
+            webSearchCloseTimer = setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                confirmationCallback = null;
+                webSearchIsClosing = false;
+                webSearchCloseTimer = null;
+            }, WEB_SEARCH_WARNING_ANIMATION_MS);
         };
 
         // Close button handler
@@ -153,6 +182,20 @@ export function showWebSearchWarningModal(callback) {
 
     // Use setTimeout to ensure proper z-index stacking
     setTimeout(() => {
+        if (webSearchCloseTimer) {
+            clearTimeout(webSearchCloseTimer);
+            webSearchCloseTimer = null;
+        }
+        webSearchIsClosing = false;
+
+        const content = modal.querySelector('.modal-content');
+
+        modal.style.opacity = '0';
+        if (content) {
+            content.style.opacity = '0';
+            content.style.transform = 'translateY(8px) scale(0.98)';
+        }
+
         // Show modal
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -162,5 +205,13 @@ export function showWebSearchWarningModal(callback) {
 
         // Ensure z-index is applied
         modal.style.zIndex = '9999';
+
+        requestAnimationFrame(() => {
+            modal.style.opacity = '1';
+            if (content) {
+                content.style.opacity = '1';
+                content.style.transform = 'translateY(0) scale(1)';
+            }
+        });
     }, 50);
 }
