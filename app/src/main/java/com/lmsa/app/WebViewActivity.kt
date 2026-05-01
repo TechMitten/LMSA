@@ -383,6 +383,9 @@ class WebViewActivity : AppCompatActivity() {
 
         val webView: WebView = findViewById(R.id.webView)
         val webSettings: WebSettings = webView.settings
+        // Include a stable app token so Cloudflare can allow trusted app requests.
+        // Keep the default UA prefix for compatibility with sites that inspect browser capabilities.
+        webSettings.userAgentString = "${webSettings.userAgentString} WebSearchAppID/v1.0"
         webView.isHapticFeedbackEnabled = true
 
         webSettings.javaScriptEnabled = true
@@ -2655,7 +2658,7 @@ class WebViewActivity : AppCompatActivity() {
                 connection.connectTimeout = 3000
                 connection.readTimeout = 3000
                 connection.setRequestProperty("Accept", "application/json")
-                connection.setRequestProperty("User-Agent", "LMSA-Android-App")
+                connection.setRequestProperty("User-Agent", "WebSearchAppID/v1.0")
 
                 val responseCode = connection.responseCode
                 if (responseCode == java.net.HttpURLConnection.HTTP_OK) {
