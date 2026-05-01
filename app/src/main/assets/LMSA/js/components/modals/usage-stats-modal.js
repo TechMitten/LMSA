@@ -85,18 +85,14 @@ export const usageStatsModal = `
 
 let usageStatsModalInitialized = false;
 
-function formatRemainingLabel(used, limit, label) {
+function formatRemainingLabel(used, limit, singularLabel, pluralLabel = `${singularLabel}s`) {
     const remaining = Math.max(0, limit - used);
     if (remaining === 0) {
-        return `${label} limit reached for today`;
+        return `${pluralLabel} limit reached for today`;
     }
 
-    const unit = remaining === 1 ? label : `${label}s`;
+    const unit = remaining === 1 ? singularLabel : pluralLabel;
     return `${remaining} ${unit} remaining today`;
-}
-
-function getUsageUnit(label, count) {
-    return count === 1 ? label : `${label}s`;
 }
 
 function applyUsageTextState(element, isLimitReached) {
@@ -125,8 +121,7 @@ function renderUsageStats() {
     }
 
     if (chatRemainingElement) {
-        const chatLabel = getUsageUnit('chat', chatLimit);
-        chatRemainingElement.textContent = formatRemainingLabel(chatUsed, chatLimit, chatLabel);
+        chatRemainingElement.textContent = formatRemainingLabel(chatUsed, chatLimit, 'chat', 'chats');
         applyUsageTextState(chatRemainingElement, chatUsed >= chatLimit);
     }
 
@@ -135,8 +130,7 @@ function renderUsageStats() {
     }
 
     if (webSearchRemainingElement) {
-        const searchLabel = getUsageUnit('web search', webSearchLimit);
-        webSearchRemainingElement.textContent = formatRemainingLabel(webSearchUsed, webSearchLimit, searchLabel);
+        webSearchRemainingElement.textContent = formatRemainingLabel(webSearchUsed, webSearchLimit, 'web search', 'web searches');
         applyUsageTextState(webSearchRemainingElement, webSearchUsed >= webSearchLimit);
     }
 }

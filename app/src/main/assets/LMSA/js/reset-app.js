@@ -7,6 +7,39 @@ import { setActionToPerform } from './shared-state.js';
 const INTRO_COMPLETED_KEY = 'lmsa_intro_completed';
 const INTRO_VERSION_KEY = 'lmsa_intro_version';
 
+// Keep free-tier usage counters across app reset so reset cannot bypass daily limits.
+const PRESERVED_USAGE_KEYS = new Set([
+    'lmsa_completion_date',
+    'lmsa_completion_count',
+    'lmsa_web_search_date',
+    'lmsa_web_search_count',
+    // Legacy localStorage key variants kept for backward compatibility.
+    'completion_date',
+    'completion_count',
+    'web_search_date',
+    'web_search_count',
+    'dailyCompletionCount',
+    'dailyWebSearchCount'
+]);
+
+function isUsageLimitKey(key) {
+    if (!key || typeof key !== 'string') {
+        return false;
+    }
+
+    if (PRESERVED_USAGE_KEYS.has(key)) {
+        return true;
+    }
+
+    const normalizedKey = key.toLowerCase();
+    return (
+        (normalizedKey.includes('usage') && normalizedKey.includes('count')) ||
+        (normalizedKey.includes('completion') && normalizedKey.includes('count')) ||
+        (normalizedKey.includes('web_search') && normalizedKey.includes('count')) ||
+        (normalizedKey.includes('daily') && normalizedKey.includes('limit'))
+    );
+}
+
 /**
  * Resets the entire application to its default state
  * - Deletes all chats
@@ -71,6 +104,10 @@ export function resetApp() {
         console.log('RESET APP: Clearing localStorage items...');
         itemsToRemove.forEach(item => {
             try {
+                if (isUsageLimitKey(item)) {
+                    console.log(`RESET APP: Preserved usage key: ${item}`);
+                    return;
+                }
                 localStorage.removeItem(item);
                 console.log(`RESET APP: Removed ${item}`);
             } catch (error) {
@@ -113,6 +150,10 @@ export function resetApp() {
             );
             
             appKeys.forEach(key => {
+                if (isUsageLimitKey(key)) {
+                    console.log(`RESET APP: Preserved usage key: ${key}`);
+                    return;
+                }
                 localStorage.removeItem(key);
                 console.log(`RESET APP: Removed app key: ${key}`);
             });
