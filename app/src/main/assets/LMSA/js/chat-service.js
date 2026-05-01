@@ -4930,9 +4930,9 @@ export function createNewChat(options = {}) {
     // Update the current chat ID
     setCurrentChatId(newChatId);
 
-    // Clear the messages container and hide the welcome message (which shows input area)
+    // Clear the messages container and show the welcome message
     messagesContainer.innerHTML = '';
-    hideWelcomeMessage();
+    showWelcomeMessage();
 
     // Hide the scroll-to-bottom button when starting a new chat
     hideScrollToBottomButton();

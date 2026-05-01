@@ -2,7 +2,7 @@
 import {
     messagesContainer, welcomeMessage, sidebar, settingsModal,
     loadingIndicator, sendButton, stopButton, loadedModelDisplay,
-    smartRepliesContainer, userInput, chatInputArea
+    smartRepliesContainer, userInput
 } from './dom-elements.js';
 import { basicSanitizeInput, sanitizeInput, initializeCodeMirror, scrollToBottom, copyToClipboard, debugLog, debugError, processCodeBlocks, decodeHtmlEntities, htmlToFormattedText, getReasoningStreamState, normalizeReasoningTags, stripReasoningSections } from './utils.js';
 import { getHideThinking, getShowModelLabel, getWebSearchEnabled } from './settings-manager.js';
@@ -125,28 +125,22 @@ function getAttachmentPreviewSrc(file) {
  * Shows the welcome message and hides the messages container
  */
 export function showWelcomeMessage() {
+    // Performance monitoring removed
+
     // Batch DOM operations to prevent layout thrashing
     domBatcher.write(() => {
-        // Fade out active chat components
-        if (messagesContainer) {
-            messagesContainer.classList.remove('animate-fade-in');
-            messagesContainer.classList.add('animate-fade-out');
-        }
-        if (chatInputArea) {
-            chatInputArea.classList.remove('animate-fade-in');
-            chatInputArea.classList.add('animate-fade-out');
-        }
-
-        // Prepare welcome message
         if (welcomeMessage) {
             welcomeMessage.style.display = 'flex';
             welcomeMessage.style.visibility = 'visible';
             welcomeMessage.style.pointerEvents = 'auto';
-            welcomeMessage.classList.remove('animate-fade-out');
-            welcomeMessage.classList.add('animate-fade-in');
+            welcomeMessage.style.opacity = '1';
         }
-
-        // Show the premium banner in the correct state
+        if (messagesContainer) {
+            messagesContainer.style.opacity = '0';
+            messagesContainer.style.visibility = 'hidden';
+            messagesContainer.style.display = 'none';
+        }
+        // Show the premium banner in the correct state when welcome screen is displayed.
         const removeAdsBanner = document.getElementById('remove-ads-banner');
         if (removeAdsBanner) {
             const isPremium = typeof window.hasPremiumAccess === 'function'
@@ -160,21 +154,7 @@ export function showWelcomeMessage() {
             }
         }
     }).then(() => {
-        // Wait for fade transition to finish before hiding chat components
-        setTimeout(() => {
-            domBatcher.write(() => {
-                if (messagesContainer) {
-                    messagesContainer.style.display = 'none';
-                    messagesContainer.style.visibility = 'hidden';
-                    messagesContainer.classList.remove('animate-fade-out');
-                }
-                if (chatInputArea) {
-                    chatInputArea.style.display = 'none';
-                    chatInputArea.classList.remove('animate-fade-out');
-                }
-            });
-        }, 300);
-
+        // Force reflow and position adjustment after DOM writes
         if (welcomeMessage) {
             void welcomeMessage.offsetWidth;
             ensureWelcomeMessagePosition();
@@ -186,46 +166,29 @@ export function showWelcomeMessage() {
  * Hides the welcome message and shows the messages container
  */
 export function hideWelcomeMessage() {
+    // Performance monitoring removed
+
     // Batch DOM operations to prevent layout thrashing
     domBatcher.write(() => {
-        // Fade out welcome message
         if (welcomeMessage) {
-            welcomeMessage.classList.remove('animate-fade-in');
-            welcomeMessage.classList.add('animate-fade-out');
+            welcomeMessage.style.display = 'none';
+            welcomeMessage.style.visibility = 'hidden';
+            welcomeMessage.style.opacity = '1';
             welcomeMessage.style.pointerEvents = 'none';
         }
 
-        // Prepare and fade in chat components
         if (messagesContainer) {
             messagesContainer.style.display = 'flex';
             messagesContainer.style.height = '100%';
+            messagesContainer.style.opacity = '1';
             messagesContainer.style.visibility = 'visible';
-            messagesContainer.classList.remove('animate-fade-out');
-            messagesContainer.classList.add('animate-fade-in');
         }
 
-        if (chatInputArea) {
-            chatInputArea.style.display = 'block';
-            chatInputArea.classList.remove('animate-fade-out');
-            chatInputArea.classList.add('animate-fade-in');
-        }
-
-        // Hide the Remove Ads banner
+        // Hide the Remove Ads banner when leaving the welcome screen
         const removeAdsBanner = document.getElementById('remove-ads-banner');
         if (removeAdsBanner) {
             removeAdsBanner.style.display = 'none';
         }
-    }).then(() => {
-        // Wait for fade transition to finish before hiding welcome message
-        setTimeout(() => {
-            domBatcher.write(() => {
-                if (welcomeMessage) {
-                    welcomeMessage.style.display = 'none';
-                    welcomeMessage.style.visibility = 'hidden';
-                    welcomeMessage.classList.remove('animate-fade-out');
-                }
-            });
-        }, 300);
     });
 }
 

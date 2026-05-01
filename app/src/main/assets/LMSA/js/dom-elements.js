@@ -87,7 +87,6 @@ export const chatContainer = domCache.get('chat-container');
 export const messagesContainer = domCache.get('messages');
 export const chatForm = domCache.get('chat-form');
 export const userInput = domCache.get('user-input');
-export const chatInputArea = domCache.get('chat-input-area');
 export const loadingIndicator = domCache.get('loading-indicator');
 export const sidebar = domCache.get('sidebar');
 
@@ -130,7 +129,6 @@ export const newChatHeaderButton = document.getElementById('new-chat-header-butt
 export const webSearchHeaderButton = document.getElementById('web-search-header-button');
 export const webSearchHeaderIcon = document.getElementById('web-search-header-icon');
 export const modeIndicator = document.getElementById('mode-indicator');
-export const dashboardButton = domCache.get('dashboard-btn');
 
 // Import/Export group elements
 export const importExportGroupButton = document.getElementById('import-export-group-btn');

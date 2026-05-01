@@ -83,23 +83,17 @@ body.light-theme header::before {
 }
 
 
-/* Animation utilities */
-@keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
+/* Button animations */
+@keyframes pulse-subtle {
 
-@keyframes fade-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
-}
+    0%,
+    100% {
+        opacity: 1;
+    }
 
-.animate-fade-in {
-    animation: fade-in 0.3s ease-in-out forwards;
-}
-
-.animate-fade-out {
-    animation: fade-out 0.3s ease-in-out forwards;
+    50% {
+        opacity: 0.8;
+    }
 }
 
 .animate-pulse-subtle {
