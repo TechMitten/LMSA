@@ -563,6 +563,7 @@ export function requireSystemPromptPremiumAccess() {
 export function updateSystemPromptPremiumState() {
   const isPremium = canEditSystemPrompt();
   const editButton = document.getElementById("edit-system-prompt-btn");
+  const saveButton = document.getElementById("save-system-prompt-btn");
   const preview = document.getElementById("system-prompt-preview");
 
   if (editButton) {
@@ -570,6 +571,13 @@ export function updateSystemPromptPremiumState() {
     editButton.title = isPremium
       ? "Edit your system prompt"
       : "Premium required to edit the system prompt";
+  }
+
+  if (saveButton) {
+    saveButton.dataset.premiumLocked = isPremium ? "false" : "true";
+    saveButton.title = isPremium
+      ? "Save the current system prompt to your saved prompts list"
+      : "Premium required to save system prompts";
   }
 
   if (preview) {

@@ -1,7 +1,7 @@
 // Saved System Prompts Manager
 // This module handles saving, loading, and managing user-created system prompts
 
-import { debugLog } from './utils.js';
+import { debugLog, isAndroidWebView, isMobileDevice } from './utils.js';
 import { closeSidebarExport } from './export-import.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { requireSystemPromptPremiumAccess } from './settings-manager.js';
@@ -13,6 +13,7 @@ const SAVED_PROMPTS_KEY = 'savedSystemPrompts';
 const SAVED_PROMPTS_FILE_KEY = 'savedSystemPrompts';
 const LM_STUDIO_SYSTEM_PROMPT_KEY = 'llm.prediction.systemPrompt';
 const LM_STUDIO_IMPORT_CANCELLED = 'cancelled';
+const LM_STUDIO_EXPORT_MODAL_ID = 'lmstudio-export-prompt-modal';
 
 let hasCheckedLegacySavedPromptMigration = false;
 
@@ -296,6 +297,205 @@ function handleLmStudioSystemPromptImport() {
     openLmStudioPromptFileInput();
 }
 
+function buildLmStudioProfileJson(prompt) {
+    return {
+        name: prompt.name,
+        systemPrompt: prompt.content
+    };
+}
+
+function sanitizeFilenameStem(value = '') {
+    return value
+        .replace(/[<>:"/\\|?*\x00-\x1F]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/[. ]+$/g, '')
+        .slice(0, 80);
+}
+
+function triggerJsonFileDownload(jsonString, filename) {
+    if (isAndroidWebView() || isMobileDevice()) {
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const dataUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = filename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(dataUrl);
+        }, 100);
+        return;
+    }
+
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+function saveJsonExportFile(jsonString, filename, onSuccess) {
+    if (window.AndroidFileOps && typeof window.AndroidFileOps.saveFile === 'function') {
+        const previousOnFileSaved = window.onFileSaved;
+
+        window.onFileSaved = function (success) {
+            if (previousOnFileSaved) {
+                window.onFileSaved = previousOnFileSaved;
+            } else {
+                delete window.onFileSaved;
+            }
+
+            if (success) {
+                onSuccess();
+            }
+        };
+
+        window.AndroidFileOps.saveFile(jsonString, filename);
+        return;
+    }
+
+    triggerJsonFileDownload(jsonString, filename);
+    onSuccess();
+}
+
+function exportSavedPromptToLmStudio(promptId) {
+    if (!requireSystemPromptPremiumAccess()) {
+        return;
+    }
+
+    const prompt = getSavedSystemPrompts().find(entry => entry.id === promptId);
+
+    if (!prompt) {
+        showErrorMessage('That saved system prompt could not be found.');
+        return;
+    }
+
+    const jsonString = JSON.stringify(buildLmStudioProfileJson(prompt), null, 2);
+    const filenameStem = sanitizeFilenameStem(prompt.name) || 'lmsa-system-prompt';
+    const filename = `${filenameStem}-lmstudio-profile.json`;
+
+    try {
+        saveJsonExportFile(jsonString, filename, () => {
+            showSuccessMessage(`Exported "${prompt.name}" as an LM Studio profile JSON file.`);
+        });
+    } catch (error) {
+        debugLog('Error exporting LM Studio system prompt:', error);
+        showErrorMessage('Failed to export the selected system prompt. Please try again.');
+    }
+}
+
+function hideLmStudioPromptExportModal() {
+    const modalOverlay = document.getElementById(LM_STUDIO_EXPORT_MODAL_ID);
+    if (!modalOverlay) {
+        return;
+    }
+
+    const previousBodyOverflow = modalOverlay.dataset.previousBodyOverflow ?? '';
+    const escapeHandler = modalOverlay._escapeHandler;
+    if (typeof escapeHandler === 'function') {
+        document.removeEventListener('keydown', escapeHandler);
+    }
+
+    modalOverlay.remove();
+    document.body.style.overflow = previousBodyOverflow;
+}
+
+function showLmStudioPromptExportModal() {
+    const savedPrompts = getSavedSystemPrompts();
+
+    if (savedPrompts.length === 0) {
+        showErrorMessage('Save a system prompt before exporting it to LM Studio.');
+        return;
+    }
+
+    hideLmStudioPromptExportModal();
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const modalOverlay = document.createElement('div');
+    modalOverlay.id = LM_STUDIO_EXPORT_MODAL_ID;
+    modalOverlay.className = 'fixed inset-0 items-center justify-center modal-container';
+    modalOverlay.dataset.previousBodyOverflow = previousBodyOverflow;
+    modalOverlay.style.cssText = 'z-index: 9999; background: var(--modal-overlay); backdrop-filter: blur(12px) saturate(180%); -webkit-backdrop-filter: blur(12px) saturate(180%); display: flex;';
+
+    modalOverlay.innerHTML = `
+        <div class="modal-content rounded-lg shadow-xl w-full max-w-2xl mx-4" style="background: var(--chat-bg); border: 1px solid var(--border-color); max-height: 85vh; overflow: hidden;">
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border-color);">
+                <div>
+                    <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Export Saved Prompt to LM Studio</h3>
+                    <p class="text-sm mt-1" style="color: var(--text-secondary);">Choose a saved system prompt to export as an LM Studio profile JSON file.</p>
+                </div>
+                <button type="button" data-role="close" class="p-2 rounded-md hover:bg-white/5" style="color: var(--text-secondary);" aria-label="Close export prompt picker">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto" style="max-height: calc(85vh - 84px);">
+                <div class="space-y-3">
+                    ${savedPrompts.map(prompt => {
+                        const preview = prompt.content.length > 160 ? `${prompt.content.substring(0, 160)}...` : prompt.content;
+                        return `
+                            <div class="rounded-lg p-4" style="background: var(--settings-label-bg); border: 1px solid var(--border-color);">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="font-medium text-base break-words" style="color: var(--text-primary);">${escapeHtml(prompt.name)}</div>
+                                        <div class="text-sm mt-2 break-words" style="color: var(--text-secondary);">${escapeHtml(preview)}</div>
+                                    </div>
+                                    <button type="button" class="lmstudio-export-picker-btn px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap" data-id="${prompt.id}" style="background: #10b981; color: #06281f;">
+                                        <i class="fas fa-file-export mr-2"></i>Export
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+
+    modalOverlay.addEventListener('click', (event) => {
+        if (event.target === modalOverlay) {
+            hideLmStudioPromptExportModal();
+        }
+    });
+
+    modalOverlay.querySelector('[data-role="close"]')?.addEventListener('click', hideLmStudioPromptExportModal);
+
+    modalOverlay.querySelectorAll('.lmstudio-export-picker-btn').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const promptId = event.currentTarget.dataset.id;
+            hideLmStudioPromptExportModal();
+            exportSavedPromptToLmStudio(promptId);
+        });
+    });
+
+    const escapeHandler = (event) => {
+        if (event.key === 'Escape') {
+            hideLmStudioPromptExportModal();
+        }
+    };
+
+    modalOverlay._escapeHandler = escapeHandler;
+    document.addEventListener('keydown', escapeHandler);
+    document.body.appendChild(modalOverlay);
+    document.body.style.overflow = 'hidden';
+}
+
+function handleLmStudioSystemPromptExport() {
+    if (!requireSystemPromptPremiumAccess()) {
+        return;
+    }
+
+    closeSidebarExport();
+    showLmStudioPromptExportModal();
+}
+
 /**
  * Gets all saved system prompts from Android internal storage or localStorage
  * @returns {Array} Array of saved prompt objects
@@ -482,6 +682,9 @@ function populateSavedPromptsModal() {
             <div class="flex justify-between items-start mb-2">
                 <h3 class="saved-prompt-item-title font-medium text-lg" style="color: var(--text-primary);">${escapeHtml(prompt.name)}</h3>
                 <div class="saved-prompt-item-actions flex space-x-2">
+                    <button class="export-prompt-lms-btn text-green-400 hover:text-green-300 p-1" data-id="${prompt.id}" title="Export this prompt as LM Studio JSON">
+                        <i class="fas fa-file-export"></i>
+                    </button>
                     <button class="restore-prompt-btn text-blue-400 hover:text-blue-300 p-1" data-id="${prompt.id}" title="Restore this prompt">
                         <i class="fas fa-undo"></i>
                     </button>
@@ -511,6 +714,13 @@ function populateSavedPromptsModal() {
  * Adds event listeners to prompt item buttons
  */
 function addPromptItemEventListeners() {
+    document.querySelectorAll('.export-prompt-lms-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.dataset.id;
+            exportSavedPromptToLmStudio(id);
+        });
+    });
+
     // Restore buttons
     document.querySelectorAll('.restore-prompt-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -590,6 +800,10 @@ function restorePrompt(id) {
  * @param {string} id - The ID of the prompt to edit
  */
 function editPrompt(id) {
+    if (!requireSystemPromptPremiumAccess()) {
+        return;
+    }
+
     const savedPrompts = getSavedSystemPrompts();
     const prompt = savedPrompts.find(p => p.id === id);
     
@@ -606,6 +820,10 @@ function editPrompt(id) {
  * @param {Object} prompt - The prompt object to edit
  */
 function showEditPromptModal(prompt) {
+    if (!requireSystemPromptPremiumAccess()) {
+        return;
+    }
+
     const modal = document.getElementById('edit-prompt-modal');
     if (!modal) return;
 
@@ -653,6 +871,10 @@ function hideEditPromptModal() {
  * Saves the edited prompt
  */
 function saveEditedPrompt() {
+    if (!requireSystemPromptPremiumAccess()) {
+        return;
+    }
+
     const modal = document.getElementById('edit-prompt-modal');
     if (!modal) return;
 
@@ -739,6 +961,10 @@ function confirmPromptDeletion() {
  */
 function handleSaveFromSettings() {
     debugLog('handleSaveFromSettings called');
+
+    if (!requireSystemPromptPremiumAccess()) {
+        return;
+    }
     
     // Get the current system prompt from the hidden textarea (which always contains the current value)
     const systemPromptInput = document.getElementById('system-prompt');
@@ -763,6 +989,10 @@ function handleSaveFromSettings() {
  */
 export function showSavePromptModal(currentPrompt = '') {
     debugLog('showSavePromptModal called with prompt:', currentPrompt);
+
+    if (!requireSystemPromptPremiumAccess()) {
+        return;
+    }
     
     const modal = document.getElementById('save-prompt-modal');
     debugLog('save-prompt-modal element:', modal);
@@ -827,6 +1057,10 @@ function hideSavePromptModal() {
  * Saves a new prompt from the save modal
  */
 function saveNewPrompt() {
+    if (!requireSystemPromptPremiumAccess()) {
+        return;
+    }
+
     const nameInput = document.getElementById('save-prompt-name');
     const contentTextarea = document.getElementById('save-prompt-content');
 
@@ -941,6 +1175,11 @@ export function initializeSavedSystemPrompts() {
     const importLmStudioPromptButton = document.getElementById('import-system-prompt-lms-btn');
     if (importLmStudioPromptButton) {
         importLmStudioPromptButton.addEventListener('click', handleLmStudioSystemPromptImport);
+    }
+
+    const exportLmStudioPromptButton = document.getElementById('export-system-prompt-lms-btn');
+    if (exportLmStudioPromptButton) {
+        exportLmStudioPromptButton.addEventListener('click', handleLmStudioSystemPromptExport);
     }
 
     // Save prompt modal event listeners

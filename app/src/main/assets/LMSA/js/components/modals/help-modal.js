@@ -308,10 +308,10 @@ export const helpModal = `
 
                          <section id="section-lmstudio-prompts">
                              <h3 class="text-lg font-semibold mb-2 flex items-center"
-                                 style="color: #10b981;"><i class="fas fa-file-import mr-2"></i>Import LM Studio Prompts
+                                 style="color: #10b981;"><i class="fas fa-file-import mr-2"></i>Import / Export LM Studio Prompts
                              </h3>
                              <p style="color: var(--text-primary); margin-bottom: 1rem;">
-                                 LMSA can import system prompts from LM Studio profile JSON files. After import, the prompt is saved inside LMSA so you can reopen it later from the Saved Prompts section in Settings.
+                                 LMSA can import system prompts from LM Studio profile JSON files, and it can also export your saved LMSA system prompts back out as LM Studio profile JSON files.
                              </p>
 
                              <div class="space-y-4">
@@ -349,6 +349,19 @@ export const helpModal = `
                                          <li>If the LM Studio JSON includes a profile name, LMSA uses that as the saved prompt name. Otherwise it falls back to the JSON filename.</li>
                                          <li>After the import finishes and the prompt appears in Saved Prompts, you can delete the transferred JSON file from your phone if you no longer need it.</li>
                                      </ul>
+                                 </div>
+
+                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                     <p class="font-medium flex items-center" style="color: #34d399;"><i
+                                             class="fas fa-file-export mr-2"></i>How to Export It</p>
+                                     <ol class="list-decimal pl-5 mt-2 space-y-1"
+                                         style="color: var(--text-primary); font-size: 0.9em;">
+                                         <li>Save the system prompt you want to share in <strong>Settings &gt; System Prompt</strong>.</li>
+                                         <li>In LMSA, open <strong>Options</strong>.</li>
+                                         <li>Open <strong>Import/Export</strong> and tap <strong>Export Saved Prompt (LMS)</strong>.</li>
+                                         <li>Choose the saved prompt you want to export, then save the generated JSON file to your device.</li>
+                                         <li>Transfer that JSON file to your computer, then import it into LM Studio or place it in LM Studio's <code>config-presets</code> folder.</li>
+                                     </ol>
                                  </div>
                              </div>
                          </section>

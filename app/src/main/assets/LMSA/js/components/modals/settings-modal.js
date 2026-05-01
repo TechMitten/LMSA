@@ -189,7 +189,7 @@ export const settingsModal = `
                             <button id="save-system-prompt-btn"
                                   class="professional-button flex items-center justify-center gap-3 flex-1 h-12">
                                 <i class="fas fa-save text-sm"></i>
-                                <span>Save</span>
+                                                                <span>Save to list</span>
                             </button>
                         </div>
 

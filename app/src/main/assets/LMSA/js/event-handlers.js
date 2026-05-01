@@ -7,12 +7,12 @@ import {
     helpButton, newChatHeaderButton, webSearchHeaderButton, webSearchHeaderIcon, whatsNewButton, aboutButton, stopButton, contextMenu, copyTextButton,
     regenerateTextButton, exitButton, refreshButton, modelToggleButton, loadedModelDisplay,
     settingsIconButton, newTopicButton, sendButton, sendContextMenu, newTopicMenuButton, scrollToBottomMenuButton,
-    modelButton, importExportGroupButton, importExportContainer,
+    modelButton, importExportGroupButton, importExportContainer, systemPromptSettingsButton,
     exportChatsButton, importChatsButton, importChatsInput,
     welcomeModelsBtn, welcomeNewChatBtn, welcomeHelpBtn,
     setupLocalBtn, setupOpenRouterBtn, setupCustomBtn
 } from './dom-elements.js';
-import { showSettingsModal, hideSettingsModal } from './settings-modal-manager.js';
+import { showSettingsModal, hideSettingsModal, navigateSettingsModalToStep } from './settings-modal-manager.js';
 import { openPremiumModal } from './components/modals/premium-modal.js';
 import { openUsageStatsModal } from './components/modals/usage-stats-modal.js';
 import {
@@ -1129,6 +1129,10 @@ export function initializeEventHandlers() {
         settingsButton.addEventListener('click', handleSettingsButtonClick);
     }
 
+    if (systemPromptSettingsButton) {
+        systemPromptSettingsButton.addEventListener('click', handleSystemPromptSettingsButtonClick);
+    }
+
     // Close settings button
     if (closeSettingsButton) {
         closeSettingsButton.addEventListener('click', handleCloseSettingsButtonClick);
@@ -2180,6 +2184,59 @@ function handleSettingsButtonClick() {
     }
     if (settingsButton) {
         settingsButton.blur();
+    }
+}
+
+function handleSystemPromptSettingsButtonClick() {
+    // Remove sidebar click handler while modal is open
+    document.body.removeEventListener('click', handleSidebarOutsideClick);
+
+    // Close the sidebar regardless of screen size
+    closeSidebar();
+
+    // Also close the options container
+    const optionsContainer = document.getElementById('options-container');
+    if (optionsContainer) {
+        optionsContainer.classList.add('hidden');
+        optionsContainer.classList.remove('animate-fade-in');
+    }
+
+    // Collapse all sections when sidebar is closed
+    const sectionHeaders = sidebar.querySelectorAll('.section-header');
+    const chatHistorySection = sidebar.querySelector('.sidebar-section:last-child');
+    sectionHeaders.forEach(header => {
+        header.classList.remove('active');
+        const content = header.nextElementSibling;
+        if (content && content.classList.contains('collapsible-content')) {
+            content.classList.remove('show');
+        }
+    });
+
+    // Ensure chat history is visible when sidebar is closed
+    if (chatHistorySection) {
+        chatHistorySection.classList.remove('chat-history-hidden');
+    }
+
+    // Ensure the welcome message is hidden when settings modal is shown
+    if (welcomeMessage && welcomeMessage.style.display !== 'none') {
+        welcomeMessage.style.opacity = '0';
+        welcomeMessage.style.visibility = 'hidden';
+    }
+
+    Promise.resolve(showSettingsModal()).finally(() => {
+        requestAnimationFrame(() => {
+            navigateSettingsModalToStep('prompt');
+        });
+    });
+
+    if (settingsIconButton) {
+        settingsIconButton.blur();
+    }
+    if (settingsButton) {
+        settingsButton.blur();
+    }
+    if (systemPromptSettingsButton) {
+        systemPromptSettingsButton.blur();
     }
 }
 

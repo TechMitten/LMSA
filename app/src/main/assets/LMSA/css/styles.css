@@ -3790,11 +3790,19 @@ body.light-theme #send-context-menu .menu-header {
     /* Ensure modal is interactive */
     inset: 0;
     /* Cover the entire viewport */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.22s ease, visibility 0.22s ease;
 }
 
 #clear-system-prompt-modal.hidden {
     display: none !important;
     /* Ensure it's completely hidden when the hidden class is applied */
+}
+
+#clear-system-prompt-modal.is-open {
+    opacity: 1;
+    visibility: visible;
 }
 
 #clear-system-prompt-modal .modal-content {
@@ -3808,6 +3816,15 @@ body.light-theme #send-context-menu .menu-header {
     /* Fallback for theme support */
     color: var(--modal-text, #ffffff);
     /* Fallback for theme support */
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    will-change: opacity, transform;
+}
+
+#clear-system-prompt-modal.is-open .modal-content {
+    opacity: 1;
+    transform: translateY(0) scale(1);
 }
 
 /* Light mode specific overrides for clear system prompt modal */

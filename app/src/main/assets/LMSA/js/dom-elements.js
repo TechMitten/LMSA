@@ -129,6 +129,7 @@ export const newChatHeaderButton = document.getElementById('new-chat-header-butt
 export const webSearchHeaderButton = document.getElementById('web-search-header-button');
 export const webSearchHeaderIcon = document.getElementById('web-search-header-icon');
 export const modeIndicator = document.getElementById('mode-indicator');
+export const systemPromptSettingsButton = document.getElementById('system-prompt-settings-btn');
 
 // Import/Export group elements
 export const importExportGroupButton = document.getElementById('import-export-group-btn');

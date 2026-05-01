@@ -2013,6 +2013,11 @@ function showClearSystemPromptModal() {
 
     const modal = document.getElementById('clear-system-prompt-modal');
     if (modal) {
+        if (modal._hideTimer) {
+            clearTimeout(modal._hideTimer);
+            modal._hideTimer = null;
+        }
+
         modal.classList.remove('hidden');
         modal.style.display = 'flex';
         modal.style.zIndex = '2200'; // Ensure it's above the system prompt overlay (2100)
@@ -2022,6 +2027,11 @@ function showClearSystemPromptModal() {
         if (modalContent) {
             modalContent.style.zIndex = '2201'; // Higher than the modal background
         }
+
+        void modal.offsetHeight;
+        requestAnimationFrame(() => {
+            modal.classList.add('is-open');
+        });
     }
 }
 
@@ -2031,8 +2041,17 @@ function showClearSystemPromptModal() {
 function hideClearSystemPromptModal() {
     const modal = document.getElementById('clear-system-prompt-modal');
     if (modal) {
-        modal.classList.add('hidden');
-        modal.style.display = 'none';
+        modal.classList.remove('is-open');
+
+        if (modal._hideTimer) {
+            clearTimeout(modal._hideTimer);
+        }
+
+        modal._hideTimer = setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+            modal._hideTimer = null;
+        }, 220);
     }
 }
 
