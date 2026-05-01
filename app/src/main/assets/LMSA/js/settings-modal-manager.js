@@ -202,6 +202,35 @@ function showConnectionPresetNotice(message, tone = 'success') {
     showToastNotice({ message, tone, duration: 2400 });
 }
 
+function setConnectionPresetsSectionExpanded(isExpanded) {
+    const toggleButton = document.getElementById('settings-connection-presets-toggle');
+    const content = document.getElementById('settings-connection-presets-content');
+
+    if (!toggleButton || !content) {
+        return;
+    }
+
+    toggleButton.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+    toggleButton.setAttribute('aria-label', isExpanded ? 'Collapse saved presets' : 'Expand saved presets');
+    content.classList.toggle('hidden', !isExpanded);
+    content.setAttribute('aria-hidden', isExpanded ? 'false' : 'true');
+}
+
+function initializeConnectionPresetsSectionToggle() {
+    const toggleButton = document.getElementById('settings-connection-presets-toggle');
+    if (!toggleButton || toggleButton.dataset.bound === 'true') {
+        return;
+    }
+
+    toggleButton.addEventListener('click', () => {
+        const isExpanded = toggleButton.getAttribute('aria-expanded') === 'true';
+        setConnectionPresetsSectionExpanded(!isExpanded);
+    });
+
+    toggleButton.dataset.bound = 'true';
+    setConnectionPresetsSectionExpanded(false);
+}
+
 function updateConnectionPresetSaveState() {
     const saveButton = document.getElementById('save-connection-preset-btn');
     const nameInput = document.getElementById('settings-connection-preset-name');
@@ -535,6 +564,8 @@ async function applySavedConnectionPreset(preset, { showNotice = true } = {}) {
 }
 
 function initializeConnectionPresetList() {
+    initializeConnectionPresetsSectionToggle();
+
     const saveButton = document.getElementById('save-connection-preset-btn');
     const nameInput = document.getElementById('settings-connection-preset-name');
     const providerButtons = [
@@ -738,6 +769,7 @@ export async function showSettingsModal() {
 
     // Refresh the connection status displays with current saved values
     updateConnectionStatusDisplays();
+    setConnectionPresetsSectionExpanded(false);
     renderConnectionPresetList();
 
     // Always use mobile/tablet stepped navigation for all device types

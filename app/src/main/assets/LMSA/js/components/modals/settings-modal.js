@@ -128,31 +128,38 @@ export const settingsModal = `
                             <div>
                                 <h3 class="connection-presets-title">Saved Presets</h3>
                             </div>
-                            <span id="settings-connection-presets-active-type" class="connection-preset-type-pill">Local Server</span>
-                        </div>
-                        <p id="settings-connection-preset-helper" class="connection-presets-description">Save, update, and switch between connection setups without retyping credentials or endpoints.</p>
-
-                        <div class="connection-presets-toolbar">
-                            <div class="connection-preset-name-field">
-                                <label for="settings-connection-preset-name" class="connection-preset-name-label">
-                                    Preset Name
-                                    <span class="connection-preset-name-required">Required</span>
-                                </label>
-                                <input type="text" id="settings-connection-preset-name" class="connection-preset-name-input"
-                                    placeholder="Name this Local Server preset" maxlength="50" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-form-type="other" required aria-required="true" aria-describedby="settings-connection-preset-name-hint" enterkeyhint="done">
-                                <p id="settings-connection-preset-name-hint" class="connection-preset-name-hint">Enter a preset name to enable saving.</p>
+                            <div class="connection-presets-header-actions">
+                                <span id="settings-connection-presets-active-type" class="connection-preset-type-pill">Local Server</span>
+                                <button id="settings-connection-presets-toggle" type="button" class="connection-presets-toggle" aria-expanded="false" aria-controls="settings-connection-presets-content" aria-label="Expand saved presets">
+                                    <i id="settings-connection-presets-chevron" class="fas fa-chevron-down" aria-hidden="true"></i>
+                                </button>
                             </div>
-                            <button id="save-connection-preset-btn" type="button" data-haptic="light" disabled aria-disabled="true"
-                                class="professional-button flex items-center justify-center gap-2 h-[44px] px-4">
-                                <i class="fas fa-save text-xs"></i>
-                                <span id="save-connection-preset-label">Save Current</span>
-                            </button>
                         </div>
+                        <div id="settings-connection-presets-content" class="hidden" aria-hidden="true">
+                            <p id="settings-connection-preset-helper" class="connection-presets-description">Save, update, and switch between connection setups without retyping credentials or endpoints.</p>
 
-                        <div id="settings-connection-presets-empty-state" class="connection-presets-empty-state">
-                            No Saved Presets yet.
+                            <div class="connection-presets-toolbar">
+                                <div class="connection-preset-name-field">
+                                    <label for="settings-connection-preset-name" class="connection-preset-name-label">
+                                        Preset Name
+                                        <span class="connection-preset-name-required">Required</span>
+                                    </label>
+                                    <input type="text" id="settings-connection-preset-name" class="connection-preset-name-input"
+                                        placeholder="Name this Local Server preset" maxlength="50" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-form-type="other" required aria-required="true" aria-describedby="settings-connection-preset-name-hint" enterkeyhint="done">
+                                    <p id="settings-connection-preset-name-hint" class="connection-preset-name-hint">Enter a preset name to enable saving.</p>
+                                </div>
+                                <button id="save-connection-preset-btn" type="button" data-haptic="light" disabled aria-disabled="true"
+                                    class="professional-button flex items-center justify-center gap-2 h-[44px] px-4">
+                                    <i class="fas fa-save text-xs"></i>
+                                    <span id="save-connection-preset-label">Save Current</span>
+                                </button>
+                            </div>
+
+                            <div id="settings-connection-presets-empty-state" class="connection-presets-empty-state">
+                                No Saved Presets yet.
+                            </div>
+                            <div id="settings-connection-presets-list" class="connection-presets-list hidden"></div>
                         </div>
-                        <div id="settings-connection-presets-list" class="connection-presets-list hidden"></div>
                     </div>
                 </div>
 

@@ -2490,6 +2490,49 @@ body.light-theme .connection-status-row .professional-button:hover {
   gap: 0.75rem;
 }
 
+.connection-presets-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.connection-presets-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  background: rgba(15, 23, 42, 0.38);
+  color: rgba(226, 232, 240, 0.94);
+  inline-size: 30px;
+  block-size: 30px;
+  padding: 0;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.connection-presets-toggle i {
+  font-size: 0.64rem;
+  transition: transform 0.2s ease;
+}
+
+.connection-presets-toggle[aria-expanded="true"] i {
+  transform: rotate(180deg);
+}
+
+.connection-presets-toggle:hover {
+  border-color: rgba(96, 165, 250, 0.52);
+  background: rgba(30, 64, 175, 0.24);
+}
+
+.connection-presets-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+#settings-connection-presets-content {
+  margin-top: 0.72rem;
+}
+
 .connection-presets-eyebrow {
   margin: 0;
   font-size: 0.68rem;
@@ -2864,6 +2907,17 @@ body.light-theme .connection-preset-name-input.is-missing {
 
 body.light-theme .connection-preset-name-hint {
   color: rgba(71, 85, 105, 0.82);
+}
+
+body.light-theme .connection-presets-toggle {
+  border-color: rgba(148, 163, 184, 0.4);
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(30, 41, 59, 0.9);
+}
+
+body.light-theme .connection-presets-toggle:hover {
+  border-color: rgba(59, 130, 246, 0.48);
+  background: rgba(219, 234, 254, 0.86);
 }
 
 body.light-theme #settings-modal #save-connection-preset-btn {
