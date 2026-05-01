@@ -9,7 +9,7 @@ import {
     settingsIconButton, newTopicButton, sendButton, sendContextMenu, newTopicMenuButton, scrollToBottomMenuButton,
     modelButton, importExportGroupButton, importExportContainer,
     exportChatsButton, importChatsButton, importChatsInput,
-    welcomeModelsBtn, welcomeNewChatBtn, welcomeHelpBtn
+    welcomeModelsBtn, welcomeNewChatBtn, welcomeHelpBtn, dashboardButton
 } from './dom-elements.js';
 import { showSettingsModal, hideSettingsModal } from './settings-modal-manager.js';
 import { openPremiumModal } from './components/modals/premium-modal.js';
@@ -440,15 +440,23 @@ export function initializeEventHandlers() {
         document.addEventListener('premium-status-changed', syncUsageStatsVisibility);
     }
 
-    // Welcome "Saved" button (previously used inline onclick)
+    // Welcome "New Chat" button
     const welcomeNewChatBtn = document.getElementById('welcome-new-chat-btn');
     if (welcomeNewChatBtn) {
-        // Function to handle saved chats button click
-        const openSavedChats = () => {
-            debugLog('Saved chats button clicked, opening sidebar');
-
-            // Open sidebar with saved chats
-            toggleSidebar();
+        // Function to handle new chat button click
+        const handleNewChatClick = () => {
+            debugLog('Welcome New Chat button clicked, creating new chat');
+            
+            // Create a new chat session
+            if (typeof createNewChat === 'function') {
+                createNewChat();
+            }
+            
+            // Focus the user input for immediate typing
+            const userInput = document.getElementById('user-input');
+            if (userInput) {
+                setTimeout(() => userInput.focus(), 100);
+            }
         };
 
         // Remove any existing event listeners to prevent duplicates
@@ -460,15 +468,40 @@ export function initializeEventHandlers() {
         bindPressInFeedback(updatedWelcomeNewChatBtn);
 
         // Add click event listener
-        updatedWelcomeNewChatBtn.addEventListener('click', openSavedChats);
+        updatedWelcomeNewChatBtn.addEventListener('click', handleNewChatClick);
 
         // Add touch event listener for better mobile experience
         updatedWelcomeNewChatBtn.addEventListener('touchend', (e) => {
-            e.preventDefault(); // Prevent default to avoid any conflicts
-            e.stopPropagation(); // Prevent event bubbling
+            e.preventDefault();
+            e.stopPropagation();
             runAfterPressIn(updatedWelcomeNewChatBtn, () => {
-                openSavedChats();
+                handleNewChatClick();
                 updatedWelcomeNewChatBtn.blur();
+            });
+        }, { passive: false });
+    }
+
+    // Dashboard button click handler
+    if (dashboardButton) {
+        bindPressInFeedback(dashboardButton);
+        dashboardButton.addEventListener('click', () => {
+            debugLog('Dashboard button clicked, returning to welcome screen');
+            
+            // Close the sidebar first
+            closeSidebar();
+            
+            // Show the welcome message (which now has a fade transition)
+            showWelcomeMessage();
+        });
+
+        // Touch support for mobile
+        dashboardButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            runAfterPressIn(dashboardButton, () => {
+                closeSidebar();
+                showWelcomeMessage();
+                dashboardButton.blur();
             });
         }, { passive: false });
     }
