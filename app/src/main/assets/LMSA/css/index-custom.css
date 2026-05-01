@@ -3506,8 +3506,88 @@ body.light-theme .conn-modal-action-btn--cancel {
 }
 
 #welcome-message .welcome-title-block .welcome-subtitle {
-    max-width: none;
-    white-space: nowrap;
+    max-width: 30ch;
+    white-space: normal;
+}
+
+#welcome-message .welcome-header {
+    margin-bottom: 16px !important;
+}
+
+#welcome-message #setup-dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    width: 100%;
+    margin: 0 0 14px 0 !important;
+}
+
+#welcome-message .provider-card {
+    min-height: 142px;
+    padding: 12px 8px !important;
+    border-radius: 16px !important;
+    justify-content: flex-start;
+}
+
+#welcome-message .provider-icon-wrapper {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    margin-bottom: 10px !important;
+    border-radius: 12px;
+}
+
+#welcome-message .provider-icon-wrapper i {
+    font-size: 1rem !important;
+}
+
+#welcome-message .provider-card h3 {
+    margin-bottom: 4px !important;
+    font-size: 0.93rem !important;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+}
+
+#welcome-message .provider-card p {
+    margin: 0;
+    max-width: 11ch;
+    font-size: 0.72rem !important;
+    line-height: 1.2 !important;
+    opacity: 0.7;
+}
+
+#welcome-message #configured-actions {
+    margin-top: 2px;
+}
+
+#welcome-message #configured-actions .welcome-action-grid {
+    gap: 10px;
+    margin-bottom: 10px !important;
+}
+
+#welcome-message #configured-actions .welcome-action-card {
+    min-height: 52px !important;
+    padding: 0 12px !important;
+    border-radius: 14px !important;
+    gap: 8px !important;
+}
+
+#welcome-message #configured-actions .welcome-action-card i {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px;
+    font-size: 0.78rem !important;
+}
+
+#welcome-message #configured-actions .welcome-action-card span {
+    font-size: 0.86rem !important;
+}
+
+#welcome-message #configured-actions .welcome-quick-switch {
+    font-size: 0.74rem;
+    line-height: 1.25;
+    margin-bottom: 8px !important;
 }
 
 #welcome-message .welcome-actions {
@@ -3754,6 +3834,31 @@ body.light-theme #welcome-message .welcome-premium-action.premium-activated {
         font-size: 0.88rem !important;
     }
 
+    #welcome-message #setup-dashboard {
+        gap: 8px;
+    }
+
+    #welcome-message .provider-card {
+        min-height: 128px;
+        padding: 10px 6px !important;
+    }
+
+    #welcome-message .provider-icon-wrapper {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        min-height: 38px;
+        margin-bottom: 8px !important;
+    }
+
+    #welcome-message .provider-card h3 {
+        font-size: 0.84rem !important;
+    }
+
+    #welcome-message .provider-card p {
+        font-size: 0.67rem !important;
+    }
+
     #welcome-message .welcome-action-grid {
         gap: 10px;
         margin-bottom: 10px !important;
@@ -3776,8 +3881,48 @@ body.light-theme #welcome-message .welcome-premium-action.premium-activated {
 }
 
 @media (max-width: 340px) {
+    #welcome-message #setup-dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    #welcome-message .provider-card {
+        min-height: 0;
+        padding: 12px !important;
+    }
+
+    #welcome-message .provider-card p {
+        max-width: none;
+    }
+
     #welcome-message .welcome-action-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 560px) {
+    #welcome-message .provider-card {
+        min-height: 156px;
+        padding: 14px 10px !important;
+    }
+
+    #welcome-message .provider-icon-wrapper {
+        width: 46px;
+        height: 46px;
+        min-width: 46px;
+        min-height: 46px;
+    }
+
+    #welcome-message .provider-card h3 {
+        font-size: 0.98rem !important;
+    }
+
+    #welcome-message .provider-card p {
+        font-size: 0.75rem !important;
+    }
+
+    #welcome-message #configured-actions .welcome-action-card {
+        min-height: 56px !important;
+        border-radius: 16px !important;
     }
 }
 
