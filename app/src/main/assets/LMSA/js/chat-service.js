@@ -31,6 +31,11 @@ const WEB_SEARCH_QUERY_MAX_LENGTH = 220;
 const WEB_SEARCH_CONTEXT_MAX_LENGTH = 96;
 const WEB_SEARCH_SHORT_QUERY_WORDS = 5;
 const WEB_SEARCH_FETCH_TIMEOUT_MS = 8000;
+const WEB_SEARCH_RECENT_CONTEXT_TURNS = 3;
+const WEB_SEARCH_RECENT_TOPIC_TURNS = 4;
+const WEB_SEARCH_CONTEXT_KEYWORD_LIMIT = 10;
+const WEB_SEARCH_TOPIC_OVERLAP_MIN_RATIO = 0.34;
+const WEB_SEARCH_REUSE_MAX_WORDS = 12;
 const CHAT_IMAGE_STORE_KEY = 'chatImageStore';
 const CHAT_IMAGE_STORE_VERSION = 1;
 const ACTIVE_TEMPLATE_CHARACTER_CARD_KEY = 'activeTemplateCharacterCard';
@@ -50,6 +55,9 @@ const WEB_SEARCH_FOLLOW_UP_PATTERN = /\b(it|its|they|them|their|this|that|these|
 const WEB_SEARCH_AMBIGUOUS_LEAD_PATTERN = /^(and|also|so|then|what about|how about|what else|when|where|why|who|which|is it|are they|does it|do they|did it|can it|could it|would it|should it)\b/i;
 const WEB_SEARCH_ERROR_PATTERN = /\b(error|exception|traceback|stack trace|typeerror|referenceerror|syntaxerror|rangeerror|failed|failure|cannot|can't|undefined|null|not found|http\s*\d{3}|\d{3}\s+error)\b/i;
 const WEB_SEARCH_RETRY_PATTERN = /^(try again|retry|again|search again|look again|check again|one more time|refresh|update it|update this)$/i;
+const WEB_SEARCH_FORCE_SKIP_PATTERN = /\b(?:don't|do not|dont|skip|avoid|without|no)\s+(?:use\s+)?(?:web\s+search|search(?:ing)?(?:\s+the\s+web)?|the\s+web|online\s+search)\b|\b(?:answer|respond|reply)\s+(?:from|using)\s+(?:chat|context|memory|what you already know|existing context)\s+only\b|\bno\s+need\s+to\s+(?:search|look\s+up|check\s+online)\b/i;
+const WEB_SEARCH_EXPLICIT_REQUEST_PATTERN = /\b(?:search(?:\s+the\s+web)?|look\s+up|find(?:\s+out)?|check\s+online|web\s+search)\b/i;
+const WEB_SEARCH_FORCE_FRESH_PATTERN = /\b(?:latest|current|today|recent|newest|breaking|up[- ]?to[- ]?date|right now|currently|news|price|pricing|availability|release date|weather|forecast|stock)\b/i;
 const WEB_SEARCH_TOOL_NAME = 'web_search';
 const WEB_SEARCH_DECISION_MAX_TOKENS = 96;
 const WEB_SEARCH_DECISION_MAX_MESSAGES = 6;
@@ -955,6 +963,21 @@ function prepareAssistantResponseForStorage(aiMessage, userMessage, shouldExtrac
     };
 }
 
+function cloneWebSearchSources(sources) {
+    if (!Array.isArray(sources)) {
+        return [];
+    }
+
+    return sources
+        .filter(source => source && typeof source === 'object')
+        .map(source => ({
+            title: typeof source.title === 'string' ? source.title : '',
+            url: typeof source.url === 'string' ? source.url : '',
+            hostname: typeof source.hostname === 'string' ? source.hostname : ''
+        }))
+        .filter(source => source.url);
+}
+
 function shouldRequestInlineChatTitle(chatMessages) {
     return getAutoGenerateTitles()
         && Array.isArray(chatMessages)
@@ -1309,11 +1332,12 @@ async function generateAIResponseWithRetry(userMessage, fileContents = [], retry
 }
 
 function normalizeWebSearchText(text) {
-    if (typeof text !== 'string') {
+    const displayText = getDisplayTextFromMessageContent(text);
+    if (typeof displayText !== 'string') {
         return '';
     }
 
-    return stripInjectedWebSearchContext(text)
+    return stripInjectedWebSearchContext(displayText)
         .replace(/```[\s\S]*?```/g, ' ')
         .replace(/`[^`]*`/g, ' ')
         .replace(/[“”]/g, '"')
@@ -1431,26 +1455,169 @@ function countWords(text) {
     return text.split(/\s+/).filter(Boolean).length;
 }
 
-function buildRecentSearchContext(chatMessages) {
-    if (!Array.isArray(chatMessages) || chatMessages.length === 0) {
+function sanitizeWebSearchQuery(query) {
+    let normalizedQuery = normalizeWebSearchText(query);
+    if (!normalizedQuery) {
         return '';
     }
 
-    const priorUserMessages = chatMessages
-        .filter(message => message.role === 'user')
-        .slice(0, -1);
+    if (normalizedQuery.length > WEB_SEARCH_QUERY_MAX_LENGTH) {
+        debugLog('Trimming web search query to max length.');
+        normalizedQuery = normalizedQuery.slice(0, WEB_SEARCH_QUERY_MAX_LENGTH).trim();
+    }
 
-    // Only use the immediately previous message, not earlier ones
+    return normalizedQuery;
+}
+
+function normalizeWebSearchPromptForPolicy(text) {
+    const normalizedText = normalizeWebSearchText(text);
+    if (!normalizedText) {
+        return '';
+    }
+
+    return stripPresentationDirectives(
+        stripSearchInstructionPhrases(normalizedText)
+    ) || normalizedText;
+}
+
+function getPriorUserMessages(chatMessages = []) {
+    if (!Array.isArray(chatMessages)) {
+        return [];
+    }
+
+    return chatMessages
+        .filter(message => message?.role === 'user')
+        .slice(0, -1);
+}
+
+function getNormalizedUserMessageText(message) {
+    return normalizeWebSearchPromptForPolicy(message?.content || '');
+}
+
+function getTopicOverlapStats(currentText, referenceText) {
+    const currentKeywords = buildKeywordSet(currentText, 10);
+    const referenceKeywords = buildKeywordSet(referenceText, 10);
+
+    if (currentKeywords.size === 0 || referenceKeywords.size === 0) {
+        return {
+            overlapCount: 0,
+            minRatio: 0,
+            currentSize: currentKeywords.size,
+            referenceSize: referenceKeywords.size
+        };
+    }
+
+    let overlapCount = 0;
+    for (const keyword of currentKeywords) {
+        if (referenceKeywords.has(keyword)) {
+            overlapCount += 1;
+        }
+    }
+
+    return {
+        overlapCount,
+        minRatio: overlapCount / Math.min(currentKeywords.size, referenceKeywords.size),
+        currentSize: currentKeywords.size,
+        referenceSize: referenceKeywords.size
+    };
+}
+
+function areWebSearchTopicsRelated(currentText, referenceText) {
+    if (!currentText || !referenceText) {
+        return false;
+    }
+
+    if (currentText === referenceText) {
+        return true;
+    }
+
+    const overlapStats = getTopicOverlapStats(currentText, referenceText);
+    if (overlapStats.currentSize < 2 || overlapStats.referenceSize < 2) {
+        return false;
+    }
+
+    return overlapStats.overlapCount >= 2
+        || (overlapStats.overlapCount >= 1 && overlapStats.minRatio >= WEB_SEARCH_TOPIC_OVERLAP_MIN_RATIO);
+}
+
+function isExplicitWebSearchSkipRequest(text) {
+    const normalizedText = normalizeWebSearchText(text).toLowerCase();
+    return Boolean(normalizedText) && WEB_SEARCH_FORCE_SKIP_PATTERN.test(normalizedText);
+}
+
+function isExplicitWebSearchRequest(text) {
+    return WEB_SEARCH_EXPLICIT_REQUEST_PATTERN.test(normalizeWebSearchText(text));
+}
+
+function isFreshnessSensitiveWebSearch(text) {
+    return WEB_SEARCH_FORCE_FRESH_PATTERN.test(normalizeWebSearchText(text));
+}
+
+function getStoredWebSearchPayload(message) {
+    if (!message || message.role !== 'user' || !message.hadWebSearch) {
+        return null;
+    }
+
+    const searchContext = typeof message.webSearchResults === 'string' ? message.webSearchResults.trim() : '';
+    if (!searchContext) {
+        return null;
+    }
+
+    const clonedSources = cloneWebSearchSources(message.webSearchSources);
+    return {
+        context: searchContext,
+        sources: clonedSources.length > 0 ? clonedSources : extractWebSearchSourcesFromContext(searchContext),
+        query: typeof message.webSearchQuery === 'string' ? message.webSearchQuery : '',
+        providerName: typeof message.webSearchProviderName === 'string' ? message.webSearchProviderName : '',
+        mode: message.webSearchMode === 'reuse' ? 'reuse' : 'fresh'
+    };
+}
+
+function getLatestWebSearchEntry(chatMessages = []) {
+    const priorUserMessages = getPriorUserMessages(chatMessages);
+
+    for (let index = priorUserMessages.length - 1; index >= 0; index -= 1) {
+        const message = priorUserMessages[index];
+        const payload = getStoredWebSearchPayload(message);
+        if (!payload) {
+            continue;
+        }
+
+        return {
+            message,
+            text: getNormalizedUserMessageText(message),
+            payload
+        };
+    }
+
+    return null;
+}
+
+function buildRecentSearchContext(chatMessages, referenceText = '') {
+    const priorUserMessages = getPriorUserMessages(chatMessages);
     if (priorUserMessages.length === 0) {
         return '';
     }
 
-    const lastPriorMessage = priorUserMessages[priorUserMessages.length - 1];
-    const priorText = stripPresentationDirectives(
-        stripSearchInstructionPhrases(normalizeWebSearchText(lastPriorMessage.content || ''))
-    );
-    // Extract 6-8 keywords for context, keeping it brief
-    const keywordContext = extractKeywordQuery(priorText, 8) || priorText;
+    const collectedTexts = [];
+    for (let index = priorUserMessages.length - 1; index >= 0 && collectedTexts.length < WEB_SEARCH_RECENT_CONTEXT_TURNS; index -= 1) {
+        const priorText = getNormalizedUserMessageText(priorUserMessages[index]);
+        if (!priorText || isSkipWorthyWebSearchQuery(priorText)) {
+            continue;
+        }
+
+        if (!referenceText || shouldUseRecentContext(referenceText) || areWebSearchTopicsRelated(referenceText, priorText)) {
+            collectedTexts.unshift(priorText);
+            continue;
+        }
+
+        if (collectedTexts.length > 0) {
+            break;
+        }
+    }
+
+    const combinedContext = collectedTexts.join(' ');
+    const keywordContext = extractKeywordQuery(combinedContext, WEB_SEARCH_CONTEXT_KEYWORD_LIMIT) || combinedContext;
 
     return keywordContext.slice(0, WEB_SEARCH_CONTEXT_MAX_LENGTH).trim();
 }
@@ -1559,6 +1726,11 @@ function buildRetryWebSearchQuery(userMessage, chatMessages = []) {
         return '';
     }
 
+    const latestWebSearchEntry = getLatestWebSearchEntry(chatMessages);
+    if (latestWebSearchEntry?.payload?.query) {
+        return latestWebSearchEntry.payload.query;
+    }
+
     const previousUserMessage = getPreviousUserMessage(chatMessages);
     const previousContent = getDisplayTextFromMessageContent(previousUserMessage?.content || '');
     if (!previousContent || isSkipWorthyWebSearchQuery(previousContent)) {
@@ -1569,28 +1741,22 @@ function buildRetryWebSearchQuery(userMessage, chatMessages = []) {
 }
 
 function isLikelyTopicSwitch(userMessage, chatMessages = []) {
-    if (!Array.isArray(chatMessages) || chatMessages.length === 0) {
+    const normalizedCurrent = normalizeWebSearchPromptForPolicy(userMessage || '');
+    if (!normalizedCurrent || shouldUseRecentContext(normalizedCurrent)) {
         return false;
     }
 
-    const normalizedCurrent = normalizeWebSearchText(userMessage || '');
-    if (!normalizedCurrent) {
-        return false;
-    }
+    const priorUserTexts = getPriorUserMessages(chatMessages)
+        .slice(-WEB_SEARCH_RECENT_TOPIC_TURNS)
+        .map(getNormalizedUserMessageText)
+        .filter(text => text && !isSkipWorthyWebSearchQuery(text));
 
-    const priorUserMessages = chatMessages.filter(message => message?.role === 'user');
-    if (priorUserMessages.length < 2) {
-        return false;
-    }
-
-    const previousUser = priorUserMessages[priorUserMessages.length - 2];
-    const normalizedPrevious = normalizeWebSearchText(previousUser?.content || '');
-    if (!normalizedPrevious) {
+    if (priorUserTexts.length === 0) {
         return false;
     }
 
     const currentKeywords = buildKeywordSet(normalizedCurrent, 10);
-    const previousKeywords = buildKeywordSet(normalizedPrevious, 10);
+    const previousKeywords = buildKeywordSet(priorUserTexts.join(' '), 12);
 
     if (currentKeywords.size < 3 || previousKeywords.size < 3) {
         return false;
@@ -1608,7 +1774,7 @@ function isLikelyTopicSwitch(userMessage, chatMessages = []) {
 }
 
 function buildWebSearchQuery(userMessage, chatMessages = []) {
-    const normalizedPrompt = normalizeWebSearchText(userMessage);
+    const normalizedPrompt = normalizeWebSearchPromptForPolicy(userMessage);
     if (!normalizedPrompt) {
         return '';
     }
@@ -1627,7 +1793,7 @@ function buildWebSearchQuery(userMessage, chatMessages = []) {
         finalQuery = extractErrorFocusedQuery(cleanedPrompt) || cleanedPrompt;
     } else if (!isFirstUserMessage(chatMessages) && shouldUseRecentContext(cleanedPrompt)) {
         // Short, ambiguous follow-up on a non-first turn: prepend prior context
-        const recentContext = buildRecentSearchContext(chatMessages);
+        const recentContext = buildRecentSearchContext(chatMessages, cleanedPrompt);
         finalQuery = recentContext ? `${recentContext} ${cleanedPrompt}` : cleanedPrompt;
     } else {
         // All other cases (including the first message): use the cleaned prompt as-is.
@@ -1635,12 +1801,36 @@ function buildWebSearchQuery(userMessage, chatMessages = []) {
         finalQuery = cleanedPrompt;
     }
 
-    finalQuery = finalQuery.replace(/\s+/g, ' ').trim();
-    if (finalQuery.length > WEB_SEARCH_QUERY_MAX_LENGTH) {
-        finalQuery = finalQuery.slice(0, WEB_SEARCH_QUERY_MAX_LENGTH).trim();
+    return sanitizeWebSearchQuery(finalQuery.replace(/\s+/g, ' ').trim());
+}
+
+function buildUsableWebSearchPayload(query, providerName, results) {
+    if (!Array.isArray(results) || results.length === 0) {
+        return null;
     }
 
-    return finalQuery;
+    const usableResults = results
+        .map(item => ({
+            title: normalizeSearchResultText(item?.title),
+            content: normalizeSearchResultText(item?.content),
+            url: normalizeSearchResultText(item?.url)
+        }))
+        .filter(item => item.title && (item.content || item.url))
+        .slice(0, 5);
+
+    const sources = buildWebSearchSourceList(usableResults);
+    const hasMeaningfulSnippet = usableResults.some(item => item.content.length >= 24);
+
+    if (usableResults.length === 0 || sources.length === 0 || !hasMeaningfulSnippet) {
+        return null;
+    }
+
+    return {
+        context: buildWebSearchContext(query, providerName, usableResults),
+        query,
+        providerName,
+        sources
+    };
 }
 
 async function performWebSearch(query) {
@@ -1650,9 +1840,14 @@ async function performWebSearch(query) {
             debugLog(`Searching the web for context via ${provider.name}...`);
             const results = await fetchWebSearchProviderResults(provider, query);
             if (results.length > 0) {
-                const searchContext = buildWebSearchContext(query, provider.name, results);
-                debugLog('Injecting search context:', searchContext.substring(0, 200));
-                return searchContext;
+                const searchPayload = buildUsableWebSearchPayload(query, provider.name, results);
+                if (searchPayload?.context) {
+                    debugLog('Injecting search context:', searchPayload.context.substring(0, 200));
+                    return searchPayload;
+                }
+
+                console.warn(`${provider.name} returned low-signal results for query:`, query);
+                continue;
             }
 
             console.warn(`${provider.name} returned no results for query:`, query);
@@ -1810,6 +2005,126 @@ function normalizeSearchResultText(text) {
     return String(text).replace(/\s+/g, ' ').trim();
 }
 
+function normalizeWebSearchHostname(url) {
+    const normalizedUrl = normalizeSearchResultText(url);
+    if (!normalizedUrl) {
+        return '';
+    }
+
+    try {
+        return new URL(normalizedUrl).hostname.replace(/^www\./i, '').toLowerCase();
+    } catch {
+        return '';
+    }
+}
+
+function truncateWebSearchSourceLabel(text, maxLength = 96) {
+    const normalizedText = normalizeSearchResultText(text);
+    if (normalizedText.length <= maxLength) {
+        return normalizedText;
+    }
+
+    return `${normalizedText.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
+}
+
+function buildWebSearchSourceList(results) {
+    if (!Array.isArray(results)) {
+        return [];
+    }
+
+    const seenHosts = new Set();
+    const sources = [];
+
+    for (const item of results) {
+        const url = normalizeSearchResultText(item?.url);
+        if (!url) {
+            continue;
+        }
+
+        const hostname = normalizeWebSearchHostname(url);
+        const dedupeKey = hostname || url;
+        if (seenHosts.has(dedupeKey)) {
+            continue;
+        }
+
+        seenHosts.add(dedupeKey);
+        sources.push({
+            title: truncateWebSearchSourceLabel(item?.title || hostname || url),
+            url,
+            hostname
+        });
+
+        if (sources.length >= 5) {
+            break;
+        }
+    }
+
+    return sources;
+}
+
+function extractWebSearchSourcesFromContext(searchContext) {
+    if (typeof searchContext !== 'string' || !searchContext.trim()) {
+        return [];
+    }
+
+    const parsedResults = [];
+    const lines = searchContext.split('\n');
+
+    for (const line of lines) {
+        const match = line.match(/^\s*\d+\.\s*(.+?):.*\((https?:\/\/[^)\s]+)\)\s*$/i);
+        if (!match) {
+            continue;
+        }
+
+        parsedResults.push({
+            title: normalizeSearchResultText(match[1]),
+            url: normalizeSearchResultText(match[2])
+        });
+    }
+
+    return buildWebSearchSourceList(parsedResults);
+}
+
+function hasAssistantSourcesSection(message) {
+    return typeof message === 'string'
+        && /(?:^|\n)##\s+Sources\s*(?:\n|$)/i.test(message);
+}
+
+function formatWebSearchSourcesSection(sources) {
+    const normalizedSources = cloneWebSearchSources(sources).slice(0, 5);
+    if (normalizedSources.length === 0) {
+        return '';
+    }
+
+    const lines = normalizedSources.map((source, index) => {
+        const baseLabel = source.title || source.hostname || source.url;
+        const label = source.hostname && baseLabel !== source.hostname
+            ? `${baseLabel} (${source.hostname})`
+            : baseLabel;
+        return `${index + 1}. ${label} - <${source.url}>`;
+    });
+
+    return `## Sources\n${lines.join('\n')}`;
+}
+
+function appendWebSearchSourcesSection(message, sources) {
+    if (typeof message !== 'string') {
+        return message;
+    }
+
+    const trimmedMessage = message.trimEnd();
+    if (!trimmedMessage || hasAssistantSourcesSection(trimmedMessage)) {
+        return trimmedMessage;
+    }
+
+    const sourcesSection = formatWebSearchSourcesSection(sources);
+    if (!sourcesSection) {
+        return trimmedMessage;
+    }
+
+    return `${trimmedMessage}\n\n${sourcesSection}`;
+}
+
 function buildWebSearchContext(query, providerName, results) {
     let searchContext = `${WEB_SEARCH_CONTEXT_HEADER}\n`;
     searchContext += `Query: ${query}\n`;
@@ -1890,12 +2205,12 @@ function extractWebSearchQueryFromToolCalls(responseData) {
         try {
             const parsedArgs = JSON.parse(rawArgs);
             const candidateQuery = typeof parsedArgs?.query === 'string' ? parsedArgs.query : '';
-            const normalizedQuery = normalizeWebSearchText(candidateQuery).slice(0, WEB_SEARCH_QUERY_MAX_LENGTH).trim();
+            const normalizedQuery = sanitizeWebSearchQuery(candidateQuery);
             if (normalizedQuery) {
                 return normalizedQuery;
             }
         } catch (_) {
-            const normalizedQuery = normalizeWebSearchText(rawArgs).slice(0, WEB_SEARCH_QUERY_MAX_LENGTH).trim();
+            const normalizedQuery = sanitizeWebSearchQuery(rawArgs);
             if (normalizedQuery) {
                 return normalizedQuery;
             }
@@ -2014,60 +2329,299 @@ async function decideWebSearchQueryWithModel(requestMessages, signal) {
 }
 
 async function resolveWebSearchQuery(userMessage, requestMessages, chatMessages, signal) {
-    const normalizedPrompt = normalizeWebSearchText(userMessage);
+    const normalizedPrompt = normalizeWebSearchPromptForPolicy(userMessage);
     if (!normalizedPrompt) {
-        return { shouldSearch: false, query: '', source: 'empty' };
+        return { action: 'skip', reason: 'empty', query: '' };
+    }
+
+    if (isExplicitWebSearchSkipRequest(userMessage)) {
+        return { action: 'skip', reason: 'explicit-skip', query: '' };
     }
 
     const retryQuery = buildRetryWebSearchQuery(userMessage, chatMessages);
     if (retryQuery) {
         return {
-            shouldSearch: true,
+            action: 'search',
             query: retryQuery,
-            source: 'retry-context'
+            reason: 'retry-fresh-search'
         };
+    }
+
+    const latestWebSearchEntry = getLatestWebSearchEntry(chatMessages);
+    const explicitFreshSearch = isExplicitWebSearchRequest(userMessage) || isFreshnessSensitiveWebSearch(userMessage);
+    const topicSwitch = isLikelyTopicSwitch(userMessage, chatMessages);
+
+    if (latestWebSearchEntry?.payload?.context) {
+        const sameTopicAsLatestSearch = areWebSearchTopicsRelated(normalizedPrompt, latestWebSearchEntry.text)
+            || (shouldUseRecentContext(normalizedPrompt) && Boolean(latestWebSearchEntry.text));
+        const shouldReuseLatestSearch = sameTopicAsLatestSearch
+            && !explicitFreshSearch
+            && !topicSwitch
+            && (shouldUseRecentContext(normalizedPrompt) || countWords(normalizedPrompt) <= WEB_SEARCH_REUSE_MAX_WORDS);
+
+        if (shouldReuseLatestSearch) {
+            return {
+                action: 'reuse',
+                reason: 'reuse-stored-context',
+                query: latestWebSearchEntry.payload.query,
+                context: latestWebSearchEntry.payload.context,
+                sources: cloneWebSearchSources(latestWebSearchEntry.payload.sources),
+                providerName: latestWebSearchEntry.payload.providerName
+            };
+        }
     }
 
     // For clear topic switches, avoid over-relying on prior conversation context
     // and force a fresh, standalone web search query.
-    if (isLikelyTopicSwitch(userMessage, chatMessages) && !isSkipWorthyWebSearchQuery(userMessage)) {
+    if (topicSwitch && !isSkipWorthyWebSearchQuery(userMessage)) {
         const topicSwitchQuery = buildWebSearchQuery(userMessage, []);
         if (topicSwitchQuery) {
             return {
-                shouldSearch: true,
+                action: 'search',
                 query: topicSwitchQuery,
-                source: 'topic-switch'
+                reason: 'topic-switch-fresh-search'
             };
         }
     }
 
     const isFirstMsg = isFirstUserMessage(chatMessages);
-    if (isFirstMsg || !isSkipWorthyWebSearchQuery(userMessage)) {
+    if (isFirstMsg || explicitFreshSearch || !isSkipWorthyWebSearchQuery(userMessage)) {
         const fallbackQuery = buildWebSearchQuery(userMessage, chatMessages);
         if (fallbackQuery) {
             return {
-                shouldSearch: true,
+                action: 'search',
                 query: fallbackQuery,
-                source: isFirstMsg ? 'first-message' : 'heuristic'
+                reason: isFirstMsg
+                    ? 'first-message-fresh-search'
+                    : explicitFreshSearch
+                        ? 'explicit-fresh-search'
+                        : 'heuristic-fresh-search'
             };
         }
     }
 
     return {
-        shouldSearch: false,
+        action: 'skip',
         query: '',
-        source: 'heuristic-skip'
+        reason: 'heuristic-skip'
     };
 }
 
-function consumeWebSearchQuota() {
-    if (!canUseWebSearch()) {
-        document.dispatchEvent(new CustomEvent('webSearchLimitReached'));
+function isInternetAvailableForWebSearch() {
+    if (window.AndroidNetwork && typeof window.AndroidNetwork.isInternetAvailable === 'function') {
+        try {
+            return !!window.AndroidNetwork.isInternetAvailable();
+        } catch (error) {
+            console.warn('Failed to read Android network availability for web search:', error);
+        }
+    }
+
+    if (typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean') {
+        return navigator.onLine;
+    }
+
+    return true;
+}
+
+function prependWebSearchContextToContent(content, searchContext) {
+    if (Array.isArray(content)) {
+        return [{ type: 'text', text: `${searchContext}\n\n` }, ...cloneContentForRequest(content)];
+    }
+
+    if (typeof content === 'string') {
+        return `${searchContext}\n\n${content}`;
+    }
+
+    if (content == null) {
+        return searchContext;
+    }
+
+    return `${searchContext}\n\n${String(content)}`;
+}
+
+function injectWebSearchContextIntoMessages(requestMessages, searchContext) {
+    if (!Array.isArray(requestMessages) || !searchContext) {
         return false;
     }
 
-    recordWebSearch();
+    let lastUserMessageIndex = -1;
+    for (let index = requestMessages.length - 1; index >= 0; index -= 1) {
+        if (requestMessages[index]?.role === 'user') {
+            lastUserMessageIndex = index;
+            break;
+        }
+    }
+
+    if (lastUserMessageIndex === -1) {
+        return false;
+    }
+
+    if (getUseOpenRouter()) {
+        const lastUserMessage = requestMessages[lastUserMessageIndex];
+        requestMessages[lastUserMessageIndex] = {
+            ...lastUserMessage,
+            content: prependWebSearchContextToContent(lastUserMessage.content, searchContext)
+        };
+    } else {
+        requestMessages.splice(lastUserMessageIndex, 0, { role: 'system', content: searchContext });
+    }
+
     return true;
+}
+
+function persistTurnWebSearchMetadata(historyMessages, userMessageIndex, searchPayload, mode = 'fresh') {
+    if (!Array.isArray(historyMessages) || userMessageIndex < 0 || !searchPayload?.context) {
+        return;
+    }
+
+    const targetMessage = historyMessages[userMessageIndex];
+    if (!targetMessage || targetMessage.role !== 'user') {
+        return;
+    }
+
+    targetMessage.webSearchResults = searchPayload.context;
+    targetMessage.webSearchSources = cloneWebSearchSources(searchPayload.sources);
+    targetMessage.webSearchQuery = typeof searchPayload.query === 'string' ? searchPayload.query : '';
+    targetMessage.webSearchProviderName = typeof searchPayload.providerName === 'string' ? searchPayload.providerName : '';
+    targetMessage.webSearchMode = mode === 'reuse' ? 'reuse' : 'fresh';
+    targetMessage.hadWebSearch = true;
+}
+
+function addWebSearchIndicatorToLatestUserMessage() {
+    const userMessages = messagesContainer.querySelectorAll('.user');
+    if (userMessages.length > 0) {
+        addWebSearchIndicator(userMessages[userMessages.length - 1]);
+    }
+}
+
+async function prepareWebSearchForRequest({
+    userMessage,
+    requestMessages,
+    chatMessages,
+    historyMessages,
+    historyUserMessageIndex,
+    storedPayload = null,
+    signal,
+    logLabel = 'Web search'
+}) {
+    const currentTurnPayload = storedPayload?.context
+        ? {
+            ...storedPayload,
+            sources: (() => {
+                const clonedSources = cloneWebSearchSources(storedPayload.sources);
+                return clonedSources.length > 0
+                    ? clonedSources
+                    : extractWebSearchSourcesFromContext(storedPayload.context);
+            })()
+        }
+        : getStoredWebSearchPayload(historyMessages?.[historyUserMessageIndex]);
+
+    if (currentTurnPayload?.context) {
+        injectWebSearchContextIntoMessages(requestMessages, currentTurnPayload.context);
+        persistTurnWebSearchMetadata(historyMessages, historyUserMessageIndex, currentTurnPayload, currentTurnPayload.mode);
+        saveChatHistory();
+        addWebSearchIndicatorToLatestUserMessage();
+        return {
+            usedWebSearch: true,
+            blockedByQuota: false,
+            reason: 'stored-current-turn-context',
+            payload: currentTurnPayload,
+            sources: cloneWebSearchSources(currentTurnPayload.sources)
+        };
+    }
+
+    if (!getWebSearchEnabled() || !Array.isArray(requestMessages) || requestMessages.length === 0) {
+        return {
+            usedWebSearch: false,
+            blockedByQuota: false,
+            reason: 'disabled',
+            payload: null,
+            sources: []
+        };
+    }
+
+    const webSearchDecision = await resolveWebSearchQuery(userMessage, requestMessages, chatMessages, signal);
+    debugLog(`${logLabel}:`, webSearchDecision.reason, webSearchDecision.query ? `query=${webSearchDecision.query}` : 'no-query');
+
+    if (webSearchDecision.action === 'reuse' && webSearchDecision.context) {
+        const reusedPayload = {
+            context: webSearchDecision.context,
+            query: webSearchDecision.query,
+            providerName: webSearchDecision.providerName,
+            sources: cloneWebSearchSources(webSearchDecision.sources)
+        };
+
+        injectWebSearchContextIntoMessages(requestMessages, reusedPayload.context);
+        persistTurnWebSearchMetadata(historyMessages, historyUserMessageIndex, reusedPayload, 'reuse');
+        saveChatHistory();
+        addWebSearchIndicatorToLatestUserMessage();
+
+        return {
+            usedWebSearch: true,
+            blockedByQuota: false,
+            reason: webSearchDecision.reason,
+            payload: reusedPayload,
+            sources: reusedPayload.sources
+        };
+    }
+
+    if (webSearchDecision.action !== 'search' || !webSearchDecision.query) {
+        return {
+            usedWebSearch: false,
+            blockedByQuota: false,
+            reason: webSearchDecision.reason,
+            payload: null,
+            sources: []
+        };
+    }
+
+    if (!isInternetAvailableForWebSearch()) {
+        debugLog(`${logLabel}: offline-blocked`);
+        return {
+            usedWebSearch: false,
+            blockedByQuota: false,
+            reason: 'offline-blocked',
+            payload: null,
+            sources: []
+        };
+    }
+
+    if (!canUseWebSearch()) {
+        document.dispatchEvent(new CustomEvent('webSearchLimitReached'));
+        return {
+            usedWebSearch: false,
+            blockedByQuota: true,
+            reason: 'quota-blocked',
+            payload: null,
+            sources: []
+        };
+    }
+
+    const searchResults = await performWebSearch(webSearchDecision.query);
+    if (!searchResults?.context) {
+        debugLog(`${logLabel}: fresh-search-no-results`, webSearchDecision.query);
+        return {
+            usedWebSearch: false,
+            blockedByQuota: false,
+            reason: 'fresh-search-no-results',
+            payload: null,
+            sources: []
+        };
+    }
+
+    recordWebSearch();
+    injectWebSearchContextIntoMessages(requestMessages, searchResults.context);
+    persistTurnWebSearchMetadata(historyMessages, historyUserMessageIndex, searchResults, 'fresh');
+    saveChatHistory();
+    addWebSearchIndicatorToLatestUserMessage();
+
+    return {
+        usedWebSearch: true,
+        blockedByQuota: false,
+        reason: webSearchDecision.reason,
+        payload: searchResults,
+        sources: cloneWebSearchSources(searchResults.sources)
+    };
 }
 
 const WEB_SEARCH_CONTEXT_HEADER = [
@@ -2170,6 +2724,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
 
     let aiMessage = '';
     let hasCodeBlock = false; // Track if we detected a code block
+    let currentTurnWebSearchSources = [];
 
     // Declare timeout variables outside try block to ensure they're accessible in finally block
     let streamingTimeoutId;
@@ -2232,10 +2787,20 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         }
 
         if (getWebSearchEnabled() && messages.length > 0) {
-            const webSearchDecision = await resolveWebSearchQuery(userMessage, messages, chatMessages, signal);
-            debugLog('Web search decision:', webSearchDecision.source, webSearchDecision.query ? `query=${webSearchDecision.query}` : 'no-query');
+            const historyMessages = chatHistoryData[currentChatId] && chatHistoryData[currentChatId].messages
+                ? chatHistoryData[currentChatId].messages
+                : [];
+            const preparedWebSearch = await prepareWebSearchForRequest({
+                userMessage,
+                requestMessages: messages,
+                chatMessages,
+                historyMessages,
+                historyUserMessageIndex: historyMessages.length - 1,
+                signal,
+                logLabel: 'Web search decision'
+            });
 
-            if (webSearchDecision.shouldSearch && !canUseWebSearch()) {
+            if (preparedWebSearch.blockedByQuota) {
                 hideLoadingIndicator();
                 const stopButton = document.getElementById('stop-button');
                 if (stopButton && !stopButton.classList.contains('hidden')) {
@@ -2244,51 +2809,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                 return;
             }
 
-            const searchResults = webSearchDecision.shouldSearch
-                ? await performWebSearch(webSearchDecision.query)
-                : null;
-
-            if (searchResults) {
-                recordWebSearch();
-                // Inject search results into the current API request
-                if (getUseOpenRouter()) {
-                    // OpenRouter (and most cloud models) do not support system-role messages
-                    // injected mid-conversation — only the first message can be system role.
-                    // Prepend the search context directly into the last user message instead.
-                    const lastMsg = messages[messages.length - 1];
-                    if (lastMsg && lastMsg.role === 'user') {
-                        messages[messages.length - 1] = {
-                            ...lastMsg,
-                            content: searchResults + '\n\n' + lastMsg.content
-                        };
-                    }
-                } else {
-                    // Local LM Studio / Ollama: inject as a system message before the last user message
-                    messages.splice(messages.length - 1, 0, { role: 'system', content: searchResults });
-                }
-                
-                // Store web search metadata with the user message in chat history
-                // This allows follow-up questions to reference the search results
-                if (chatHistoryData[currentChatId] && chatHistoryData[currentChatId].messages) {
-                    const historyMessages = chatHistoryData[currentChatId].messages;
-                    const lastUserMsgIndex = historyMessages.length - 1;
-                    if (lastUserMsgIndex >= 0 && historyMessages[lastUserMsgIndex].role === 'user') {
-                        historyMessages[lastUserMsgIndex].webSearchResults = searchResults;
-                        historyMessages[lastUserMsgIndex].hadWebSearch = true;
-                        // Save to localStorage immediately
-                        saveChatHistory();
-                        
-                        // Add visual indicator to the user message in the DOM
-                        const userMessages = messagesContainer.querySelectorAll('.user');
-                        if (userMessages.length > 0) {
-                            const lastUserMessageElement = userMessages[userMessages.length - 1];
-                            addWebSearchIndicator(lastUserMessageElement);
-                        }
-                    }
-                }
-            } else if (webSearchDecision.shouldSearch) {
-                debugLog('Web search selected but no search context was returned:', webSearchDecision.query);
-            }
+            currentTurnWebSearchSources = cloneWebSearchSources(preparedWebSearch.sources);
         }
 
         // If files are attached, enhance the last user message in the messages array
@@ -2486,7 +3007,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             }
 
             const responsePayload = prepareAssistantResponseForStorage(aiMessage, userMessage, shouldInlineChatTitle);
-            aiMessage = responsePayload.cleanMessage;
+            aiMessage = appendWebSearchSourcesSection(responsePayload.cleanMessage, currentTurnWebSearchSources);
             if (responsePayload.title && chatHistoryData[currentChatId]) {
                 chatHistoryData[currentChatId].title = responsePayload.title;
             }
@@ -2512,11 +3033,13 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
 
             if (containsCodeBlocksOutsideThinkTags(aiMessage)) {
                 await fastUpdateChatHistoryBeforeReload(userMessage, aiMessage, fileContents, {
-                    lmStudioResponseId: nativeResult.responseId
+                    lmStudioResponseId: nativeResult.responseId,
+                    webSearchSources: currentTurnWebSearchSources
                 });
             } else {
                 await updateChatHistory(userMessage, aiMessage, fileContents, {
-                    lmStudioResponseId: nativeResult.responseId
+                    lmStudioResponseId: nativeResult.responseId,
+                    webSearchSources: currentTurnWebSearchSources
                 });
             }
 
@@ -2952,7 +3475,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         // Apply final content processing based on thinking tags/settings and strip the
         // hidden inline title marker before rendering or saving the response.
         const responsePayload = prepareAssistantResponseForStorage(aiMessage, userMessage, shouldInlineChatTitle);
-        aiMessage = responsePayload.cleanMessage;
+        aiMessage = appendWebSearchSourcesSection(responsePayload.cleanMessage, currentTurnWebSearchSources);
         if (responsePayload.title && chatHistoryData[currentChatId]) {
             chatHistoryData[currentChatId].title = responsePayload.title;
         }
@@ -2989,10 +3512,14 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         // This makes the reload happen faster
         if (containsCodeBlocksOutsideThinkTags(aiMessage)) {
             // Fast path for code blocks outside think tags - minimal chat update without UI refresh
-            await fastUpdateChatHistoryBeforeReload(userMessage, aiMessage, fileContents);
+            await fastUpdateChatHistoryBeforeReload(userMessage, aiMessage, fileContents, {
+                webSearchSources: currentTurnWebSearchSources
+            });
         } else {
             // Normal path for non-code blocks or code blocks only in think tags - full history update with UI refresh
-            await updateChatHistory(userMessage, aiMessage, fileContents);
+            await updateChatHistory(userMessage, aiMessage, fileContents, {
+                webSearchSources: currentTurnWebSearchSources
+            });
         }
 
         // Review trigger removed
@@ -3280,6 +3807,9 @@ export async function updateChatHistory(userMessage, aiMessage, fileContents = [
     const assistantMessage = { role: 'assistant', content: responsePayload.cleanMessage, model: getSelectedModel() };
     if (options.lmStudioResponseId) {
         assistantMessage.lmStudioResponseId = options.lmStudioResponseId;
+    }
+    if (Array.isArray(options.webSearchSources) && options.webSearchSources.length > 0) {
+        assistantMessage.webSearchSources = cloneWebSearchSources(options.webSearchSources);
     }
 
     // Add the AI response
@@ -5207,6 +5737,15 @@ export async function regenerateLastResponse(isRetry = false) {
         // Check if the message had web search results stored
         const hadStoredWebSearch = lastUserMsg.hadWebSearch && lastUserMsg.webSearchResults;
         const storedWebSearchResults = hadStoredWebSearch ? lastUserMsg.webSearchResults : null;
+        const storedWebSearchSources = hadStoredWebSearch
+            ? (() => {
+                const clonedSources = cloneWebSearchSources(lastUserMsg.webSearchSources);
+                return clonedSources.length > 0
+                    ? clonedSources
+                    : extractWebSearchSourcesFromContext(storedWebSearchResults);
+            })()
+            : [];
+        let currentTurnWebSearchSources = storedWebSearchSources;
 
         // Set the generation flag
         isGenerating = true;
@@ -5289,66 +5828,30 @@ export async function regenerateLastResponse(isRetry = false) {
                 apiMessages.push(cloneMessageForRequest(msg));
             }
 
-            // For the message being regenerated, use stored web search results if available
-            // This ensures consistency - regeneration reproduces the original inputs
-            const apiLastUserMessageIndex = apiMessages.length - 1;
-            if (hadStoredWebSearch && storedWebSearchResults) {
-                // Use the original web search results for consistency
-                if (getUseOpenRouter()) {
-                    const lastMsg = apiMessages[apiLastUserMessageIndex];
-                    if (lastMsg && lastMsg.role === 'user') {
-                        apiMessages[apiLastUserMessageIndex] = {
-                            ...lastMsg,
-                            content: storedWebSearchResults + '\n\n' + lastUserMessage
-                        };
+            const preparedWebSearch = await prepareWebSearchForRequest({
+                userMessage: lastUserMessage,
+                requestMessages: apiMessages,
+                chatMessages: filteredMessages,
+                historyMessages: messages,
+                historyUserMessageIndex: lastUserMessageIndex,
+                storedPayload: hadStoredWebSearch && storedWebSearchResults
+                    ? {
+                        context: storedWebSearchResults,
+                        sources: storedWebSearchSources,
+                        query: typeof lastUserMsg.webSearchQuery === 'string' ? lastUserMsg.webSearchQuery : '',
+                        providerName: typeof lastUserMsg.webSearchProviderName === 'string' ? lastUserMsg.webSearchProviderName : '',
+                        mode: lastUserMsg.webSearchMode === 'reuse' ? 'reuse' : 'fresh'
                     }
-                } else {
-                    apiMessages.splice(apiLastUserMessageIndex, 0, { role: 'system', content: storedWebSearchResults });
-                }
-            } else if (getWebSearchEnabled() && apiMessages.length > 0) {
-                // If web search is enabled and this turn has no stored results,
-                // resolve the current-turn search query deterministically.
-                const currentChatMessages = chatHistoryData[currentChatId] && chatHistoryData[currentChatId].messages
-                    ? chatHistoryData[currentChatId].messages
-                    : [];
-                const webSearchDecision = await resolveWebSearchQuery(lastUserMessage, apiMessages, currentChatMessages, signal);
-                debugLog('Regeneration web search decision:', webSearchDecision.source, webSearchDecision.query ? `query=${webSearchDecision.query}` : 'no-query');
+                    : null,
+                signal,
+                logLabel: 'Regeneration web search decision'
+            });
 
-                if (webSearchDecision.shouldSearch && !canUseWebSearch()) {
-                    return;
-                }
-
-                const searchResults = webSearchDecision.shouldSearch
-                    ? await performWebSearch(webSearchDecision.query)
-                    : null;
-
-                if (searchResults) {
-                    recordWebSearch();
-                    if (getUseOpenRouter()) {
-                        const lastMsg = apiMessages[apiLastUserMessageIndex];
-                        if (lastMsg && lastMsg.role === 'user') {
-                            apiMessages[apiLastUserMessageIndex] = {
-                                ...lastMsg,
-                                content: searchResults + '\n\n' + lastMsg.content
-                            };
-                        }
-                    } else {
-                        apiMessages.splice(apiLastUserMessageIndex, 0, { role: 'system', content: searchResults });
-                    }
-                    
-                    // Store the new web search results in history
-                    if (chatHistoryData[currentChatId] && chatHistoryData[currentChatId].messages) {
-                        const historyMessages = chatHistoryData[currentChatId].messages;
-                        if (lastUserMessageIndex >= 0 && historyMessages[lastUserMessageIndex].role === 'user') {
-                            historyMessages[lastUserMessageIndex].webSearchResults = searchResults;
-                            historyMessages[lastUserMessageIndex].hadWebSearch = true;
-                            saveChatHistory();
-                        }
-                    }
-                } else if (webSearchDecision.shouldSearch) {
-                    debugLog('Regeneration web search selected but no search context was returned:', webSearchDecision.query);
-                }
+            if (preparedWebSearch.blockedByQuota) {
+                return;
             }
+
+            currentTurnWebSearchSources = cloneWebSearchSources(preparedWebSearch.sources);
 
             if (shouldUseLmStudioNativeMcpChat()) {
                 const nativeRequestBody = buildLmStudioMcpRequest(apiMessages, shouldInlineChatTitle);
@@ -5386,7 +5889,7 @@ export async function regenerateLastResponse(isRetry = false) {
                 }
 
                 const responsePayload = prepareAssistantResponseForStorage(aiMessage, lastUserMessage, shouldInlineChatTitle);
-                aiMessage = responsePayload.cleanMessage;
+                aiMessage = appendWebSearchSourcesSection(responsePayload.cleanMessage, currentTurnWebSearchSources);
                 if (responsePayload.title && chatHistoryData[currentChatId]) {
                     chatHistoryData[currentChatId].title = responsePayload.title;
                 }
@@ -5424,6 +5927,9 @@ export async function regenerateLastResponse(isRetry = false) {
                 const assistantMessage = { role: 'assistant', content: aiMessage, model: getSelectedModel() };
                 if (nativeResult.responseId) {
                     assistantMessage.lmStudioResponseId = nativeResult.responseId;
+                }
+                if (currentTurnWebSearchSources.length > 0) {
+                    assistantMessage.webSearchSources = cloneWebSearchSources(currentTurnWebSearchSources);
                 }
                 chatHistoryData[currentChatId].messages.push(assistantMessage);
 
@@ -5829,7 +6335,7 @@ export async function regenerateLastResponse(isRetry = false) {
             // Apply final content processing based on thinking tags/settings and strip the
             // hidden inline title marker before rendering or saving the response.
             const responsePayload = prepareAssistantResponseForStorage(aiMessage, lastUserMessage, shouldInlineChatTitle);
-            aiMessage = responsePayload.cleanMessage;
+            aiMessage = appendWebSearchSourcesSection(responsePayload.cleanMessage, currentTurnWebSearchSources);
             if (responsePayload.title && chatHistoryData[currentChatId]) {
                 chatHistoryData[currentChatId].title = responsePayload.title;
             }
@@ -5876,7 +6382,11 @@ export async function regenerateLastResponse(isRetry = false) {
             }
 
             // Add the new AI response
-            chatHistoryData[currentChatId].messages.push({ role: 'assistant', content: aiMessage, model: getSelectedModel() });
+            const regeneratedAssistantMessage = { role: 'assistant', content: aiMessage, model: getSelectedModel() };
+            if (currentTurnWebSearchSources.length > 0) {
+                regeneratedAssistantMessage.webSearchSources = cloneWebSearchSources(currentTurnWebSearchSources);
+            }
+            chatHistoryData[currentChatId].messages.push(regeneratedAssistantMessage);
 
             // Make sure to save to localStorage before any other operations
             // This ensures the chat is saved even if there's an issue with subsequent operations
@@ -6535,6 +7045,9 @@ async function fastUpdateChatHistoryBeforeReload(userMessage, aiMessage, fileCon
     const assistantMessage = { role: 'assistant', content: responsePayload.cleanMessage, model: getSelectedModel() };
     if (options.lmStudioResponseId) {
         assistantMessage.lmStudioResponseId = options.lmStudioResponseId;
+    }
+    if (Array.isArray(options.webSearchSources) && options.webSearchSources.length > 0) {
+        assistantMessage.webSearchSources = cloneWebSearchSources(options.webSearchSources);
     }
 
     // Add the AI response
