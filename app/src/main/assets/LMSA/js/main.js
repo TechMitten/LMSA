@@ -617,15 +617,14 @@ export async function initializeApp() {
     // Ensure the About button is properly initialized
     const aboutButton = document.getElementById('about-btn');
 
-    // Load critical settings first
-    setTimeout(() => {
-        try {
-            loadServerSettings(); // This will also fetch available models
-        } catch (error) {
-            console.warn('Server settings load failed (non-blocking):', error);
-        }
-    }, 0);
+    // Load provider/settings state first, then hydrate server inputs before the
+    // initial silent model check so default model auto-load can run on launch.
     loadSettings();
+    try {
+        loadServerSettings(); // This will also fetch available models
+    } catch (error) {
+        console.warn('Server settings load failed (non-blocking):', error);
+    }
     ensureBiometricUnlockButton();
 
     // Check biometric requirement right after loading settings

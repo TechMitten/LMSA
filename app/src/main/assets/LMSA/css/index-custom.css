@@ -871,18 +871,20 @@ body.keyboard-visible #chat-form,
 
     /* Loaded card state */
     .model-card.loaded .model-card-body {
-        background: rgba(52, 211, 153, 0.06);
-        border-color: rgba(52, 211, 153, 0.18);
+        background: rgba(59, 130, 246, 0.08);
+        border-color: var(--button-primary-bg, #3b82f6);
+        box-shadow: 0 0 0 1px var(--title-border, rgba(59, 130, 246, 0.3));
     }
     .model-card.loaded .model-name {
-        color: #6ee7b7 !important;
+        color: var(--button-primary-bg, #60a5fa) !important;
     }
     body.light-theme .model-card.loaded .model-card-body {
-        background: rgba(16, 185, 129, 0.04);
-        border-color: rgba(16, 185, 129, 0.25);
+        background: rgba(59, 130, 246, 0.06);
+        border-color: var(--button-primary-bg, #3b82f6);
+        box-shadow: 0 0 0 1px var(--title-border, rgba(59, 130, 246, 0.3));
     }
     body.light-theme .model-card.loaded .model-name {
-        color: #059669 !important;
+        color: var(--button-primary-bg, #2563eb) !important;
     }
 
     /* Model list header */
