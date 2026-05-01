@@ -1253,12 +1253,16 @@ function showFullModelNameModal() {
 
         // Show the modal with animation
         modalElement.classList.remove('hidden');
+        modalElement.style.display = 'flex';
+        modalElement.classList.remove('animate-backdrop-in', 'animate-backdrop-out');
+        void modalElement.offsetWidth;
+        modalElement.classList.add('animate-backdrop-in');
+
         const modalContent = modalElement.querySelector('.modal-content');
         if (modalContent) {
+            modalContent.classList.remove('animate-modal-in', 'animate-modal-out');
+            void modalContent.offsetWidth;
             modalContent.classList.add('animate-modal-in');
-            setTimeout(() => {
-                modalContent.classList.remove('animate-modal-in');
-            }, 300);
         }
     } else {
         console.error('Full model name modal element not found in the DOM');
@@ -1290,18 +1294,28 @@ function showMobileInstructionsIfNeeded() {
 function closeFullModelNameModal() {
     const modal = document.getElementById('full-model-name-modal');
     if (modal) {
+        modal.classList.remove('animate-backdrop-in');
+        modal.classList.add('animate-backdrop-out');
         const modalContent = modal.querySelector('.modal-content');
         if (modalContent) {
+            modalContent.classList.remove('animate-modal-in');
             modalContent.classList.add('animate-modal-out');
             setTimeout(() => {
                 modalContent.classList.remove('animate-modal-out');
+                modal.classList.remove('animate-backdrop-out');
                 modal.classList.add('hidden');
+                modal.style.display = '';
             }, 300);
         } else {
-            modal.classList.add('hidden');
+            setTimeout(() => {
+                modal.classList.remove('animate-backdrop-out');
+                modal.classList.add('hidden');
+                modal.style.display = '';
+            }, 300);
         }
     }
 }
+
 
 /**
  * Shows the default model loaded success modal
@@ -1332,12 +1346,16 @@ function showDefaultModelLoadedModal(modelName) {
 
         // Show the modal with animation
         modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        modal.classList.remove('animate-backdrop-in', 'animate-backdrop-out');
+        void modal.offsetWidth;
+        modal.classList.add('animate-backdrop-in');
+
         const modalContent = modal.querySelector('.modal-content');
         if (modalContent) {
+            modalContent.classList.remove('animate-modal-in', 'animate-modal-out');
+            void modalContent.offsetWidth;
             modalContent.classList.add('animate-modal-in');
-            setTimeout(() => {
-                modalContent.classList.remove('animate-modal-in');
-            }, 300);
         }
 
         // Auto-close after 3 seconds
@@ -1407,6 +1425,10 @@ function showTransientModelConfirmationModal(modalId, nameDisplayId, modelId) {
     syncTransientModelBodyLock();
     blockTransientModalScroll(modal);
 
+    modal.classList.remove('animate-backdrop-in', 'animate-backdrop-out');
+    void modal.offsetWidth;
+    modal.classList.add('animate-backdrop-in');
+
     const modalContent = modal.querySelector('.modal-content');
     const progressBar = modal.querySelector('.model-toast-progress');
     if (modalContent) {
@@ -1426,20 +1448,28 @@ function showTransientModelConfirmationModal(modalId, nameDisplayId, modelId) {
     }
 
     timers.hide = setTimeout(() => {
+        modal.classList.remove('animate-backdrop-in');
+        modal.classList.add('animate-backdrop-out');
+
         if (modalContent) {
             modalContent.classList.remove('animate-modal-in');
             modalContent.classList.add('animate-modal-out');
             timers.close = setTimeout(() => {
                 modalContent.classList.remove('animate-modal-out');
+                modal.classList.remove('animate-backdrop-out');
                 modal.classList.add('hidden');
                 modal.style.display = '';
                 syncTransientModelBodyLock();
                 timers.close = null;
             }, 300);
         } else {
-            modal.classList.add('hidden');
-            modal.style.display = '';
-            syncTransientModelBodyLock();
+            timers.close = setTimeout(() => {
+                modal.classList.remove('animate-backdrop-out');
+                modal.classList.add('hidden');
+                modal.style.display = '';
+                syncTransientModelBodyLock();
+                timers.close = null;
+            }, 300);
         }
 
         timers.hide = null;
@@ -1469,15 +1499,24 @@ function blockTransientModalScroll(modal) {
 function closeDefaultModelLoadedModal() {
     const modal = document.getElementById('default-model-loaded-modal');
     if (modal) {
+        modal.classList.remove('animate-backdrop-in');
+        modal.classList.add('animate-backdrop-out');
         const modalContent = modal.querySelector('.modal-content');
         if (modalContent) {
+            modalContent.classList.remove('animate-modal-in');
             modalContent.classList.add('animate-modal-out');
             setTimeout(() => {
                 modalContent.classList.remove('animate-modal-out');
+                modal.classList.remove('animate-backdrop-out');
                 modal.classList.add('hidden');
+                modal.style.display = '';
             }, 300);
         } else {
-            modal.classList.add('hidden');
+            setTimeout(() => {
+                modal.classList.remove('animate-backdrop-out');
+                modal.classList.add('hidden');
+                modal.style.display = '';
+            }, 300);
         }
     }
 }
@@ -1493,13 +1532,15 @@ function showDefaultModelConfirmationModal(modelId) {
 
         confirmDefaultModelModal.classList.remove('hidden');
         confirmDefaultModelModal.style.display = 'flex';
+        confirmDefaultModelModal.classList.remove('animate-backdrop-in', 'animate-backdrop-out');
+        void confirmDefaultModelModal.offsetWidth;
+        confirmDefaultModelModal.classList.add('animate-backdrop-in');
 
         const modalContent = confirmDefaultModelModal.querySelector('.modal-content');
         if (modalContent) {
+            modalContent.classList.remove('animate-modal-in', 'animate-modal-out');
+            void modalContent.offsetWidth;
             modalContent.classList.add('animate-modal-in');
-            setTimeout(() => {
-                modalContent.classList.remove('animate-modal-in');
-            }, 300);
         }
     } else {
         console.error('Confirmation modal elements not found');
@@ -1511,19 +1552,26 @@ function showDefaultModelConfirmationModal(modelId) {
  */
 function hideDefaultModelConfirmationModal() {
     if (confirmDefaultModelModal) {
+        confirmDefaultModelModal.classList.remove('animate-backdrop-in');
+        confirmDefaultModelModal.classList.add('animate-backdrop-out');
         const modalContent = confirmDefaultModelModal.querySelector('.modal-content');
         if (modalContent) {
+            modalContent.classList.remove('animate-modal-in');
             modalContent.classList.add('animate-modal-out');
             setTimeout(() => {
                 modalContent.classList.remove('animate-modal-out');
+                confirmDefaultModelModal.classList.remove('animate-backdrop-out');
                 confirmDefaultModelModal.classList.add('hidden');
                 confirmDefaultModelModal.style.display = 'none';
                 pendingDefaultModelId = null;
             }, 300);
         } else {
-            confirmDefaultModelModal.classList.add('hidden');
-            confirmDefaultModelModal.style.display = 'none';
-            pendingDefaultModelId = null;
+            setTimeout(() => {
+                confirmDefaultModelModal.classList.remove('animate-backdrop-out');
+                confirmDefaultModelModal.classList.add('hidden');
+                confirmDefaultModelModal.style.display = 'none';
+                pendingDefaultModelId = null;
+            }, 300);
         }
     }
 }

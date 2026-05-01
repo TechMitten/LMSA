@@ -134,30 +134,30 @@ function updateUiForPremium(isPremium) {
         legacyAccessBtn.style.display = isPremium ? 'none' : 'block';
     }
 
-    // Keep the welcome premium banner visible, but switch to activated state for premium users.
+    // Hide the welcome premium banner for premium users; show it only for free users.
     const removeAdsBanner = document.getElementById('remove-ads-banner');
     if (removeAdsBanner) {
-        removeAdsBanner.style.display = 'flex';
+        removeAdsBanner.style.display = isPremium ? 'none' : 'flex';
     }
 
     const removeAdsBannerButton = document.getElementById('remove-ads-banner-button');
-    if (removeAdsBannerButton) {
-        removeAdsBannerButton.classList.toggle('premium-activated', isPremium);
-        removeAdsBannerButton.disabled = isPremium;
-        removeAdsBannerButton.setAttribute('aria-label', isPremium ? 'Premium Activated' : 'Unlock Premium');
-        removeAdsBannerButton.setAttribute('aria-disabled', isPremium ? 'true' : 'false');
-        removeAdsBannerButton.tabIndex = isPremium ? -1 : 0;
+    if (removeAdsBannerButton && !isPremium) {
+        removeAdsBannerButton.classList.remove('premium-activated');
+        removeAdsBannerButton.disabled = false;
+        removeAdsBannerButton.setAttribute('aria-label', 'Unlock Premium');
+        removeAdsBannerButton.setAttribute('aria-disabled', 'false');
+        removeAdsBannerButton.tabIndex = 0;
 
         const buttonLabel = removeAdsBannerButton.querySelector('span');
         if (buttonLabel) {
-            buttonLabel.textContent = isPremium ? 'Premium Activated' : 'Unlock Premium';
+            buttonLabel.textContent = 'Unlock Premium';
         }
 
         const buttonIcon = removeAdsBannerButton.querySelector('i');
         if (buttonIcon) {
-            buttonIcon.classList.toggle('fa-crown', !isPremium);
-            buttonIcon.classList.toggle('fa-check-circle', isPremium);
-            buttonIcon.style.color = isPremium ? '#34d399' : '#fbbf24';
+            buttonIcon.classList.add('fa-crown');
+            buttonIcon.classList.remove('fa-check-circle');
+            buttonIcon.style.color = '#fbbf24';
         }
     }
 }
