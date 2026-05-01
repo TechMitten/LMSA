@@ -13,7 +13,16 @@ import {
 } from './dom-elements.js';
 import { showSettingsModal, hideSettingsModal } from './settings-modal-manager.js';
 import { openPremiumModal } from './components/modals/premium-modal.js';
-import { getEnterSendsNewline, clearOpenRouterApiKey, clearLMStudioApiToken, toggleWebSearchFeature } from './settings-manager.js';
+import {
+    getEnterSendsNewline,
+    clearOpenRouterApiKey,
+    clearLMStudioApiToken,
+    toggleWebSearchFeature,
+    applyConnectionProviderSelection,
+    getUseOpenRouter,
+    getUseOpenAICompatible,
+    markCurrentModeActivity
+} from './settings-manager.js';
 import {
     showWelcomeMessage, hideWelcomeMessage, toggleSidebar, closeSidebar, showLoadingIndicator,
     hideLoadingIndicator, toggleSendStopButton, hideConfirmationModal, showConfirmationModal,
@@ -161,6 +170,11 @@ export function initializeEventHandlers() {
         if (!element || typeof callback !== 'function') {
             return;
         }
+
+        if (element.dataset.sidebarScrollableTapBound === 'true') {
+            return;
+        }
+        element.dataset.sidebarScrollableTapBound = 'true';
 
         const TOUCH_SCROLL_GUARD_SLOP = 4;
         let touchStartX = 0;
@@ -774,6 +788,145 @@ export function initializeEventHandlers() {
                 legacyAccessModal.style.display = 'none';
             }
         });
+    }
+
+    // Quick mode switcher in the sidebar footer
+    const modeIndicator = document.getElementById('mode-indicator');
+    const modeSwitcher = document.getElementById('sidebar-mode-switcher');
+    if (modeIndicator && modeSwitcher) {
+        const QUICK_SWITCHER_OPEN_MS = 180;
+        const QUICK_SWITCHER_CLOSE_MS = 140;
+        let quickSwitcherTimer = null;
+        const modeButtons = Array.from(modeSwitcher.querySelectorAll('.sidebar-mode-switcher-btn'));
+        const getActiveProvider = () => {
+            if (getUseOpenRouter()) {
+                return 'openrouter';
+            }
+
+            if (getUseOpenAICompatible()) {
+                return 'openai-compatible';
+            }
+
+            return 'local';
+        };
+
+        const syncQuickSwitcherState = () => {
+            const activeProvider = getActiveProvider();
+            modeButtons.forEach((button) => {
+                const isActive = button.dataset.provider === activeProvider;
+                button.classList.toggle('active', isActive);
+                button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+        };
+
+        const hideQuickSwitcher = () => {
+            if (quickSwitcherTimer) {
+                clearTimeout(quickSwitcherTimer);
+                quickSwitcherTimer = null;
+            }
+
+            if (modeSwitcher.classList.contains('hidden')) {
+                modeIndicator.classList.remove('hidden');
+                modeIndicator.setAttribute('aria-hidden', 'false');
+                return;
+            }
+
+            modeSwitcher.classList.remove('animating-in');
+            modeSwitcher.classList.add('animating-out');
+            modeSwitcher.setAttribute('aria-hidden', 'true');
+
+            quickSwitcherTimer = setTimeout(() => {
+                modeSwitcher.classList.remove('animating-out');
+                modeSwitcher.classList.add('hidden');
+                modeIndicator.classList.remove('hidden');
+                modeIndicator.setAttribute('aria-hidden', 'false');
+                quickSwitcherTimer = null;
+            }, QUICK_SWITCHER_CLOSE_MS);
+        };
+
+        const showQuickSwitcher = () => {
+            if (quickSwitcherTimer) {
+                clearTimeout(quickSwitcherTimer);
+                quickSwitcherTimer = null;
+            }
+
+            syncQuickSwitcherState();
+            modeSwitcher.classList.remove('hidden', 'animating-out');
+            modeSwitcher.setAttribute('aria-hidden', 'false');
+            modeIndicator.classList.add('hidden');
+            modeIndicator.setAttribute('aria-hidden', 'true');
+
+            // Restart opening animation reliably.
+            modeSwitcher.classList.remove('animating-in');
+            void modeSwitcher.offsetWidth;
+            modeSwitcher.classList.add('animating-in');
+
+            quickSwitcherTimer = setTimeout(() => {
+                modeSwitcher.classList.remove('animating-in');
+                quickSwitcherTimer = null;
+            }, QUICK_SWITCHER_OPEN_MS);
+        };
+
+        const toggleQuickSwitcher = () => {
+            if (modeSwitcher.classList.contains('hidden')) {
+                showQuickSwitcher();
+            } else {
+                hideQuickSwitcher();
+            }
+        };
+
+        const applyProviderFromQuickSwitcher = (provider) => {
+            const normalizedProvider = provider === 'openrouter' || provider === 'openai-compatible'
+                ? provider
+                : 'local';
+            applyConnectionProviderSelection(normalizedProvider);
+            syncQuickSwitcherState();
+            hideQuickSwitcher();
+        };
+
+        modeIndicator.setAttribute('role', 'button');
+        modeIndicator.setAttribute('tabindex', '0');
+        modeIndicator.setAttribute('aria-label', 'Open quick AI mode switcher');
+        modeIndicator.style.cursor = 'pointer';
+        bindPressInFeedback(modeIndicator);
+        bindSidebarScrollableTap(modeIndicator, toggleQuickSwitcher);
+        modeIndicator.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') {
+                return;
+            }
+
+            e.preventDefault();
+            toggleQuickSwitcher();
+            modeIndicator.blur();
+        });
+
+        modeButtons.forEach((button) => {
+            bindPressInFeedback(button);
+            bindSidebarScrollableTap(button, () => {
+                applyProviderFromQuickSwitcher(button.dataset.provider || 'local');
+            });
+        });
+
+        if (modeSwitcher.dataset.quickSwitcherOutsideBound !== 'true') {
+            const onDocumentPointerDown = (event) => {
+                if (modeSwitcher.classList.contains('hidden')) {
+                    return;
+                }
+
+                const target = event.target;
+                if (modeIndicator.contains(target) || modeSwitcher.contains(target)) {
+                    return;
+                }
+
+                hideQuickSwitcher();
+            };
+
+            document.addEventListener('click', onDocumentPointerDown);
+            document.addEventListener('touchstart', onDocumentPointerDown, { passive: true });
+            modeSwitcher.dataset.quickSwitcherOutsideBound = 'true';
+        }
+
+        syncQuickSwitcherState();
     }
 
     // Terms of Service button
@@ -1866,6 +2019,9 @@ async function handleChatFormSubmit(e) {
             debugLog('Chat submission blocked: free user is offline');
             return;
         }
+
+        // Mark the currently selected provider as used once the user sends a message.
+        markCurrentModeActivity();
 
         hideWelcomeMessage();
 

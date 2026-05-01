@@ -72,6 +72,7 @@ let chatFontFamily = 'system-ui, sans-serif'; // Font family for chat message bu
 let chatFontSize = '16px'; // Font size for chat message bubbles
 let requireBiometric = false; // Require biometric unlock on app start
 let webSearchEnabled = false;
+const MODE_ACTIVITY_STORAGE_KEY = 'modeActivityByProvider';
 
 const ALLOWED_CHAT_FONT_SIZES = ['12px', '14px', '16px', '20px', '24px'];
 
@@ -1372,10 +1373,52 @@ export function getUseOllama() {
 /**
  * Synchronizes the mode indicator icon in the header with the current provider state.
  */
+function getCurrentProviderForModeIndicator() {
+  if (useOpenRouter) {
+    return 'openrouter';
+  }
+
+  if (useOpenAICompatible) {
+    return 'openai-compatible';
+  }
+
+  return 'local';
+}
+
+function getModeActivityMap() {
+  try {
+    const rawValue = localStorage.getItem(MODE_ACTIVITY_STORAGE_KEY);
+    if (!rawValue) {
+      return {};
+    }
+
+    const parsed = JSON.parse(rawValue);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (_error) {
+    return {};
+  }
+}
+
+function hasModeActivity(provider) {
+  const activityMap = getModeActivityMap();
+  return activityMap[provider] === true;
+}
+
+function saveModeActivity(provider, isActive) {
+  const normalizedProvider = provider === 'openrouter' || provider === 'openai-compatible'
+    ? provider
+    : 'local';
+
+  const activityMap = getModeActivityMap();
+  activityMap[normalizedProvider] = !!isActive;
+  localStorage.setItem(MODE_ACTIVITY_STORAGE_KEY, JSON.stringify(activityMap));
+}
+
 function syncModeIndicator() {
   if (!modeIndicator) return;
 
   const statusText = modeIndicator.querySelector('.status-text');
+  const statusDot = modeIndicator.querySelector('.status-dot');
   if (!statusText) return;
 
   if (useOpenRouter) {
@@ -1388,6 +1431,18 @@ function syncModeIndicator() {
     statusText.textContent = "LOCAL SERVER";
     modeIndicator.title = "Current AI Mode: Local Server";
   }
+
+  if (statusDot) {
+    const provider = getCurrentProviderForModeIndicator();
+    const isActive = hasModeActivity(provider);
+    statusDot.classList.toggle('is-active', isActive);
+    statusDot.classList.toggle('is-inactive', !isActive);
+  }
+}
+
+export function markCurrentModeActivity() {
+  saveModeActivity(getCurrentProviderForModeIndicator(), true);
+  syncModeIndicator();
 }
 
 /**

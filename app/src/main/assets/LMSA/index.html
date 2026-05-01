@@ -292,6 +292,11 @@
                     <span class="status-dot"></span>
                     <span class="status-text">LOCAL SERVER</span>
                 </div>
+                <div id="sidebar-mode-switcher" class="sidebar-mode-switcher hidden" aria-hidden="true">
+                    <button type="button" class="sidebar-mode-switcher-btn" data-provider="local" aria-pressed="true">Local Server</button>
+                    <button type="button" class="sidebar-mode-switcher-btn" data-provider="openrouter" aria-pressed="false">OpenRouter</button>
+                    <button type="button" class="sidebar-mode-switcher-btn" data-provider="openai-compatible" aria-pressed="false">Custom Endpoint</button>
+                </div>
                 <div class="flex items-center justify-center gap-4">
                     <button id="terms-service-btn" class="text-xs"
                         style="background: none !important; border: none; padding: 0; cursor: pointer; color: var(--text-muted); opacity: 0.7;">Terms</button>

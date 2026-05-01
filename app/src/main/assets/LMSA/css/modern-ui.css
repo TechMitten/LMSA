@@ -79,15 +79,107 @@ header {
   user-select: none;
   font-family: inherit;
   letter-spacing: 0.02rem;
+  min-height: 1.7rem;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.sidebar-mode-switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: -0.15rem 0 0.5rem;
+  transform-origin: bottom center;
+  will-change: transform, opacity;
+}
+
+.sidebar-mode-switcher.hidden {
+  display: none;
+}
+
+.sidebar-mode-switcher.animating-in {
+  animation: sidebarModeSwitcherIn 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sidebar-mode-switcher.animating-out {
+  animation: sidebarModeSwitcherOut 140ms ease-in;
+}
+
+@keyframes sidebarModeSwitcherIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sidebarModeSwitcherOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+}
+
+.sidebar-mode-switcher-btn {
+  width: 100%;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--sidebar-text);
+  opacity: 0.9;
+  font-size: 0.72rem;
+  letter-spacing: 0.02rem;
+  padding: 0.35rem 0.5rem;
+  text-transform: uppercase;
+  transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.sidebar-mode-switcher-btn:hover,
+.sidebar-mode-switcher-btn:focus-visible {
+  background: var(--sidebar-item-hover);
+  opacity: 1;
+}
+
+.sidebar-mode-switcher-btn.active {
+  border-color: rgba(16, 185, 129, 0.75);
+  background: rgba(16, 185, 129, 0.16);
+  opacity: 1;
+}
+
+.sidebar-mode-switcher-btn.active::after {
+  content: '  • Active';
+  font-size: 0.62rem;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #34d399;
 }
 
 .status-dot {
   width: 8px;
   height: 8px;
-  background-color: #10b981; /* Green */
+  background-color: #94a3b8;
   border-radius: 50%;
   display: inline-block;
+  box-shadow: 0 0 6px rgba(148, 163, 184, 0.45);
+}
+
+.status-dot.is-active {
+  background-color: #10b981;
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.status-dot.is-inactive {
+  background-color: #94a3b8;
+  box-shadow: 0 0 6px rgba(148, 163, 184, 0.45);
 }
 
 .status-text {

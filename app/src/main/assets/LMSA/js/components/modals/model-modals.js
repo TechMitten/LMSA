@@ -20,16 +20,6 @@ export const modelModals = `
             <!-- Body -->
             <div class="overflow-y-auto flex-grow px-5 pb-5 model-modal-scroll" style="padding-top:1rem;">
 
-                <!-- Tip for mobile users -->
-                <div id="mobile-instructions"
-                    class="mb-4 px-3.5 py-3 rounded-lg bg-amber-500/8 hidden">
-                    <div class="flex items-start">
-                        <p class="text-[13px] text-gray-400 light:text-gray-600 leading-relaxed">
-                            Always load your initial model through the app so each new selection properly replaces the previous one.
-                        </p>
-                    </div>
-                </div>
-
                 <!-- Active model -->
                 <div id="active-model-section" style="margin-bottom:1rem;">
                     <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:0 2px;">
