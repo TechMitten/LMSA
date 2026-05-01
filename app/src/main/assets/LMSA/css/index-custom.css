@@ -3188,7 +3188,9 @@ body.light-theme .conn-modal-action-btn--cancel {
     overflow: hidden;
     isolation: isolate;
     background:
-        linear-gradient(180deg, rgba(16, 18, 23, 0.94) 0%, rgba(10, 12, 16, 0.98) 100%);
+        radial-gradient(circle at 18% 24%, rgba(59, 130, 246, 0.07) 0%, rgba(59, 130, 246, 0) 40%),
+        radial-gradient(circle at 80% 78%, rgba(20, 184, 166, 0.05) 0%, rgba(20, 184, 166, 0) 36%),
+        linear-gradient(180deg, rgba(15, 18, 27, 0.95) 0%, rgba(10, 12, 17, 0.98) 100%);
 }
 
 #welcome-message::before {
@@ -3198,11 +3200,11 @@ body.light-theme .conn-modal-action-btn--cancel {
     z-index: 0;
     pointer-events: none;
     background:
-        radial-gradient(circle at 18% 32%, rgba(45, 212, 191, 0.08) 0%, rgba(45, 212, 191, 0) 28%),
-        radial-gradient(circle at 76% 18%, rgba(96, 165, 250, 0.07) 0%, rgba(96, 165, 250, 0) 26%),
-        radial-gradient(circle at 52% 72%, rgba(30, 41, 59, 0.22) 0%, rgba(30, 41, 59, 0) 32%),
+        radial-gradient(circle at 18% 32%, rgba(45, 212, 191, 0.07) 0%, rgba(45, 212, 191, 0) 30%),
+        radial-gradient(circle at 76% 18%, rgba(96, 165, 250, 0.06) 0%, rgba(96, 165, 250, 0) 28%),
+        radial-gradient(circle at 52% 72%, rgba(30, 41, 59, 0.18) 0%, rgba(30, 41, 59, 0) 34%),
         repeating-linear-gradient(0deg, rgba(148, 163, 184, 0.028) 0 1px, transparent 1px 78px);
-    opacity: 0.62;
+    opacity: 0.68;
 }
 
 #welcome-message .welcome-content {
@@ -3438,7 +3440,7 @@ body.light-theme .conn-modal-action-btn--cancel {
     height: auto !important;
     padding: 0 16px !important;
     border-radius: 18px !important;
-    border: 1px solid rgba(74, 222, 128, 0.34) !important;
+    border: 1px solid rgba(71, 85, 105, 0.32) !important;
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
         linear-gradient(180deg, rgba(30, 41, 59, 0.78), rgba(15, 23, 42, 0.88)) !important;
@@ -3497,13 +3499,12 @@ body.light-theme .conn-modal-action-btn--cancel {
 #welcome-message .welcome-action-card:hover,
 #welcome-message .welcome-premium-action:hover {
     transform: translateY(-2px);
-    border-color: rgba(74, 222, 128, 0.5) !important;
+    border-color: rgba(100, 116, 139, 0.45) !important;
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
         linear-gradient(180deg, rgba(35, 47, 63, 0.88), rgba(17, 24, 38, 0.95)) !important;
     box-shadow:
         0 12px 28px rgba(2, 6, 23, 0.25),
-        0 0 0 1px rgba(74, 222, 128, 0.08),
         inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
@@ -3515,7 +3516,7 @@ body.light-theme .conn-modal-action-btn--cancel {
 #welcome-message .welcome-premium-action {
     justify-content: center !important;
     min-height: 60px !important;
-    border-color: rgba(74, 222, 128, 0.34) !important;
+    border-color: rgba(71, 85, 105, 0.32) !important;
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
         linear-gradient(180deg, rgba(28, 40, 58, 0.82), rgba(15, 24, 38, 0.9)) !important;
@@ -3529,7 +3530,7 @@ body.light-theme .conn-modal-action-btn--cancel {
 
 #welcome-message .welcome-premium-action.premium-activated {
     cursor: default;
-    border-color: rgba(74, 222, 128, 0.34) !important;
+    border-color: rgba(71, 85, 105, 0.32) !important;
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02)),
         linear-gradient(180deg, rgba(18, 46, 50, 0.78), rgba(10, 25, 30, 0.88)) !important;
