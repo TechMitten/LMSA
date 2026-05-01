@@ -129,7 +129,6 @@ class WebViewActivity : AppCompatActivity() {
     private val PREFS_NAME = "LMSA_PREFS"
     private val PREF_IS_PREMIUM = "is_premium"
     private val PREF_IS_DEBUG_MODE = "is_debug_mode"
-    private val PREF_ONBOARDING_COMPLETED = "onboarding_completed"
     private var isPremium = false
     private var isDebugMode = false
     private var biometricPromptShowing = false
@@ -460,7 +459,6 @@ class WebViewActivity : AppCompatActivity() {
                 maybeHideStartupSplash("onPageFinished")
                 // Now that the page is loaded, update the UI with the persisted premium status
                 updatePremiumUiState()
-                updateOnboardingUiState()
             }
 
             // Handle renderer crashes without terminating the app process.
@@ -662,26 +660,6 @@ class WebViewActivity : AppCompatActivity() {
             .setDuration(350)
             .withEndAction { splashImage.visibility = View.GONE }
             .start()
-    }
-
-    private fun isOnboardingCompleted(): Boolean {
-        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        return prefs.getBoolean(PREF_ONBOARDING_COMPLETED, false)
-    }
-
-    private fun setOnboardingCompleted(completed: Boolean) {
-        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        prefs.edit().putBoolean(PREF_ONBOARDING_COMPLETED, completed).apply()
-        updateOnboardingUiState()
-    }
-
-    private fun updateOnboardingUiState() {
-        runOnUiThread {
-            val webView: WebView = findViewById(R.id.webView)
-            val completed = isOnboardingCompleted()
-            val jsCommand = "if(typeof window.updateOnboardingStateFromNative === 'function') { window.updateOnboardingStateFromNative($completed); }"
-            webView.evaluateJavascript(jsCommand, null)
-        }
     }
 
     private fun hideSystemBars() {
@@ -1630,16 +1608,6 @@ class WebViewActivity : AppCompatActivity() {
         @JavascriptInterface
         fun checkDebugMode(): Boolean {
             return isDebugMode
-        }
-
-        @JavascriptInterface
-        fun isOnboardingCompleted(): Boolean {
-            return this@WebViewActivity.isOnboardingCompleted()
-        }
-
-        @JavascriptInterface
-        fun setOnboardingCompleted(completed: Boolean) {
-            this@WebViewActivity.setOnboardingCompleted(completed)
         }
 
         @JavascriptInterface

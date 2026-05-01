@@ -4,9 +4,6 @@ import { debugLog, debugError } from './utils.js';
 import { showConfirmationModal } from './ui-manager.js';
 import { setActionToPerform } from './shared-state.js';
 
-const INTRO_COMPLETED_KEY = 'lmsa_intro_completed';
-const INTRO_VERSION_KEY = 'lmsa_intro_version';
-
 // Keep free-tier usage counters across app reset so reset cannot bypass daily limits.
 const PRESERVED_USAGE_KEYS = new Set([
     'lmsa_completion_date',
@@ -50,16 +47,6 @@ export function resetApp() {
     try {
         console.log('RESET APP: Starting app reset to default state');
 
-        // Reset native onboarding state so first-run intro can appear again after reload.
-        try {
-            if (window.AndroidBilling && typeof window.AndroidBilling.setOnboardingCompleted === 'function') {
-                window.AndroidBilling.setOnboardingCompleted(false);
-                console.log('RESET APP: Cleared native onboarding completion state');
-            }
-        } catch (error) {
-            console.error('RESET APP: Error clearing native onboarding state:', error);
-        }
-
         // 1. Clear all chats first
         try {
             clearAllChats();
@@ -96,9 +83,7 @@ export function resetApp() {
             'openAICompatibleApiKey',
             'openAICompatibleManualModel',
             'openAICompatibleSelectedModel',
-            'savedConnectionPresets',
-            INTRO_COMPLETED_KEY,
-            INTRO_VERSION_KEY
+            'savedConnectionPresets'
         ];
 
         console.log('RESET APP: Clearing localStorage items...');

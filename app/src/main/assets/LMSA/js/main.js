@@ -26,7 +26,6 @@ import { initBiometricUnavailableModal, showBiometricUnavailableModal } from './
 import { initializeTemplateIndicator } from './template-indicator.js';
 import { initializeHapticFeedback } from './haptics.js';
 import { updateConfirmationModalTheme, updateExportImportModalsTheme } from './confirmation-modal-fix.js';
-import { ensureOnboardingCompleted, openOnboarding } from './intro-screen.js';
 import './about.js';
 
 // Android WebView keyboard overlap fix
@@ -749,12 +748,6 @@ export async function initializeApp() {
     window.showBiometricUnavailableModal = showBiometricUnavailableModal;
     initializeTemplateIndicator();
 
-    const onboardingCompleted = await ensureOnboardingCompleted();
-    if (!onboardingCompleted) {
-        console.log('Onboarding not completed, app initialization paused');
-        return;
-    }
-
     // Pre-initialize TTS service to prevent double-tap issues
     try {
         if (window.TTSService && !window.TTSService.isInitialized()) {
@@ -1091,7 +1084,6 @@ function initializeAndroidKeyboardFix() {
 document.addEventListener('DOMContentLoaded', function () {
     // Make initializeApp globally available
     window.initializeApp = initializeApp;
-    window.openOnboarding = () => openOnboarding(true);
     window.openPremiumModal = openPremiumModal;
 
     initPremiumModal();

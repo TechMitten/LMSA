@@ -2598,18 +2598,3 @@ export function loadDefaultModelSetting() {
     debugLog("No default model set");
   }
 }
-/**
- * Gets the current useOpenRouter setting
- * @returns {boolean}
- */
-export function getUseOpenRouter() {
-  return useOpenRouter;
-}
-
-/**
- * Gets the current useOpenAICompatible setting
- * @returns {boolean}
- */
-export function getUseOpenAICompatible() {
-  return useOpenAICompatible;
-}
