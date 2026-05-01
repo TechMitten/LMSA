@@ -262,7 +262,7 @@ async function loadModelInformation(silent = false) {
                 console.log('Using model from API service:', currentlyLoadedModelId);
             }
 
-            if (!currentlyLoadedModelId && window.currentLoadedModel) {
+            if (!currentlyLoadedModelId && (getUseOpenRouter() || getUseOpenAICompatible()) && window.currentLoadedModel) {
                 console.log('Using global currentLoadedModel variable:', window.currentLoadedModel);
                 // Verify if this model exists in the available models list
                 const foundModel = allAvailableModels.find(model => model.id === window.currentLoadedModel);

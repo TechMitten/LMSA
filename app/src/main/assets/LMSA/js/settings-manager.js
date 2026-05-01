@@ -1472,6 +1472,23 @@ function updateProviderUI() {
   }
 }
 
+function refreshLocalLmStudioLoadedModelState() {
+  if (useOpenRouter || useOpenAICompatible || useOllama) {
+    return;
+  }
+
+  window.currentLoadedModel = null;
+
+  import('./api-service.js')
+    .then(({ fetchAvailableModels }) => fetchAvailableModels({
+      forceRefresh: true,
+      disableSelectionFallback: true
+    }))
+    .catch(error => {
+      console.error('Failed to refresh LM Studio loaded model detection:', error);
+    });
+}
+
 /**
  * Loads the OpenRouter settings from localStorage
  */
@@ -1550,7 +1567,7 @@ export function loadOpenRouterSettings() {
         localStorage.setItem('useOpenRouter', 'false');
         localStorage.setItem('useOpenAICompatible', 'false');
         updateProviderUI();
-        window.currentLoadedModel = localStorage.getItem('localSelectedModel') || null;
+        refreshLocalLmStudioLoadedModelState();
       }
     });
   }
@@ -1574,6 +1591,7 @@ export function loadOpenRouterSettings() {
   }
 
   updateProviderUI();
+  refreshLocalLmStudioLoadedModelState();
 }
 
 /**
@@ -1626,7 +1644,7 @@ export function saveOpenRouterSettings() {
     if (useOpenAICompatible) {
       window.currentLoadedModel = localStorage.getItem('openAICompatibleSelectedModel') || null;
     } else {
-      window.currentLoadedModel = localStorage.getItem('localSelectedModel') || null;
+      refreshLocalLmStudioLoadedModelState();
     }
     updateProviderUI();
   }
@@ -1668,7 +1686,7 @@ export function saveOpenAICompatibleSettings() {
       localStorage.setItem('openAICompatibleApiKey', openAICompatibleApiKey);
     }
     updateProviderUI();
-    window.currentLoadedModel = localStorage.getItem('localSelectedModel') || null;
+    refreshLocalLmStudioLoadedModelState();
   }
 }
 
@@ -1706,7 +1724,7 @@ export function applyConnectionProviderSelection(provider) {
   } else if (useOpenAICompatible) {
     window.currentLoadedModel = localStorage.getItem('openAICompatibleSelectedModel') || null;
   } else {
-    window.currentLoadedModel = localStorage.getItem('localSelectedModel') || null;
+    refreshLocalLmStudioLoadedModelState();
   }
 }
 

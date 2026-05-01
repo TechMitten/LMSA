@@ -169,6 +169,49 @@ function setPersistedLocalSelectedModel(modelId) {
     }
 }
 
+async function detectLmStudioLoadedModelViaCompletionProbe(ip, port, modelsList = []) {
+    try {
+        const probeCtrl = new AbortController();
+        const probeTimer = setTimeout(() => probeCtrl.abort(), 3000);
+
+        const chatResponse = await fetch(`http://${ip}:${port}/v1/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getLocalServerAuthHeaders()
+            },
+            body: JSON.stringify({
+                messages: [
+                    { role: 'system', content: 'You are a helpful assistant.' },
+                    { role: 'user', content: 'Respond with exactly: ok' }
+                ],
+                max_tokens: 1,
+                stream: false
+            }),
+            signal: probeCtrl.signal
+        }).catch(() => ({ ok: false }));
+
+        clearTimeout(probeTimer);
+
+        if (!chatResponse.ok) {
+            return null;
+        }
+
+        const result = await chatResponse.json().catch(() => null);
+        const detectedModelId = result?.model;
+        if (!detectedModelId) {
+            return null;
+        }
+
+        return modelsList.find(model => model.id === detectedModelId) || {
+            id: detectedModelId,
+            display_name: detectedModelId
+        };
+    } catch (_) {
+        return null;
+    }
+}
+
 /**
  * Updates the server URL based on IP and port inputs
  */
@@ -748,61 +791,20 @@ export async function fetchAvailableModels(options = {}) {
                     }
                 }
 
-                // Method: Optional legacy completion probe (disabled by default to avoid noisy 400s)
-                const apiVersion2 = apiVersionCache.version; // already resolved above
-                const enableLegacyCompletionProbe =
-                    apiVersion2 !== 'v1native' && // skip if we already have reliable detection
-                    (options.enableCompletionProbe === true ||
-                     localStorage.getItem('enableLegacyCompletionProbe') === 'true');
-
-                if (enableLegacyCompletionProbe && !loadedModelInfo && modelsList.length > 0 && !window.currentLoadedModel) {
-                    try {
-                        const probeCtrl = new AbortController();
-                        const probeTimer = setTimeout(() => probeCtrl.abort(), 3000);
-
-                        const chatResponse = await fetch(`http://${ip}:${port}/v1/chat/completions`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                ...getLocalServerAuthHeaders()
-                            },
-                            body: JSON.stringify({
-                                messages: [
-                                    { role: 'system', content: 'You are a helpful assistant.' },
-                                    { role: 'user', content: 'test' }
-                                ],
-                                max_tokens: 1,
-                                stream: false
-                            }),
-                            signal: probeCtrl.signal
-                        }).catch(() => ({ ok: false }));
-
-                        clearTimeout(probeTimer);
-
-                        if (chatResponse.ok) {
-                            const result = await chatResponse.json();
-                            if (result && result.model) {
-                                loadedModelInfo = modelsList.find(m => m.id === result.model);
-                                if (!loadedModelInfo && modelsList.length > 0) {
-                                    loadedModelInfo = modelsList[0];
-                                }
-                            }
-                        }
-                    } catch (_) { /* suppress probe errors */ }
+                // If the model list does not expose loaded state, ask the server which
+                // model is currently answering requests instead of trusting local state.
+                if (!loadedModelInfo && modelsList.length > 0) {
+                    loadedModelInfo = await detectLmStudioLoadedModelViaCompletionProbe(ip, port, modelsList);
                 }
 
-                // Method 4: Optional fallback to previously selected model.
-                // Disabled for strict status checks (e.g. when opening the Models modal),
-                // so we never show stale "last switched" model names.
-                if (!loadedModelInfo && options.disableSelectionFallback !== true) {
-                    const fallbackModelId = window.currentLoadedModel || getPersistedLocalSelectedModel();
-                    const matchingModel = fallbackModelId
-                        ? modelsList.find(model => model.id === fallbackModelId)
-                        : null;
-                    if (matchingModel) {
-                        console.log('Using previously stored loaded model:', fallbackModelId);
-                        loadedModelInfo = matchingModel;
-                    }
+                // Only trust an explicit server-confirmed model id from a just-completed load,
+                // never the last locally remembered selection.
+                if (!loadedModelInfo && options.confirmedLoadedModelId) {
+                    const confirmedModelId = options.confirmedLoadedModelId;
+                    loadedModelInfo = modelsList.find(model => model.id === confirmedModelId) || {
+                        id: confirmedModelId,
+                        display_name: confirmedModelId
+                    };
                 }
 
                 if (loadedModelInfo) {
@@ -1374,8 +1376,10 @@ export async function loadModel(modelId) {
 
             if (verified) {
                 console.log(`Successfully verified ${modelId} is loaded via endpoint method`);
+                window.currentLoadedModel = modelId;
+                availableModels = [modelId];
                 setPersistedLocalSelectedModel(modelId);
-                await fetchAvailableModels();
+                await fetchAvailableModels({ forceRefresh: true, confirmedLoadedModelId: modelId });
                 return true;
             } else {
                 console.log(`API endpoint succeeded but model is not actually loaded, trying force load...`);
@@ -1388,8 +1392,10 @@ export async function loadModel(modelId) {
 
         if (forceSuccess) {
             console.log(`Successfully loaded ${modelId} via force load method`);
+            window.currentLoadedModel = modelId;
+            availableModels = [modelId];
             setPersistedLocalSelectedModel(modelId);
-            await fetchAvailableModels();
+            await fetchAvailableModels({ forceRefresh: true, confirmedLoadedModelId: modelId });
             return true;
         }
 

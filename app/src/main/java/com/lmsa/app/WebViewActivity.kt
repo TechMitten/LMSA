@@ -26,6 +26,7 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.webkit.RenderProcessGoneDetail
+import android.view.inputmethod.InputMethodManager
 import kotlin.math.roundToInt
 import java.io.IOException
 import android.util.Base64
@@ -2429,6 +2430,23 @@ class WebViewActivity : AppCompatActivity() {
                 } else {
                     window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                     Log.d(TAG, "Keep screen on: disabled")
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun dismissKeyboard() {
+            runOnUiThread {
+                val webView: WebView = findViewById(R.id.webView)
+                val targetView = currentFocus ?: webView
+                val windowToken = targetView.windowToken ?: webView.windowToken ?: window.decorView.windowToken
+                val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+
+                targetView.clearFocus()
+                webView.clearFocus()
+
+                if (windowToken != null) {
+                    inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
                 }
             }
         }

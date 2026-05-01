@@ -747,6 +747,7 @@ async function resolveGenerationClientState() {
     }
 
     let loadedModelInfo = null;
+    let lmStudioModelsList = [];
 
     try {
         if (savedUseOllama) {
@@ -810,15 +811,18 @@ async function resolveGenerationClientState() {
                     if (nativeData && Array.isArray(nativeData.models)) {
                         triedNative = true;
                         clearTimeout(timeoutId);
+                        lmStudioModelsList = nativeData.models
+                            .filter(model => model.type === 'llm' || model.type == null)
+                            .map(model => ({ id: model.key || model.id }))
+                            .filter(model => Boolean(model.id));
                         const loadedNative = nativeData.models.find(
-                            m => Array.isArray(m.loaded_instances) && m.loaded_instances.length > 0
+                            m => (Array.isArray(m.loaded_instances) && m.loaded_instances.length > 0) ||
+                                 m.state === 'loaded' || m.state === 'running'
                         );
                         if (loadedNative) {
                             loadedModelInfo = {
-                                id: loadedNative.loaded_instances[0].id || loadedNative.key
+                                id: loadedNative.key || loadedNative.id
                             };
-                        } else if (nativeData.models.length > 0) {
-                            loadedModelInfo = { id: nativeData.models[0].key };
                         }
                     }
                 }
@@ -844,6 +848,9 @@ async function resolveGenerationClientState() {
                 }
 
                 const modelsList = data.data;
+                lmStudioModelsList = modelsList
+                    .map(model => ({ id: model.id }))
+                    .filter(model => Boolean(model.id));
 
                 loadedModelInfo = modelsList.find(model =>
                     model.ready === true ||
@@ -888,8 +895,72 @@ async function resolveGenerationClientState() {
                     }
                 }
 
-                if (!loadedModelInfo && modelsList.length > 0) {
-                    loadedModelInfo = modelsList[0];
+                if (!loadedModelInfo && lmStudioModelsList.length > 0) {
+                    try {
+                        const probeController = new AbortController();
+                        const probeTimeout = setTimeout(() => probeController.abort(), 3000);
+                        const probeResponse = await fetch(`http://${serverIp}:${serverPort}/v1/chat/completions`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                messages: [
+                                    { role: 'system', content: 'You are a helpful assistant.' },
+                                    { role: 'user', content: 'Respond with exactly: ok' }
+                                ],
+                                max_tokens: 1,
+                                stream: false
+                            }),
+                            signal: probeController.signal
+                        }).catch(() => ({ ok: false }));
+                        clearTimeout(probeTimeout);
+
+                        if (probeResponse.ok) {
+                            const probeResult = await probeResponse.json().catch(() => null);
+                            const detectedModelId = probeResult?.model;
+                            if (detectedModelId) {
+                                loadedModelInfo = modelsList.find(model => model.id === detectedModelId) || {
+                                    id: detectedModelId
+                                };
+                            }
+                        }
+                    } catch (_) {
+                        // Silently continue
+                    }
+                }
+            } else if (!loadedModelInfo && lmStudioModelsList.length > 0) {
+                try {
+                    const probeController = new AbortController();
+                    const probeTimeout = setTimeout(() => probeController.abort(), 3000);
+                    const probeResponse = await fetch(`http://${serverIp}:${serverPort}/v1/chat/completions`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            messages: [
+                                { role: 'system', content: 'You are a helpful assistant.' },
+                                { role: 'user', content: 'Respond with exactly: ok' }
+                            ],
+                            max_tokens: 1,
+                            stream: false
+                        }),
+                        signal: probeController.signal
+                    }).catch(() => ({ ok: false }));
+                    clearTimeout(probeTimeout);
+
+                    if (probeResponse.ok) {
+                        const probeResult = await probeResponse.json().catch(() => null);
+                        const detectedModelId = probeResult?.model;
+                        if (detectedModelId) {
+                            loadedModelInfo = lmStudioModelsList.find(model => model.id === detectedModelId) || {
+                                id: detectedModelId
+                            };
+                        }
+                    }
+                } catch (_) {
+                    // Silently continue
                 }
             }
         }

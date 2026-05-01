@@ -525,9 +525,17 @@ function getSelectedModel() {
     if (window.currentLoadedModel) {
         return window.currentLoadedModel;
     }
-    const persistedLocalModel = localStorage.getItem('localSelectedModel');
-    if (persistedLocalModel) {
-        return persistedLocalModel;
+    if (getUseOpenRouter()) {
+        const persistedOpenRouterModel = localStorage.getItem('openRouterSelectedModel');
+        if (persistedOpenRouterModel) {
+            return persistedOpenRouterModel;
+        }
+    }
+    if (getUseOpenAICompatible()) {
+        const persistedOpenAICompatibleModel = localStorage.getItem('openAICompatibleSelectedModel');
+        if (persistedOpenAICompatibleModel) {
+            return persistedOpenAICompatibleModel;
+        }
     }
     const availableModels = getAvailableModels();
     // Return the first available model or a default value if none available

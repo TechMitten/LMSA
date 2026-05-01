@@ -13,7 +13,7 @@ export const whatsNewModal = `
                     <div class="flex flex-col">
                         <span class="text-blue-400 font-extrabold">What's New</span>
                         <span class="text-xs text-blue-300/80 font-medium">v<span
-                            id="whats-new-version">10.14</span></span>
+                            id="whats-new-version">10.15</span></span>
                     </div>
                 </h2>
                 <button id="close-whats-new"
@@ -26,6 +26,26 @@ export const whatsNewModal = `
                 <div class="space-y-3">
                     <div class="feature-item">
                         <div class="relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-cyan-500/10 to-sky-700/5 rounded-full blur-xl"></div>
+                            <div class="flex items-start relative z-10">
+                                <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-cyan-500/20 w-10 h-10 shadow-sm">
+                                    <i class="fas fa-sliders text-cyan-300"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <h3 class="feature-title underline decoration-cyan-500/30 underline-offset-4">More Control for Custom Servers</h3>
+                                    </div>
+                                    <div class="feature-description">
+                                        <p class="mb-3 text-sm">You can now set max tokens for your requests, so it is easier to control response length.</p>
+                                        <p class="mb-3 text-sm">Custom OpenAI-compatible endpoints are now supported, so you can connect more providers and self-hosted setups.</p>
+                                        <p class="mb-3 text-sm">You can also save custom preset servers and switch between them anytime with fewer setup steps.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-slate-500/10 to-gray-700/5 rounded-full blur-xl"></div>
                             <div class="flex items-start relative z-10">
                                 <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-slate-500/20 w-10 h-10 shadow-sm">
@@ -36,8 +56,8 @@ export const whatsNewModal = `
                                         <h3 class="feature-title underline decoration-slate-500/30 underline-offset-4">Offline Access</h3>
                                     </div>
                                     <div class="feature-description">
-                                        <p class="mb-3 text-sm">Core app features now work seamlessly without an internet connection. Use Local Server chat, saved chats, templates, and all main functionality offline.</p>
-                                        <p class="mb-3 text-sm text-gray-400 text-xs italic">Note: OpenRouter API calls and web search require an active internet connection.</p>
+                                        <p class="mb-3 text-sm">Offline access is now available for Premium users, so you can keep using LMSA without an internet connection.</p>
+                                        <p class="mb-3 text-sm text-gray-400 text-xs italic">Restrictions apply: offline mode is limited to LAN-only parts of the app (such as Local Server chat, saved chats, and templates). Cloud features like OpenRouter and web search still require an active internet connection.</p>
                                     </div>
                                 </div>
                             </div>

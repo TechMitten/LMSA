@@ -239,6 +239,52 @@ function queueSidebarHide() {
     }, SIDEBAR_TRANSITION_DURATION_MS);
 }
 
+function isTextEntryElement(element) {
+    if (!(element instanceof HTMLElement)) {
+        return false;
+    }
+
+    if (element.isContentEditable) {
+        return true;
+    }
+
+    if (element instanceof HTMLTextAreaElement) {
+        return !element.disabled && !element.readOnly;
+    }
+
+    if (!(element instanceof HTMLInputElement)) {
+        return false;
+    }
+
+    if (element.disabled || element.readOnly) {
+        return false;
+    }
+
+    const type = (element.type || 'text').toLowerCase();
+    return ['text', 'password', 'search', 'url', 'email', 'tel', 'number'].includes(type);
+}
+
+function shouldDismissKeyboardForSidebarOpen(activeElement) {
+    if (!window.androidKeyboardVisible || !isTextEntryElement(activeElement)) {
+        return false;
+    }
+
+    return !activeElement.closest('#sidebar, #chat-rename-modal, .modal-container:not(.hidden)');
+}
+
+function dismissKeyboardForSidebarOpen() {
+    const activeElement = document.activeElement;
+    if (!shouldDismissKeyboardForSidebarOpen(activeElement)) {
+        return;
+    }
+
+    activeElement.blur();
+
+    if (window.AndroidPower && typeof window.AndroidPower.dismissKeyboard === 'function') {
+        window.AndroidPower.dismissKeyboard();
+    }
+}
+
 function animateSidebarClosed() {
     if (!sidebar) return;
 
@@ -300,6 +346,8 @@ export function toggleSidebar() {
         closeSidebar();
         return;
     }
+
+    dismissKeyboardForSidebarOpen();
 
     // Toggle the overlay in mobile and tablet view first
     // Increased width threshold to 1024px to include tablets

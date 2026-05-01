@@ -1777,8 +1777,18 @@ function initializeSystemPromptOverlay() {
                     modelToUse = window.currentLoadedModel;
                 }
 
-                if (!modelToUse) {
-                    modelToUse = localStorage.getItem('localSelectedModel') || null;
+                if (!modelToUse && !getUseOpenRouter() && !getUseOpenAICompatible()) {
+                    await fetchAvailableModels({
+                        forceRefresh: true,
+                        disableSelectionFallback: true
+                    }).catch(() => []);
+
+                    const refreshedModels = getAvailableModels();
+                    if (window.currentLoadedModel) {
+                        modelToUse = window.currentLoadedModel;
+                    } else if (refreshedModels.length > 0) {
+                        modelToUse = refreshedModels[0];
+                    }
                 }
 
                 const apiUrl = getApiUrl();
