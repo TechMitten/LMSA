@@ -2085,44 +2085,13 @@ function extractWebSearchSourcesFromContext(searchContext) {
     return buildWebSearchSourceList(parsedResults);
 }
 
-function hasAssistantSourcesSection(message) {
-    return typeof message === 'string'
-        && /(?:^|\n)##\s+Sources\s*(?:\n|$)/i.test(message);
-}
-
-function formatWebSearchSourcesSection(sources) {
-    const normalizedSources = cloneWebSearchSources(sources).slice(0, 5);
-    if (normalizedSources.length === 0) {
-        return '';
-    }
-
-    const lines = normalizedSources.map((source, index) => {
-        const baseLabel = source.title || source.hostname || source.url;
-        const label = source.hostname && baseLabel !== source.hostname
-            ? `${baseLabel} (${source.hostname})`
-            : baseLabel;
-        return `${index + 1}. ${label} - <${source.url}>`;
-    });
-
-    return `## Sources\n${lines.join('\n')}`;
-}
-
 function appendWebSearchSourcesSection(message, sources) {
     if (typeof message !== 'string') {
         return message;
     }
 
-    const trimmedMessage = message.trimEnd();
-    if (!trimmedMessage || hasAssistantSourcesSection(trimmedMessage)) {
-        return trimmedMessage;
-    }
-
-    const sourcesSection = formatWebSearchSourcesSection(sources);
-    if (!sourcesSection) {
-        return trimmedMessage;
-    }
-
-    return `${trimmedMessage}\n\n${sourcesSection}`;
+    // Preserve legacy call sites but intentionally suppress source injection in assistant text.
+    return message.trimEnd();
 }
 
 function buildWebSearchContext(query, providerName, results) {
