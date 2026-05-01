@@ -1085,13 +1085,14 @@ export async function isServerRunning() {
  * @param {Object} requestData - Request data to send
  * @returns {Promise<boolean>} - True if any endpoint succeeds
  */
-async function tryEndpoints(ip, port, operation, endpoints, requestData = null) {
+async function tryEndpoints(ip, port, operation, endpoints, requestData = null, options = {}) {
+    const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : 5000;
     for (const endpoint of endpoints) {
         try {
             console.log(`Trying ${operation} with endpoint: ${endpoint.path}`);
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
             const options = {
                 method: endpoint.method,
@@ -1145,12 +1146,15 @@ async function waitForModelLoad(ip, port, modelId, maxAttempts = 10) {
             console.log(`Checking if model is loaded (attempt ${attempt + 1}/${maxAttempts})...`);
 
             // Make a simple test completion to see if the model responds
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 7000);
             const testResponse = await fetch(`http://${ip}:${port}/v1/chat/completions`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     ...getLMStudioAuthHeaders()
                 },
+                signal: controller.signal,
                 body: JSON.stringify({
                     model: modelId,
                     messages: [
@@ -1159,9 +1163,9 @@ async function waitForModelLoad(ip, port, modelId, maxAttempts = 10) {
                     ],
                     max_tokens: 1,
                     stream: false
-                }),
-                timeout: 2000
+                })
             });
+            clearTimeout(timeoutId);
 
             if (testResponse.ok) {
                 // Read the completed text - this confirms the model is actually loaded
@@ -1199,12 +1203,15 @@ async function forceLoadModel(ip, port, modelId) {
 
         // Make a special completion request that forces model loading
         // The long prompt forces LM Studio to fully load the model
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
         const response = await fetch(`http://${ip}:${port}/v1/chat/completions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 ...getLMStudioAuthHeaders()
             },
+            signal: controller.signal,
             body: JSON.stringify({
                 model: modelId,
                 messages: [
@@ -1220,9 +1227,9 @@ async function forceLoadModel(ip, port, modelId) {
                 temperature: 0.1,
                 max_tokens: 10,
                 stream: false
-            }),
-            timeout: 60000 // Long timeout to give the model time to load
+            })
         });
+        clearTimeout(timeoutId);
 
         if (response.ok) {
             const result = await response.json();
@@ -1347,7 +1354,7 @@ export async function loadModel(modelId) {
             console.log(`Using native v1 API to load model: ${modelId}`);
             directSuccess = await tryEndpoints(ip, port, 'Load model (native)', [
                 { path: '/api/v1/models/load', method: 'POST' }
-            ], { model: modelId });
+            ], { model: modelId }, { timeoutMs: 60000 });
 
             // Invalidate the version cache so the next fetchAvailableModels re-reads loaded_instances
             apiVersionCache.timestamp = 0;
@@ -1366,13 +1373,13 @@ export async function loadModel(modelId) {
                 { path: '/v1/models/load', method: 'POST' },
                 { path: `/v1/models/${modelId}/load`, method: 'POST' }
             ];
-            directSuccess = await tryEndpoints(ip, port, 'Load model (legacy)', loadEndpoints, { model_id: modelId });
+            directSuccess = await tryEndpoints(ip, port, 'Load model (legacy)', loadEndpoints, { model_id: modelId }, { timeoutMs: 60000 });
         }
 
         // If the endpoint call succeeds, verify the model is actually loaded by making a test request
         if (directSuccess) {
             console.log(`API endpoint reported success, verifying model is actually loaded...`);
-            const verified = await waitForModelLoad(ip, port, modelId, 5);
+            const verified = await waitForModelLoad(ip, port, modelId, 15);
 
             if (verified) {
                 console.log(`Successfully verified ${modelId} is loaded via endpoint method`);
