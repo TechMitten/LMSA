@@ -440,22 +440,6 @@ export function initializeEventHandlers() {
         }, { passive: false });
     }
 
-    // Welcome Remove Ads button
-    const removeAdsBannerButton = document.getElementById('remove-ads-banner-button');
-    if (removeAdsBannerButton) {
-        bindPressInFeedback(removeAdsBannerButton);
-
-        removeAdsBannerButton.addEventListener('click', openPremiumFlow);
-        removeAdsBannerButton.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            runAfterPressIn(removeAdsBannerButton, () => {
-                openPremiumFlow();
-                removeAdsBannerButton.blur();
-            });
-        }, { passive: false });
-    }
-
     const sidebarPremiumButton = document.getElementById('remove-ads-button');
     if (sidebarPremiumButton) {
         bindPressInFeedback(sidebarPremiumButton);

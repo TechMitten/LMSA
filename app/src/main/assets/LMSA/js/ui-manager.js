@@ -168,19 +168,6 @@ export function showWelcomeMessage() {
             messagesContainer.style.visibility = 'hidden';
             messagesContainer.style.display = 'none';
         }
-        // Show the premium banner in the correct state when welcome screen is displayed.
-        const removeAdsBanner = document.getElementById('remove-ads-banner');
-        if (removeAdsBanner) {
-            const isPremium = typeof window.hasPremiumAccess === 'function'
-                ? window.hasPremiumAccess()
-                : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
-
-            if (typeof window.updateUiForPremium === 'function') {
-                window.updateUiForPremium(!!isPremium);
-            } else {
-                removeAdsBanner.style.display = 'flex';
-            }
-        }
     }).then(() => {
         // Force reflow and position adjustment after DOM writes
         if (welcomeMessage) {
@@ -2678,7 +2665,7 @@ export function renderSmartReplies(replies) {
         if (!reply.trim()) return;
 
         const btn = document.createElement('button');
-        btn.className = 'px-3 py-1.5 bg-darkTertiary hover:bg-darkHover text-gray-200 text-sm rounded-full border border-gray-600/50 transition-colors whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px] flex-shrink-0';
+        btn.className = 'px-3 py-1.5 bg-darkTertiary hover:bg-darkHover text-gray-200 text-sm rounded-full border border-gray-600/50 transition-all hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px] flex-shrink-0 shadow-sm';
         btn.textContent = reply.trim();
         btn.title = reply.trim();
 

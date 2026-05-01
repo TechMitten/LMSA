@@ -166,8 +166,12 @@ function confirmEnableDebugMode() {
     return true;
 }
 
-function updateWelcomeDebugIndicator(isEnabled) {
-    const indicator = document.getElementById('welcome-debug-indicator');
+/**
+ * Updates the debug indicator in the header
+ * @param {boolean} isEnabled - Whether debug mode is enabled
+ */
+function updateHeaderDebugIndicator(isEnabled) {
+    const indicator = document.getElementById('header-debug-indicator');
     if (!indicator) {
         return;
     }
@@ -178,7 +182,7 @@ function applyDebugModeState(enabled, syncNative = true) {
     const isEnabled = !!enabled;
     window.isDebugMode = isEnabled;
     setDebugEnabled(isEnabled);
-    updateWelcomeDebugIndicator(isEnabled);
+    updateHeaderDebugIndicator(isEnabled);
 
     if (syncNative && window.AndroidBilling && typeof window.AndroidBilling.toggleDebugMode === 'function') {
         window.AndroidBilling.toggleDebugMode(isEnabled);
@@ -208,7 +212,7 @@ function hydrateDebugModeState() {
 
     window.isDebugMode = hydratedDebugMode;
     setDebugEnabled(hydratedDebugMode);
-    updateWelcomeDebugIndicator(hydratedDebugMode);
+    updateHeaderDebugIndicator(hydratedDebugMode);
 }
 
 hydrateDebugModeState();

@@ -998,16 +998,11 @@ body.light-theme #active-character-display {
   padding-top: 0;
   padding-bottom: 0;
   color: rgba(156, 163, 175, 0.7);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 0.15s ease;
-  /* Grayer muted text */
-}
-
-body.chat-input-focused #ai-disclaimer {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.15s ease;
+  /* Grayer muted text */
 }
 
 @media (max-width: 768px) {

@@ -121,6 +121,12 @@ body.preview-mode {
 #smart-replies-container {
     scrollbar-width: none;
     -ms-overflow-style: none;
+    margin-bottom: 0.95rem !important;
+    padding-top: 0.25rem !important;
+}
+
+#smart-replies-container button {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 /* Show scrollbar when user opts in via settings */
@@ -1476,7 +1482,7 @@ button[type="submit"] {
     width: 100%;
     box-sizing: border-box;
     margin-top: auto;
-    padding: 0.95rem 0.75rem 0.5rem;
+    padding: 0.95rem 0.75rem 1.45rem;
     background:
         linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(12, 18, 28, 0.82) 16%, rgba(6, 10, 17, 0.97) 58%, rgba(3, 6, 12, 1) 100%),
         radial-gradient(circle at 50% 8%, rgba(100, 116, 139, 0.2) 0%, rgba(100, 116, 139, 0) 52%),
@@ -1485,6 +1491,16 @@ button[type="submit"] {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 -20px 38px rgba(2, 6, 23, 0.4);
     backdrop-filter: blur(18px) saturate(120%);
     -webkit-backdrop-filter: blur(18px) saturate(120%);
+}
+
+.keyboard-visible #chat-input-area,
+.android-webview.keyboard-visible #chat-input-area {
+    padding-bottom: 0.45rem !important;
+}
+
+.keyboard-visible #smart-replies-container,
+.android-webview.keyboard-visible #smart-replies-container {
+    display: none !important;
 }
 
 body.light-theme #chat-input-area {
@@ -1649,16 +1665,11 @@ body.light-theme #chat-input-area {
     padding-top: 0;
     padding-bottom: 0;
     color: rgba(156, 163, 175, 0.7);
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition: opacity 0.15s ease;
-    /* Grayer muted text */
-}
-
-body.chat-input-focused #ai-disclaimer {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.15s ease;
+    /* Grayer muted text */
 }
 
 @media (max-width: 480px) {

@@ -1430,9 +1430,10 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     }
 
     #smart-replies-container {
-        margin-bottom: 0.55rem !important;
+        margin-bottom: 0.95rem !important;
         padding-left: 0.1rem !important;
         padding-right: 0.1rem !important;
+        padding-top: 0.25rem !important;
     }
 
     #chat-form {
@@ -2222,6 +2223,21 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 /* Stable chat composer layout */
 :root {
     --chat-composer-control-size: 52px;
+}
+
+#chat-input-area {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+}
+
+#ai-disclaimer {
+    min-height: 1.2rem !important;
+    height: auto !important;
+    margin-top: 0.4rem !important;
+    margin-bottom: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    overflow: visible !important;
 }
 
 #chat-form {

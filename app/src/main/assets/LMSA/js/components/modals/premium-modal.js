@@ -594,7 +594,6 @@ export function initPremiumModal() {
     }
 
     const modal = document.getElementById('premium-modal');
-    const openButton = document.getElementById('remove-ads-banner-button');
     const closeButton = document.getElementById('close-premium-modal');
     const secondaryCloseButton = document.getElementById('close-premium-modal-secondary');
     const upgradeButton = document.getElementById('premium-upgrade-button');
@@ -616,13 +615,6 @@ export function initPremiumModal() {
     const closeModal = () => {
         closePremiumModal();
     };
-
-    // Open modal
-    if (openButton) {
-        openButton.addEventListener('click', () => {
-            openPremiumModal();
-        });
-    }
 
     // Close modal handlers
     if (closeButton) {
@@ -659,15 +651,6 @@ export function initPremiumModal() {
             } else {
                 console.warn('Premium upgrade unavailable: window.removeAds is not defined');
             }
-        });
-    }
-
-    // Hide banner when user focuses on chat input field
-    const userInput = document.getElementById('user-input');
-    const removeAdsBanner = document.getElementById('remove-ads-banner');
-    if (userInput && removeAdsBanner) {
-        userInput.addEventListener('focus', () => {
-            removeAdsBanner.style.display = 'none';
         });
     }
 }

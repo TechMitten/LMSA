@@ -72,9 +72,12 @@
                 <h1 class="text-2xl font-bold header-title">LMSA</h1>
             </div>
             <div class="flex items-center space-x-1 header-controls">
-
-
-
+                <div id="header-debug-indicator" class="mr-1" style="display: none;">
+                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+                        style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #f59e0b; white-space: nowrap;">
+                        Debug
+                    </span>
+                </div>
                 <button id="sidebar-toggle" class="p-2 rounded-md focus:outline-none header-btn" data-priority="1" aria-label="Toggle Sidebar">
                     <span class="icon-wrapper">
                         <svg class="w-5 h-5 header-icon" fill="none" viewBox="0 0 24 24"
@@ -406,21 +409,6 @@
                                     <!-- Quick Switch Info -->
                                     <p class="welcome-quick-switch text-xs opacity-50 mb-4 sm:mb-6">Tap a provider above to quickly switch mode</p>
                                 </div>
-
-                                <div id="welcome-debug-indicator" class="mb-4" style="display: none;">
-                                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
-                                        style="background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.45); color: #f59e0b;">
-                                        Debug Mode Enabled
-                                    </span>
-                                </div>
-
-                                <div id="remove-ads-banner" class="welcome-premium-row w-full mt-4" style="display: none;">
-                                    <button id="remove-ads-banner-button"
-                                        class="professional-button welcome-premium-action flex items-center justify-center gap-2 w-full h-12 rounded-xl">
-                                        <i class="fas fa-crown" style="color: #fbbf24;"></i>
-                                        <span class="font-bold">Unlock Premium Access</span>
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -441,7 +429,7 @@
 
                     <!-- Smart Replies Container -->
                     <div id="smart-replies-container"
-                        class="flex-nowrap gap-2 p-2 hidden mb-2 w-full max-w-full overflow-x-auto select-none"
+                        class="flex-nowrap gap-2 p-2 hidden w-full max-w-full overflow-x-auto select-none"
                         style="padding-bottom: 0px; padding-top: 0px;"></div>
 
                     <form id="chat-form" class="flex" style="position: relative; background-color: transparent;">

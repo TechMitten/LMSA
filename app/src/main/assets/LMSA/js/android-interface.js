@@ -133,33 +133,6 @@ function updateUiForPremium(isPremium) {
     if (legacyAccessBtn) {
         legacyAccessBtn.style.display = isPremium ? 'none' : 'block';
     }
-
-    // Hide the welcome premium banner for premium users; show it only for free users.
-    const removeAdsBanner = document.getElementById('remove-ads-banner');
-    if (removeAdsBanner) {
-        removeAdsBanner.style.display = isPremium ? 'none' : 'flex';
-    }
-
-    const removeAdsBannerButton = document.getElementById('remove-ads-banner-button');
-    if (removeAdsBannerButton && !isPremium) {
-        removeAdsBannerButton.classList.remove('premium-activated');
-        removeAdsBannerButton.disabled = false;
-        removeAdsBannerButton.setAttribute('aria-label', 'Unlock Premium');
-        removeAdsBannerButton.setAttribute('aria-disabled', 'false');
-        removeAdsBannerButton.tabIndex = 0;
-
-        const buttonLabel = removeAdsBannerButton.querySelector('span');
-        if (buttonLabel) {
-            buttonLabel.textContent = 'Unlock Premium';
-        }
-
-        const buttonIcon = removeAdsBannerButton.querySelector('i');
-        if (buttonIcon) {
-            buttonIcon.classList.add('fa-crown');
-            buttonIcon.classList.remove('fa-check-circle');
-            buttonIcon.style.color = '#fbbf24';
-        }
-    }
 }
 
 window.showPostAppOpenPremiumCta = function() { console.log('Post-ad CTA disabled.'); };
