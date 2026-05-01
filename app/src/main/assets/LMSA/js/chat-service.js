@@ -30,6 +30,7 @@ const MAX_HISTORICAL_SEARCHES = 3;
 const WEB_SEARCH_QUERY_MAX_LENGTH = 220;
 const WEB_SEARCH_CONTEXT_MAX_LENGTH = 96;
 const WEB_SEARCH_SHORT_QUERY_WORDS = 5;
+const WEB_SEARCH_FETCH_TIMEOUT_MS = 8000;
 const CHAT_IMAGE_STORE_KEY = 'chatImageStore';
 const CHAT_IMAGE_STORE_VERSION = 1;
 const ACTIVE_TEMPLATE_CHARACTER_CARD_KEY = 'activeTemplateCharacterCard';
@@ -48,6 +49,17 @@ const WEB_SEARCH_STOP_WORDS = new Set([
 const WEB_SEARCH_FOLLOW_UP_PATTERN = /\b(it|its|they|them|their|this|that|these|those|he|she|him|her|former|latter)\b/i;
 const WEB_SEARCH_AMBIGUOUS_LEAD_PATTERN = /^(and|also|so|then|what about|how about|what else|when|where|why|who|which|is it|are they|does it|do they|did it|can it|could it|would it|should it)\b/i;
 const WEB_SEARCH_ERROR_PATTERN = /\b(error|exception|traceback|stack trace|typeerror|referenceerror|syntaxerror|rangeerror|failed|failure|cannot|can't|undefined|null|not found|http\s*\d{3}|\d{3}\s+error)\b/i;
+const WEB_SEARCH_RETRY_PATTERN = /^(try again|retry|again|search again|look again|check again|one more time|refresh|update it|update this)$/i;
+const WEB_SEARCH_TOOL_NAME = 'web_search';
+const WEB_SEARCH_DECISION_MAX_TOKENS = 96;
+const WEB_SEARCH_DECISION_MAX_MESSAGES = 6;
+const WEB_SEARCH_DECISION_MAX_CHARS_PER_MESSAGE = 700;
+const WEB_SEARCH_PROVIDERS = [
+    { name: 'SearXNG TechMitten', type: 'searxng', url: 'https://searxng.techmitten.com/search' },
+    { name: 'SearXNG Inetol', type: 'searxng', url: 'https://search.inetol.net/search' },
+    { name: 'SearXNG Tiekoetter', type: 'searxng', url: 'https://searx.tiekoetter.com/search' },
+    { name: 'DuckDuckGo Instant Answer', type: 'duckduckgo', url: 'https://api.duckduckgo.com/' }
+];
 const WEB_SEARCH_SKIP_WORDS = new Set([
     'thanks', 'thank', 'ty', 'thnx', 'thx', 'thankyou', 'thank you',
     'ok', 'okay', 'k', 'kk', 'got it', 'understood', 'understood', 'yes', 'yep', 'yup', 'yeah', 'no', 'nope',
@@ -629,13 +641,40 @@ function cloneMessageForRequest(message) {
         return message;
     }
 
+    // Keep only API-relevant keys so internal metadata (e.g. webSearchResults,
+    // hadWebSearch, UI flags) is never sent back to the model.
     const clonedMessage = {
-        ...message,
+        role: message.role,
         content: cloneContentForRequest(message.content)
     };
 
-    if (Array.isArray(message.files)) {
-        clonedMessage.files = message.files.map(file => ({ ...file }));
+    if (typeof message.name === 'string' && message.name.trim()) {
+        clonedMessage.name = message.name;
+    }
+
+    if (typeof message.tool_call_id === 'string' && message.tool_call_id.trim()) {
+        clonedMessage.tool_call_id = message.tool_call_id;
+    }
+
+    if (Array.isArray(message.tool_calls)) {
+        clonedMessage.tool_calls = message.tool_calls.map(toolCall => {
+            if (!toolCall || typeof toolCall !== 'object') {
+                return toolCall;
+            }
+
+            const clonedToolCall = {
+                id: toolCall.id,
+                type: toolCall.type,
+                function: toolCall.function
+                    ? {
+                        name: toolCall.function.name,
+                        arguments: toolCall.function.arguments
+                    }
+                    : toolCall.function
+            };
+
+            return clonedToolCall;
+        });
     }
 
     return clonedMessage;
@@ -1369,6 +1408,21 @@ function extractKeywordQuery(text, maxTerms = 14) {
     return keywords.join(' ').trim();
 }
 
+function buildKeywordSet(text, maxTerms = 10) {
+    const keywordText = extractKeywordQuery(text, maxTerms);
+    if (!keywordText) {
+        return new Set();
+    }
+
+    return new Set(
+        keywordText
+            .toLowerCase()
+            .split(/\s+/)
+            .map(token => token.trim())
+            .filter(Boolean)
+    );
+}
+
 function countWords(text) {
     if (!text) {
         return 0;
@@ -1406,13 +1460,27 @@ function shouldUseRecentContext(text) {
         return false;
     }
 
-    // Only prepend prior context if the query is very short AND has a follow-up indicator
-    // This avoids prepending context for topic switches
     const wordCount = countWords(text);
     const hasFollowUpIndicator = WEB_SEARCH_FOLLOW_UP_PATTERN.test(text) || 
                                  WEB_SEARCH_AMBIGUOUS_LEAD_PATTERN.test(text);
-    
-    return wordCount <= WEB_SEARCH_SHORT_QUERY_WORDS && hasFollowUpIndicator;
+
+    // If the follow-up explicitly references prior context (it/that/these/etc.),
+    // allow a broader length limit because users often ask full-sentence follow-ups.
+    if (hasFollowUpIndicator) {
+        return wordCount <= 12;
+    }
+
+    // Handle follow-ups that omit prior topic words (e.g., "what are the side effects?").
+    // If the query is short and semantically sparse, prepend recent context to ground search.
+    const keywordCount = extractKeywordQuery(text, 6).split(/\s+/).filter(Boolean).length;
+    const startsWithQuestionWord = /^(what|when|where|why|how|which|who|is|are|can|could|would|should|did|do|does)\b/i.test(text);
+    const isLikelyContextDependent = startsWithQuestionWord && keywordCount <= 3 && wordCount <= 10;
+
+    if (isLikelyContextDependent) {
+        return true;
+    }
+
+    return false;
 }
 
 function isSkipWorthyWebSearchQuery(text) {
@@ -1469,7 +1537,74 @@ function isFirstUserMessage(chatMessages) {
     if (!Array.isArray(chatMessages)) {
         return true;
     }
-    return chatMessages.filter(m => m.role === 'user').length === 0;
+    return chatMessages.filter(m => m.role === 'user').length <= 1;
+}
+
+function getPreviousUserMessage(chatMessages = []) {
+    if (!Array.isArray(chatMessages)) {
+        return null;
+    }
+
+    const userMessages = chatMessages.filter(message => message?.role === 'user');
+    if (userMessages.length < 2) {
+        return null;
+    }
+
+    return userMessages[userMessages.length - 2];
+}
+
+function buildRetryWebSearchQuery(userMessage, chatMessages = []) {
+    const normalizedPrompt = normalizeWebSearchText(userMessage || '').toLowerCase();
+    if (!WEB_SEARCH_RETRY_PATTERN.test(normalizedPrompt)) {
+        return '';
+    }
+
+    const previousUserMessage = getPreviousUserMessage(chatMessages);
+    const previousContent = getDisplayTextFromMessageContent(previousUserMessage?.content || '');
+    if (!previousContent || isSkipWorthyWebSearchQuery(previousContent)) {
+        return '';
+    }
+
+    return buildWebSearchQuery(previousContent, chatMessages);
+}
+
+function isLikelyTopicSwitch(userMessage, chatMessages = []) {
+    if (!Array.isArray(chatMessages) || chatMessages.length === 0) {
+        return false;
+    }
+
+    const normalizedCurrent = normalizeWebSearchText(userMessage || '');
+    if (!normalizedCurrent) {
+        return false;
+    }
+
+    const priorUserMessages = chatMessages.filter(message => message?.role === 'user');
+    if (priorUserMessages.length < 2) {
+        return false;
+    }
+
+    const previousUser = priorUserMessages[priorUserMessages.length - 2];
+    const normalizedPrevious = normalizeWebSearchText(previousUser?.content || '');
+    if (!normalizedPrevious) {
+        return false;
+    }
+
+    const currentKeywords = buildKeywordSet(normalizedCurrent, 10);
+    const previousKeywords = buildKeywordSet(normalizedPrevious, 10);
+
+    if (currentKeywords.size < 3 || previousKeywords.size < 3) {
+        return false;
+    }
+
+    let overlapCount = 0;
+    for (const keyword of currentKeywords) {
+        if (previousKeywords.has(keyword)) {
+            overlapCount += 1;
+        }
+    }
+
+    // Strong topic switch signal: substantial keywords on both turns with no overlap.
+    return overlapCount === 0;
 }
 
 function buildWebSearchQuery(userMessage, chatMessages = []) {
@@ -1510,78 +1645,419 @@ function buildWebSearchQuery(userMessage, chatMessages = []) {
 
 async function performWebSearch(query) {
     if (!query) return null;
-    try {
-        const searxngUrl = new URL('https://searxng.techmitten.com/search');
-        searxngUrl.searchParams.set('q', query);
-        searxngUrl.searchParams.set('format', 'json');
-        searxngUrl.searchParams.set('categories', 'general');
-
-        const urlString = searxngUrl.toString();
-        debugLog('Searching the web for context via SearXNG...');
-
-        let resultData = null;
-
-        // Tier 1: Try Native Bridge (Android only, bypasses CORS reliably)
-        if (window.nativeFetch && typeof window.nativeFetch === 'function') {
-            const nativeResult = await window.nativeFetch(urlString);
-            if (nativeResult) {
-                try {
-                    resultData = JSON.parse(nativeResult);
-                } catch (e) {
-                    console.error('Failed to parse native fetch result:', e);
-                }
+    for (const provider of WEB_SEARCH_PROVIDERS) {
+        try {
+            debugLog(`Searching the web for context via ${provider.name}...`);
+            const results = await fetchWebSearchProviderResults(provider, query);
+            if (results.length > 0) {
+                const searchContext = buildWebSearchContext(query, provider.name, results);
+                debugLog('Injecting search context:', searchContext.substring(0, 200));
+                return searchContext;
             }
-        }
 
-        // Tier 2: Direct Fetch (Works on Android file:// origin if native bridge missing, or if server allows CORS)
-        if (!resultData) {
-            try {
-                const response = await fetch(urlString);
-                if (response.ok) {
-                    resultData = await response.json();
-                } else {
-                    console.warn(`Direct web search HTTP error: ${response.status}`);
-                }
-            } catch (error) {
-                // If direct fetch fails with TypeError (likely CORS), try Tier 3
-                if (error.name === 'TypeError' && window.location.protocol !== 'file:') {
-                    debugLog('Direct search failed (CORS), attempting Tier 3: CORS Proxy...');
-                    
-                    // Tier 3: CORS Proxy (For desktop browser development)
-                    try {
-                        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlString)}`;
-                        const proxyResponse = await fetch(proxyUrl);
-                        if (proxyResponse.ok) {
-                            const proxyData = await proxyResponse.json();
-                            if (proxyData && proxyData.contents) {
-                                resultData = JSON.parse(proxyData.contents);
-                            }
-                        }
-                    } catch (proxyError) {
-                        console.error('CORS proxy fetch failed:', proxyError);
-                    }
-                } else {
-                    throw error;
-                }
-            }
+            console.warn(`${provider.name} returned no results for query:`, query);
+        } catch (error) {
+            console.warn(`${provider.name} search failed:`, error?.message || error);
         }
-
-        if (resultData && resultData.results && resultData.results.length > 0) {
-            let searchContext = `${WEB_SEARCH_CONTEXT_HEADER}\n`;
-            resultData.results.slice(0, 5).forEach((item, index) => {
-                const snippet = item.content || item.url || '';
-                searchContext += `${index + 1}. ${item.title}: ${snippet}\n`;
-            });
-            debugLog('Injecting search context:', searchContext.substring(0, 200));
-            return searchContext;
-        }
-
-        console.warn('SearXNG returned no results for query:', query);
-        return null;
-    } catch (error) {
-        console.error("Web search failed overall:", error.name, error.message);
-        return null;
     }
+
+    console.warn('All web search providers returned no usable results for query:', query);
+    return null;
+}
+
+async function fetchWebSearchProviderResults(provider, query) {
+    const searchUrl = new URL(provider.url);
+
+    if (provider.type === 'duckduckgo') {
+        searchUrl.searchParams.set('q', query);
+        searchUrl.searchParams.set('format', 'json');
+        searchUrl.searchParams.set('no_html', '1');
+        searchUrl.searchParams.set('skip_disambig', '1');
+    } else {
+        searchUrl.searchParams.set('q', query);
+        searchUrl.searchParams.set('format', 'json');
+        searchUrl.searchParams.set('categories', 'general');
+    }
+
+    const resultData = await fetchJsonWithNativeFallback(searchUrl.toString());
+    if (!resultData) {
+        return [];
+    }
+
+    if (provider.type === 'duckduckgo') {
+        return extractDuckDuckGoResults(resultData);
+    }
+
+    return extractSearxngResults(resultData);
+}
+
+async function fetchJsonWithNativeFallback(urlString) {
+    if (window.nativeFetch && typeof window.nativeFetch === 'function') {
+        const nativeResult = await window.nativeFetch(urlString);
+        if (nativeResult) {
+            try {
+                return JSON.parse(nativeResult);
+            } catch (error) {
+                console.warn('Failed to parse native fetch result:', error);
+            }
+        }
+    }
+
+    try {
+        const response = await fetchWithTimeout(urlString, WEB_SEARCH_FETCH_TIMEOUT_MS);
+        if (response.ok) {
+            return await response.json();
+        }
+
+        console.warn(`Direct web search HTTP error: ${response.status}`);
+    } catch (error) {
+        if (error.name !== 'TypeError' || window.location.protocol === 'file:') {
+            throw error;
+        }
+
+        debugLog('Direct search failed, attempting CORS proxy fallback...');
+    }
+
+    if (window.location.protocol !== 'file:') {
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlString)}`;
+        const proxyResponse = await fetchWithTimeout(proxyUrl, WEB_SEARCH_FETCH_TIMEOUT_MS);
+        if (proxyResponse.ok) {
+            const proxyData = await proxyResponse.json();
+            if (proxyData?.contents) {
+                return JSON.parse(proxyData.contents);
+            }
+        }
+    }
+
+    return null;
+}
+
+async function fetchWithTimeout(url, timeoutMs) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+        return await fetch(url, { signal: controller.signal });
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
+function extractSearxngResults(resultData) {
+    if (!Array.isArray(resultData?.results)) {
+        return [];
+    }
+
+    return resultData.results
+        .map(item => ({
+            title: normalizeSearchResultText(item?.title),
+            content: normalizeSearchResultText(item?.content || item?.url),
+            url: normalizeSearchResultText(item?.url)
+        }))
+        .filter(item => item.title && (item.content || item.url));
+}
+
+function extractDuckDuckGoResults(resultData) {
+    const results = [];
+    const abstractText = normalizeSearchResultText(resultData?.AbstractText || resultData?.Abstract);
+    const abstractTitle = normalizeSearchResultText(resultData?.Heading || 'DuckDuckGo result');
+
+    if (abstractText) {
+        results.push({
+            title: abstractTitle,
+            content: abstractText,
+            url: normalizeSearchResultText(resultData?.AbstractURL)
+        });
+    }
+
+    appendDuckDuckGoRelatedTopics(results, resultData?.RelatedTopics);
+    return results;
+}
+
+function appendDuckDuckGoRelatedTopics(results, topics) {
+    if (!Array.isArray(topics)) {
+        return;
+    }
+
+    for (const topic of topics) {
+        if (results.length >= 5) {
+            return;
+        }
+
+        if (Array.isArray(topic?.Topics)) {
+            appendDuckDuckGoRelatedTopics(results, topic.Topics);
+            continue;
+        }
+
+        const text = normalizeSearchResultText(topic?.Text);
+        if (!text) {
+            continue;
+        }
+
+        results.push({
+            title: text.split(' - ')[0].slice(0, 120),
+            content: text,
+            url: normalizeSearchResultText(topic?.FirstURL)
+        });
+    }
+}
+
+function normalizeSearchResultText(text) {
+    if (text == null) {
+        return '';
+    }
+
+    return String(text).replace(/\s+/g, ' ').trim();
+}
+
+function buildWebSearchContext(query, providerName, results) {
+    let searchContext = `${WEB_SEARCH_CONTEXT_HEADER}\n`;
+    searchContext += `Query: ${query}\n`;
+    searchContext += `Provider: ${providerName}\n`;
+
+    results.slice(0, 5).forEach((item, index) => {
+        const snippet = item.content || item.url || '';
+        const urlSuffix = item.url ? ` (${item.url})` : '';
+        searchContext += `${index + 1}. ${item.title}: ${snippet}${urlSuffix}\n`;
+    });
+
+    return searchContext;
+}
+
+function getChatCompletionHeaders() {
+    const headers = {
+        'Content-Type': 'application/json',
+    };
+
+    if (getUseOpenRouter()) {
+        headers['Authorization'] = `Bearer ${getOpenRouterApiKey()}`;
+        headers['HTTP-Referer'] = 'https://lmsa.app';
+        headers['X-Title'] = 'LMSA';
+    } else if (getUseOpenAICompatible()) {
+        const apiKey = getOpenAICompatibleApiKey();
+        if (apiKey) {
+            headers['Authorization'] = `Bearer ${apiKey}`;
+        }
+    } else if (!getUseOllama()) {
+        const lmToken = getLMStudioApiToken();
+        if (lmToken) {
+            headers['Authorization'] = `Bearer ${lmToken}`;
+        }
+    }
+
+    return headers;
+}
+
+function buildWebSearchToolDefinition() {
+    return [
+        {
+            type: 'function',
+            function: {
+                name: WEB_SEARCH_TOOL_NAME,
+                description: 'Call this only when the latest user request needs fresh or external factual information from the web. Do not call this for acknowledgments, gratitude, or conversational follow-ups that can be answered from the existing chat context.',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        query: {
+                            type: 'string',
+                            description: 'A standalone web-search query for the latest user request.'
+                        }
+                    },
+                    required: ['query'],
+                    additionalProperties: false
+                }
+            }
+        }
+    ];
+}
+
+function extractWebSearchQueryFromToolCalls(responseData) {
+    const toolCalls = responseData?.choices?.[0]?.message?.tool_calls;
+    if (!Array.isArray(toolCalls) || toolCalls.length === 0) {
+        return '';
+    }
+
+    for (const toolCall of toolCalls) {
+        if (!toolCall || toolCall.type !== 'function' || toolCall.function?.name !== WEB_SEARCH_TOOL_NAME) {
+            continue;
+        }
+
+        const rawArgs = toolCall.function?.arguments;
+        if (typeof rawArgs !== 'string' || !rawArgs.trim()) {
+            continue;
+        }
+
+        try {
+            const parsedArgs = JSON.parse(rawArgs);
+            const candidateQuery = typeof parsedArgs?.query === 'string' ? parsedArgs.query : '';
+            const normalizedQuery = normalizeWebSearchText(candidateQuery).slice(0, WEB_SEARCH_QUERY_MAX_LENGTH).trim();
+            if (normalizedQuery) {
+                return normalizedQuery;
+            }
+        } catch (_) {
+            const normalizedQuery = normalizeWebSearchText(rawArgs).slice(0, WEB_SEARCH_QUERY_MAX_LENGTH).trim();
+            if (normalizedQuery) {
+                return normalizedQuery;
+            }
+        }
+    }
+
+    return '';
+}
+
+function normalizeWebSearchDecisionContent(content) {
+    const displayText = getDisplayTextFromMessageContent(content);
+    const cleaned = stripInjectedWebSearchContext(displayText || '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    if (!cleaned) {
+        return '';
+    }
+
+    if (cleaned.length <= WEB_SEARCH_DECISION_MAX_CHARS_PER_MESSAGE) {
+        return cleaned;
+    }
+
+    return cleaned.slice(-WEB_SEARCH_DECISION_MAX_CHARS_PER_MESSAGE).trim();
+}
+
+function buildWebSearchDecisionMessages(requestMessages) {
+    if (!Array.isArray(requestMessages) || requestMessages.length === 0) {
+        return [];
+    }
+
+    const decisionMessages = [];
+    const systemMessages = requestMessages.filter(m => m && m.role === 'system');
+    const latestSystem = systemMessages.length > 0 ? systemMessages[systemMessages.length - 1] : null;
+
+    if (latestSystem) {
+        const systemContent = normalizeWebSearchDecisionContent(latestSystem.content);
+        if (systemContent) {
+            decisionMessages.push({ role: 'system', content: systemContent });
+        }
+    }
+
+    const nonSystemMessages = requestMessages.filter(m => m && m.role !== 'system');
+    const recentMessages = nonSystemMessages.slice(-WEB_SEARCH_DECISION_MAX_MESSAGES);
+
+    for (const message of recentMessages) {
+        const normalizedContent = normalizeWebSearchDecisionContent(message.content);
+        if (!normalizedContent) {
+            continue;
+        }
+
+        decisionMessages.push({
+            role: message.role,
+            content: normalizedContent
+        });
+    }
+
+    return decisionMessages;
+}
+
+async function decideWebSearchQueryWithModel(requestMessages, signal) {
+    if (!Array.isArray(requestMessages) || requestMessages.length === 0) {
+        return { state: 'skip', query: '' };
+    }
+
+    const decisionMessages = buildWebSearchDecisionMessages(requestMessages);
+    if (decisionMessages.length === 0) {
+        return { state: 'fallback', query: '' };
+    }
+
+    const decisionBody = {
+        model: getSelectedModel(),
+        messages: decisionMessages,
+        temperature: 0,
+        stream: false,
+        max_tokens: WEB_SEARCH_DECISION_MAX_TOKENS,
+        tools: buildWebSearchToolDefinition(),
+        tool_choice: 'auto'
+    };
+
+    try {
+        const fetchResult = await postChatCompletionWithReasoningFallback(
+            getApiUrl(),
+            getChatCompletionHeaders(),
+            decisionBody,
+            signal
+        );
+
+        if (!fetchResult.response.ok) {
+            const errorText = await parseApiErrorResponse(fetchResult.response);
+            debugLog('Web-search tool decision unavailable, using fallback heuristics:', errorText);
+            return { state: 'fallback', query: '' };
+        }
+
+        const decisionData = await fetchResult.response.json();
+        const toolQuery = extractWebSearchQueryFromToolCalls(decisionData);
+
+        if (toolQuery) {
+            return { state: 'search', query: toolQuery };
+        }
+
+        // Some providers/models accept the request but ignore tool-calling and return
+        // a normal assistant message with no tool calls. In that case, fall back to
+        // heuristic decisioning instead of force-skipping web search.
+        const finishReason = decisionData?.choices?.[0]?.finish_reason;
+        if (finishReason !== 'tool_calls') {
+            debugLog('Web-search decision returned no tool call, using fallback heuristics.');
+            return { state: 'fallback', query: '' };
+        }
+
+        return { state: 'skip', query: '' };
+    } catch (error) {
+        debugLog('Web-search tool decision failed, using fallback heuristics:', error?.message || error);
+        return { state: 'fallback', query: '' };
+    }
+}
+
+async function resolveWebSearchQuery(userMessage, requestMessages, chatMessages, signal) {
+    const normalizedPrompt = normalizeWebSearchText(userMessage);
+    if (!normalizedPrompt) {
+        return { shouldSearch: false, query: '', source: 'empty' };
+    }
+
+    const retryQuery = buildRetryWebSearchQuery(userMessage, chatMessages);
+    if (retryQuery) {
+        return {
+            shouldSearch: true,
+            query: retryQuery,
+            source: 'retry-context'
+        };
+    }
+
+    // For clear topic switches, avoid over-relying on prior conversation context
+    // and force a fresh, standalone web search query.
+    if (isLikelyTopicSwitch(userMessage, chatMessages) && !isSkipWorthyWebSearchQuery(userMessage)) {
+        const topicSwitchQuery = buildWebSearchQuery(userMessage, []);
+        if (topicSwitchQuery) {
+            return {
+                shouldSearch: true,
+                query: topicSwitchQuery,
+                source: 'topic-switch'
+            };
+        }
+    }
+
+    const isFirstMsg = isFirstUserMessage(chatMessages);
+    if (isFirstMsg || !isSkipWorthyWebSearchQuery(userMessage)) {
+        const fallbackQuery = buildWebSearchQuery(userMessage, chatMessages);
+        if (fallbackQuery) {
+            return {
+                shouldSearch: true,
+                query: fallbackQuery,
+                source: isFirstMsg ? 'first-message' : 'heuristic'
+            };
+        }
+    }
+
+    return {
+        shouldSearch: false,
+        query: '',
+        source: 'heuristic-skip'
+    };
 }
 
 function consumeWebSearchQuota() {
@@ -1755,11 +2231,11 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             messages.push(cloneMessageForRequest(msg));
         }
 
-        const isFirstMsg = isFirstUserMessage(chatMessages);
-        if (getWebSearchEnabled() && messages.length > 0 && (isFirstMsg || !isSkipWorthyWebSearchQuery(userMessage))) {
-            const searchQuery = buildWebSearchQuery(userMessage, chatMessages);
-            debugLog('Derived web search query:', searchQuery, '| first message:', isFirstMsg);
-            if (!consumeWebSearchQuota()) {
+        if (getWebSearchEnabled() && messages.length > 0) {
+            const webSearchDecision = await resolveWebSearchQuery(userMessage, messages, chatMessages, signal);
+            debugLog('Web search decision:', webSearchDecision.source, webSearchDecision.query ? `query=${webSearchDecision.query}` : 'no-query');
+
+            if (webSearchDecision.shouldSearch && !canUseWebSearch()) {
                 hideLoadingIndicator();
                 const stopButton = document.getElementById('stop-button');
                 if (stopButton && !stopButton.classList.contains('hidden')) {
@@ -1767,8 +2243,13 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                 }
                 return;
             }
-            const searchResults = await performWebSearch(searchQuery);
+
+            const searchResults = webSearchDecision.shouldSearch
+                ? await performWebSearch(webSearchDecision.query)
+                : null;
+
             if (searchResults) {
+                recordWebSearch();
                 // Inject search results into the current API request
                 if (getUseOpenRouter()) {
                     // OpenRouter (and most cloud models) do not support system-role messages
@@ -1805,6 +2286,8 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                         }
                     }
                 }
+            } else if (webSearchDecision.shouldSearch) {
+                debugLog('Web search selected but no search context was returned:', webSearchDecision.query);
             }
         }
 
@@ -2103,20 +2586,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
 
         // Send the request to the API with timeout protection
         console.log('Sending fetch request to:', apiUrl);
-        const requestHeaders = {
-            'Content-Type': 'application/json',
-        };
-        if (getUseOpenRouter()) {
-            requestHeaders['Authorization'] = `Bearer ${getOpenRouterApiKey()}`;
-            requestHeaders['HTTP-Referer'] = 'https://lmsa.app';
-            requestHeaders['X-Title'] = 'LMSA';
-        } else if (getUseOpenAICompatible()) {
-            const apiKey = getOpenAICompatibleApiKey();
-            if (apiKey) requestHeaders['Authorization'] = `Bearer ${apiKey}`;
-        } else {
-            const lmToken = getUseOllama() ? '' : getLMStudioApiToken();
-            if (lmToken) requestHeaders['Authorization'] = `Bearer ${lmToken}`;
-        }
+        const requestHeaders = getChatCompletionHeaders();
         const fetchPromise = postChatCompletionWithReasoningFallback(apiUrl, requestHeaders, requestBody, signal);
 
         // Race between fetch and timeout
@@ -4835,18 +5305,25 @@ export async function regenerateLastResponse(isRetry = false) {
                 } else {
                     apiMessages.splice(apiLastUserMessageIndex, 0, { role: 'system', content: storedWebSearchResults });
                 }
-            } else if (getWebSearchEnabled() && apiMessages.length > 0 && !isSkipWorthyWebSearchQuery(lastUserMessage)) {
-                // If web search is now enabled but wasn't before, perform a new search
+            } else if (getWebSearchEnabled() && apiMessages.length > 0) {
+                // If web search is enabled and this turn has no stored results,
+                // resolve the current-turn search query deterministically.
                 const currentChatMessages = chatHistoryData[currentChatId] && chatHistoryData[currentChatId].messages
                     ? chatHistoryData[currentChatId].messages
                     : [];
-                const searchQuery = buildWebSearchQuery(lastUserMessage, currentChatMessages);
-                debugLog('Derived web search query for regeneration:', searchQuery);
-                if (!consumeWebSearchQuota()) {
+                const webSearchDecision = await resolveWebSearchQuery(lastUserMessage, apiMessages, currentChatMessages, signal);
+                debugLog('Regeneration web search decision:', webSearchDecision.source, webSearchDecision.query ? `query=${webSearchDecision.query}` : 'no-query');
+
+                if (webSearchDecision.shouldSearch && !canUseWebSearch()) {
                     return;
                 }
-                const searchResults = await performWebSearch(searchQuery);
+
+                const searchResults = webSearchDecision.shouldSearch
+                    ? await performWebSearch(webSearchDecision.query)
+                    : null;
+
                 if (searchResults) {
+                    recordWebSearch();
                     if (getUseOpenRouter()) {
                         const lastMsg = apiMessages[apiLastUserMessageIndex];
                         if (lastMsg && lastMsg.role === 'user') {
@@ -4868,6 +5345,8 @@ export async function regenerateLastResponse(isRetry = false) {
                             saveChatHistory();
                         }
                     }
+                } else if (webSearchDecision.shouldSearch) {
+                    debugLog('Regeneration web search selected but no search context was returned:', webSearchDecision.query);
                 }
             }
 
@@ -5025,24 +5504,7 @@ export async function regenerateLastResponse(isRetry = false) {
             });
 
             // Send request to API with timeout protection
-            const regenHeaders = {
-                'Content-Type': 'application/json',
-            };
-            if (getUseOpenRouter()) {
-                regenHeaders['Authorization'] = `Bearer ${getOpenRouterApiKey()}`;
-                regenHeaders['HTTP-Referer'] = 'https://lmsa.app';
-                regenHeaders['X-Title'] = 'LMSA';
-            } else if (getUseOpenAICompatible()) {
-                const apiKey = getOpenAICompatibleApiKey();
-                if (apiKey) {
-                    regenHeaders['Authorization'] = `Bearer ${apiKey}`;
-                }
-            } else if (!getUseOllama()) {
-                const lmToken = getLMStudioApiToken();
-                if (lmToken) {
-                    regenHeaders['Authorization'] = `Bearer ${lmToken}`;
-                }
-            }
+            const regenHeaders = getChatCompletionHeaders();
             const fetchPromise = postChatCompletionWithReasoningFallback(getApiUrl(), regenHeaders, requestBody, signal);
 
             // Race between fetch and timeout

@@ -2655,9 +2655,10 @@ class WebViewActivity : AppCompatActivity() {
             return try {
                 val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
                 connection.requestMethod = "GET"
-                connection.connectTimeout = 3000
-                connection.readTimeout = 3000
-                connection.setRequestProperty("Accept", "application/json")
+                connection.connectTimeout = 8000
+                connection.readTimeout = 8000
+                connection.instanceFollowRedirects = true
+                connection.setRequestProperty("Accept", "application/json, text/plain, */*")
                 connection.setRequestProperty("User-Agent", "WebSearchAppID/v1.0")
 
                 val responseCode = connection.responseCode
