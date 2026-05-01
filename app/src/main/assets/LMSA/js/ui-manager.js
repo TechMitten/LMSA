@@ -74,6 +74,17 @@ function createAIEditButton() {
     return editButton;
 }
 
+function createMessageDeleteButton() {
+    const deleteButton = document.createElement('button');
+    deleteButton.classList.add('delete-btn', 'flex', 'items-center', 'hover:text-red-400', 'transition-colors', 'duration-300');
+    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+    deleteButton.title = 'Delete this message';
+    deleteButton.dataset.action = 'delete';
+    deleteButton.setAttribute('role', 'button');
+    deleteButton.setAttribute('aria-label', 'Delete message');
+    return deleteButton;
+}
+
 function ensureAIEditButton(controlsContainer) {
     if (!controlsContainer || controlsContainer.querySelector('.ai-edit-btn')) {
         return;
@@ -86,6 +97,21 @@ function ensureAIEditButton(controlsContainer) {
         controlsContainer.insertBefore(aiEditButton, copyButton);
     } else {
         controlsContainer.appendChild(aiEditButton);
+    }
+}
+
+function ensureAIDeleteButton(controlsContainer) {
+    if (!controlsContainer || controlsContainer.querySelector('.delete-btn')) {
+        return;
+    }
+
+    const deleteButton = createMessageDeleteButton();
+    const copyButton = controlsContainer.querySelector('.copy-btn');
+
+    if (copyButton) {
+        controlsContainer.insertBefore(deleteButton, copyButton);
+    } else {
+        controlsContainer.appendChild(deleteButton);
     }
 }
 
@@ -1002,16 +1028,11 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                 controlsContainer.appendChild(editButton);
 
                 // Create delete button for user messages
-                const deleteButton = document.createElement('button');
-                deleteButton.classList.add('delete-btn', 'flex', 'items-center', 'hover:text-red-400', 'transition-colors', 'duration-300');
-                deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
-                deleteButton.title = 'Delete this message';
-                deleteButton.dataset.action = 'delete';
-                deleteButton.setAttribute('role', 'button');
-                deleteButton.setAttribute('aria-label', 'Delete message');
+                const deleteButton = createMessageDeleteButton();
                 controlsContainer.appendChild(deleteButton);
             } else if (sender === 'ai') {
                 ensureAIEditButton(controlsContainer);
+                ensureAIDeleteButton(controlsContainer);
 
                 // Create copy button for AI messages
                 const copyButton = document.createElement('button');
@@ -1799,6 +1820,7 @@ export function refreshAllMessages() {
             }
 
             ensureAIEditButton(controlsContainer);
+            ensureAIDeleteButton(controlsContainer);
         }
     });
 
@@ -1842,13 +1864,7 @@ export function refreshAllMessages() {
                 controlsContainer.appendChild(editButton);
 
                 // Create delete button
-                const deleteButton = document.createElement('button');
-                deleteButton.classList.add('delete-btn', 'flex', 'items-center', 'hover:text-red-400', 'transition-colors', 'duration-300');
-                deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
-                deleteButton.title = 'Delete this message';
-                deleteButton.dataset.action = 'delete';
-                deleteButton.setAttribute('role', 'button');
-                deleteButton.setAttribute('aria-label', 'Delete message');
+                const deleteButton = createMessageDeleteButton();
 
                 // Add the delete button to the controls container
                 controlsContainer.appendChild(deleteButton);
@@ -1872,13 +1888,7 @@ export function refreshAllMessages() {
 
                 // Ensure the delete button exists in the controls container
                 if (!controlsContainer.querySelector('.delete-btn')) {
-                    const deleteButton = document.createElement('button');
-                    deleteButton.classList.add('delete-btn', 'flex', 'items-center', 'hover:text-red-400', 'transition-colors', 'duration-300');
-                    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
-                    deleteButton.title = 'Delete this message';
-                    deleteButton.dataset.action = 'delete';
-                    deleteButton.setAttribute('role', 'button');
-                    deleteButton.setAttribute('aria-label', 'Delete message');
+                    const deleteButton = createMessageDeleteButton();
 
                     // Add the delete button to the controls container
                     controlsContainer.appendChild(deleteButton);
@@ -2471,6 +2481,7 @@ export function addSpeakerButtonsToExistingMessages() {
         const controlsContainer = messageEl.querySelector('.message-controls');
         if (controlsContainer) {
             ensureAIEditButton(controlsContainer);
+            ensureAIDeleteButton(controlsContainer);
         }
 
         if (controlsContainer && !controlsContainer.querySelector('.speaker-btn')) {

@@ -5242,6 +5242,38 @@ body.light-theme .regenerate-btn:hover {
     font-size: 12px;
 }
 
+/* Delete message modal fade animation */
+#delete-message-modal.is-animating {
+    opacity: 0;
+    transition: opacity 0.18s ease;
+}
+
+#delete-message-modal.is-animating.is-visible {
+    opacity: 1;
+}
+
+#delete-message-modal.is-animating .modal-content {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+#delete-message-modal.is-animating.is-visible .modal-content {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #delete-message-modal.is-animating,
+    #delete-message-modal.is-animating .modal-content {
+        transition: none;
+    }
+
+    #delete-message-modal.is-animating .modal-content {
+        transform: none;
+    }
+}
+
 /* Make the delete button more touch-friendly on small screens */
 @media (max-width: 480px) {
     .delete-btn {

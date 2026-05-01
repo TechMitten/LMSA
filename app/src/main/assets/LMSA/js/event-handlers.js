@@ -3200,16 +3200,51 @@ function handleEditButtonClick(e) {
 }
 
 /**
- * Handles click on the delete button for user messages
+ * Handles click on the delete button for user and AI messages
  * @param {Event} e - The click event
  */
+function showDeleteMessageModal(deleteModal) {
+    if (!deleteModal) return;
+
+    if (deleteModal._hideTimeoutId) {
+        clearTimeout(deleteModal._hideTimeoutId);
+        deleteModal._hideTimeoutId = null;
+    }
+
+    deleteModal.classList.remove('hidden');
+    deleteModal.classList.add('flex', 'is-animating');
+
+    requestAnimationFrame(() => {
+        deleteModal.classList.add('is-visible');
+    });
+}
+
+function hideDeleteMessageModal(deleteModal) {
+    if (!deleteModal) return;
+
+    deleteModal.classList.remove('is-visible');
+
+    const ANIMATION_MS = 180;
+    if (deleteModal._hideTimeoutId) {
+        clearTimeout(deleteModal._hideTimeoutId);
+    }
+
+    deleteModal._hideTimeoutId = setTimeout(() => {
+        deleteModal.classList.add('hidden');
+        deleteModal.classList.remove('flex', 'is-animating');
+        deleteModal._hideTimeoutId = null;
+    }, ANIMATION_MS);
+}
+
 function handleDeleteButtonClick(e) {
     const target = e.target.closest('.delete-btn');
     if (!target) return; // Not a delete button
 
     // Find the message element
-    const messageElement = target.closest('.user');
+    const messageElement = target.closest('.user, .ai');
     if (!messageElement) return;
+
+    const historyRole = messageElement.classList.contains('ai') ? 'assistant' : 'user';
 
     // Get message index
     const messageElements = Array.from(messagesContainer.children);
@@ -3224,28 +3259,25 @@ function handleDeleteButtonClick(e) {
 
     if (!deleteModal || !confirmBtn || !cancelBtn) return;
 
-    // Show the modal
-    deleteModal.classList.remove('hidden');
-    deleteModal.classList.add('flex');
+    // Show the modal with fade animation
+    showDeleteMessageModal(deleteModal);
 
     // Handle confirmation
     const handleConfirm = () => {
-        // Hide modal
-        deleteModal.classList.add('hidden');
-        deleteModal.classList.remove('flex');
+        // Hide modal with fade animation
+        hideDeleteMessageModal(deleteModal);
 
         // Clean up listeners
         confirmBtn.removeEventListener('click', handleConfirm);
         cancelBtn.removeEventListener('click', handleCancel);
 
-        deleteMessage(messageElement, messageElements, messageIndex);
+        deleteMessage(messageElement, messageElements, messageIndex, historyRole);
     };
 
     // Handle cancellation
     const handleCancel = () => {
-        // Hide modal
-        deleteModal.classList.add('hidden');
-        deleteModal.classList.remove('flex');
+        // Hide modal with fade animation
+        hideDeleteMessageModal(deleteModal);
 
         // Clean up listeners
         confirmBtn.removeEventListener('click', handleConfirm);
@@ -3258,12 +3290,13 @@ function handleDeleteButtonClick(e) {
 }
 
 /**
- * Deletes a user message and all subsequent messages
+ * Deletes a single message from the UI and chat history
  * @param {HTMLElement} messageElement - The message element to delete
  * @param {Array} messageElements - All message elements
  * @param {number} messageIndex - Index of the message to delete
+ * @param {'user'|'assistant'} historyRole - Message role in persisted history
  */
-function deleteMessage(messageElement, messageElements, messageIndex) {
+function deleteMessage(messageElement, messageElements, messageIndex, historyRole = 'user') {
     try {
         // Remove only the message element from DOM
         messageElement.remove();
@@ -3274,24 +3307,29 @@ function deleteMessage(messageElement, messageElements, messageIndex) {
             const messages = Array.isArray(chatData) ? chatData : chatData.messages;
 
             if (messages && messages.length > 0) {
-                // Count user messages in UI up to the deleted message
-                const userMessagesBeforeDelete = messageElements
-                    .slice(0, messageIndex + 1)
-                    .filter(el => el.classList.contains('user')).length;
+                const roleClass = historyRole === 'assistant' ? 'ai' : 'user';
+                const roleMatches = historyRole === 'assistant'
+                    ? (msg) => msg.role === 'assistant' || msg.role === 'ai'
+                    : (msg) => msg.role === 'user';
 
-                // Find the user message index in chat history
-                const userMessageIndices = messages
-                    .map((msg, index) => msg.role === 'user' ? index : -1)
+                // Count messages of this role in UI up to the deleted message
+                const roleMessagesBeforeDelete = messageElements
+                    .slice(0, messageIndex + 1)
+                    .filter(el => el.classList.contains(roleClass)).length;
+
+                // Find the corresponding message index in chat history
+                const roleMessageIndices = messages
+                    .map((msg, index) => roleMatches(msg) ? index : -1)
                     .filter(index => index !== -1);
 
-                const userMessageIndex = userMessageIndices[userMessagesBeforeDelete - 1];
+                const messageHistoryIndex = roleMessageIndices[roleMessagesBeforeDelete - 1];
 
-                if (userMessageIndex !== undefined) {
+                if (messageHistoryIndex !== undefined) {
                     // Remove only this specific message from chat history
                     if (Array.isArray(chatData)) {
-                        chatHistoryData[currentChatId].splice(userMessageIndex, 1);
+                        chatHistoryData[currentChatId].splice(messageHistoryIndex, 1);
                     } else {
-                        chatData.messages.splice(userMessageIndex, 1);
+                        chatData.messages.splice(messageHistoryIndex, 1);
                     }
 
                     // Save to storage
