@@ -3218,6 +3218,7 @@ function initializeConnectionInputModals() {
             selectedMcpTools = normalizeMcpTools(selectedMcpTools);
 
             if (selectedMcpTools.length === 0) {
+                mcpSelectedTools.classList.remove('flex');
                 mcpSelectedTools.classList.add('hidden');
                 return;
             }
@@ -3242,6 +3243,7 @@ function initializeConnectionInputModals() {
                 mcpSelectedTools.appendChild(chip);
             });
 
+            mcpSelectedTools.classList.add('flex');
             mcpSelectedTools.classList.remove('hidden');
         };
 

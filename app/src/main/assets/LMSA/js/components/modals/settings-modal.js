@@ -59,7 +59,7 @@ export const settingsModal = `
                                 <span id="local-server-status-text" class="connection-status-text">Not configured</span>
                             </div>
                             <button id="configure-local-server-btn" type="button" data-haptic="light"
-                                class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
+                                  class="professional-button flex items-center justify-center gap-2 px-4 h-10">
                                 <i class="fas fa-pencil-alt text-xs"></i>
                                 <span>Configure</span>
                             </button>
@@ -71,7 +71,7 @@ export const settingsModal = `
                                 <span id="lmstudio-token-status-text" class="connection-status-text">No token (optional)</span>
                             </div>
                             <button id="configure-lmstudio-token-btn" type="button" data-haptic="light"
-                                class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
+                                  class="professional-button flex items-center justify-center gap-2 px-4 h-10">
                                 <i class="fas fa-pencil-alt text-xs"></i>
                                 <span>Token</span>
                             </button>
@@ -82,7 +82,7 @@ export const settingsModal = `
                                 <span id="lmstudio-mcp-status-text" class="connection-status-text">No MCP integrations configured</span>
                             </div>
                             <button id="configure-lmstudio-mcp-btn" type="button" data-haptic="light"
-                                class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
+                                  class="professional-button flex items-center justify-center gap-2 px-4 h-10">
                                 <i class="fas fa-pencil-alt text-xs"></i>
                                 <span>MCP</span>
                             </button>
@@ -100,7 +100,7 @@ export const settingsModal = `
                                 <span id="openrouter-key-status-text" class="connection-status-text">No API key saved</span>
                             </div>
                             <button id="configure-openrouter-key-btn" type="button" data-haptic="light"
-                                class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
+                                  class="professional-button flex items-center justify-center gap-2 px-4 h-10">
                                 <i class="fas fa-pencil-alt text-xs"></i>
                                 <span>Configure</span>
                             </button>
@@ -116,7 +116,7 @@ export const settingsModal = `
                                 <span id="openai-compatible-endpoint-status-text" class="connection-status-text">No endpoint configured</span>
                             </div>
                             <button id="configure-openai-compatible-btn" type="button" data-haptic="light"
-                                class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
+                                  class="professional-button flex items-center justify-center gap-2 px-4 h-10">
                                 <i class="fas fa-pencil-alt text-xs"></i>
                                 <span>Configure</span>
                             </button>
@@ -149,7 +149,7 @@ export const settingsModal = `
                                     <p id="settings-connection-preset-name-hint" class="connection-preset-name-hint">Enter a preset name to enable saving.</p>
                                 </div>
                                 <button id="save-connection-preset-btn" type="button" data-haptic="light" disabled aria-disabled="true"
-                                    class="professional-button flex items-center justify-center gap-2 h-[44px] px-4">
+                                     class="professional-button flex items-center justify-center gap-2 h-11 px-4">
                                     <i class="fas fa-save text-xs"></i>
                                     <span id="save-connection-preset-label">Save Current</span>
                                 </button>
@@ -174,7 +174,7 @@ export const settingsModal = `
 
                         <!-- Display current prompt value (non-interactive) -->
                         <div id="system-prompt-preview"
-                            class="border p-3 rounded-lg min-h-[80px] mb-2 whitespace-pre-wrap"
+                               class="border p-3 rounded-lg min-h-20 mb-2 whitespace-pre-wrap"
                             style="background-color: var(--settings-input-bg); color: var(--settings-input-text); border-color: var(--settings-input-border);">
                             <span class="italic" id="prompt-placeholder" style="color: var(--text-muted);"></span>
                         </div>
@@ -182,12 +182,12 @@ export const settingsModal = `
                         <!-- Edit and Save buttons -->
                         <div class="flex gap-2">
                             <button id="edit-system-prompt-btn"
-                                class="professional-button flex items-center justify-center gap-3 flex-1 h-[48px]">
+                                  class="professional-button flex items-center justify-center gap-3 flex-1 h-12">
                                 <i class="fas fa-edit text-sm"></i>
                                 <span>Edit</span>
                             </button>
                             <button id="save-system-prompt-btn"
-                                class="professional-button flex items-center justify-center gap-3 flex-1 h-[48px]">
+                                  class="professional-button flex items-center justify-center gap-3 flex-1 h-12">
                                 <i class="fas fa-save text-sm"></i>
                                 <span>Save</span>
                             </button>
@@ -446,7 +446,7 @@ export const settingsModal = `
                     <!-- Connection step buttons -->
                     <div class="flex justify-end navigation-buttons" id="connection-step-buttons">
                         <button id="to-prompt-step-btn"
-                            class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                               class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
                             <i class="fas fa-arrow-right text-sm"></i>
                             <span class="button-text">Next</span>
                         </button>
@@ -455,12 +455,12 @@ export const settingsModal = `
                     <!-- Prompt step buttons -->
                     <div class="justify-between navigation-buttons hidden" id="prompt-step-buttons">
                         <button id="back-to-connection-btn"
-                            class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                               class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
                             <i class="fas fa-arrow-left text-sm"></i>
                             <span class="button-text">Back</span>
                         </button>
                         <button id="to-options-step-btn"
-                            class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                               class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
                             <i class="fas fa-arrow-right text-sm"></i>
                             <span class="button-text">Next</span>
                         </button>
@@ -469,12 +469,12 @@ export const settingsModal = `
                     <!-- Options step buttons -->
                     <div class="justify-between navigation-buttons hidden" id="options-step-buttons">
                         <button id="back-to-prompt-btn"
-                            class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                               class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
                             <i class="fas fa-arrow-left text-sm"></i>
                             <span class="button-text">Back</span>
                         </button>
                         <button id="to-font-step-btn"
-                            class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                               class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
                             <i class="fas fa-arrow-right text-sm"></i>
                             <span class="button-text">Next</span>
                         </button>
@@ -483,12 +483,12 @@ export const settingsModal = `
                     <!-- Font step buttons -->
                     <div class="justify-between navigation-buttons hidden" id="font-step-buttons">
                         <button id="back-to-options-btn"
-                            class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                               class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
                             <i class="fas fa-arrow-left text-sm"></i>
                             <span class="button-text">Back</span>
                         </button>
                         <button id="to-actions-step-btn"
-                            class="professional-button flex items-center justify-center gap-3 w-[48%] h-[48px]">
+                               class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
                             <i class="fas fa-arrow-right text-sm"></i>
                             <span class="button-text">Next</span>
                         </button>
@@ -497,7 +497,7 @@ export const settingsModal = `
                     <!-- Actions step buttons -->
                     <div class="navigation-buttons hidden" id="actions-step-buttons">
                         <button id="back-to-font-btn"
-                            class="professional-button flex items-center justify-center gap-3 w-full h-[48px]">
+                               class="professional-button flex items-center justify-center gap-3 w-full h-12">
                             <i class="fas fa-arrow-left text-sm"></i>
                             <span class="button-text">Back</span>
                         </button>
@@ -508,11 +508,11 @@ export const settingsModal = `
                     <button id="close-settings"
                         class="professional-button flex items-center justify-center gap-3 w-full h-[52px]">
                         <i class="fas fa-check text-sm"></i>
-                        <span>Apply Changes</span>
+                            <span>Confirm</span>
                     </button>
 
                     <div class="flex justify-center mt-3">
-                        <div class="h-[1px] w-1/2 bg-gray-600/30"></div>
+                            <div class="h-px w-1/2 bg-gray-600/30"></div>
                     </div>
                 </div>
             </div>
@@ -658,11 +658,11 @@ export const settingsModal = `
 
             <div class="flex gap-3 mt-5">
                 <button id="cancel-edit-connection-preset-modal" type="button"
-                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-12">
                     Cancel
                 </button>
                 <button id="save-edit-connection-preset-modal" type="button"
-                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
+                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-12">
                     <i class="fas fa-check mr-2"></i>Update Preset
                 </button>
             </div>
@@ -690,11 +690,11 @@ export const settingsModal = `
             </p>
 
             <div class="flex justify-end gap-2">
-                <button id="cancel-delete-connection-preset" type="button" class="professional-button px-4 h-[40px]">
+                 <button id="cancel-delete-connection-preset" type="button" class="professional-button px-4 h-10">
                     Cancel
                 </button>
                 <button id="confirm-delete-connection-preset" type="button"
-                    class="professional-button px-4 h-[40px] bg-red-600 hover:bg-red-700 border-red-500 text-white">
+                    class="professional-button px-4 h-10 bg-red-600 hover:bg-red-700 border-red-500 text-white">
                     Delete
                 </button>
             </div>
@@ -736,11 +736,11 @@ export const settingsModal = `
             </div>
             <div class="flex gap-3">
                 <button id="cancel-ip-port-input-modal" type="button"
-                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-12">
                     Cancel
                 </button>
                 <button id="save-ip-port-input-modal" type="button"
-                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
+                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-12">
                     <i class="fas fa-check mr-2"></i>Save
                 </button>
             </div>
@@ -770,11 +770,11 @@ export const settingsModal = `
             </div>
             <div class="flex gap-3">
                 <button id="cancel-openrouter-key-input-modal" type="button"
-                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-12">
                     Cancel
                 </button>
                 <button id="save-openrouter-key-input-modal" type="button"
-                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
+                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-12">
                     <i class="fas fa-check mr-2"></i>Save
                 </button>
             </div>
@@ -827,11 +827,11 @@ export const settingsModal = `
             </div>
             <div class="flex gap-3">
                 <button id="cancel-openai-compatible-input-modal" type="button"
-                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-12">
                     Cancel
                 </button>
                 <button id="save-openai-compatible-input-modal" type="button"
-                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
+                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-12">
                     <i class="fas fa-check mr-2"></i>Save
                 </button>
             </div>
@@ -870,15 +870,15 @@ export const settingsModal = `
             </div>
             <div class="flex gap-3">
                 <button id="cancel-lmstudio-token-input-modal" type="button"
-                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-12">
                     Cancel
                 </button>
                 <button id="clear-lmstudio-token-input-modal" type="button"
-                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-12">
                     <i class="fas fa-trash-alt mr-2"></i>Clear
                 </button>
                 <button id="save-lmstudio-token-input-modal" type="button"
-                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
+                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-12">
                     <i class="fas fa-check mr-2"></i>Save
                 </button>
             </div>
@@ -910,19 +910,19 @@ export const settingsModal = `
                     </div>
                 </div>
                 <div class="grid grid-cols-1 gap-2">
-                    <button type="button" class="professional-button justify-start px-4 h-[44px] text-left" data-mcp-template="huggingface">
+                    <button type="button" class="professional-button justify-start px-4 h-11 text-left" data-mcp-template="huggingface">
                         <i class="fas fa-fire text-yellow-300"></i>
                         <span>Hugging Face Search</span>
                     </button>
-                    <button type="button" class="professional-button justify-start px-4 h-[44px] text-left" data-mcp-template="brave">
+                    <button type="button" class="professional-button justify-start px-4 h-11 text-left" data-mcp-template="brave">
                         <i class="fas fa-compass text-orange-300"></i>
                         <span>Web Search (Brave)</span>
                     </button>
-                    <button type="button" class="professional-button justify-start px-4 h-[44px] text-left" data-mcp-template="serpapi">
+                    <button type="button" class="professional-button justify-start px-4 h-11 text-left" data-mcp-template="serpapi">
                         <i class="fas fa-search text-emerald-300"></i>
                         <span>Web Search (SerpApi)</span>
                     </button>
-                    <button type="button" class="professional-button justify-start px-4 h-[44px] text-left" data-mcp-template="playwright">
+                    <button type="button" class="professional-button justify-start px-4 h-11 text-left" data-mcp-template="playwright">
                         <i class="fas fa-globe text-blue-300"></i>
                         <span>Playwright (Plugin)</span>
                     </button>
@@ -936,7 +936,7 @@ export const settingsModal = `
                         <p id="lmstudio-mcp-list-summary" class="text-xs mt-1" style="color: var(--settings-help-text, #6b7280);">No integrations added yet.</p>
                     </div>
                     <button id="add-lmstudio-mcp-integration-btn" type="button"
-                        class="professional-button flex items-center justify-center gap-2 px-4 h-[40px]">
+                            class="professional-button flex items-center justify-center gap-2 px-4 h-10">
                         <i class="fas fa-plus text-xs"></i>
                         <span>Add</span>
                     </button>
@@ -986,17 +986,17 @@ export const settingsModal = `
                         <input type="text" id="lmstudio-mcp-tool-input" class="connection-modal-input w-full"
                             placeholder="model_search" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-form-type="other">
                         <button id="add-lmstudio-mcp-tool-btn" type="button"
-                            class="professional-button flex items-center justify-center gap-2 px-4 h-[40px] shrink-0">
+                               class="professional-button flex items-center justify-center gap-2 px-4 h-10 shrink-0">
                             <i class="fas fa-plus text-xs"></i>
                             <span>Tool</span>
                         </button>
                     </div>
                     <div class="flex flex-wrap gap-2 mt-3">
-                        <button type="button" class="professional-button px-3 h-[36px] text-xs" data-mcp-tool-suggestion="model_search">model_search</button>
-                        <button type="button" class="professional-button px-3 h-[36px] text-xs" data-mcp-tool-suggestion="browser_navigate">browser_navigate</button>
-                        <button type="button" class="professional-button px-3 h-[36px] text-xs" data-mcp-tool-suggestion="search">search</button>
+                        <button type="button" class="professional-button px-3 h-9 text-xs" data-mcp-tool-suggestion="model_search">model_search</button>
+                        <button type="button" class="professional-button px-3 h-9 text-xs" data-mcp-tool-suggestion="browser_navigate">browser_navigate</button>
+                        <button type="button" class="professional-button px-3 h-9 text-xs" data-mcp-tool-suggestion="search">search</button>
                     </div>
-                    <div id="lmstudio-mcp-selected-tools" class="flex flex-wrap gap-2 mt-3 hidden"></div>
+                    <div id="lmstudio-mcp-selected-tools" class="flex-wrap gap-2 mt-3 hidden"></div>
                     <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);">Optional. Leave empty to allow every tool exposed by that server.</p>
                 </div>
 
@@ -1004,11 +1004,11 @@ export const settingsModal = `
 
                 <div class="flex gap-3 mt-4">
                     <button id="cancel-lmstudio-mcp-builder-btn" type="button"
-                        class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                            class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-12">
                         Cancel
                     </button>
                     <button id="save-lmstudio-mcp-builder-btn" type="button"
-                        class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
+                            class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-12">
                         <i class="fas fa-check mr-2"></i>Save Integration
                     </button>
                 </div>
@@ -1016,15 +1016,15 @@ export const settingsModal = `
 
             <div class="flex gap-3">
                 <button id="cancel-lmstudio-mcp-input-modal" type="button"
-                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-12">
                     Cancel
                 </button>
                 <button id="clear-lmstudio-mcp-input-modal" type="button"
-                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-[48px]">
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-12">
                     <i class="fas fa-trash-alt mr-2"></i>Clear All
                 </button>
                 <button id="save-lmstudio-mcp-input-modal" type="button"
-                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-[48px]">
+                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-12">
                     <i class="fas fa-check mr-2"></i>Done
                 </button>
             </div>

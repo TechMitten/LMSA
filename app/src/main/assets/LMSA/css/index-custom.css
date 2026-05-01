@@ -2242,7 +2242,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 
 #chat-form {
     display: flex !important;
-    align-items: flex-end !important;
+    align-items: center !important;
     gap: 8px !important;
 }
 
@@ -2257,7 +2257,7 @@ body.keyboard-visible #chat-form,
     flex: 1 1 auto !important;
     min-width: 0 !important;
     display: flex !important;
-    align-items: stretch !important;
+    align-items: center !important;
     position: relative !important;
 }
 
@@ -2293,9 +2293,26 @@ body.keyboard-visible #chat-form > .flex-grow,
     border-radius: 999px !important;
 }
 
+#chat-form button#send-button:not(.hidden),
+#chat-form button#stop-button:not(.hidden),
+#send-button:not(.hidden),
+#stop-button:not(.hidden) {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
 #chat-form button#send-button i,
 #chat-form button#stop-button i {
     margin: 0 !important;
+}
+
+#chat-form button#send-button > div,
+#chat-form button#stop-button > div {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
 }
 
 body.keyboard-visible #chat-form button#send-button,
