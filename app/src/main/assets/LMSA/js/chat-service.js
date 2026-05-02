@@ -25,6 +25,25 @@ let renameModalHideTimer = null;
 let suppressChatHistoryClickUntil = 0;
 const lmStudioThinkingCompatibilityCache = new Map();
 
+function syncCompletionScrollState() {
+    if (!messagesContainer) {
+        return;
+    }
+
+    if (getAutoScrollEnabled()) {
+        scrollToBottom(messagesContainer, true);
+        return;
+    }
+
+    requestAnimationFrame(() => {
+        handleScroll(messagesContainer);
+    });
+
+    setTimeout(() => {
+        handleScroll(messagesContainer);
+    }, 150);
+}
+
 // Maximum number of historical web search results to include in context (legacy)
 // This is deprecated - web search results are now scoped to current turn only
 const MAX_HISTORICAL_SEARCHES = 3;
@@ -3022,7 +3041,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                 setIsFirstMessage(false);
             }
 
-            scrollToBottom(messagesContainer, true);
+            syncCompletionScrollState();
             return;
         }
 
@@ -3523,14 +3542,14 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                         refreshAllCodeBlocks();
                     });
                 }
-                scrollToBottom(messagesContainer, true);
+                syncCompletionScrollState();
                 return;
             }
 
             // Code blocks detected - no longer triggering reload, just continue normally
-            scrollToBottom(messagesContainer, true);
+            syncCompletionScrollState();
         } else {
-            scrollToBottom(messagesContainer, true);
+            syncCompletionScrollState();
         }
     } catch (error) {
         // Clean up timeouts on error
@@ -5209,48 +5228,11 @@ export function saveChatHistory() {
                             message.content = removeInlineChatTitleMarkup(message.content);
                         }
 
-                        // For messages with code blocks, use a simple but effective preservation method
+                        // Preserve fenced code exactly as generated so reopen/reload paths
+                        // render from the original markdown instead of a lossy transformed copy.
                         if (message.content.includes('```')) {
-                            debugLog('Saving message with code blocks - preserving format');
-
-                            // Process code blocks with minimal modification to preserve format
-                            const codeBlocks = [];
-                            let processedContent = message.content;
-
-                            // First locate and tag all code blocks
-                            processedContent = processedContent.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
-                                const isHtmlCode = language === 'html' || language === 'xml';
-                                codeBlocks.push({
-                                    language: language || '',
-                                    code: code.trim(),
-                                    isHtml: isHtmlCode
-                                });
-                                return `[CODE_BLOCK_${codeBlocks.length - 1}]`;
-                            });
-
-                            // Then restore them with special markers for HTML
-                            for (let i = 0; i < codeBlocks.length; i++) {
-                                const block = codeBlocks[i];
-                                let preservedCode;
-
-                                if (block.isHtml) {
-                                    // For HTML code, add preservation markers
-                                    preservedCode = `[HTML_CODE_BLOCK_START]${block.code}[HTML_CODE_BLOCK_END]`;
-                                } else {
-                                    // For non-HTML, preserve as-is
-                                    preservedCode = block.code;
-                                }
-
-                                // Replace the placeholder with the preserved code
-                                processedContent = processedContent.replace(
-                                    `[CODE_BLOCK_${i}]`,
-                                    `\`\`\`${block.language}\n${preservedCode}\`\`\``
-                                );
-                            }
-
-                            // Update the message content
-                            message.content = processedContent;
-                            debugLog('Preserved code blocks with minimal processing');
+                            message.content = normalizeMalformedCodeFences(message.content);
+                            debugLog('Saving message with original code block content');
                         }
                     }
                 });
@@ -5392,6 +5374,10 @@ export function loadChatHistory() {
                         msg.content = getDisplayTextFromMessageContent(msg.content);
                     }
 
+                    if (typeof msg.content === 'string') {
+                        msg.content = normalizeMalformedCodeFences(msg.content);
+                    }
+
                     // If this is a system message with the topic boundary marker text
                     // but doesn't have the isTopicBoundary flag, add it
                     if (msg.role === 'system' &&
@@ -5416,8 +5402,7 @@ export function loadChatHistory() {
                         }
 
                         // Only preserve the original content during load - don't add any markers
-                        // HTML markers should only be added during save operations, not load operations
-                        debugLog('Preserved original code block content on load');
+                        debugLog('Normalized saved code block content on load');
                     }
 
                     if (Array.isArray(msg.files) && msg.files.length > 0) {
@@ -5899,7 +5884,7 @@ export async function regenerateLastResponse(isRetry = false) {
                     }, 100);
                 }
 
-                scrollToBottom(messagesContainer, true);
+                syncCompletionScrollState();
 
                 if (Array.isArray(chatHistoryData[currentChatId])) {
                     chatHistoryData[currentChatId] = {
@@ -6147,29 +6132,21 @@ export async function regenerateLastResponse(isRetry = false) {
                                         const hasThinkTags = reasoningState.hasThinking;
 
                                         // Check if this is a code block outside of think tags
-                                        if (!hasCodeBlock &&
-                                            (chunkContent.includes('```') ||
-                                                aiMessage.includes('```'))) {
+                                        if (!hasCodeBlock && containsCodeBlocksOutsideThinkTags(aiMessage)) {
+                                            hasCodeBlock = true;
 
-                                            // Only trigger reload for code blocks outside think tags
-                                            if (containsCodeBlocksOutsideThinkTags(aiMessage)) {
-                                                hasCodeBlock = true;
+                                            // Special handling for first message - detect code blocks early
+                                            if (isFirstMessage) {
+                                                // Check if we have a complete code block already (outside think tags)
+                                                const contentWithoutThinkTags = aiMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
+                                                const codeBlockStart = contentWithoutThinkTags.indexOf('```');
+                                                const codeBlockEnd = contentWithoutThinkTags.indexOf('```', codeBlockStart + 3);
 
-                                                // Special handling for first message - detect code blocks early
-                                                if (isFirstMessage) {
-                                                    // Check if we have a complete code block already (outside think tags)
-                                                    const contentWithoutThinkTags = aiMessage.replace(/<think>[\s\S]*?<\/think>/g, '');
-                                                    const codeBlockStart = contentWithoutThinkTags.indexOf('```');
-                                                    const codeBlockEnd = contentWithoutThinkTags.indexOf('```', codeBlockStart + 3);
-
-                                                    // If we have a complete code block in first message (outside think tags),
-                                                    // prepare for faster reload by setting up flag
-                                                    if (codeBlockStart !== -1 && codeBlockEnd !== -1) {
-                                                        debugLog('Complete code block detected outside think tags in first message, preparing for fast reload');
-                                                        hasInitializedCodeBlocks = true; // Mark as detected for reload
-
-                                                        // Code block detected - no longer triggering reload
-                                                    }
+                                                // If we have a complete code block in first message (outside think tags),
+                                                // prepare for faster reload by setting up flag
+                                                if (codeBlockStart !== -1 && codeBlockEnd !== -1) {
+                                                    debugLog('Complete code block detected outside think tags in first message, preparing for fast reload');
+                                                    hasInitializedCodeBlocks = true;
                                                 }
                                             }
                                         }
@@ -6184,36 +6161,29 @@ export async function regenerateLastResponse(isRetry = false) {
                                             if (hideThinking) {
                                                 // When hide thinking is enabled, always hide thinking tags and content
                                                 if (contentAfterThink !== "") {
-                                                    // We have content after </think>, show ONLY that content (streaming)
                                                     const processedContent = stripReasoningSections(visibleStreamingMessage);
                                                     contentContainer.innerHTML = basicSanitizeInput(processedContent);
 
-                                                    // Remove any thinking indicator that might exist
                                                     const thinkingIndicator = contentContainer.querySelector('.thinking-indicator');
                                                     if (thinkingIndicator) {
                                                         thinkingIndicator.remove();
                                                     }
                                                 } else if (inThinkingSection) {
-                                                    // We're in thinking section and hide thinking is enabled, show indicator
                                                     let thinkingIndicator = contentContainer.querySelector('.thinking-indicator');
 
-                                                    // Create thinking indicator if it doesn't exist
                                                     if (!thinkingIndicator) {
                                                         thinkingIndicator = document.createElement('div');
                                                         thinkingIndicator.className = 'thinking-indicator';
 
-                                                        // Enhanced thinking indicator with progress (same as initial generation)
                                                         const thinkingDuration = thinkingStartTime ? Date.now() - thinkingStartTime : 0;
                                                         const durationText = thinkingDuration > 1000 ? ` (${Math.round(thinkingDuration / 1000)}s)` : '';
 
                                                         thinkingIndicator.innerHTML = `<i class="fas fa-brain"></i>${durationText}`;
                                                         thinkingIndicator.setAttribute('data-thinking-content', '');
 
-                                                        // Clear the container and add the indicator
                                                         contentContainer.innerHTML = '';
                                                         contentContainer.appendChild(thinkingIndicator);
                                                     } else {
-                                                        // Update existing indicator with duration (throttled to avoid too frequent updates)
                                                         const now = Date.now();
                                                         if (!lastThinkingUiUpdateTime || now - lastThinkingUiUpdateTime > 100) {
                                                             lastThinkingUiUpdateTime = now;
@@ -6223,27 +6193,20 @@ export async function regenerateLastResponse(isRetry = false) {
                                                         }
                                                     }
 
-                                                    // Update the data attribute with current thinking content
                                                     if (reasoningState.activeThinkingContent) {
                                                         thinkingIndicator.setAttribute('data-thinking-content', reasoningState.activeThinkingContent);
                                                     }
                                                 } else {
-                                                    // Hide thinking is enabled but we're not in thinking section and no content after think
-                                                    // This means thinking tags are complete but no content after them yet
                                                     const processedContent = stripReasoningSections(visibleStreamingMessage);
                                                     contentContainer.innerHTML = basicSanitizeInput(processedContent);
                                                 }
                                             } else {
-                                                // Hide thinking is disabled, show everything including thinking tags (streaming)
                                                 contentContainer.innerHTML = sanitizeInput(visibleStreamingMessage);
                                             }
 
-                                            // Mark this message as having thinking
                                             aiMessageElement.dataset.hasThinking = 'true';
                                         } else if (contentContainer) {
-                                            // For non-reasoning models, apply basic sanitization
                                             contentContainer.innerHTML = basicSanitizeInput(visibleStreamingMessage);
-                                            // Mark this message as a non-reasoning model response
                                             aiMessageElement.dataset.hasThinking = 'false';
                                         }
 
@@ -6354,7 +6317,7 @@ export async function regenerateLastResponse(isRetry = false) {
                 }, 100);
             }
 
-            scrollToBottom(messagesContainer, true);
+            syncCompletionScrollState();
 
             // Update chat history: remove messages after the last user message and add new AI response
             if (Array.isArray(chatHistoryData[currentChatId])) {
