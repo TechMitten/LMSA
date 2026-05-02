@@ -3741,7 +3741,6 @@ function showTermsReviewModal() {
     const acceptanceFooter = document.getElementById('terms-acceptance-footer');
     const reviewFooter = document.getElementById('terms-review-footer');
     const closeTermsBtn = document.getElementById('close-terms-btn');
-    const scrollIndicator = document.getElementById('review-scroll-indicator');
 
     if (!termsModal || !termsContent || !acceptanceFooter || !reviewFooter) {
         console.error('Terms review modal: Required elements not found');
@@ -3756,14 +3755,11 @@ function showTermsReviewModal() {
     acceptanceFooter.classList.add('hidden');
     reviewFooter.classList.remove('hidden');
 
-    // Reset scroll to top and show scroll indicator
+    // Reset scroll to top
     termsContent.scrollTop = 0;
-    if (scrollIndicator) {
-        scrollIndicator.classList.remove('hidden');
-    }
 
     // Set up review mode event listeners
-    setupTermsReviewListeners(termsContent, scrollIndicator, closeTermsBtn, termsModal);
+    setupTermsReviewListeners(termsContent, closeTermsBtn, termsModal);
 
     // Prevent body scroll
     document.body.style.overflow = 'hidden';
@@ -3775,34 +3771,7 @@ function showTermsReviewModal() {
 /**
  * Setup event listeners for terms review mode
  */
-function setupTermsReviewListeners(termsContent, scrollIndicator, closeTermsBtn, termsModal) {
-    let hasScrolledToBottom = false;
-
-    // Handle scroll to show/hide scroll indicator
-    function handleScroll() {
-        const scrollTop = termsContent.scrollTop;
-        const scrollHeight = termsContent.scrollHeight;
-        const clientHeight = termsContent.clientHeight;
-
-        // Check if scrolled to bottom (with 10px tolerance)
-        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
-
-        if (isAtBottom && !hasScrolledToBottom) {
-            hasScrolledToBottom = true;
-            if (scrollIndicator) {
-                scrollIndicator.classList.add('hidden');
-            }
-        } else if (!isAtBottom && hasScrolledToBottom) {
-            hasScrolledToBottom = false;
-            if (scrollIndicator) {
-                scrollIndicator.classList.remove('hidden');
-            }
-        }
-    }
-
-    // Add scroll listener
-    termsContent.addEventListener('scroll', handleScroll);
-
+function setupTermsReviewListeners(termsContent, closeTermsBtn, termsModal) {
     // Handle close button
     function handleCloseTerms() {
         // Hide modal
@@ -3816,7 +3785,6 @@ function setupTermsReviewListeners(termsContent, scrollIndicator, closeTermsBtn,
         document.body.style.height = '';
 
         // Clean up event listeners
-        termsContent.removeEventListener('scroll', handleScroll);
         closeTermsBtn.removeEventListener('click', handleCloseTerms);
 
         // Also handle clicks outside modal

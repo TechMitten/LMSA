@@ -56,11 +56,7 @@ export const termsModal = `
 
             <!-- Modal Footer - Review Mode -->
             <div id="terms-review-footer" class="terms-modal-footer hidden">
-                <div id="review-scroll-indicator" class="terms-scroll-indicator hidden">
-                    <i class="fas fa-arrow-down" aria-hidden="true"></i>
-                    <span>Please scroll to review all terms</span>
-                </div>
-                <button id="close-terms-btn" class="terms-secondary-action">
+                <button id="close-terms-btn" class="terms-primary-action">
                     <i class="fas fa-times" aria-hidden="true"></i>
                     <span>Close</span>
                 </button>

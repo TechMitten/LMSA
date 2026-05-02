@@ -58,6 +58,7 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.browser.customtabs.CustomTabsService
 import java.util.concurrent.Executor
 import java.net.HttpURLConnection
 import java.net.URL
@@ -1177,6 +1178,47 @@ class WebViewActivity : AppCompatActivity() {
         suppressBiometricReentryForExternalLaunch = false
     }
 
+    private fun supportsCustomTabs(packageName: String): Boolean {
+        val customTabsServiceIntent = Intent(CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION).apply {
+            setPackage(packageName)
+        }
+
+        return packageManager.resolveService(customTabsServiceIntent, 0) != null
+    }
+
+    private fun resolveExternalBrowserPackage(uri: Uri): String? {
+        val viewIntent = Intent(Intent.ACTION_VIEW, uri).apply {
+            addCategory(Intent.CATEGORY_BROWSABLE)
+        }
+
+        val resolvedPackages = packageManager.queryIntentActivities(viewIntent, PackageManager.MATCH_DEFAULT_ONLY)
+            .mapNotNull { resolveInfo -> resolveInfo.activityInfo?.packageName }
+            .filter { candidatePackage -> candidatePackage != packageName }
+            .distinct()
+
+        if (resolvedPackages.isEmpty()) {
+            return null
+        }
+
+        val customTabsPackages = resolvedPackages.filter(::supportsCustomTabs).toSet()
+        val preferredPackages = listOf(
+            "com.android.chrome",
+            "com.google.android.apps.chrome",
+            "com.chrome.beta",
+            "com.chrome.dev",
+            "com.microsoft.emmx",
+            "org.mozilla.firefox",
+            "org.mozilla.firefox_beta",
+            "org.mozilla.fenix",
+            "com.sec.android.app.sbrowser"
+        )
+
+        return preferredPackages.firstOrNull(customTabsPackages::contains)
+            ?: preferredPackages.firstOrNull(resolvedPackages::contains)
+            ?: customTabsPackages.firstOrNull()
+            ?: resolvedPackages.firstOrNull()
+    }
+
     private fun openExternalUrl(url: String) {
         val normalizedUrl = url.trim()
         val uri = Uri.parse(normalizedUrl)
@@ -1186,6 +1228,8 @@ class WebViewActivity : AppCompatActivity() {
             Log.w(TAG, "Rejected unsupported external URL: $normalizedUrl")
             return
         }
+
+        val browserPackage = resolveExternalBrowserPackage(uri)
 
         val colorScheme = CustomTabColorSchemeParams.Builder()
             .setToolbarColor(ContextCompat.getColor(this, R.color.splash_background))
@@ -1197,17 +1241,39 @@ class WebViewActivity : AppCompatActivity() {
             .setDefaultColorSchemeParams(colorScheme)
             .build()
 
+        if (browserPackage != null) {
+            customTabsIntent.intent.addCategory(Intent.CATEGORY_BROWSABLE)
+            customTabsIntent.intent.setPackage(browserPackage)
+        }
+
+        val browserIntent = Intent(Intent.ACTION_VIEW, uri).apply {
+            addCategory(Intent.CATEGORY_BROWSABLE)
+            if (browserPackage != null) {
+                setPackage(browserPackage)
+            }
+        }
+
         try {
             markExternalLaunch()
+            // First, try Custom Tabs (will use default Custom Tabs browser if available)
             customTabsIntent.launchUrl(this, uri)
         } catch (customTabsError: ActivityNotFoundException) {
             try {
                 markExternalLaunch()
-                startActivity(Intent(Intent.ACTION_VIEW, uri))
+                // Fallback: try the resolved browser
+                startActivity(browserIntent)
             } catch (browserError: Exception) {
-                clearExternalLaunchMarker()
-                Log.e(TAG, "Unable to open external URL: $normalizedUrl", browserError)
-                Toast.makeText(this, "No browser is available to open this page.", Toast.LENGTH_SHORT).show()
+                // Final fallback: try without specifying a package
+                try {
+                    markExternalLaunch()
+                    startActivity(Intent(Intent.ACTION_VIEW, uri).apply {
+                        addCategory(Intent.CATEGORY_BROWSABLE)
+                    })
+                } catch (fallbackError: Exception) {
+                    clearExternalLaunchMarker()
+                    Log.e(TAG, "Unable to open external URL: $normalizedUrl", fallbackError)
+                    Toast.makeText(this, "No browser is available to open this page.", Toast.LENGTH_SHORT).show()
+                }
             }
         } catch (unexpectedError: Exception) {
             clearExternalLaunchMarker()
