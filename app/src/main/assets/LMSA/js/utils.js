@@ -162,6 +162,10 @@ function highlightCodeBlockElement(codeElement, language) {
         try {
             let hljsLanguage = normalizedLanguage;
 
+            // Highlight.js marks nodes it has already processed. Chat restore resets
+            // blocks back to raw text before re-highlighting, so clear the marker first.
+            codeElement.removeAttribute('data-highlighted');
+
             if (!window.hljs.getLanguage(hljsLanguage)) {
                 hljsLanguage = detectLanguageFromCode(rawCode);
             }
@@ -567,6 +571,12 @@ function restoreCodeBlockPlaceholders(sanitized, codeBlockPlaceholders) {
     return sanitized;
 }
 
+function replaceInlineCodeSpans(sanitized) {
+    // Keep inline code confined to a single line so an unmatched backtick
+    // cannot wrap entire paragraphs, lists, or restored code block text.
+    return sanitized.replace(/`([^`\r\n]+)`/g, '<code>$1</code>');
+}
+
 /**
  * Sanitizes input for non-reasoning models
  * @param {string} input - The input text to sanitize
@@ -622,7 +632,7 @@ export function basicSanitizeInput(input) {
     sanitized = replaceMarkdownCodeBlocks(sanitized, '', codeBlockPlaceholders);
 
     // Handle inline code
-    sanitized = sanitized.replace(/`([^`]+)`/g, '<code>$1</code>');
+    sanitized = replaceInlineCodeSpans(sanitized);
 
     // Handle headers
     sanitized = sanitized.replace(/^###### (.+)$/gm, '<h6>$1</h6>');
@@ -868,7 +878,7 @@ export function sanitizeInput(input) {
     );
 
     // Handle inline code
-    sanitized = sanitized.replace(/`([^`]+)`/g, '<code>$1</code>');
+    sanitized = replaceInlineCodeSpans(sanitized);
 
     // Handle headers
     sanitized = sanitized.replace(/^###### (.+)$/gm, '<h6>$1</h6>');
@@ -2059,7 +2069,7 @@ if (typeof window !== 'undefined') {
                 sanitized = replaceMarkdownCodeBlocks(sanitized);
 
                 // Handle inline code
-                sanitized = sanitized.replace(/`([^`]+)`/g, '<code>$1</code>');
+                sanitized = replaceInlineCodeSpans(sanitized);
 
                 // Handle headers
                 sanitized = sanitized.replace(/^###### (.+)$/gm, '<h6>$1</h6>');

@@ -3022,9 +3022,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                 setIsFirstMessage(false);
             }
 
-            if (getAutoScrollEnabled()) {
-                scrollToBottom(messagesContainer, true);
-            }
+            scrollToBottom(messagesContainer, true);
             return;
         }
 
@@ -3060,38 +3058,6 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         // Monaco Editor removed - no need to track initialization
         // to avoid unnecessary repeated initializations during streaming
         let hasInitializedCodeBlocks = false;
-
-        const renderStreamingHtml = (html) => {
-            if (!contentContainer) return;
-
-            // Streaming rewrites can briefly collapse/re-expand code blocks,
-            // which causes visible vertical jumping in the chat viewport.
-            const shouldStabilizeHeight = hasCodeBlock;
-            const previousHeight = shouldStabilizeHeight
-                ? contentContainer.getBoundingClientRect().height
-                : 0;
-
-            contentContainer.innerHTML = html;
-
-            if (!shouldStabilizeHeight) {
-                if (contentContainer.style.minHeight) {
-                    contentContainer.style.minHeight = '';
-                }
-                return;
-            }
-
-            const nextHeight = contentContainer.getBoundingClientRect().height;
-            if (previousHeight > 0 && nextHeight + 1 < previousHeight) {
-                contentContainer.style.minHeight = `${Math.ceil(previousHeight)}px`;
-                requestAnimationFrame(() => {
-                    if (contentContainer) {
-                        contentContainer.style.minHeight = '';
-                    }
-                });
-            } else if (contentContainer.style.minHeight) {
-                contentContainer.style.minHeight = '';
-            }
-        };
 
         // Create a timeout for the streaming response (configurable for reasoning models)
         const streamingTimeoutMs = getReasoningTimeout() * 1000; // Convert seconds to milliseconds
@@ -3337,7 +3303,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                             if (contentAfterThink !== "") {
                                                 // We have content after </think>, show ONLY that content (streaming)
                                                 const processedContent = stripReasoningSections(visibleStreamingMessage);
-                                                renderStreamingHtml(basicSanitizeInput(processedContent));
+                                                contentContainer.innerHTML = basicSanitizeInput(processedContent);
 
                                                 // Remove any thinking indicator that might exist
                                                 const thinkingIndicator = contentContainer.querySelector('.thinking-indicator');
@@ -3382,18 +3348,18 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                                                 // Hide thinking is enabled but we're not in thinking section and no content after think
                                                 // This means thinking tags are complete but no content after them yet
                                                 const processedContent = stripReasoningSections(visibleStreamingMessage);
-                                                renderStreamingHtml(basicSanitizeInput(processedContent));
+                                                contentContainer.innerHTML = basicSanitizeInput(processedContent);
                                             }
                                         } else {
                                             // Hide thinking is disabled, show everything including thinking tags (streaming)
-                                            renderStreamingHtml(sanitizeInput(visibleStreamingMessage));
+                                            contentContainer.innerHTML = sanitizeInput(visibleStreamingMessage);
                                         }
 
                                         // Mark this message as having thinking
                                         aiMessageElement.dataset.hasThinking = 'true';
                                     } else if (contentContainer) {
                                         // For non-reasoning models, apply basic sanitization
-                                        renderStreamingHtml(basicSanitizeInput(visibleStreamingMessage));
+                                        contentContainer.innerHTML = basicSanitizeInput(visibleStreamingMessage);
                                         // Mark this message as a non-reasoning model response
                                         aiMessageElement.dataset.hasThinking = 'false';
                                     }
@@ -3557,20 +3523,14 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                         refreshAllCodeBlocks();
                     });
                 }
-                if (getAutoScrollEnabled()) {
-                    scrollToBottom(messagesContainer, true);
-                }
+                scrollToBottom(messagesContainer, true);
                 return;
             }
 
             // Code blocks detected - no longer triggering reload, just continue normally
-            if (getAutoScrollEnabled()) {
-                scrollToBottom(messagesContainer, true);
-            }
+            scrollToBottom(messagesContainer, true);
         } else {
-            if (getAutoScrollEnabled()) {
-                scrollToBottom(messagesContainer, true);
-            }
+            scrollToBottom(messagesContainer, true);
         }
     } catch (error) {
         // Clean up timeouts on error
@@ -5258,11 +5218,10 @@ export function saveChatHistory() {
                             let processedContent = message.content;
 
                             // First locate and tag all code blocks
-                            processedContent = processedContent.replace(/```([^\n`]*)\n([\s\S]*?)```/g, (match, languageInfo, code) => {
-                                const languageToken = String(languageInfo || '').trim().split(/\s+/)[0] || '';
-                                const isHtmlCode = languageToken === 'html' || languageToken === 'xml';
+                            processedContent = processedContent.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
+                                const isHtmlCode = language === 'html' || language === 'xml';
                                 codeBlocks.push({
-                                    language: languageToken,
+                                    language: language || '',
                                     code: code.trim(),
                                     isHtml: isHtmlCode
                                 });
@@ -5940,9 +5899,7 @@ export async function regenerateLastResponse(isRetry = false) {
                     }, 100);
                 }
 
-                if (getAutoScrollEnabled()) {
-                    scrollToBottom(messagesContainer, true);
-                }
+                scrollToBottom(messagesContainer, true);
 
                 if (Array.isArray(chatHistoryData[currentChatId])) {
                     chatHistoryData[currentChatId] = {
@@ -6229,7 +6186,7 @@ export async function regenerateLastResponse(isRetry = false) {
                                                 if (contentAfterThink !== "") {
                                                     // We have content after </think>, show ONLY that content (streaming)
                                                     const processedContent = stripReasoningSections(visibleStreamingMessage);
-                                                    renderStreamingHtml(basicSanitizeInput(processedContent));
+                                                    contentContainer.innerHTML = basicSanitizeInput(processedContent);
 
                                                     // Remove any thinking indicator that might exist
                                                     const thinkingIndicator = contentContainer.querySelector('.thinking-indicator');
@@ -6274,18 +6231,18 @@ export async function regenerateLastResponse(isRetry = false) {
                                                     // Hide thinking is enabled but we're not in thinking section and no content after think
                                                     // This means thinking tags are complete but no content after them yet
                                                     const processedContent = stripReasoningSections(visibleStreamingMessage);
-                                                    renderStreamingHtml(basicSanitizeInput(processedContent));
+                                                    contentContainer.innerHTML = basicSanitizeInput(processedContent);
                                                 }
                                             } else {
                                                 // Hide thinking is disabled, show everything including thinking tags (streaming)
-                                                renderStreamingHtml(sanitizeInput(visibleStreamingMessage));
+                                                contentContainer.innerHTML = sanitizeInput(visibleStreamingMessage);
                                             }
 
                                             // Mark this message as having thinking
                                             aiMessageElement.dataset.hasThinking = 'true';
                                         } else if (contentContainer) {
                                             // For non-reasoning models, apply basic sanitization
-                                            renderStreamingHtml(basicSanitizeInput(visibleStreamingMessage));
+                                            contentContainer.innerHTML = basicSanitizeInput(visibleStreamingMessage);
                                             // Mark this message as a non-reasoning model response
                                             aiMessageElement.dataset.hasThinking = 'false';
                                         }
@@ -6397,9 +6354,7 @@ export async function regenerateLastResponse(isRetry = false) {
                 }, 100);
             }
 
-            if (getAutoScrollEnabled()) {
-                scrollToBottom(messagesContainer, true);
-            }
+            scrollToBottom(messagesContainer, true);
 
             // Update chat history: remove messages after the last user message and add new AI response
             if (Array.isArray(chatHistoryData[currentChatId])) {
