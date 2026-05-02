@@ -1,29 +1,45 @@
+# IntelliJ IDEA / Android Studio
 *.iml
-.gradle
+.idea/
+.gradle/
+.gradle-user-home/
+local.properties
 /local.properties
-.DS_Store
-/build
-/captures
 .externalNativeBuild
 .cxx
-local.properties
-AGENTS.md
+/captures
 
-# IDE settings - personal workspace files
-.idea/
-
-# Ignore all build directories
+# Build artifacts
 **/build/
 app/build/
+dist/
+out/
+/build
 
-# Kotlin
-.kotlin/
+# Dependencies
+node_modules/
+**/node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
 
 # VS Code
 .vscode/
 
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Kotlin
+.kotlin/
+
 # JDK setup directory (large binary files)
 jdk_setup/
 
-# Local Gradle user home and caches
-.gradle-user-home/
+# Project specific
+AGENTS.md
+.gemini/
+.claude/
+.archive/
