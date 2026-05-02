@@ -227,8 +227,20 @@ function isBiometricSupported() {
     }
 }
 
+function hasBiometricFeatureAccess() {
+    if (typeof window.hasPremiumAccess === 'function') {
+        return !!window.hasPremiumAccess();
+    }
+
+    return !!(
+        window.AndroidBilling &&
+        typeof window.AndroidBilling.checkPremiumStatus === 'function' &&
+        window.AndroidBilling.checkPremiumStatus()
+    );
+}
+
 function shouldRequireBiometricUnlock() {
-    return isBiometricSupported() && getRequireBiometric() && !getDebugEnabled();
+    return hasBiometricFeatureAccess() && isBiometricSupported() && getRequireBiometric() && !getDebugEnabled();
 }
 
 function isBiometricAuthenticated() {
@@ -661,7 +673,7 @@ export async function initializeApp() {
     }
     
     const alreadyAuthenticated = isBiometricAuthenticated();
-    if (biometricSupported && requireBiometric && !getDebugEnabled() && !alreadyAuthenticated) {
+    if (shouldRequireBiometricUnlock() && !alreadyAuthenticated) {
         lockAppForBiometricReentry();
         setTimeout(() => {
             void promptForBiometricUnlock(true);

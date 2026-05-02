@@ -6,6 +6,7 @@ import { debugLog, getDebugEnabled, isAndroidWebView } from './utils.js';
 import { showToastNotice } from './toast-notice.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { getApiUrl, getAvailableModels, isServerRunning, validateIpPort, saveServerSettings, fetchAvailableModels } from './api-service.js';
+import { openPremiumModal } from './components/modals/premium-modal.js';
 import { showOpenRouterKeyRequiredModal, initOpenRouterKeyRequiredModal } from './components/modals/openrouter-key-required-modal.js';
 import {
     getUseOpenRouter,
@@ -36,6 +37,29 @@ const CONNECTION_PRESET_TYPE_LABELS = {
     openrouter: 'OpenRouter',
     'openai-compatible': 'Custom Endpoint'
 };
+
+function hasPremiumAccess() {
+    if (typeof window.hasPremiumAccess === 'function') {
+        return !!window.hasPremiumAccess();
+    }
+
+    return !!(window.AndroidBilling &&
+        typeof window.AndroidBilling.checkPremiumStatus === 'function' &&
+        window.AndroidBilling.checkPremiumStatus());
+}
+
+function requiresPremiumForConnectionPreset(type) {
+    return type === 'openrouter' || type === 'openai-compatible';
+}
+
+function requestConnectionPresetPremiumAccess(type) {
+    if (!requiresPremiumForConnectionPreset(type) || hasPremiumAccess()) {
+        return false;
+    }
+
+    openPremiumModal('Connection Presets');
+    return true;
+}
 
 function getBiometricBridge() {
     if (typeof AndroidBiometrics !== 'undefined') {
@@ -577,6 +601,11 @@ function initializeConnectionPresetList() {
     if (saveButton) {
         saveButton.addEventListener('click', () => {
             const presetDraft = getCurrentConnectionPresetDraft();
+
+            if (requestConnectionPresetPremiumAccess(presetDraft.type)) {
+                return;
+            }
+
             if (!hasSavableConnectionPresetData(presetDraft)) {
                 showConnectionPresetNotice(`Configure the active ${CONNECTION_PRESET_TYPE_LABELS[presetDraft.type] || 'connection'} before saving a preset.`, 'error');
                 return;
@@ -2569,6 +2598,11 @@ function initializeConnectionInputModals() {
     const configOpenAICompatibleBtn = document.getElementById('configure-openai-compatible-btn');
     if (configOpenAICompatibleBtn) {
         configOpenAICompatibleBtn.addEventListener('click', () => {
+            if (!hasPremiumAccess()) {
+                openPremiumModal('Custom Endpoint');
+                return;
+            }
+
             const endpointInput = document.getElementById('openai-compatible-endpoint');
             const keyInput = document.getElementById('openai-compatible-api-key');
             const modelInput = document.getElementById('openai-compatible-model-name');
@@ -2935,8 +2969,14 @@ function initializeConnectionInputModals() {
             savePresetEditBtn.addEventListener('click', () => {
                 clearPresetEditError();
 
+                const presetPayload = buildPresetEditPayload();
+
+                if (requestConnectionPresetPremiumAccess(presetPayload.type)) {
+                    return;
+                }
+
                 try {
-                    const savedPreset = saveConnectionPreset(buildPresetEditPayload());
+                    const savedPreset = saveConnectionPreset(presetPayload);
                     hidePresetEditModal();
                     renderConnectionPresetList();
                     showConnectionPresetNotice(`Updated ${savedPreset.name}.`);

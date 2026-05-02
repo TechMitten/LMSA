@@ -757,6 +757,7 @@ document.addEventListener("premium-status-changed", () => {
   updateSystemPromptPremiumState();
   void syncTTSVoiceSelectionForAccess();
   syncMaxTokensForAccess();
+  loadBiometricSetting();
 });
 
 /**
@@ -2476,6 +2477,13 @@ export function loadBiometricSetting() {
       checkbox.checked = false;
       requireBiometric = false;
     }
+
+    if (!isPremiumUser() && requireBiometric) {
+      checkbox.checked = false;
+      requireBiometric = false;
+      localStorage.setItem("requireBiometric", "false");
+    }
+
     // Only attach listener once to prevent duplicate handlers
     if (!biometricListenerAttached) {
       checkbox.addEventListener("change", saveBiometricSetting);
@@ -2495,6 +2503,22 @@ export async function saveBiometricSetting() {
     console.log('[Biometric] Checkbox checked:', isChecked);
     
     if (isChecked) {
+      const isPremium = typeof window.hasPremiumAccess === 'function'
+        ? window.hasPremiumAccess()
+        : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
+      console.log('[Biometric] isPremium:', isPremium);
+
+      if (!isPremium) {
+        console.log('[Biometric] Not premium, showing premium modal');
+        if (typeof window.openPremiumModal === 'function') {
+            window.openPremiumModal('Biometric Unlock');
+        }
+        checkbox.checked = false;
+        requireBiometric = false;
+        localStorage.setItem("requireBiometric", "false");
+        return;
+      }
+
       // First check if biometrics are actually supported on this device
       const biometricSupported = isBiometricSupported();
       console.log('[Biometric] Device supports biometrics:', biometricSupported);
@@ -2508,22 +2532,6 @@ export async function saveBiometricSetting() {
         if (typeof window.showBiometricUnavailableModal === 'function') {
           window.showBiometricUnavailableModal();
         }
-        return;
-      }
-      
-      const isPremium = typeof window.hasPremiumAccess === 'function'
-        ? window.hasPremiumAccess()
-        : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
-      console.log('[Biometric] isPremium:', isPremium);
-      
-      if (!isPremium) {
-        console.log('[Biometric] Not premium, showing premium modal');
-        if (typeof window.openPremiumModal === 'function') {
-            window.openPremiumModal('Biometric Unlock');
-        }
-        checkbox.checked = false;
-        requireBiometric = false;
-        localStorage.setItem("requireBiometric", "false");
         return;
       }
 
