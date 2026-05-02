@@ -1,0 +1,649 @@
+2026-05-02 12:56:43  [INFO]
+ [LM STUDIO SERVER] Success! HTTP server listening on port 1234
+2026-05-02 12:56:43  [WARN]
+ [LM STUDIO SERVER] Server accepting connections from the local network. Only use this if you know what you are doing!
+2026-05-02 12:56:43  [INFO]
+2026-05-02 12:56:43  [INFO]
+ [LM STUDIO SERVER] Supported endpoints:
+2026-05-02 12:56:43  [INFO]
+ [LM STUDIO SERVER]   LM Studio API
+2026-05-02 12:56:43  [INFO]
+ [LM STUDIO SERVER]    ->  GET  http://192.168.4.21:1234/api/v1/models
+2026-05-02 12:56:43  [INFO]
+ [LM STUDIO SERVER]    ->  POST http://192.168.4.21:1234/api/v1/chat
+2026-05-02 12:56:43  [INFO]
+ [LM STUDIO SERVER]    ->  POST http://192.168.4.21:1234/api/v1/models/load
+2026-05-02 12:56:43  [INFO]
+ [LM STUDIO SERVER]    ->  POST http://192.168.4.21:1234/api/v1/models/download
+2026-05-02 12:56:43  [INFO]
+ [LM STUDIO SERVER]    ->  GET http://192.168.4.21:1234/api/v1/models/download/status:job_id
+2026-05-02 12:56:43  [INFO]
+ [LM STUDIO SERVER]   OpenAI-compatible
+2026-05-02 12:56:43  [INFO]
+ [LM STUDIO SERVER]    ->  GET  http://192.168.4.21:1234/v1/models
+2026-05-02 12:56:43  [INFO]
+ [LM STUDIO SERVER]    ->  POST http://192.168.4.21:1234/v1/responses
+2026-05-02 12:56:43  [INFO]
+ [LM STUDIO SERVER]    ->  POST http://192.168.4.21:1234/v1/chat/completions
+2026-05-02 12:56:43  [INFO]
+ [LM STUDIO SERVER]    ->  POST http://192.168.4.21:1234/v1/completions
+2026-05-02 12:56:43  [INFO]
+ [LM STUDIO SERVER]    ->  POST http://192.168.4.21:1234/v1/embeddings
+2026-05-02 12:56:43  [INFO]
+2026-05-02 12:56:43  [INFO]
+ [LM STUDIO SERVER] Logs are saved into C:\Users\Raymond\.lmstudio\server-logs
+2026-05-02 12:56:43  [INFO]
+ Server started.
+2026-05-02 12:56:43  [INFO]
+ Just-in-time model loading active.
+2026-05-02 12:56:51  [INFO]
+ [LM STUDIO SERVER] Success! HTTP server listening on port 1234
+2026-05-02 12:56:51  [INFO]
+2026-05-02 12:56:51  [INFO]
+ [LM STUDIO SERVER] Supported endpoints:
+2026-05-02 12:56:51  [INFO]
+ [LM STUDIO SERVER]   LM Studio API
+2026-05-02 12:56:51  [INFO]
+ [LM STUDIO SERVER]    ->  GET  http://localhost:1234/api/v1/models
+2026-05-02 12:56:51  [INFO]
+ [LM STUDIO SERVER]    ->  POST http://localhost:1234/api/v1/chat
+2026-05-02 12:56:51  [INFO]
+ [LM STUDIO SERVER]    ->  POST http://localhost:1234/api/v1/models/load
+2026-05-02 12:56:51  [INFO]
+ [LM STUDIO SERVER]    ->  POST http://localhost:1234/api/v1/models/download
+2026-05-02 12:56:51  [INFO]
+ [LM STUDIO SERVER]    ->  GET http://localhost:1234/api/v1/models/download/status:job_id
+2026-05-02 12:56:51  [INFO]
+ [LM STUDIO SERVER]   OpenAI-compatible
+2026-05-02 12:56:51  [INFO]
+ [LM STUDIO SERVER]    ->  GET  http://localhost:1234/v1/models
+2026-05-02 12:56:51  [INFO]
+ [LM STUDIO SERVER]    ->  POST http://localhost:1234/v1/responses
+2026-05-02 12:56:51  [INFO]
+ [LM STUDIO SERVER]    ->  POST http://localhost:1234/v1/chat/completions
+2026-05-02 12:56:51  [INFO]
+ [LM STUDIO SERVER]    ->  POST http://localhost:1234/v1/completions
+2026-05-02 12:56:51  [INFO]
+ [LM STUDIO SERVER]    ->  POST http://localhost:1234/v1/embeddings
+2026-05-02 12:56:51  [INFO]
+2026-05-02 12:56:51  [INFO]
+ [LM STUDIO SERVER] Logs are saved into C:\Users\Raymond\.lmstudio\server-logs
+2026-05-02 12:57:01 [DEBUG]
+ Received request: GET to /v1/models
+2026-05-02 12:57:01  [INFO]
+ Returning {
+  "data": [
+    {
+      "id": "google/gemma-4-e4b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "google/gemma-4-26b-a4b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "qwen3.5-9b-uncensored-hauhaucs-aggressive",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "qwen/qwen3.5-9b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "google/gemma-3-4b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "qwen/qwen3-4b-thinking-2507",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "zai-org/glm-4.7-flash",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "google/gemma-3-1b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "text-embedding-nomic-embed-text-v1.5",
+      "object": "model",
+      "owned_by": "organization_owner"
+    }
+  ],
+  "object": "list"
+}
+2026-05-02 12:57:02 [DEBUG]
+ Received request: GET to /v1/models
+2026-05-02 12:57:02  [INFO]
+ Returning {
+  "data": [
+    {
+      "id": "google/gemma-4-e4b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "google/gemma-4-26b-a4b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "qwen3.5-9b-uncensored-hauhaucs-aggressive",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "qwen/qwen3.5-9b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "google/gemma-3-4b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "qwen/qwen3-4b-thinking-2507",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "zai-org/glm-4.7-flash",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "google/gemma-3-1b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "text-embedding-nomic-embed-text-v1.5",
+      "object": "model",
+      "owned_by": "organization_owner"
+    }
+  ],
+  "object": "list"
+}
+2026-05-02 12:57:02 [DEBUG]
+ Received request: GET to /v1/internal/model/info
+2026-05-02 12:57:02 [ERROR]
+ Unexpected endpoint or method. (GET /v1/internal/model/info). Returning 200 anyway
+2026-05-02 12:57:02 [DEBUG]
+ Received request: GET to /v1/model/info
+2026-05-02 12:57:02 [ERROR]
+ Unexpected endpoint or method. (GET /v1/model/info). Returning 200 anyway
+2026-05-02 12:57:02  [INFO]
+ [LM STUDIO SERVER] Received OPTIONS request. {}
+2026-05-02 12:57:02 [DEBUG]
+ Received request: POST to /v1/chat/completions with body  {
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant."
+    },
+    {
+      "role": "user",
+      "content": "Respond with exactly: ok"
+    }
+  ],
+  "max_tokens": 1,
+  "stream": false
+}
+2026-05-02 12:57:02 [ERROR]
+ No models loaded. Please load a model in the developer page or use the 'lms load' command.
+2026-05-02 12:57:11 [DEBUG]
+ Received request: GET to /api/v1/models
+2026-05-02 12:57:11  [INFO]
+ Returning 9 models from v1 API
+2026-05-02 12:57:11  [INFO]
+ [LM STUDIO SERVER] Received OPTIONS request. {}
+2026-05-02 12:57:11 [DEBUG]
+ Received request: POST to /api/v1/models/load with body  {
+  "model": "google/gemma-4-e4b"
+}
+2026-05-02 12:57:12 [DEBUG]
+ LlamaV4::load called with model path: C:\Users\Raymond\.lmstudio\models\lmstudio-community\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf
+2026-05-02 12:57:12 [DEBUG]
+ 
+LlamaV4::load config: n_parallel=4 n_ctx=4096 kv_unified=true
+2026-05-02 12:57:12 [DEBUG]
+ ggml_cuda_init: found 1 CUDA devices (Total VRAM: 8187 MiB):
+  Device 0: NVIDIA GeForce RTX 4060 Ti, compute capability 8.9, VMM: yes, VRAM: 8187 MiB
+2026-05-02 12:57:12 [DEBUG]
+ gemma4 architecture detected, using AUTO flash attention mode
+srv    load_model: loading model 'C:\Users\Raymond\.lmstudio\models\lmstudio-community\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf'
+2026-05-02 12:57:12 [DEBUG]
+ llama_model_load_from_file_impl: using device CUDA0 (NVIDIA GeForce RTX 4060 Ti) (0000:01:00.0) - 7075 MiB free
+2026-05-02 12:57:12 [DEBUG]
+ llama_model_loader: loaded meta data with 42 key-value pairs and 720 tensors from C:\Users\Raymond\.lmstudio\models\lmstudio-community\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf (version GGUF V3 (latest))
+llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+llama_model_loader: - kv   0:                       general.architecture str              = gemma4
+llama_model_loader: - kv   1:                               general.type str              = model
+llama_model_loader: - kv   2:                     general.sampling.top_k i32              = 64
+llama_model_loader: - kv   3:                     general.sampling.top_p f32              = 0.950000
+llama_model_loader: - kv   4:                      general.sampling.temp f32              = 1.000000
+llama_model_loader: - kv   5:                               general.name str              = Gemma 4 E4B
+llama_model_loader: - kv   6:                         general.size_label str              = 7.5B
+llama_model_loader: - kv   7:                         gemma4.block_count u32              = 42
+llama_model_loader: - kv   8:                      gemma4.context_length u32              = 131072
+llama_model_loader: - kv   9:                    gemma4.embedding_length u32              = 2560
+llama_model_loader: - kv  10:                 gemma4.feed_forward_length u32              = 10240
+llama_model_loader: - kv  11:                gemma4.attention.head_count u32              = 8
+llama_model_loader: - kv  12:             gemma4.attention.head_count_kv u32              = 2
+llama_model_loader: - kv  13:                      gemma4.rope.freq_base f32              = 1000000.000000
+llama_model_loader: - kv  14:                  gemma4.rope.freq_base_swa f32              = 10000.000000
+llama_model_loader: - kv  15:    gemma4.attention.layer_norm_rms_epsilon f32              = 0.000001
+llama_model_loader: - kv  16:                gemma4.attention.key_length u32              = 512
+llama_model_loader: - kv  17:              gemma4.attention.value_length u32              = 512
+llama_model_loader: - kv  18:             gemma4.final_logit_softcapping f32              = 30.000000
+llama_model_loader: - kv  19:            gemma4.attention.sliding_window u32              = 512
+llama_model_loader: - kv  20:          gemma4.attention.shared_kv_layers u32              = 18
+llama_model_loader: - kv  21:    gemma4.embedding_length_per_layer_input u32              = 256
+2026-05-02 12:57:12 [DEBUG]
+ llama_model_loader: - kv  22:    gemma4.attention.sliding_window_pattern arr[bool,42]     = [true, true, true, true, true, false,...
+llama_model_loader: - kv  23:            gemma4.attention.key_length_swa u32              = 256
+llama_model_loader: - kv  24:          gemma4.attention.value_length_swa u32              = 256
+llama_model_loader: - kv  25:                gemma4.rope.dimension_count u32              = 512
+llama_model_loader: - kv  26:            gemma4.rope.dimension_count_swa u32              = 256
+llama_model_loader: - kv  27:                       tokenizer.ggml.model str              = gemma4
+2026-05-02 12:57:12 [DEBUG]
+ llama_model_loader: - kv  28:                      tokenizer.ggml.tokens arr[str,262144]  = ["<pad>", "<eos>", "<bos>", "<unk>", ...
+2026-05-02 12:57:12 [DEBUG]
+ llama_model_loader: - kv  29:                      tokenizer.ggml.scores arr[f32,262144]  = [-1000.000000, -1000.000000, -1000.00...
+2026-05-02 12:57:12 [DEBUG]
+ llama_model_loader: - kv  30:                  tokenizer.ggml.token_type arr[i32,262144]  = [3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, ...
+2026-05-02 12:57:12 [DEBUG]
+ llama_model_loader: - kv  31:                      tokenizer.ggml.merges arr[str,514906]  = ["\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n \n", ...
+llama_model_loader: - kv  32:                tokenizer.ggml.bos_token_id u32              = 2
+llama_model_loader: - kv  33:                tokenizer.ggml.eos_token_id u32              = 1
+llama_model_loader: - kv  34:            tokenizer.ggml.unknown_token_id u32              = 3
+llama_model_loader: - kv  35:            tokenizer.ggml.padding_token_id u32              = 0
+llama_model_loader: - kv  36:               tokenizer.ggml.mask_token_id u32              = 4
+llama_model_loader: - kv  37:                    tokenizer.chat_template str              = {%- macro format_parameters(propertie...
+llama_model_loader: - kv  38:            tokenizer.ggml.add_space_prefix bool             = false
+llama_model_loader: - kv  39:               tokenizer.ggml.add_bos_token bool             = true
+llama_model_loader: - kv  40:               general.quantization_version u32              = 2
+llama_model_loader: - kv  41:                          general.file_type u32              = 15
+llama_model_loader: - type  f32:  339 tensors
+llama_model_loader: - type q4_K:  336 tensors
+llama_model_loader: - type q6_K:   44 tensors
+llama_model_loader: - type bf16:    1 tensors
+print_info: file format = GGUF V3 (latest)
+print_info: file type   = Q4_K - Medium
+print_info: file size   = 4.95 GiB (5.66 BPW)
+2026-05-02 12:57:12 [DEBUG]
+ load: 0 unused tokens
+load: control-looking token:     50 '<|tool_response>' was not control-type; this is probably a bug in the model. its type will be overridden
+2026-05-02 12:57:12 [DEBUG]
+ load: control-looking token:    212 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+2026-05-02 12:57:12 [DEBUG]
+ load: printing all EOG tokens:
+load:   - 1 ('<eos>')
+load:   - 50 ('<|tool_response>')
+load:   - 106 ('<turn|>')
+load:   - 212 ('</s>')
+load: special_eog_ids contains '<|tool_response>', removing '</s>' token from EOG list
+2026-05-02 12:57:12 [DEBUG]
+ load: special tokens cache size = 24
+2026-05-02 12:57:13 [DEBUG]
+ load: token to piece cache size = 1.9445 MB
+2026-05-02 12:57:13 [DEBUG]
+ print_info: arch                  = gemma4
+print_info: vocab_only            = 0
+print_info: no_alloc              = 0
+print_info: n_ctx_train           = 131072
+print_info: n_embd                = 2560
+print_info: n_embd_inp            = 2560
+print_info: n_layer               = 42
+print_info: n_head                = 8
+print_info: n_head_kv             = 2
+print_info: n_rot                 = 512
+print_info: n_swa                 = 512
+print_info: is_swa_any            = 1
+print_info: n_embd_head_k         = 512
+print_info: n_embd_head_v         = 512
+print_info: n_gqa                 = 4
+print_info: n_embd_k_gqa          = [512, 512, 512, 512, 512, 1024, 512, 512, 512, 512, 512, 1024, 512, 512, 512, 512, 512, 1024, 512, 512, 512, 512, 512, 1024, 512, 512, 512, 512, 512, 1024, 512, 512, 512, 512, 512, 1024, 512, 512, 512, 512, 512, 1024]
+print_info: n_embd_v_gqa          = [512, 512, 512, 512, 512, 1024, 512, 512, 512, 512, 512, 1024, 512, 512, 512, 512, 512, 1024, 512, 512, 512, 512, 512, 1024, 512, 512, 512, 512, 512, 1024, 512, 512, 512, 512, 512, 1024, 512, 512, 512, 512, 512, 1024]
+print_info: f_norm_eps            = 0.0e+00
+print_info: f_norm_rms_eps        = 1.0e-06
+print_info: f_clamp_kqv           = 0.0e+00
+print_info: f_max_alibi_bias      = 0.0e+00
+print_info: f_logit_scale         = 0.0e+00
+print_info: f_attn_scale          = 1.0e+00
+print_info: n_ff                  = 10240
+print_info: n_expert              = 0
+print_info: n_expert_used         = 0
+print_info: n_expert_groups       = 0
+print_info: n_group_used          = 0
+print_info: causal attn           = 1
+print_info: pooling type          = -1
+print_info: rope type             = 2
+print_info: rope scaling          = linear
+print_info: freq_base_train       = 1000000.0
+print_info: freq_scale_train      = 1
+print_info: freq_base_swa         = 10000.0
+print_info: freq_scale_swa        = 1
+print_info: n_embd_head_k_swa     = 256
+print_info: n_embd_head_v_swa     = 256
+print_info: n_rot_swa             = 256
+print_info: n_ctx_orig_yarn       = 131072
+print_info: rope_yarn_log_mul     = 0.0000
+print_info: rope_finetuned        = unknown
+print_info: model type            = E4B
+print_info: model params          = 7.52 B
+print_info: general.name          = Gemma 4 E4B
+print_info: vocab type            = BPE
+print_info: n_vocab               = 262144
+print_info: n_merges              = 514906
+print_info: BOS token             = 2 '<bos>'
+print_info: EOS token             = 1 '<eos>'
+print_info: UNK token             = 3 '<unk>'
+print_info: PAD token             = 0 '<pad>'
+print_info: MASK token            = 4 '<mask>'
+print_info: LF token              = 107 '
+'
+print_info: EOG token             = 1 '<eos>'
+print_info: EOG token             = 50 '<|tool_response>'
+print_info: EOG token             = 106 '<turn|>'
+print_info: max token length      = 93
+load_tensors: loading model tensors, this can take a while... (mmap = true, direct_io = false)
+2026-05-02 12:57:14 [DEBUG]
+ load_tensors: offloading output layer to GPU
+load_tensors: offloading 38 repeating layers to GPU
+load_tensors: offloaded 39/43 layers to GPU
+load_tensors:   CPU_Mapped model buffer size =  3009.46 MiB
+load_tensors:        CUDA0 model buffer size =  2588.59 MiB
+2026-05-02 12:57:18 [DEBUG]
+ common_init_result: added <eos> logit bias = -inf
+common_init_result: added <|tool_response> logit bias = -inf
+common_init_result: added <turn|> logit bias = -inf
+2026-05-02 12:57:18 [DEBUG]
+ llama_context: constructing llama_context
+llama_context: n_seq_max     = 4
+llama_context: n_ctx         = 4096
+llama_context: n_ctx_seq     = 4096
+llama_context: n_batch       = 512
+llama_context: n_ubatch      = 512
+llama_context: causal_attn   = 1
+llama_context: flash_attn    = auto
+llama_context: kv_unified    = true
+llama_context: freq_base     = 1000000.0
+llama_context: freq_scale    = 1
+llama_context: n_ctx_seq (4096) < n_ctx_train (131072) -- the full capacity of the model will not be utilized
+2026-05-02 12:57:18 [DEBUG]
+ llama_context:  CUDA_Host  output buffer size =     4.00 MiB
+llama_kv_cache_iswa: creating non-SWA KV cache, size = 4096 cells
+2026-05-02 12:57:18 [DEBUG]
+ llama_kv_cache:      CUDA0 KV buffer size =    64.00 MiB
+2026-05-02 12:57:18 [DEBUG]
+ llama_kv_cache: size =   64.00 MiB (  4096 cells,   4 layers,  4/1 seqs), K (f16):   32.00 MiB, V (f16):   32.00 MiB
+llama_kv_cache: attn_rot_k = 0, n_embd_head_k_all = 512
+llama_kv_cache: attn_rot_v = 0, n_embd_head_k_all = 512
+llama_kv_cache_iswa: creating     SWA KV cache, size = 2560 cells
+llama_kv_cache:        CPU KV buffer size =    20.00 MiB
+2026-05-02 12:57:18 [DEBUG]
+ llama_kv_cache:      CUDA0 KV buffer size =    80.00 MiB
+2026-05-02 12:57:18 [DEBUG]
+ llama_kv_cache: size =  100.00 MiB (  2560 cells,  20 layers,  4/1 seqs), K (f16):   50.00 MiB, V (f16):   50.00 MiB
+llama_kv_cache: attn_rot_k = 0, n_embd_head_k_all = 256
+llama_kv_cache: attn_rot_v = 0, n_embd_head_k_all = 256
+sched_reserve: reserving ...
+2026-05-02 12:57:18 [DEBUG]
+ sched_reserve: Flash Attention was auto, set to enabled
+sched_reserve: resolving fused Gated Delta Net support:
+2026-05-02 12:57:18 [DEBUG]
+ sched_reserve: fused Gated Delta Net (autoregressive) enabled
+sched_reserve: fused Gated Delta Net (chunked) enabled
+2026-05-02 12:57:18 [DEBUG]
+ sched_reserve:      CUDA0 compute buffer size =   538.00 MiB
+sched_reserve:  CUDA_Host compute buffer size =    44.02 MiB
+sched_reserve: graph nodes  = 1867
+sched_reserve: graph splits = 80 (with bs=512), 13 (with bs=1)
+sched_reserve: reserve took 26.05 ms, sched copies = 1
+2026-05-02 12:57:18 [DEBUG]
+ common_init_from_params: KV cache shifting is not supported for this context, disabling KV cache shifting
+common_init_from_params: warming up the model with an empty run - please wait ... (--no-warmup to disable)
+2026-05-02 12:57:18 [DEBUG]
+ clip_model_loader: model name:   Gemma 4 E4B
+clip_model_loader: description:  
+clip_model_loader: GGUF version: 3
+clip_model_loader: alignment:    32
+clip_model_loader: n_tensors:    1411
+clip_model_loader: n_kv:         30
+
+clip_model_loader: has vision encoder
+clip_model_loader: has audio encoder
+2026-05-02 12:57:18 [DEBUG]
+ clip_ctx: CLIP using CUDA0 backend
+2026-05-02 12:57:18 [DEBUG]
+ load_hparams: projector:          gemma4v
+load_hparams: n_embd:             768
+load_hparams: n_head:             12
+load_hparams: n_ff:               3072
+load_hparams: n_layer:            16
+load_hparams: ffn_op:             gelu_quick
+load_hparams: projection_dim:     2560
+
+--- vision hparams ---
+load_hparams: image_size:         224
+load_hparams: patch_size:         16
+load_hparams: has_llava_proj:     0
+load_hparams: minicpmv_version:   0
+load_hparams: n_merge:            3
+load_hparams: n_wa_pattern: 0
+load_hparams: image_min_pixels:   580608
+load_hparams: image_max_pixels:   645120
+
+load_hparams: model size:         945.51 MiB
+load_hparams: metadata size:      0.50 MiB
+2026-05-02 12:57:19 [DEBUG]
+ warmup: warmup with image size = 768 x 768
+2026-05-02 12:57:19 [DEBUG]
+ alloc_compute_meta:      CUDA0 compute buffer size =    94.52 MiB
+alloc_compute_meta:        CPU compute buffer size =     6.77 MiB
+alloc_compute_meta: graph splits = 1, nodes = 940
+warmup: flash attention is enabled
+srv    load_model: loaded multimodal model, 'C:/Users/Raymond/.lmstudio/models/lmstudio-community/gemma-4-E4B-it-GGUF/mmproj-gemma-4-E4B-it-BF16.gguf'
+srv    load_model: initializing slots, n_slots = 4
+2026-05-02 12:57:19 [DEBUG]
+ no implementations specified for speculative decoding
+slot   load_model: id  0 | task -1 | speculative decoding context not initialized
+slot   load_model: id  0 | task -1 | new slot, n_ctx = 4096
+2026-05-02 12:57:19 [DEBUG]
+ no implementations specified for speculative decoding
+slot   load_model: id  1 | task -1 | speculative decoding context not initialized
+slot   load_model: id  1 | task -1 | new slot, n_ctx = 4096
+no implementations specified for speculative decoding
+slot   load_model: id  2 | task -1 | speculative decoding context not initialized
+slot   load_model: id  2 | task -1 | new slot, n_ctx = 4096
+no implementations specified for speculative decoding
+slot   load_model: id  3 | task -1 | speculative decoding context not initialized
+slot   load_model: id  3 | task -1 | new slot, n_ctx = 4096
+srv    load_model: prompt cache is enabled, size limit: 8192 MiB
+srv    load_model: use `--cache-ram 0` to disable the prompt cache
+srv    load_model: for more info see https://github.com/ggml-org/llama.cpp/pull/16391
+2026-05-02 12:57:19 [DEBUG]
+ srv          init: init: idle slots will be saved to prompt cache and cleared upon starting a new task
+2026-05-02 12:57:19 [DEBUG]
+ init: chat template, example_format: 'You are a helpful assistantHelloHi thereHow are you?'
+2026-05-02 12:57:19 [DEBUG]
+ srv          init: init: chat template, thinking = 0
+srv  update_slots: all slots are idle
+2026-05-02 12:57:19  [INFO]
+ [LM STUDIO SERVER] Received OPTIONS request. {}
+2026-05-02 12:57:19 [DEBUG]
+ Received request: POST to /v1/chat/completions with body  {
+  "model": "google/gemma-4-e4b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant."
+    },
+    {
+      "role": "user",
+      "content": "test"
+    }
+  ],
+  "max_tokens": 1,
+  "stream": false
+}
+2026-05-02 12:57:19  [INFO]
+ [google/gemma-4-e4b] Running chat completion on conversation with 2 messages.
+2026-05-02 12:57:19 [DEBUG]
+ LlamaV4::predict slot selection: session_id=<empty> server-selected (LCP/LRU)
+2026-05-02 12:57:19 [DEBUG]
+ slot get_availabl: id  3 | task -1 | selected slot by LRU, t_last = -1
+srv  get_availabl: updating prompt cache
+2026-05-02 12:57:19 [DEBUG]
+ srv          load:  - looking for better prompt, base f_keep = -1.000, sim = 0.000
+srv        update:  - cache state: 0 prompts, 0.000 MiB (limits: 8192.000 MiB, 4096 tokens, 8589934592 est)
+srv  get_availabl: prompt cache update took 0.25 ms
+slot launch_slot_: id  3 | task -1 | sampler chain: logits -> penalties -> ?dry -> ?top-n-sigma -> top-k -> ?typical -> top-p -> min-p -> ?xtc -> ?temp-ext -> dist 
+slot launch_slot_: id  3 | task 0 | processing task, is_child = 0
+slot update_slots: id  3 | task 0 | new prompt, n_ctx_slot = 4096, n_keep = 23, task.n_tokens = 23
+slot update_slots: id  3 | task 0 | cache reuse is not supported - ignoring n_cache_reuse = 256
+slot update_slots: id  3 | task 0 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  3 | task 0 | prompt processing progress, n_tokens = 19, batch.n_tokens = 19, progress = 0.826087
+2026-05-02 12:57:19  [INFO]
+ [google/gemma-4-e4b] Prompt processing progress: 0.0%
+2026-05-02 12:57:19 [DEBUG]
+ slot update_slots: id  3 | task 0 | n_tokens = 19, memory_seq_rm [19, end)
+slot init_sampler: id  3 | task 0 | init sampler, took 0.01 ms, tokens: text = 23, total = 23
+slot update_slots: id  3 | task 0 | prompt processing done, n_tokens = 23, batch.n_tokens = 4
+2026-05-02 12:57:19  [INFO]
+ [google/gemma-4-e4b] Prompt processing progress: 82.6%
+2026-05-02 12:57:19  [INFO]
+ [google/gemma-4-e4b] Prompt processing progress: 100.0%
+2026-05-02 12:57:19 [DEBUG]
+ slot print_timing: id  3 | task 0 | 
+prompt eval time =     149.07 ms /    23 tokens (    6.48 ms per token,   154.29 tokens per second)
+       eval time =       0.00 ms /     1 tokens (    0.00 ms per token, 1000000.00 tokens per second)
+      total time =     149.07 ms /    24 tokens
+slot      release: id  3 | task 0 | stop processing: n_tokens = 23, truncated = 0
+srv  update_slots: all slots are idle
+2026-05-02 12:57:19 [DEBUG]
+ LlamaV4: server assigned slot 3 to task 0
+2026-05-02 12:57:19  [INFO]
+ [google/gemma-4-e4b] Model generated tool calls:  []
+2026-05-02 12:57:19  [INFO]
+ [google/gemma-4-e4b] Generated prediction:  {
+  "id": "chatcmpl-sib4ny4yi5qd1xikp23ixa",
+  "object": "chat.completion",
+  "created": 1777741039,
+  "model": "google/gemma-4-e4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "length"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 23,
+    "completion_tokens": 1,
+    "total_tokens": 24,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e4b"
+}
+2026-05-02 12:57:19 [DEBUG]
+ Received request: GET to /api/v1/models
+2026-05-02 12:57:19  [INFO]
+ Returning 9 models from v1 API
+2026-05-02 12:57:19 [DEBUG]
+ Received request: GET to /api/v1/models
+2026-05-02 12:57:19  [INFO]
+ Returning 9 models from v1 API
+2026-05-02 12:57:19 [DEBUG]
+ Received request: GET to /api/v1/models
+2026-05-02 12:57:19  [INFO]
+ Returning 9 models from v1 API
+2026-05-02 12:57:49 [DEBUG]
+ Received request: GET to /api/v1/models
+2026-05-02 12:57:50  [INFO]
+ Returning 9 models from v1 API
+2026-05-02 12:57:50 [DEBUG]
+ Received request: GET to /api/v1/models
+2026-05-02 12:57:50  [INFO]
+ Returning 9 models from v1 API
+2026-05-02 12:57:50  [INFO]
+ [LM STUDIO SERVER] Received OPTIONS request. {}
+2026-05-02 12:57:50 [DEBUG]
+ Received request: POST to /v1/chat/completions with body  {
+  "model": "google/gemma-4-e4b",
+  "messages": [
+    {
+      "role": "user",
+      "content": "hi"
+    }
+  ],
+  "temperature": 0.3,
+  "stream": true,
+  "thinking": {
+    "type": "disabled"
+  }
+}
+2026-05-02 12:57:50  [INFO]
+ [google/gemma-4-e4b] Running chat completion on conversation with 1 messages.
+2026-05-02 12:57:50  [INFO]
+ [google/gemma-4-e4b] Streaming response...
+2026-05-02 12:57:50 [DEBUG]
+ LlamaV4::predict slot selection: session_id=<empty> server-selected (LCP/LRU)
+2026-05-02 12:57:50 [DEBUG]
+ slot get_availabl: id  3 | task -1 | selected slot by LCP similarity, sim_best = 0.353 (> 0.100 thold), f_keep = 0.261
+srv  get_availabl: updating prompt cache
+srv   prompt_save:  - saving prompt with length 23, total state size = 1.259 MiB
+2026-05-02 12:57:50 [DEBUG]
+ srv          load:  - looking for better prompt, base f_keep = 0.261, sim = 0.353
+srv        update:  - cache state: 1 prompts, 1.259 MiB (limits: 8192.000 MiB, 4096 tokens, 149664 est)
+srv        update:    - prompt 00000321EC3402D0:      23 tokens, checkpoints:  0,     1.259 MiB
+srv  get_availabl: prompt cache update took 1.59 ms
+slot launch_slot_: id  3 | task -1 | sampler chain: logits -> penalties -> ?dry -> ?top-n-sigma -> top-k -> ?typical -> top-p -> min-p -> ?xtc -> temp-ext -> dist 
+slot launch_slot_: id  3 | task 3 | processing task, is_child = 0
+slot update_slots: id  3 | task 3 | new prompt, n_ctx_slot = 4096, n_keep = 17, task.n_tokens = 17
+slot update_slots: id  3 | task 3 | cache reuse is not supported - ignoring n_cache_reuse = 256
+slot update_slots: id  3 | task 3 | n_past = 6, slot.prompt.tokens.size() = 23, seq_id = 3, pos_min = 0, n_swa = 512
+slot update_slots: id  3 | task 3 | forcing full prompt re-processing due to lack of cache data (likely due to SWA or hybrid/recurrent memory, see https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+slot update_slots: id  3 | task 3 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  3 | task 3 | prompt processing progress, n_tokens = 13, batch.n_tokens = 13, progress = 0.764706
+2026-05-02 12:57:50  [INFO]
+ [google/gemma-4-e4b] Prompt processing progress: 0.0%
+2026-05-02 12:57:50 [DEBUG]
+ slot update_slots: id  3 | task 3 | n_tokens = 13, memory_seq_rm [13, end)
+slot init_sampler: id  3 | task 3 | init sampler, took 0.01 ms, tokens: text = 17, total = 17
+slot update_slots: id  3 | task 3 | prompt processing done, n_tokens = 17, batch.n_tokens = 4
+2026-05-02 12:57:50  [INFO]
+ [google/gemma-4-e4b] Prompt processing progress: 76.5%
+2026-05-02 12:57:50  [INFO]
+ [google/gemma-4-e4b] Prompt processing progress: 100.0%
+2026-05-02 12:57:55 [DEBUG]
+ slot print_timing: id  3 | task 3 | 
+prompt eval time =     168.55 ms /    17 tokens (    9.91 ms per token,   100.86 tokens per second)
+       eval time =    5127.44 ms /   214 tokens (   23.96 ms per token,    41.74 tokens per second)
+      total time =    5295.99 ms /   231 tokens
+slot      release: id  3 | task 3 | stop processing: n_tokens = 230, truncated = 0
+srv  update_slots: all slots are idle
+2026-05-02 12:57:55 [DEBUG]
+ LlamaV4: server assigned slot 3 to task 3
+2026-05-02 12:57:55  [INFO]
+ [google/gemma-4-e4b] Finished streaming response

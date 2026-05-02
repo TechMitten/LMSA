@@ -3,7 +3,7 @@ import { messagesContainer, userInput, loadedModelDisplay } from './dom-elements
 import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll, renderSmartReplies, hideSmartReplies, showSmartRepliesLoading, addWebSearchIndicator } from './ui-manager.js';
 import { openHelpModal } from './help.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
-import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOpenAICompatible, getUseOllama, getOpenRouterApiKey, getOpenAICompatibleApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations, getWebSearchEnabled, getConfiguredMaxTokens } from './settings-manager.js';
+import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOpenAICompatible, getUseOllama, getOpenRouterApiKey, getOpenAICompatibleApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations, getWebSearchEnabled, getConfiguredMaxTokens, getReasoningLevel } from './settings-manager.js';
 import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags, normalizeMalformedCodeFences, isAndroidWebView } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
 import { canSendCompletion, recordCompletion, canSendOpenRouterCompletion, recordOpenRouterCompletion, canUseWebSearch, recordWebSearch } from './usage-limiter.js';
@@ -138,23 +138,54 @@ function applyReasoningOptions(requestBody) {
         return requestBody;
     }
 
+    const level = getReasoningLevel() || 'default';
+
+    // Handle default state (no injection, use provider defaults)
+    if (level === 'default') {
+        return requestBody;
+    }
+
+    // 1. OpenRouter reasoning
     if (getUseOpenRouter()) {
-        requestBody.include_reasoning = true;
+        if (level === 'disabled') {
+            requestBody.include_reasoning = false;
+            delete requestBody.reasoning;
+        } else {
+            requestBody.include_reasoning = true;
+            requestBody.reasoning = {
+                effort: level
+            };
+        }
     }
 
-    if (!isLocalLmStudioProvider()) {
-        return requestBody;
+    // 2. Ollama reasoning
+    if (getUseOllama()) {
+        requestBody.reasoning_effort = (level === 'disabled') ? 'none' : level;
     }
 
-    const modelId = typeof requestBody.model === 'string' ? requestBody.model : '';
-    if (modelId && lmStudioThinkingCompatibilityCache.get(modelId) === false) {
-        return requestBody;
-    }
+    // 3. LM Studio reasoning (only if local provider)
+    if (isLocalLmStudioProvider()) {
+        const modelId = typeof requestBody.model === 'string' ? requestBody.model : '';
+        if (modelId && lmStudioThinkingCompatibilityCache.get(modelId) === false) {
+            return requestBody;
+        }
 
-    if (!requestBody.thinking || typeof requestBody.thinking !== 'object') {
-        requestBody.thinking = {
-            type: 'enabled'
-        };
+        if (level === 'disabled') {
+            // Native LM Studio 0.3+ reasoning
+            requestBody.thinking = {
+                type: 'disabled'
+            };
+            // OpenAI-compatible reasoning (some models/endpoints in LM Studio)
+            requestBody.reasoning_effort = 'none';
+        } else {
+            // Native LM Studio 0.3+ reasoning
+            requestBody.thinking = {
+                type: 'enabled',
+                effort: level
+            };
+            // OpenAI-compatible reasoning (some models/endpoints in LM Studio)
+            requestBody.reasoning_effort = level;
+        }
     }
 
     return requestBody;

@@ -941,8 +941,8 @@ export function updateStepIndicators(currentStep) {
     // Get all step indicators
     const stepIndicators = {
         connection: document.getElementById('step-indicator-1'),
-        prompt: document.getElementById('step-indicator-2'),
-        options: document.getElementById('step-indicator-3'),
+        options: document.getElementById('step-indicator-2'),
+        prompt: document.getElementById('step-indicator-3'),
         font: document.getElementById('step-indicator-4'),
         actions: document.getElementById('step-indicator-5')
     };
@@ -966,8 +966,8 @@ export function updateStepIndicators(currentStep) {
     if (subtitleEl) {
         const subtitles = {
             connection: 'Server Connection',
-            prompt: 'System Prompt',
             options: 'Options',
+            prompt: 'System Prompt',
             font: 'Font & Layout',
             actions: 'Actions'
         };
@@ -1048,8 +1048,8 @@ export function initializeSettingsModalNavigation() {
         // Get all step indicators
         const stepIndicators = {
             connection: document.getElementById('step-indicator-1'),
-            prompt: document.getElementById('step-indicator-2'),
-            options: document.getElementById('step-indicator-3'),
+            options: document.getElementById('step-indicator-2'),
+            prompt: document.getElementById('step-indicator-3'),
             font: document.getElementById('step-indicator-4'),
             actions: document.getElementById('step-indicator-5')
         };
@@ -1073,8 +1073,8 @@ export function initializeSettingsModalNavigation() {
         if (subtitleEl) {
             const subtitles = {
                 connection: 'Server Connection',
-                prompt: 'System Prompt',
                 options: 'Options',
+                prompt: 'System Prompt',
                 font: 'Font & Layout',
                 actions: 'Actions'
             };
@@ -1179,12 +1179,12 @@ export function initializeSettingsModalNavigation() {
     };
 
     // Apply the improved event listeners to all navigation buttons
-    addButtonEventListener(toPromptBtn, 'prompt', 'right');
-    addButtonEventListener(backToConnectionBtn, 'connection', 'left');
     addButtonEventListener(toOptionsBtn, 'options', 'right');
-    addButtonEventListener(backToPromptBtn, 'prompt', 'left');
-    addButtonEventListener(toFontBtn, 'font', 'right');
+    addButtonEventListener(backToConnectionBtn, 'connection', 'left');
+    addButtonEventListener(toPromptBtn, 'prompt', 'right');
     addButtonEventListener(backToOptionsBtn, 'options', 'left');
+    addButtonEventListener(toFontBtn, 'font', 'right');
+    addButtonEventListener(backToPromptBtn, 'prompt', 'left');
     addButtonEventListener(toActionsBtn, 'actions', 'right');
     addButtonEventListener(backToFontBtn, 'font', 'left');
 

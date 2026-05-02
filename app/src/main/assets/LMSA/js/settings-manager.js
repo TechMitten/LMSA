@@ -65,6 +65,7 @@ let openAICompatibleEndpoint = ''; // Base URL or chat completions URL
 let openAICompatibleApiKey = ''; // Optional API key for custom endpoint
 let lmStudioApiToken = ''; // Optional LM Studio API token for authenticated servers
 let lmStudioMcpIntegrations = []; // Optional LM Studio native chat integrations payload
+let reasoningLevel = 'default'; // Thinking effort level (default, disabled, low, medium, high)
 
 /**
  * Checks if the application has a valid connection configuration
@@ -816,6 +817,30 @@ export function saveHideThinkingSetting() {
         }
       });
     }
+  }
+}
+
+/**
+ * Loads the reasoning level setting from localStorage
+ */
+export function loadReasoningLevelSetting() {
+  const select = document.getElementById("reasoning-level-select");
+  if (select) {
+    const saved = localStorage.getItem("reasoningLevel");
+    if (saved) {
+      reasoningLevel = saved;
+      select.value = saved;
+    } else {
+      reasoningLevel = "default";
+      select.value = "default";
+      localStorage.setItem("reasoningLevel", "default");
+    }
+
+    // Add event listener for the select
+    select.addEventListener("change", (e) => {
+      reasoningLevel = e.target.value;
+      localStorage.setItem("reasoningLevel", reasoningLevel);
+    });
   }
 }
 
@@ -2062,11 +2087,28 @@ export function loadLMStudioApiTokenSetting() {
 }
 
 /**
+ * Gets the current reasoning level setting.
+ * @returns {string} - The reasoning level (default, disabled, low, medium, high).
+ */
+export function getReasoningLevel() {
+  return reasoningLevel;
+}
+
+/**
  * Gets the current LM Studio API token.
  * @returns {string} - The token string, or empty string if not set.
  */
 export function getLMStudioApiToken() {
   return lmStudioApiToken;
+}
+
+export function setReasoningLevel(level) {
+  reasoningLevel = level;
+  localStorage.setItem('reasoningLevel', level);
+  const select = document.getElementById('reasoning-level-select');
+  if (select) {
+    select.value = level;
+  }
 }
 
 /**
@@ -2435,6 +2477,7 @@ export function loadSettings() {
   initializeTemperature();
   loadMaxTokensSetting();
   loadHideThinkingSetting();
+  loadReasoningLevelSetting();
   loadAutoGenerateTitlesSetting();
   loadWebSearchSetting();
   loadAutoSmartReplySetting();

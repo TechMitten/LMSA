@@ -109,6 +109,7 @@ export const closeSidebarButton = domCache.get('close-sidebar');
 export const loadedModelDisplay = domCache.get('loaded-model');
 export const hideThinkingCheckbox = domCache.get('hide-thinking');
 export const autoGenerateTitlesCheckbox = domCache.get('auto-generate-titles');
+export const reasoningLevelSelect = domCache.get('reasoning-level-select');
 export const openRouterToggleCheckbox = domCache.get('openrouter-toggle');
 export const openRouterApiKeyInput = domCache.get('openrouter-api-key');
 export const openAICompatibleToggleCheckbox = domCache.get('openai-compatible-toggle');

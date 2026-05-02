@@ -2222,16 +2222,14 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     }
 
     #temperature-lock {
-        width: 46px;
-        height: 46px;
-        border-radius: 0.9rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(148, 163, 184, 0.14);
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
     }
 
     body.light-theme #temperature-lock {
-        background: rgba(255, 255, 255, 0.74);
-        border-color: rgba(148, 163, 184, 0.2);
+        background: none !important;
+        border: none !important;
     }
 
     #settings-step-font.active {
@@ -3174,16 +3172,12 @@ body.light-theme #settings-step-connection.active > .connection-settings-panel {
 }
 
 #settings-modal #temperature-lock {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 42px !important;
-    min-width: 42px !important;
-    height: 42px !important;
-    margin-left: 10px !important;
-    border-radius: var(--settings-radius) !important;
-    border: 1px solid var(--settings-border-quiet) !important;
-    background: var(--settings-surface-subtle) !important;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
 }
 
 #settings-navigation-buttons,

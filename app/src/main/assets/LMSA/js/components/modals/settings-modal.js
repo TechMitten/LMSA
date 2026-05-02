@@ -163,44 +163,301 @@ export const settingsModal = `
                     </div>
                 </div>
 
-                <!-- Step 2: System Prompt -->
-                <div id="settings-step-prompt" class="settings-step hidden" data-step-name="Prompt">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium mb-1 system-prompt-heading" role="presentation" aria-hidden="true">
-                            <i class="fas fa-comment-dots mr-2 text-blue-400"></i>System Prompt (Optional):</label>
+                <!-- Step 2: Options -->
+                <div id="settings-step-options" class="settings-step hidden" data-step-name="Options">
+                    <!-- AI Model Settings Group -->
+                    <div class="settings-group group-ai">
+                        <div class="settings-group-title">
+                            <i class="fas fa-microchip"></i>
+                            <span>AI Model Settings</span>
+                        </div>
+                        
+                        <!-- Temperature -->
+                        <div class="settings-item">
+                            <div class="settings-item-header">
+                                <label for="temperature" class="settings-item-label">
+                                    <i class="fas fa-sliders-h"></i>Temperature: <span id="temperature-value">0.3</span>
+                                </label>
+                                <button id="temperature-lock" class="focus:outline-none"
+                                    aria-label="Toggle Temperature Lock" title="Temperature is locked (click to unlock)">
+                                    <i class="fas fa-lock text-red-400"></i>
+                                </button>
+                            </div>
+                            <p class="settings-item-description">Controls randomness. Lower is more focused and deterministic, higher is more creative.</p>
+                            <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.3"
+                                class="w-full bg-darkTertiary text-gray-100 rounded-lg appearance-none cursor-pointer"
+                                disabled>
+                        </div>
 
+                        <!-- Reasoning Level -->
+                        <div class="settings-item">
+                            <div class="settings-item-header">
+                                <label for="reasoning-level-select" class="settings-item-label">
+                                    <i class="fas fa-microchip"></i>Reasoning Level
+                                </label>
+                            </div>
+                            <p class="settings-item-description">Controls thinking effort for reasoning models. Higher levels improve logic but take longer.</p>
+                            <select id="reasoning-level-select"
+                                class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500">
+                                <option value="default" selected>Default</option>
+                                <option value="disabled">Disabled</option>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+
+                        <!-- Max Output Tokens -->
+                        <div class="settings-item max-tokens-setting">
+                            <div class="settings-item-header">
+                                <label for="max-tokens-input" class="settings-item-label">
+                                    <i class="fas fa-text-width"></i>Max Output Tokens
+                                </label>
+                            </div>
+                            <p class="settings-item-description">Limits how long the AI response can be. Premium feature.</p>
+                            <div class="flex items-center max-tokens-input-row">
+                                <input type="text" id="max-tokens-input" min="1" step="1"
+                                    class="bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500 max-tokens-input-field"
+                                    placeholder="Server default" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" data-form-type="other">
+                                <button id="clear-max-tokens-btn" type="button"
+                                    class="professional-button flex items-center justify-center gap-2 px-4 h-[42px] shrink-0 max-tokens-default-btn">
+                                    <i class="fas fa-rotate-left text-xs"></i>
+                                    <span>Default</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Hide Thinking -->
+                        <div class="settings-item">
+                            <div class="settings-item-header">
+                                <label for="hide-thinking" class="settings-item-label">
+                                    <i class="fas fa-eye-slash"></i>Hide Thinking Text
+                                </label>
+                                <div class="toggle-container">
+                                    <input type="checkbox" id="hide-thinking">
+                                    <div class="toggle-switch"></div>
+                                    <div class="toggle-dot"></div>
+                                </div>
+                            </div>
+                            <p class="settings-item-description">Hides the internal "thought process" block often seen in reasoning models.</p>
+                        </div>
+                    </div>
+
+                    <!-- Smart Conversational Tools Group -->
+                    <div class="settings-group group-smart">
+                        <div class="settings-group-title">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>Smart Features</span>
+                        </div>
+
+                        <!-- Generate Chat Titles -->
+                        <div class="settings-item" id="auto-generate-titles-setting">
+                            <div class="settings-item-header">
+                                <label for="auto-generate-titles" class="settings-item-label">
+                                    <i class="fas fa-magic"></i>Generate Chat Titles
+                                </label>
+                                <div class="toggle-container">
+                                    <input type="checkbox" id="auto-generate-titles">
+                                    <div class="toggle-switch"></div>
+                                    <div class="toggle-dot"></div>
+                                </div>
+                            </div>
+                            <p class="settings-item-description">Automatically generates a title for your chat after the first message.</p>
+                        </div>
+
+                        <!-- Enable Smart Reply -->
+                        <div class="settings-item" id="smart-reply-setting">
+                            <div class="settings-item-header">
+                                <label for="auto-smart-reply" class="settings-item-label">
+                                    <i class="fas fa-reply"></i>Enable Smart Reply
+                                </label>
+                                <div class="toggle-container">
+                                    <input type="checkbox" id="auto-smart-reply">
+                                    <div class="toggle-switch"></div>
+                                    <div class="toggle-dot"></div>
+                                </div>
+                            </div>
+                            <p class="settings-item-description">Suggests quick reply options based on the conversation context.</p>
+                        </div>
+
+                        <!-- Enable Web Search -->
+                        <div class="settings-item" id="web-search-setting">
+                            <div class="settings-item-header">
+                                <label for="web-search-toggle" class="settings-item-label">
+                                    <i class="fas fa-globe"></i>Enable Web Search
+                                </label>
+                                <div class="toggle-container">
+                                    <input type="checkbox" id="web-search-toggle">
+                                    <div class="toggle-switch"></div>
+                                    <div class="toggle-dot"></div>
+                                </div>
+                            </div>
+                            <p class="settings-item-description">Allows the AI to search the internet to provide real-time information.</p>
+                        </div>
+                    </div>
+
+                    <!-- Chat Interface Group -->
+                    <div class="settings-group group-interface">
+                        <div class="settings-group-title">
+                            <i class="fas fa-desktop"></i>
+                            <span>Chat Interface</span>
+                        </div>
+
+                        <!-- Auto-Scroll -->
+                        <div class="settings-item">
+                            <div class="settings-item-header">
+                                <label for="auto-scroll" class="settings-item-label">
+                                    <i class="fas fa-arrow-down"></i>Auto-Scroll to Bottom
+                                </label>
+                                <div class="toggle-container">
+                                    <input type="checkbox" id="auto-scroll">
+                                    <div class="toggle-switch"></div>
+                                    <div class="toggle-dot"></div>
+                                </div>
+                            </div>
+                            <p class="settings-item-description">Automatically scrolls the chat as new text arrives from the model.</p>
+                        </div>
+
+                        <!-- Enter for New Line -->
+                        <div class="settings-item">
+                            <div class="settings-item-header">
+                                <label for="enter-newline-toggle" class="settings-item-label">
+                                    <i class="fas fa-keyboard"></i>Enter for New Line
+                                </label>
+                                <div class="toggle-container">
+                                    <input type="checkbox" id="enter-newline-toggle">
+                                    <div class="toggle-switch"></div>
+                                    <div class="toggle-dot"></div>
+                                </div>
+                            </div>
+                            <p class="settings-item-description">Pressing Enter adds a newline instead of sending the message.</p>
+                        </div>
+
+                        <!-- Show Model Name -->
+                        <div class="settings-item">
+                            <div class="settings-item-header">
+                                <label for="show-model-label" class="settings-item-label">
+                                    <i class="fas fa-robot"></i>Show Model Name
+                                </label>
+                                <div class="toggle-container">
+                                    <input type="checkbox" id="show-model-label">
+                                    <div class="toggle-switch"></div>
+                                    <div class="toggle-dot"></div>
+                                </div>
+                            </div>
+                            <p class="settings-item-description">Displays which AI model generated the specific response.</p>
+                        </div>
+
+                        <!-- Show Chat Scrollbar -->
+                        <div class="settings-item">
+                            <div class="settings-item-header">
+                                <label for="show-chat-scrollbar" class="settings-item-label">
+                                    <i class="fas fa-bars"></i>Show Chat Scrollbar
+                                </label>
+                                <div class="toggle-container">
+                                    <input type="checkbox" id="show-chat-scrollbar">
+                                    <div class="toggle-switch"></div>
+                                    <div class="toggle-dot"></div>
+                                </div>
+                            </div>
+                            <p class="settings-item-description">Toggles the visibility of the scrollbar in the chat area.</p>
+                        </div>
+                    </div>
+
+
+                    <!-- Device & Accessibility Group -->
+                    <div class="settings-group group-device">
+                        <div class="settings-group-title">
+                            <i class="fas fa-tools"></i>
+                            <span>Device & Voice</span>
+                        </div>
+
+                        <!-- Require Biometric Unlock -->
+                        <div class="settings-item" id="biometric-setting-container">
+                            <div class="settings-item-header">
+                                <label for="require-biometric" class="settings-item-label">
+                                    <i class="fas fa-fingerprint"></i>Require Biometric Unlock
+                                </label>
+                                <div class="toggle-container">
+                                    <input type="checkbox" id="require-biometric">
+                                    <div class="toggle-switch"></div>
+                                    <div class="toggle-dot"></div>
+                                </div>
+                            </div>
+                            <p class="settings-item-description">Prompts for fingerprint or PIN when opening the application.</p>
+                        </div>
+
+                        <!-- TTS Voice -->
+                        <div class="settings-item">
+                            <div class="settings-item-header">
+                                <label for="tts-voice-select" class="settings-item-label">
+                                    <i class="fas fa-microphone"></i>TTS Voice
+                                </label>
+                            </div>
+                            <p class="settings-item-description">Select the voice used for Text-to-Speech playback.</p>
+                            <select id="tts-voice-select"
+                                class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500">
+                                <option value="">Loading voices...</option>
+                            </select>
+                        </div>
+
+                        <!-- Use Ollama -->
+                        <div class="settings-item">
+                            <div class="settings-item-header">
+                                <label for="ollama-toggle" class="settings-item-label">
+                                    <i class="fas fa-network-wired"></i>Use Ollama Connection
+                                </label>
+                                <div class="toggle-container">
+                                    <input type="checkbox" id="ollama-toggle">
+                                    <div class="toggle-switch"></div>
+                                    <div class="toggle-dot"></div>
+                                </div>
+                            </div>
+                            <p class="settings-item-description">Specialized handling for local Ollama server instances.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: System Prompt -->
+                <div id="settings-step-prompt" class="settings-step hidden" data-step-name="Prompt">
+                    <div class="settings-group group-ai">
+                        <div class="settings-group-title">
+                            <i class="fas fa-comment-dots"></i>
+                            <span>System Prompt</span>
+                        </div>
+                        
                         <!-- Hidden real textarea that holds the actual value -->
                         <textarea id="system-prompt" class="hidden" rows="4"></textarea>
 
                         <!-- Display current prompt value (non-interactive) -->
                         <div id="system-prompt-preview"
-                               class="border p-3 rounded-lg min-h-20 mb-2 whitespace-pre-wrap"
+                               class="border p-4 rounded-xl min-h-24 mb-4 whitespace-pre-wrap"
                             style="background-color: var(--settings-input-bg); color: var(--settings-input-text); border-color: var(--settings-input-border);">
                             <span class="italic" id="prompt-placeholder" style="color: var(--text-muted);"></span>
                         </div>
 
                         <!-- Edit and Save buttons -->
-                        <div class="flex gap-2">
+                        <div class="flex gap-3">
                             <button id="edit-system-prompt-btn"
                                   class="professional-button flex items-center justify-center gap-3 flex-1 h-12">
                                 <i class="fas fa-edit text-sm"></i>
-                                <span>Edit</span>
+                                <span>Edit Prompt</span>
                             </button>
                             <button id="save-system-prompt-btn"
                                   class="professional-button flex items-center justify-center gap-3 flex-1 h-12">
                                 <i class="fas fa-save text-sm"></i>
-                                                                <span>Save to list</span>
+                                <span>Save Preset</span>
                             </button>
                         </div>
 
-                        <section id="saved-prompts-section" class="mt-4" aria-labelledby="saved-prompts-section-title">
+                        <section id="saved-prompts-section" class="mt-6 pt-6 border-t border-gray-700/30" aria-labelledby="saved-prompts-section-title">
                             <div class="saved-prompts-section-header">
                                 <div>
-                                    <p class="saved-prompts-section-eyebrow">Saved Prompts</p>
-                                    <h3 id="saved-prompts-section-title" class="saved-prompts-section-title">Reusable System Prompts</h3>
+                                    <p class="saved-prompts-section-eyebrow">Prompt Library</p>
+                                    <h3 id="saved-prompts-section-title" class="saved-prompts-section-title">Reusable Personas</h3>
                                 </div>
                             </div>
-                            <p class="saved-prompts-section-description">Restore, edit, or delete saved prompts without leaving this page.</p>
+                            <p class="saved-prompts-section-description">Quickly switch between different AI personalities and instructions.</p>
                             <div id="saved-prompts-list" class="saved-prompts-section-list" aria-live="polite">
                                 <!-- Saved prompts will be dynamically inserted here -->
                             </div>
@@ -208,261 +465,86 @@ export const settingsModal = `
                     </div>
                 </div>
 
-                <!-- Step 3: Options -->
-                <div id="settings-step-options" class="settings-step hidden" data-step-name="Options">
-                    <div class="mb-4">
-                        <label for="temperature" class="block text-sm font-medium mb-1">
-                            <i class="fas fa-sliders-h mr-2 text-blue-400"></i>Temperature: <span
-                                id="temperature-value">0.3</span></label>
-                        <div class="flex items-center">
-                            <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.3"
-                                class="w-full bg-darkTertiary text-gray-100 rounded-lg appearance-none cursor-pointer"
-                                disabled>
-                            <button id="temperature-lock" class="ml-2 text-gray-100 focus:outline-none p-2"
-                                aria-label="Toggle Temperature Lock" title="Temperature is locked (click to unlock)">
-                                <i class="fas fa-lock text-red-400"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="mb-5 max-tokens-setting">
-                        <label for="max-tokens-input" class="block text-sm font-medium max-tokens-setting-label">
-                            <span class="max-tokens-label-main">
-                                <i class="fas fa-text-width text-blue-400"></i>
-                                <span>Max Output Tokens</span>
-                            </span>
-                        </label>
-                        <div class="flex items-center max-tokens-input-row">
-                            <input type="text" id="max-tokens-input" min="1" step="1"
-                                class="bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500 max-tokens-input-field"
-                                placeholder="Leave blank to use server default" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" data-form-type="other">
-                            <button id="clear-max-tokens-btn" type="button"
-                                class="professional-button flex items-center justify-center gap-2 px-4 h-[42px] shrink-0 max-tokens-default-btn">
-                                <i class="fas fa-rotate-left text-xs"></i>
-                                <span>Default</span>
-                            </button>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1 max-tokens-help-text">Premium feature. Applies to main chat requests. Free users use the provider or model default.</p>
-                    </div>
-
-                    <div class="mb-5" id="biometric-setting-container">
-                        <div class="flex justify-between items-center mb-2">
-                            <label for="require-biometric" class="text-sm font-medium">
-                                <i class="fas fa-fingerprint mr-2 text-blue-400"></i>Require Biometric Unlock</label>
-                            <div class="toggle-container">
-                                <input type="checkbox" id="require-biometric">
-                                <div class="toggle-switch"></div>
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">When enabled, you must authenticate to open the app. Relies on device biometrics or credentials.</p>
-                    </div>
-
-                    <div class="mb-5">
-                        <div class="flex justify-between items-center mb-2">
-                            <label for="ollama-toggle" class="text-sm font-medium">
-                                <i class="fas fa-network-wired mr-2 text-blue-400"></i>Use Ollama Connection</label>
-                            <div class="toggle-container">
-                                <input type="checkbox" id="ollama-toggle">
-                                <div class="toggle-switch"></div>
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">Enable to communicate with a local Ollama server (default
-                            port 11434). Disables manual model loading.</p>
-                    </div>
-                    <div class="mb-5">
-                        <div class="flex justify-between items-center mb-2">
-                            <label for="hide-thinking" class="text-sm font-medium">
-                                <i class="fas fa-eye-slash mr-2 text-blue-400"></i>Hide Thinking Text</label>
-                            <div class="toggle-container">
-                                <input type="checkbox" id="hide-thinking">
-                                <div class="toggle-switch"></div>
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">When enabled, hides text between &lt;think&gt; tags in
-                            model responses</p>
-                    </div>
-                    <div class="mb-5" id="auto-generate-titles-setting">
-                        <div class="flex justify-between items-center mb-2">
-                            <label for="auto-generate-titles" class="text-sm font-medium">
-                                <i class="fas fa-magic mr-2 text-blue-400"></i>Generate Chat Titles</label>
-                            <div class="toggle-container">
-                                <input type="checkbox" id="auto-generate-titles">
-                                <div class="toggle-switch"></div>
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <p id="auto-generate-titles-description" class="text-xs text-gray-400 mt-1">When enabled, the first AI reply includes a hidden short title that LMSA saves to your chat list without making a second API call.</p>
-                    </div>
-
-                    <div class="mb-5" id="smart-reply-setting">
-                        <div class="flex justify-between items-center mb-2">
-                            <label for="auto-smart-reply" class="text-sm font-medium">
-                                <i class="fas fa-reply mr-2 text-blue-400"></i>Enable Smart Reply</label>
-                            <div class="toggle-container">
-                                <input type="checkbox" id="auto-smart-reply">
-                                <div class="toggle-switch"></div>
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <p id="smart-reply-description" class="text-xs text-gray-400 mt-1">When enabled, the LLM will analyze the conversation and suggest interactive tap-to-reply options above the chat input.</p>
-                    </div>
-
-                    <div class="mb-5" id="web-search-setting">
-                        <div class="flex justify-between items-center mb-2">
-                            <label for="web-search-toggle" class="text-sm font-medium">
-                                <i class="fas fa-globe mr-2 text-blue-400"></i>Enable Web Search</label>
-                            <div class="toggle-container">
-                                <input type="checkbox" id="web-search-toggle">
-                                <div class="toggle-switch"></div>
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">When enabled, the LLM will search the web using an API that queries popular search engines and other services to augment its knowledge before answering.</p>
-                    </div>
-
-                    <div class="mb-5">
-                        <div class="flex justify-between items-center mb-2">
-                            <label for="auto-scroll" class="text-sm font-medium">
-                                <i class="fas fa-arrow-down mr-2 text-blue-400"></i>Auto-Scroll to Bottom</label>
-                            <div class="toggle-container">
-                                <input type="checkbox" id="auto-scroll">
-                                <div class="toggle-switch"></div>
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">When enabled, automatically scrolls to the bottom of the
-                            chat while the LLM is streaming its response.</p>
-                    </div>
-
-                    <div class="mb-5">
-                        <div class="flex justify-between items-center mb-2">
-                            <label for="enter-newline-toggle" class="text-sm font-medium">
-                                <i class="fas fa-keyboard mr-2 text-blue-400"></i>Enter for New Line</label>
-                            <div class="toggle-container">
-                                <input type="checkbox" id="enter-newline-toggle">
-                                <div class="toggle-switch"></div>
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">When enabled, Enter creates a new line. Use Shift+Enter or
-                            the send button to send message.</p>
-                    </div>
-
-                    <div class="mb-5">
-                        <div class="flex justify-between items-center mb-2">
-                            <label for="show-model-label" class="text-sm font-medium">
-                                <i class="fas fa-robot mr-2 text-blue-400"></i>Show Model Name</label>
-                            <div class="toggle-container">
-                                <input type="checkbox" id="show-model-label">
-                                <div class="toggle-switch"></div>
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">When enabled, shows the AI model name used to generate each response at the bottom of the message bubble.</p>
-                    </div>
-
-                    <div class="mb-5">
-                        <div class="flex justify-between items-center mb-2">
-                            <label for="show-chat-scrollbar" class="text-sm font-medium">
-                                <i class="fas fa-bars mr-2 text-blue-400"></i>Show Chat Scrollbar</label>
-                            <div class="toggle-container">
-                                <input type="checkbox" id="show-chat-scrollbar">
-                                <div class="toggle-switch"></div>
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">When enabled, shows a scrollbar on the side of the chat message area.</p>
-                    </div>
-
-                    <div class="mb-5">
-                        <label for="tts-voice-select" class="block text-sm font-medium mb-2">
-                            <i class="fas fa-microphone mr-2 text-blue-400"></i>TTS Voice</label>
-                        <select id="tts-voice-select"
-                            class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500">
-                            <option value="">Loading voices...</option>
-                        </select>
-                        <p class="text-xs text-gray-400 mt-1">Free users can use unlimited TTS with the default voice. Premium unlocks alternate voices.
-                        </p>
-                    </div>
-
-                </div>
-
                 <!-- Step 4: Font -->
                 <div id="settings-step-font" class="settings-step hidden" data-step-name="Font">
-                    <div class="mb-5">
-                        <label for="chat-font-family-select" class="block text-sm font-medium mb-2">
-                            <i class="fas fa-font mr-2 text-blue-400"></i>Chat Bubble Font</label>
-                        <select id="chat-font-family-select"
-                            class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500">
-                            <option value="system-ui, sans-serif">System Default</option>
-                            <option value="Roboto, sans-serif">Roboto</option>
-                            <option value="Arial, Helvetica, sans-serif">Sans-Serif (Arial)</option>
-                            <option value="Georgia, serif">Serif (Georgia)</option>
-                            <option value="'Courier New', monospace">Monospace (Courier)</option>
-                        </select>
-                        <p class="text-xs text-gray-400 mt-1">Select the font used in chat message bubbles</p>
-                    </div>
+                    <div class="settings-group group-font">
+                        <div class="settings-group-title">
+                            <i class="fas fa-font"></i>
+                            <span>Typography</span>
+                        </div>
 
-                    <div class="mb-5">
-                        <label for="chat-font-size-select" class="block text-sm font-medium mb-2">
-                            <i class="fas fa-text-height mr-2 text-blue-400"></i>Chat Bubble Font Size</label>
-                        <select id="chat-font-size-select"
-                            class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500">
-                            <option value="12px">Extra Small</option>
-                            <option value="14px">Small</option>
-                            <option value="16px" selected>Medium (Default)</option>
-                            <option value="20px">Large</option>
-                            <option value="24px">Extra Large</option>
-                        </select>
-                        <p class="text-xs text-gray-400 mt-1">Select the text size used in chat message bubbles</p>
+                        <!-- Font Family -->
+                        <div class="settings-item">
+                            <div class="settings-item-header">
+                                <label for="chat-font-family-select" class="settings-item-label">
+                                    <i class="fas fa-font"></i>Chat Bubble Font
+                                </label>
+                            </div>
+                            <p class="settings-item-description">Select the font used in chat message bubbles.</p>
+                            <select id="chat-font-family-select"
+                                class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500">
+                                <option value="system-ui, sans-serif">System Default</option>
+                                <option value="Roboto, sans-serif">Roboto</option>
+                                <option value="Arial, Helvetica, sans-serif">Sans-Serif (Arial)</option>
+                                <option value="Georgia, serif">Serif (Georgia)</option>
+                                <option value="'Courier New', monospace">Monospace (Courier)</option>
+                            </select>
+                        </div>
+
+                        <!-- Font Size -->
+                        <div class="settings-item">
+                            <div class="settings-item-header">
+                                <label for="chat-font-size-select" class="settings-item-label">
+                                    <i class="fas fa-text-height"></i>Chat Bubble Font Size
+                                </label>
+                            </div>
+                            <p class="settings-item-description">Adjust the text size for optimal readability.</p>
+                            <select id="chat-font-size-select"
+                                class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500">
+                                <option value="12px">Extra Small</option>
+                                <option value="14px">Small</option>
+                                <option value="16px" selected>Medium (Default)</option>
+                                <option value="20px">Large</option>
+                                <option value="24px">Extra Large</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Step 5: Actions -->
                 <div id="settings-step-actions" class="settings-step hidden" data-step-name="Actions">
-                    <div class="mb-4">
-                        <button id="clear-chat" class="settings-action-button">
-                            <i class="fas fa-trash-alt text-sm"></i>
-                            <span>Clear All Chats</span>
-                        </button>
+                    <div class="settings-group group-danger">
+                        <div class="settings-group-title">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>System Actions</span>
+                        </div>
+                        <div class="space-y-4">
+                            <button id="clear-chat" class="settings-action-button">
+                                <i class="fas fa-trash-alt text-sm"></i>
+                                <span>Clear All Chats</span>
+                            </button>
 
-                        <button id="reset-app" class="settings-action-button">
-                            <i class="fas fa-exclamation-triangle text-sm"></i>
-                            <span>Reset App</span>
-                        </button>
+                            <button id="reset-app" class="settings-action-button">
+                                <i class="fas fa-exclamation-triangle text-sm"></i>
+                                <span>Reset App</span>
+                            </button>
 
-                        <button id="clear-openrouter-key" class="settings-action-button">
-                            <i class="fas fa-key text-sm"></i>
-                            <span>Clear OpenRouter Key</span>
-                        </button>
+                            <button id="clear-openrouter-key" class="settings-action-button">
+                                <i class="fas fa-key text-sm"></i>
+                                <span>Clear OpenRouter Key</span>
+                            </button>
 
-                        <button id="clear-lmstudio-token" class="settings-action-button">
-                            <i class="fas fa-key text-sm"></i>
-                            <span>Clear LM Studio Token</span>
-                        </button>
+                            <button id="clear-lmstudio-token" class="settings-action-button">
+                                <i class="fas fa-key text-sm"></i>
+                                <span>Clear LM Studio Token</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <!-- Navigation buttons container -->
                 <div id="settings-navigation-buttons" class="mt-5 mb-2">
                     <!-- Connection step buttons -->
                     <div class="flex justify-end navigation-buttons" id="connection-step-buttons">
-                        <button id="to-prompt-step-btn"
-                               class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
-                            <i class="fas fa-arrow-right text-sm"></i>
-                            <span class="button-text">Next</span>
-                        </button>
-                    </div>
-
-                    <!-- Prompt step buttons -->
-                    <div class="justify-between navigation-buttons hidden" id="prompt-step-buttons">
-                        <button id="back-to-connection-btn"
-                               class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
-                            <i class="fas fa-arrow-left text-sm"></i>
-                            <span class="button-text">Back</span>
-                        </button>
                         <button id="to-options-step-btn"
                                class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
                             <i class="fas fa-arrow-right text-sm"></i>
@@ -472,7 +554,21 @@ export const settingsModal = `
 
                     <!-- Options step buttons -->
                     <div class="justify-between navigation-buttons hidden" id="options-step-buttons">
-                        <button id="back-to-prompt-btn"
+                        <button id="back-to-connection-btn"
+                               class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
+                            <i class="fas fa-arrow-left text-sm"></i>
+                            <span class="button-text">Back</span>
+                        </button>
+                        <button id="to-prompt-step-btn"
+                               class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
+                            <i class="fas fa-arrow-right text-sm"></i>
+                            <span class="button-text">Next</span>
+                        </button>
+                    </div>
+
+                    <!-- Prompt step buttons -->
+                    <div class="justify-between navigation-buttons hidden" id="prompt-step-buttons">
+                        <button id="back-to-options-btn"
                                class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
                             <i class="fas fa-arrow-left text-sm"></i>
                             <span class="button-text">Back</span>
@@ -486,7 +582,7 @@ export const settingsModal = `
 
                     <!-- Font step buttons -->
                     <div class="justify-between navigation-buttons hidden" id="font-step-buttons">
-                        <button id="back-to-options-btn"
+                        <button id="back-to-prompt-btn"
                                class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
                             <i class="fas fa-arrow-left text-sm"></i>
                             <span class="button-text">Back</span>
