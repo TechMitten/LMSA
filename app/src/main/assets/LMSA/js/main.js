@@ -18,7 +18,6 @@ import { initializeSettingsModal } from './settings-modal-manager.js';
 import { initializeIpPortConfirmationModal } from './ip-port-confirmation-modal.js';
 import { initializeChatScrollbar, refreshChatScrollbar } from './chat-scrollbar.js';
 import { closePremiumModal, initPremiumModal, isPremiumModalLocked, openPremiumModal } from './components/modals/premium-modal.js';
-import { initUsageStatsModal, openUsageStatsModal } from './components/modals/usage-stats-modal.js';
 import { initSmartReplyWarningModal } from './components/modals/smart-reply-warning-modal.js';
 import { initOpenRouterWarningModal } from './components/modals/openrouter-warning-modal.js';
 import { initWebSearchWarningModal } from './components/modals/web-search-warning-modal.js';
@@ -734,9 +733,7 @@ export async function initializeApp() {
     initializeSettingsModal();
     initializeIpPortConfirmationModal();
     initPremiumModal();
-    initUsageStatsModal();
     window.openPremiumModal = openPremiumModal;
-    window.openUsageStatsModal = openUsageStatsModal;
     document.addEventListener('completionLimitReached', () => openPremiumModal('Chat Messages'));
     document.addEventListener('webSearchLimitReached', () => openPremiumModal('Web Search'));
     // OpenRouter is currently unmetered by app tier; keep listener for forward compatibility.

@@ -81,11 +81,11 @@ export const premiumModal = `
                         <div class="benefit-item" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%); padding: 0.625rem; border-radius: 0.75rem; border: 1px solid rgba(16, 185, 129, 0.2); transition: all 0.3s ease;">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 <div class="benefit-icon" style="width: 1.75rem; height: 1.75rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 0.55rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                    <i class="fas fa-infinity" style="color: white; font-size: 0.8rem;"></i>
+                                    <i class="fas fa-sliders-h" style="color: white; font-size: 0.8rem;"></i>
                                 </div>
                                 <div style="text-align: left; min-width: 0;">
-                                    <p class="benefit-title" style="color: var(--text-primary); font-weight: 600; font-size: 0.8rem; margin: 0;">Unlimited Usage</p>
-                                    <p class="benefit-subtitle" style="color: var(--text-secondary); font-size: 0.7rem; margin: 0.1rem 0 0 0; word-break: break-word;">No daily limits, chat as much as you want</p>
+                                    <p class="benefit-title" style="color: var(--text-primary); font-weight: 600; font-size: 0.8rem; margin: 0;">Token Controls</p>
+                                    <p class="benefit-subtitle" style="color: var(--text-secondary); font-size: 0.7rem; margin: 0.1rem 0 0 0; word-break: break-word;">Adjust max output tokens from the app</p>
                                 </div>
                             </div>
                         </div>
@@ -487,7 +487,7 @@ function getPremiumFeatureNotice(featureName, options = {}) {
     }
 
     if (featureName === 'Chat Messages') {
-        return `You've reached your daily limit for Chat Messages!`;
+        return `Chat Messages are available on the free plan with no daily cap.`;
     }
 
     return `<span id="premium-feature-name">${featureName}</span> is a premium feature!`;

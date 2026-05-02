@@ -12,7 +12,7 @@ export const helpModal = `
                         <i class="fas fa-question-circle text-white text-lg"></i>
                     </div>
                     <span
-                        class="bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">LMSA
+                        class="bg-linear-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">LMSA
                         Help</span>
                 </h2>
                 <div class="flex items-center h-9">
@@ -21,7 +21,7 @@ export const helpModal = `
                     </button>
                 </div>
             </div>
-            <div class="overflow-y-auto flex-grow p-6 pt-4"
+            <div class="overflow-y-auto grow p-6 pt-4"
                 style="-webkit-overflow-scrolling: touch; touch-action: auto; overscroll-behavior: contain;"
                 id="help-modal-content">
                 <div class="space-y-6">
@@ -533,7 +533,7 @@ export const helpModal = `
                                     class="fas fa-text-width mr-2"></i>Max Output Tokens</h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">
                                 LMSA includes a <strong>Max Output Tokens</strong> setting in <strong>Settings &gt; Options</strong>.
-                                It gives you a simple way to cap how long the model is allowed to keep generating during normal chat.
+                                This is a <strong>Premium-only</strong> control that lets you cap how long the model is allowed to keep generating during normal chat.
                             </p>
 
                             <div class="space-y-4">
@@ -542,9 +542,10 @@ export const helpModal = `
                                             class="fas fa-sliders-h mr-2"></i>How to Use It</p>
                                     <ul class="list-disc pl-5 mt-2 space-y-1"
                                         style="color: var(--text-primary); font-size: 0.9em;">
-                                        <li>Open <strong>Settings</strong>, go to <strong>Options</strong>, and find <strong>Max Output Tokens</strong>.</li>
+                                        <li>Premium users can open <strong>Settings</strong>, go to <strong>Options</strong>, and find <strong>Max Output Tokens</strong>.</li>
                                         <li>Enter a whole number greater than <strong>0</strong> to set a hard ceiling for the model's reply length.</li>
                                         <li>Tap <strong>Default</strong>, or leave the field blank, to remove LMSA's override and let the active provider decide.</li>
+                                        <li>Free users stay on the provider or model default because in-app token adjustment is reserved for Premium.</li>
                                     </ul>
                                 </div>
 
@@ -1119,18 +1120,22 @@ export const helpModal = `
                         <section id="section-limits">
                         <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #22c55e;"><i
                             class="fas fa-chart-line mr-2"></i>Usage Limits</h3>
+                        <p style="color: var(--text-primary); margin-bottom: 1rem;">
+                            Chat usage is unlimited on both the Free and Premium tiers. Current limits mainly apply to web search and which advanced features are unlocked.
+                        </p>
                         
                         <div class="space-y-4">
                             <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #22c55e;"><i
                                         class="fas fa-user-circle mr-2"></i>Free Users</p>
                                 <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
-                                    Free users have the following limits and features:</p>
+                                    Free users have unlimited chats with the following limits and feature access:</p>
                                 <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
-                                    <li><strong>Local Chat Limit: 15 per day</strong> — After reaching this limit, you'll enter a cooldown period</li>
+                                    <li><strong>Chats:</strong> Unlimited chat usage</li>
                                     <li><strong>Web Search Limit: 2 per day</strong> — Free users can augment two prompts per day with real-time web results</li>
-                                    <li><strong>Automatic Reset: Midnight (Local Time)</strong> — Your chat completion counts reset at midnight in your timezone, allowing you to chat freely again</li>
+                                    <li><strong>Automatic Reset: Midnight (Local Time)</strong> — Web search counts reset at midnight in your timezone</li>
 
+                                    <li><strong>Max Output Tokens in App:</strong> Not available on the Free tier; free users use the provider or model default</li>
                                     <li><strong>File Attachments:</strong> Not available on the Free tier; upgrade to Premium to attach files to chats</li>
                                     <li><strong>Offline Use (Local LM Studio/Ollama):</strong> Not available on the Free tier; upgrade to Premium for full offline access</li>
                                     <li><strong>TTS (Text-to-Speech):</strong> Unlimited with the default voice; upgrade to Premium to unlock alternate voices</li>
@@ -1142,11 +1147,12 @@ export const helpModal = `
                                 <p class="font-medium flex items-center" style="color: #f59e0b;"><i
                                         class="fas fa-crown mr-2"></i>Premium Users</p>
                                 <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
-                                    Premium users enjoy unlimited access with the following benefits:</p>
+                                    Premium users keep unlimited chats and unlock the following benefits:</p>
                                     <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
-                                    <li><strong>Unlimited Chat Completions</strong> — No daily limits or cooldown periods</li>
+                                    <li><strong>Chats:</strong> Unlimited chat usage</li>
                                     <li><strong>Unlimited Web Search</strong> — No daily cap on real-time web-augmented prompts</li>
 
+                                    <li><strong>Max Output Tokens in App:</strong> Adjust max output tokens directly from <strong>Settings &gt; Options</strong></li>
                                     <li><strong>File Attachments:</strong> Attach files (documents, code, data) to chats for analysis</li>
                                     <li><strong>Offline Use (Local LM Studio/Ollama):</strong> Full access to use local LM Studio and Ollama servers with no internet connection required</li>
                                     <li><strong>OpenRouter Access:</strong> Full access to cloud models via OpenRouter</li>
@@ -1160,11 +1166,11 @@ export const helpModal = `
                             <div class="p-3 rounded-lg mt-4" style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #3b82f6;"><i
                                         class="fas fa-lightbulb mr-2"></i>How to Upgrade</p>
-                                <p style="color: var(--text-primary); margin-top: 0.5rem;">To unlock Premium benefits and remove the chat completion limit:</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">To unlock Premium benefits:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>Tap the <strong>Unlock Premium</strong> button in the Premium Settings menu</li>
                                     <li>Complete a one-time lifetime purchase</li>
-                                    <li>Enjoy unlimited chats forever</li>
+                                    <li>Unlock premium-only features like offline access, file attachments, and in-app token controls</li>
                                 </ul>
                             </div>
                         </div>

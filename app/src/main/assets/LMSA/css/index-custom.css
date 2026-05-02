@@ -102,16 +102,17 @@ body.light-theme header::before {
 
 /* AI Provider Dashboard Styles */
 .provider-card {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: rgba(255, 255, 255, 0.06);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.028) 100%);
+    border-color: rgba(255, 255, 255, 0.12);
     backdrop-filter: blur(8px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 18px -14px rgba(0, 0, 0, 0.75);
 }
 
 .provider-card:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.12);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.085) 0%, rgba(255, 255, 255, 0.045) 100%);
+    border-color: rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
-    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 28px -14px rgba(0, 0, 0, 0.45);
 }
 
 .provider-card:active {
@@ -119,8 +120,9 @@ body.light-theme header::before {
 }
 
 .provider-card.active {
-    background: rgba(59, 130, 246, 0.08);
-    border-color: rgba(59, 130, 246, 0.3);
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.14) 0%, rgba(59, 130, 246, 0.07) 100%);
+    border-color: rgba(96, 165, 250, 0.45);
+    box-shadow: inset 0 1px 0 rgba(147, 197, 253, 0.16), 0 14px 28px -16px rgba(37, 99, 235, 0.45);
 }
 
 .provider-card.active .current-provider-badge {
@@ -186,18 +188,20 @@ body.light-theme #setup-custom-btn .provider-icon-wrapper {
 
 /* Light theme support for provider cards */
 body.light-theme .provider-card {
-    background: rgba(0, 0, 0, 0.02);
-    border-color: rgba(0, 0, 0, 0.05);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.92) 100%);
+    border-color: rgba(15, 23, 42, 0.1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 10px 22px -18px rgba(15, 23, 42, 0.28);
 }
 
 body.light-theme .provider-card:hover {
-    background: rgba(0, 0, 0, 0.04);
-    border-color: rgba(0, 0, 0, 0.1);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(241, 245, 249, 0.96) 100%);
+    border-color: rgba(15, 23, 42, 0.16);
 }
 
 body.light-theme .provider-card.active {
-    background: rgba(59, 130, 246, 0.05);
-    border-color: rgba(59, 130, 246, 0.2);
+    background: linear-gradient(180deg, rgba(219, 234, 254, 0.92) 0%, rgba(239, 246, 255, 0.98) 100%);
+    border-color: rgba(59, 130, 246, 0.34);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 12px 24px -18px rgba(37, 99, 235, 0.24);
 }
 
 body.light-theme .welcome-content {
@@ -1862,14 +1866,14 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
         width: 2.6rem !important;
         height: 2.6rem !important;
         border-radius: 0.9rem !important;
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(148, 163, 184, 0.14) !important;
+        background: none !important;
+        border: none !important;
         opacity: 1 !important;
     }
 
     body.light-theme #settings-modal #close-settings-x {
-        background: rgba(255, 255, 255, 0.75) !important;
-        border-color: rgba(148, 163, 184, 0.18) !important;
+        background: none !important;
+        border: none !important;
     }
 
     #settings-content-wrapper {
@@ -2540,19 +2544,25 @@ body.light-theme #settings-modal > .modal-content > .flex.flex-col {
     margin: 0 !important;
     border-radius: var(--settings-radius) !important;
     color: var(--settings-text-muted) !important;
-    background: var(--settings-surface-subtle) !important;
-    border: 1px solid var(--settings-border-quiet) !important;
+    background: none !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-tap-highlight-color: transparent !important;
     opacity: 1 !important;
     transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.12s ease !important;
 }
 
 #settings-modal #close-settings-x:hover,
-#settings-modal #close-settings-x:focus-visible {
+#settings-modal #close-settings-x:focus,
+#settings-modal #close-settings-x:focus-visible,
+#settings-modal #close-settings-x:active {
     color: var(--settings-text-strong) !important;
-    background: rgba(79, 140, 255, 0.14) !important;
-    border-color: rgba(79, 140, 255, 0.36) !important;
+    background: none !important;
+    border: none !important;
+    outline: none !important;
     transform: none !important;
-    box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.16) !important;
+    box-shadow: none !important;
 }
 
 #settings-content-wrapper {
@@ -3587,8 +3597,8 @@ body.light-theme .conn-modal-action-btn--cancel {
 }
 
 #welcome-message .provider-card {
-    min-height: 142px;
-    padding: 12px 8px !important;
+    min-height: 108px;
+    padding: 14px 10px 12px !important;
     border-radius: 16px !important;
     justify-content: flex-start;
 }
@@ -3903,8 +3913,8 @@ body.light-theme #welcome-message .welcome-premium-action.premium-activated {
     }
 
     #welcome-message .provider-card {
-        min-height: 128px;
-        padding: 10px 6px !important;
+        min-height: 96px;
+        padding: 12px 8px 10px !important;
     }
 
     #welcome-message .provider-icon-wrapper {
@@ -3965,8 +3975,8 @@ body.light-theme #welcome-message .welcome-premium-action.premium-activated {
 
 @media (min-width: 560px) {
     #welcome-message .provider-card {
-        min-height: 156px;
-        padding: 14px 10px !important;
+        min-height: 116px;
+        padding: 16px 12px 14px !important;
     }
 
     #welcome-message .provider-icon-wrapper {

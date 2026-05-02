@@ -225,22 +225,26 @@ export const settingsModal = `
                         </div>
                     </div>
 
-                    <div class="mb-5">
-                        <label for="max-tokens-input" class="block text-sm font-medium mb-2">
-                            <i class="fas fa-text-width mr-2 text-blue-400"></i>Max Output Tokens: <span id="max-tokens-value">Server Default</span></label>
-                        <div class="flex items-center gap-2">
-                            <input type="number" id="max-tokens-input" min="1" step="1"
-                                class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500"
-                                placeholder="Leave blank to use server default" inputmode="numeric" autocomplete="off" data-form-type="other">
+                    <div class="mb-5 max-tokens-setting">
+                        <label for="max-tokens-input" class="block text-sm font-medium max-tokens-setting-label">
+                            <span class="max-tokens-label-main">
+                                <i class="fas fa-text-width text-blue-400"></i>
+                                <span>Max Output Tokens</span>
+                            </span>
+                        </label>
+                        <div class="flex items-center max-tokens-input-row">
+                            <input type="text" id="max-tokens-input" min="1" step="1"
+                                class="bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500 max-tokens-input-field"
+                                placeholder="Leave blank to use server default" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" data-form-type="other">
                             <button id="clear-max-tokens-btn" type="button"
-                                class="professional-button flex items-center justify-center gap-2 px-4 h-[42px] shrink-0">
+                                class="professional-button flex items-center justify-center gap-2 px-4 h-[42px] shrink-0 max-tokens-default-btn">
                                 <i class="fas fa-rotate-left text-xs"></i>
                                 <span>Default</span>
                             </button>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">Applies to main chat requests. Leave blank to use the provider or model default.</p>
+                        <p class="text-xs text-gray-400 mt-1 max-tokens-help-text">Premium feature. Applies to main chat requests. Free users use the provider or model default.</p>
                     </div>
-                    
+
                     <div class="mb-5" id="biometric-setting-container">
                         <div class="flex justify-between items-center mb-2">
                             <label for="require-biometric" class="text-sm font-medium">

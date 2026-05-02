@@ -622,6 +622,112 @@
   font-style: normal;
 }
 
+/* Max tokens setting layout and spacing polish */
+#settings-modal .max-tokens-setting {
+  margin-top: 0.25rem;
+}
+
+#settings-modal .max-tokens-setting-label {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 0.55rem 0.9rem;
+  margin-bottom: 0;
+  padding-bottom: 0.85rem;
+  line-height: 1.35;
+}
+
+#settings-modal .max-tokens-label-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+#settings-modal .max-tokens-label-main i {
+  margin-right: 0;
+  flex-shrink: 0;
+}
+
+#settings-modal .max-tokens-current-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary, #9ca3af);
+  white-space: nowrap;
+}
+
+#settings-modal #max-tokens-value.max-tokens-current-value {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  color: #bfdbfe;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+body.light-theme #settings-modal #max-tokens-value.max-tokens-current-value {
+  color: #1d4ed8;
+}
+
+#settings-modal .max-tokens-input-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.65rem;
+  margin-top: 0.55rem;
+}
+
+#settings-modal #max-tokens-input.max-tokens-input-field {
+  min-height: 42px;
+  padding-inline: 0.9rem;
+  flex: 1;
+  min-width: 120px;
+}
+
+#settings-modal #clear-max-tokens-btn.max-tokens-default-btn {
+  min-width: 110px;
+}
+
+#settings-modal .max-tokens-help-text {
+  margin-top: 0.5rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+  #settings-modal .max-tokens-setting-label {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #settings-modal .max-tokens-current-text {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 480px) {
+  #settings-modal .max-tokens-input-row {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: 0.7rem;
+  }
+
+  #settings-modal #max-tokens-input.max-tokens-input-field {
+    width: min(100%, 320px);
+    min-width: 0;
+    align-self: flex-start;
+  }
+
+  #settings-modal #clear-max-tokens-btn.max-tokens-default-btn {
+    width: min(100%, 320px);
+    min-width: 0;
+    align-self: flex-start;
+  }
+}
+
 /* IP and Port inputs with icons */
 #server-ip {
   padding-left: 1rem;
@@ -1488,50 +1594,40 @@ body.light-theme #settings-modal button[id^="to-"]:hover {
 #settings-modal #close-settings-x {
   outline: none;
   position: relative;
-  background: transparent;
-  /* Removed background */
+  background: none;
   border: none;
-  /* Removed border */
-  border-radius: 50%;
+  box-shadow: none;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 0;
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-primary);
-  /* Use primary text color for better visibility */
   opacity: 0.8;
-  /* Slightly transparent when not hovered */
-
   cursor: pointer;
   flex-shrink: 0;
-  /* Prevent shrinking */
   margin-left: auto;
-  /* Push to the right */
+  padding: 0;
 }
 
 #settings-modal #close-settings-x:hover {
-  background: transparent;
-  /* Keep background transparent on hover */
+  background: none;
   color: var(--text-primary);
+  border: none;
+  box-shadow: none;
   opacity: 1;
-  /* Full opacity on hover */
-  /* Removed transform to prevent movement on hover */
 }
 
 #settings-modal #close-settings-x:focus,
-#settings-modal #close-settings-x:focus-visible {
+#settings-modal #close-settings-x:focus-visible,
+#settings-modal #close-settings-x:active {
   outline: none;
-  background: transparent;
-  /* Keep background transparent even on focus */
+  background: none;
   border: none;
-  /* No border on focus */
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-  /* Keep focus ring for accessibility */
+  box-shadow: none;
   opacity: 1;
-  /* Full opacity on focus for better visibility */
-  transform: scale(1.1);
-  /* Slight scale on focus for better visibility */
 }
 
 #settings-modal #close-settings-x i {

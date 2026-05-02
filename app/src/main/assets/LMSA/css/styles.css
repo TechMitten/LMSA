@@ -7278,6 +7278,23 @@ body.light-theme #whats-new-modal .flex.justify-between.items-center.pt-3.pb-2.m
         transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+#premium-container .premium-action-group {
+    display: flex;
+    flex-direction: column;
+}
+
+#premium-container[data-premium-state="pending"] .premium-action-group {
+    display: none;
+}
+
+#premium-container[data-premium-state="free"] .premium-active-actions {
+    display: none;
+}
+
+#premium-container[data-premium-state="premium"] .premium-free-actions {
+    display: none;
+}
+
 #import-export-container.animate-fade-in {
     max-height: 200px;
     opacity: 1;

@@ -41,9 +41,7 @@ const CHAT_IMAGE_STORE_KEY = 'chatImageStore';
 const CHAT_IMAGE_STORE_VERSION = 1;
 const ACTIVE_TEMPLATE_CHARACTER_CARD_KEY = 'activeTemplateCharacterCard';
 const PENDING_TEMPLATE_CHARACTER_CARD_KEY = 'pendingTemplateCharacterCard';
-const DEFAULT_LMSTUDIO_THINKING_BUDGET = 2048;
-const MIN_LMSTUDIO_THINKING_BUDGET = 256;
-const MAX_LMSTUDIO_THINKING_BUDGET = 8192;
+
 const IMAGE_FILE_EXTENSION_PATTERN = /\.(?:apng|avif|bmp|gif|jpe?g|png|svg|webp)$/i;
 const WEB_SEARCH_STOP_WORDS = new Set([
     'a', 'an', 'and', 'are', 'as', 'at', 'be', 'because', 'briefly', 'by', 'can', 'could', 'do', 'does',
@@ -114,12 +112,7 @@ function isLocalLmStudioProvider() {
     return !getUseOpenRouter() && !getUseOpenAICompatible() && !getUseOllama();
 }
 
-function getLmStudioThinkingBudget(maxTokens) {
-    if (Number.isFinite(maxTokens) && maxTokens > 0) {
-        return Math.max(MIN_LMSTUDIO_THINKING_BUDGET, Math.min(maxTokens, MAX_LMSTUDIO_THINKING_BUDGET));
-    }
-    return DEFAULT_LMSTUDIO_THINKING_BUDGET;
-}
+
 
 function applyReasoningOptions(requestBody) {
     if (!requestBody || typeof requestBody !== 'object') {
@@ -141,8 +134,7 @@ function applyReasoningOptions(requestBody) {
 
     if (!requestBody.thinking || typeof requestBody.thinking !== 'object') {
         requestBody.thinking = {
-            type: 'enabled',
-            budget_tokens: getLmStudioThinkingBudget(Number(requestBody.max_tokens))
+            type: 'enabled'
         };
     }
 
@@ -1176,7 +1168,10 @@ function buildLmStudioMcpRequest(messages, shouldInlineChatTitle) {
 
     const maxTokens = getConfiguredMaxTokens();
     if (maxTokens > 0) {
-        requestBody.max_output_tokens = maxTokens;
+        requestBody.options = {
+            ...(requestBody.options || {}),
+            max_tokens: maxTokens
+        };
     }
 
     return requestBody;
@@ -4213,7 +4208,7 @@ function ensureRenameChatModal() {
     modal.setAttribute('aria-labelledby', 'chat-rename-title');
 
     modal.innerHTML = `
-        <div class="chat-rename-modal-box bg-gradient-to-b from-[#0a192f] to-[#0d1f3d] dark:from-[#0a192f] dark:to-[#0d1f3d] light:from-[#f8fafc] light:to-[#f1f5f9] p-6 rounded-xl w-[420px] max-w-[90%] shadow-2xl modal-content border border-blue-900/30 dark:border-blue-900/30 light:border-blue-200 overflow-x-hidden overflow-y-auto">
+        <div class="chat-rename-modal-box bg-linear-to-b from-[#0a192f] to-[#0d1f3d] dark:from-[#0a192f] dark:to-[#0d1f3d] light:from-[#f8fafc] light:to-[#f1f5f9] p-6 rounded-xl w-[420px] max-w-[90%] shadow-2xl modal-content border border-blue-900/30 dark:border-blue-900/30 light:border-blue-200 overflow-x-hidden overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 id="chat-rename-title" class="text-xl font-bold flex items-center text-blue-400 dark:text-blue-400 light:text-blue-700">
                     <i class="fas fa-edit mr-3"></i>Rename Chat

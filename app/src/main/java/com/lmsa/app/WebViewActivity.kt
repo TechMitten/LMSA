@@ -1657,8 +1657,7 @@ class WebViewActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun canSendCompletion(): Boolean {
-            if (hasEffectivePremium()) return true
-            return getUsageCountForToday("lmsa_completion_date", "lmsa_completion_count") < 15
+            return true
         }
 
         @JavascriptInterface
@@ -1677,19 +1676,6 @@ class WebViewActivity : AppCompatActivity() {
         fun recordWebSearch() {
             if (hasEffectivePremium()) return
             recordUsage("lmsa_web_search_date", "lmsa_web_search_count")
-        }
-
-        @JavascriptInterface
-        fun getUsageStats(): String {
-            val completionCount = getUsageCountForToday("lmsa_completion_date", "lmsa_completion_count")
-            val webSearchCount = getUsageCountForToday("lmsa_web_search_date", "lmsa_web_search_count")
-
-            return JSONObject().apply {
-                put("chatCount", completionCount)
-                put("chatLimit", 15)
-                put("webSearchCount", webSearchCount)
-                put("webSearchLimit", 2)
-            }.toString()
         }
 
         @JavascriptInterface

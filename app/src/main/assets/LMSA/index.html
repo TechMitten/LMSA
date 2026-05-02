@@ -240,31 +240,30 @@
                         </div>
                         <i class="fas fa-caret-down" style="color: #64748b;"></i>
                     </button>
-                    <div id="premium-container" class="hidden">
-                        <button id="remove-ads-button" class="menu-item w-full text-left" style="display: none;">
-                            <i class="fas fa-ban"></i>
-                            Unlock Premium
-                        </button>
+                    <div id="premium-container" class="hidden" data-premium-state="pending">
+                        <div class="premium-action-group premium-free-actions">
+                            <button id="remove-ads-button" class="menu-item w-full text-left">
+                                <i class="fas fa-ban"></i>
+                                Unlock Premium
+                            </button>
 
-                        <button id="premium-activated-button" class="menu-item w-full text-left" style="display: none;" disabled>
-                            <i class="fas fa-check-circle" style="color: #34d399;"></i>
-                            Premium Activated
-                        </button>
+                            <button id="restore-purchases-button" class="menu-item w-full text-left">
+                                <i class="fas fa-undo"></i>
+                                Restore Purchase
+                            </button>
 
-                        <button id="usage-stats-btn" class="menu-item w-full text-left" style="display: none;">
-                            <i class="fas fa-chart-line"></i>
-                            Today's Usage
-                        </button>
+                            <button id="legacy-access-btn" class="menu-item w-full text-left">
+                                <i class="fas fa-key"></i>
+                                Legacy Access
+                            </button>
+                        </div>
 
-                        <button id="restore-purchases-button" class="menu-item w-full text-left">
-                            <i class="fas fa-undo"></i>
-                            Restore Purchase
-                        </button>
-
-                        <button id="legacy-access-btn" class="menu-item w-full text-left">
-                            <i class="fas fa-key"></i>
-                            Legacy Access
-                        </button>
+                        <div class="premium-action-group premium-active-actions">
+                            <button id="premium-activated-button" class="menu-item w-full text-left" disabled>
+                                <i class="fas fa-check-circle" style="color: #34d399;"></i>
+                                Premium Activated
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -366,8 +365,7 @@
                                         <div class="provider-icon-wrapper mb-2.5 sm:mb-4 p-2.5 sm:p-3 rounded-xl bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform">
                                             <i class="fas fa-server text-2xl"></i>
                                         </div>
-                                        <h3 class="font-bold text-white mb-1 text-sm sm:text-base">Local Server</h3>
-                                        <p class="text-[11px] sm:text-xs opacity-60 leading-tight">LM Studio / Ollama</p>
+                                        <h3 class="font-bold text-white text-sm sm:text-base">Local Server</h3>
                                         <div class="current-provider-badge hidden absolute top-2 right-2">
                                             <span class="flex h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></span>
                                         </div>
@@ -378,8 +376,7 @@
                                         <div class="provider-icon-wrapper mb-2.5 sm:mb-4 p-2.5 sm:p-3 rounded-xl bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
                                             <i class="fas fa-cloud text-2xl"></i>
                                         </div>
-                                        <h3 class="font-bold text-white mb-1 text-sm sm:text-base">OpenRouter</h3>
-                                        <p class="text-[11px] sm:text-xs opacity-60 leading-tight">Cloud models (GPT/Claude)</p>
+                                        <h3 class="font-bold text-white text-sm sm:text-base">OpenRouter</h3>
                                         <div class="current-provider-badge hidden absolute top-2 right-2">
                                             <span class="flex h-2 w-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]"></span>
                                         </div>
@@ -390,8 +387,7 @@
                                         <div class="provider-icon-wrapper mb-2.5 sm:mb-4 p-2.5 sm:p-3 rounded-xl bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform">
                                             <i class="fas fa-plug text-2xl"></i>
                                         </div>
-                                        <h3 class="font-bold text-white mb-1 text-sm sm:text-base">Custom API</h3>
-                                        <p class="text-[11px] sm:text-xs opacity-60 leading-tight">OpenAI compatible</p>
+                                        <h3 class="font-bold text-white text-sm sm:text-base">Custom API</h3>
                                         <div class="current-provider-badge hidden absolute top-2 right-2">
                                             <span class="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
                                         </div>

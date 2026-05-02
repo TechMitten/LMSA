@@ -103,36 +103,28 @@ function hasPremiumAccess() {
 
 window.hasPremiumAccess = hasPremiumAccess;
 
+function syncPremiumMenuState(isPremium) {
+    const premiumContainer = document.getElementById('premium-container');
+    if (premiumContainer) {
+        premiumContainer.dataset.premiumState = isPremium ? 'premium' : 'free';
+    }
+}
+
 // Updated UI function to manage premium status
 function updateUiForPremium(isPremium) {
     const premiumState = setPremiumState(isPremium);
     const isDebugEnabled = !!window.isDebugMode || !!(window.AndroidBilling && typeof window.AndroidBilling.checkDebugMode === 'function' && window.AndroidBilling.checkDebugMode());
     isPremium = premiumState.isPremium && !isDebugEnabled;
     console.log('Premium status updated:', isPremium, '(debug:', isDebugEnabled, ')');
-    const removeAdsBtn = document.getElementById('remove-ads-button');
-    if (removeAdsBtn) {
-        removeAdsBtn.style.display = isPremium ? 'none' : 'block';
-    }
+    syncPremiumMenuState(isPremium);
+}
 
-    const premiumActivatedBtn = document.getElementById('premium-activated-button');
-    if (premiumActivatedBtn) {
-        premiumActivatedBtn.style.display = isPremium ? 'block' : 'none';
-    }
-
-    const restorePurchasesBtn = document.getElementById('restore-purchases-button');
-    if (restorePurchasesBtn) {
-        restorePurchasesBtn.style.display = isPremium ? 'none' : 'block';
-    }
-
-    const usageStatsBtn = document.getElementById('usage-stats-btn');
-    if (usageStatsBtn) {
-        usageStatsBtn.style.display = isPremium ? 'none' : 'block';
-    }
-
-    const legacyAccessBtn = document.getElementById('legacy-access-btn');
-    if (legacyAccessBtn) {
-        legacyAccessBtn.style.display = isPremium ? 'none' : 'block';
-    }
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        syncPremiumMenuState(hasPremiumAccess());
+    }, { once: true });
+} else {
+    syncPremiumMenuState(hasPremiumAccess());
 }
 
 window.showPostAppOpenPremiumCta = function() { console.log('Post-ad CTA disabled.'); };
