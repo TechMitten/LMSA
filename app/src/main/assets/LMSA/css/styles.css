@@ -3597,14 +3597,9 @@ body.light-theme #send-context-menu .menu-header {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
+    overflow: visible !important;
     display: flex !important;
     flex-direction: column !important;
-
-    transform-style: preserve-3d !important;
-    contain: layout !important;
-    isolation: isolate !important;
 }
 
 /* Fix for system prompt textarea to ensure it's not cut off */
@@ -3620,9 +3615,8 @@ body.light-theme #send-context-menu .menu-header {
 
 /* System prompt preview - constrain height and allow scrolling */
 #system-prompt-preview {
-    max-height: 200px !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    max-height: none !important;
+    overflow: visible !important;
     padding: 0.75rem !important;
 }
 
@@ -4207,10 +4201,8 @@ body.light-theme #clear-system-prompt-modal #close-clear-system-prompt-modal:hov
         /* Remove top padding to ensure vertical centering */
         padding-bottom: 0 !important;
         /* Remove bottom padding to ensure vertical centering */
-        overflow-y: auto;
-        /* Allow scrolling */
-        -webkit-overflow-scrolling: touch;
-        /* Smooth scrolling on iOS */
+        overflow: hidden !important;
+        touch-action: none;
         height: 100% !important;
         /* Full height */
         width: 100% !important;
@@ -4226,13 +4218,12 @@ body.light-theme #clear-system-prompt-modal #close-clear-system-prompt-modal:hov
 
     .modal-content {
         margin: auto !important;
-        /* Center both horizontally and vertically */
         max-height: calc(100vh - 4rem);
-        /* Prevent overlap with header and input area */
         width: 90%;
-        /* Control width */
         box-sizing: border-box;
-        overflow-x: hidden;
+        overflow-y: auto !important;
+        touch-action: pan-y !important;
+        -webkit-overflow-scrolling: touch !important;
     }
 
     .modal-overlay .modal-content {

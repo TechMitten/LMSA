@@ -51,14 +51,24 @@ body.light-theme header::before {
 #settings-content-wrapper {
     display: flex;
     flex-direction: column;
-    -ms-overflow-style: none !important;
-    scrollbar-width: none !important;
+    flex: 1 1 auto;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
 }
 
+/* Ensure scrollbar is visible for accessibility while keeping it subtle */
 #settings-content-wrapper::-webkit-scrollbar {
-    width: 0 !important;
-    height: 0 !important;
-    display: none !important;
+    width: 6px;
+    display: block !important;
+}
+
+#settings-content-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.3);
+    border-radius: 10px;
+}
+
+#settings-content-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.5);
 }
 
 #settings-step-actions.active {

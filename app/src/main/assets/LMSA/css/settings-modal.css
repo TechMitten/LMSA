@@ -75,7 +75,7 @@
   background: var(--modal-bg);
   border: 1px solid var(--border-color);
   border-radius: 1.5rem;
-  padding: 1.5rem;
+  padding: 0 1.5rem 1.5rem 1.5rem;
   /* Add back the padding that was removed from HTML */
   box-shadow: 0 25px 50px -12px var(--modal-overlay),
     0 0 0 1px var(--border-color) inset, 0 1px 3px 0 var(--border-color) inset;
@@ -100,8 +100,9 @@
   bottom: auto !important;
   transform: none !important;
   overflow-x: hidden;
-  overflow-y: hidden;
-  /* Parent doesn't scroll - settings-content-wrapper handles it */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   z-index: 1052;
   /* Responsive sizing that works across all devices */
   width: min(750px, calc(100vw - 32px));
@@ -432,10 +433,7 @@
 }
 
 #settings-modal #saved-prompts-list {
-  max-height: min(34vh, 360px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 0.25rem;
+  padding-right: 0;
 }
 
 #settings-modal #saved-prompts-list .saved-prompt-item {
@@ -552,7 +550,7 @@
   }
 
   #settings-modal #saved-prompts-list {
-    max-height: min(38vh, 320px);
+    max-height: none;
   }
 }
 
@@ -3604,65 +3602,174 @@ body.light-theme .openrouter-key-input-wrapper input {
 }
 
 .settings-group-title {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
-    margin-bottom: 1.5rem;
+    letter-spacing: 0.15em;
+    margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 0.75rem;
+    padding: 0.4rem 0.85rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2rem;
     width: fit-content;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
-/* Thematic Color Variations */
-.group-ai { border-left: 3px solid #8b5cf6 !important; background: rgba(139, 92, 246, 0.04) !important; }
-.group-ai .settings-group-title { color: #a78bfa !important; border-color: rgba(167, 139, 250, 0.2) !important; background: rgba(139, 92, 246, 0.1) !important; }
+/* Thematic Color Variations - Dark Theme */
+.group-ai { 
+    border-left: 3px solid #8b5cf6 !important; 
+    background: linear-gradient(165deg, rgba(139, 92, 246, 0.05) 0%, rgba(30, 41, 59, 0.2) 100%) !important; 
+}
+.group-ai .settings-group-title { 
+    color: #a78bfa !important; 
+    border-color: rgba(167, 139, 250, 0.15) !important; 
+    background: rgba(139, 92, 246, 0.1) !important; 
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.08);
+}
 .group-ai .settings-item-label i { color: #a78bfa !important; }
 
-.group-smart { border-left: 3px solid #10b981 !important; background: rgba(16, 185, 129, 0.04) !important; }
-.group-smart .settings-group-title { color: #34d399 !important; border-color: rgba(52, 211, 153, 0.2) !important; background: rgba(16, 185, 129, 0.1) !important; }
+.group-smart { 
+    border-left: 3px solid #10b981 !important; 
+    background: linear-gradient(165deg, rgba(16, 185, 129, 0.05) 0%, rgba(30, 41, 59, 0.2) 100%) !important; 
+}
+.group-smart .settings-group-title { 
+    color: #34d399 !important; 
+    border-color: rgba(52, 211, 153, 0.15) !important; 
+    background: rgba(16, 185, 129, 0.1) !important; 
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.08);
+}
 .group-smart .settings-item-label i { color: #34d399 !important; }
 
-.group-interface { border-left: 3px solid #3b82f6 !important; background: rgba(59, 130, 246, 0.04) !important; }
-.group-interface .settings-group-title { color: #60a5fa !important; border-color: rgba(96, 165, 250, 0.2) !important; background: rgba(59, 130, 246, 0.1) !important; }
+.group-interface { 
+    border-left: 3px solid #3b82f6 !important; 
+    background: linear-gradient(165deg, rgba(59, 130, 246, 0.05) 0%, rgba(30, 41, 59, 0.2) 100%) !important; 
+}
+.group-interface .settings-group-title { 
+    color: #60a5fa !important; 
+    border-color: rgba(96, 165, 250, 0.15) !important; 
+    background: rgba(59, 130, 246, 0.1) !important; 
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.08);
+}
 .group-interface .settings-item-label i { color: #60a5fa !important; }
 
-.group-device { border-left: 3px solid #f59e0b !important; background: rgba(245, 158, 11, 0.04) !important; }
-.group-device .settings-group-title { color: #fbbf24 !important; border-color: rgba(251, 191, 36, 0.2) !important; background: rgba(245, 158, 11, 0.1) !important; }
+.group-device { 
+    border-left: 3px solid #f59e0b !important; 
+    background: linear-gradient(165deg, rgba(245, 158, 11, 0.05) 0%, rgba(30, 41, 59, 0.2) 100%) !important; 
+}
+.group-device .settings-group-title { 
+    color: #fbbf24 !important; 
+    border-color: rgba(251, 191, 36, 0.15) !important; 
+    background: rgba(245, 158, 11, 0.1) !important; 
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.08);
+}
 .group-device .settings-item-label i { color: #fbbf24 !important; }
 
-.group-danger { border-left: 3px solid #ef4444 !important; background: rgba(239, 68, 68, 0.04) !important; }
-.group-danger .settings-group-title { color: #f87171 !important; border-color: rgba(248, 113, 113, 0.2) !important; background: rgba(239, 68, 68, 0.1) !important; }
+.group-danger { 
+    border-left: 3px solid #ef4444 !important; 
+    background: linear-gradient(165deg, rgba(239, 68, 68, 0.07) 0%, rgba(30, 41, 59, 0.3) 100%) !important; 
+}
+.group-danger .settings-group-title { 
+    color: #f87171 !important; 
+    border-color: rgba(248, 113, 113, 0.2) !important; 
+    background: rgba(239, 68, 68, 0.12) !important; 
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.1);
+}
 .group-danger .settings-item-label i { color: #f87171 !important; }
 
-.group-font { border-left: 3px solid #ec4899 !important; background: rgba(236, 72, 153, 0.04) !important; }
-.group-font .settings-group-title { color: #f472b6 !important; border-color: rgba(244, 114, 182, 0.2) !important; background: rgba(236, 72, 153, 0.1) !important; }
+.group-font { 
+    border-left: 3px solid #ec4899 !important; 
+    background: linear-gradient(165deg, rgba(236, 72, 153, 0.07) 0%, rgba(30, 41, 59, 0.3) 100%) !important; 
+}
+.group-font .settings-group-title { 
+    color: #f472b6 !important; 
+    border-color: rgba(244, 114, 182, 0.2) !important; 
+    background: rgba(236, 72, 153, 0.12) !important; 
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.1);
+}
 .group-font .settings-item-label i { color: #f472b6 !important; }
 
 /* Light Theme Variations */
-.light-theme .group-ai { border-left-color: #7c3aed !important; background: rgba(124, 58, 237, 0.03) !important; }
-.light-theme .group-ai .settings-group-title { color: #6d28d9 !important; background: rgba(124, 58, 237, 0.08) !important; }
-.light-theme .group-smart { border-left-color: #059669 !important; background: rgba(5, 150, 105, 0.03) !important; }
-.light-theme .group-smart .settings-group-title { color: #047857 !important; background: rgba(5, 150, 105, 0.08) !important; }
-.light-theme .group-interface { border-left-color: #2563eb !important; background: rgba(37, 99, 235, 0.03) !important; }
-.light-theme .group-interface .settings-group-title { color: #1d4ed8 !important; background: rgba(37, 99, 235, 0.08) !important; }
-.light-theme .group-device { border-left-color: #d97706 !important; background: rgba(217, 119, 6, 0.03) !important; }
-.light-theme .group-device .settings-group-title { color: #b45309 !important; background: rgba(217, 119, 6, 0.08) !important; }
-.light-theme .group-danger { border-left-color: #dc2626 !important; background: rgba(220, 38, 38, 0.03) !important; }
-.light-theme .group-danger .settings-group-title { color: #b91c1c !important; background: rgba(220, 38, 38, 0.08) !important; }
-.light-theme .group-font { border-left-color: #db2777 !important; background: rgba(219, 39, 119, 0.03) !important; }
-.light-theme .group-font .settings-group-title { color: #be185d !important; background: rgba(219, 39, 119, 0.08) !important; }
+/* Light Theme Variations - Refined */
+.light-theme .group-ai { 
+    border-left-color: #7c3aed !important; 
+    background: linear-gradient(165deg, rgba(124, 58, 237, 0.04) 0%, rgba(248, 250, 252, 0.7) 100%) !important; 
+}
+.light-theme .group-ai .settings-group-title { 
+    color: #6d28d9 !important; 
+    background: rgba(124, 58, 237, 0.1) !important; 
+    border-color: rgba(124, 58, 237, 0.15) !important;
+}
+
+.light-theme .group-smart { 
+    border-left-color: #059669 !important; 
+    background: linear-gradient(165deg, rgba(5, 150, 105, 0.04) 0%, rgba(248, 250, 252, 0.7) 100%) !important; 
+}
+.light-theme .group-smart .settings-group-title { 
+    color: #047857 !important; 
+    background: rgba(5, 150, 105, 0.1) !important; 
+    border-color: rgba(5, 150, 105, 0.15) !important;
+}
+
+.light-theme .group-interface { 
+    border-left-color: #2563eb !important; 
+    background: linear-gradient(165deg, rgba(37, 99, 235, 0.04) 0%, rgba(248, 250, 252, 0.7) 100%) !important; 
+}
+.light-theme .group-interface .settings-group-title { 
+    color: #1d4ed8 !important; 
+    background: rgba(37, 99, 235, 0.1) !important; 
+    border-color: rgba(37, 99, 235, 0.15) !important;
+}
+
+.light-theme .group-device { 
+    border-left-color: #d97706 !important; 
+    background: linear-gradient(165deg, rgba(217, 119, 6, 0.04) 0%, rgba(248, 250, 252, 0.7) 100%) !important; 
+}
+.light-theme .group-device .settings-group-title { 
+    color: #b45309 !important; 
+    background: rgba(217, 119, 6, 0.1) !important; 
+    border-color: rgba(217, 119, 6, 0.15) !important;
+}
+
+.light-theme .group-danger { 
+    border-left-color: #dc2626 !important; 
+    background: linear-gradient(165deg, rgba(220, 38, 38, 0.04) 0%, rgba(248, 250, 252, 0.7) 100%) !important; 
+}
+.light-theme .group-danger .settings-group-title { 
+    color: #b91c1c !important; 
+    background: rgba(220, 38, 38, 0.1) !important; 
+    border-color: rgba(220, 38, 38, 0.15) !important;
+}
+
+.light-theme .group-font { 
+    border-left-color: #db2777 !important; 
+    background: linear-gradient(165deg, rgba(219, 39, 119, 0.04) 0%, rgba(248, 250, 252, 0.7) 100%) !important; 
+}
+.light-theme .group-font .settings-group-title { 
+    color: #be185d !important; 
+    background: rgba(219, 39, 119, 0.1) !important; 
+    border-color: rgba(219, 39, 119, 0.15) !important;
+}
 
 .settings-item {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    margin-bottom: 1.5rem;
+    gap: 0.35rem;
+    margin-bottom: 1.25rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.75rem;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.settings-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.light-theme .settings-item:hover {
+    background: rgba(0, 0, 0, 0.02);
 }
 
 .settings-item:last-child {
@@ -3672,29 +3779,30 @@ body.light-theme .openrouter-key-input-wrapper input {
 .settings-item-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 1rem;
 }
 
 .settings-item-label {
-    font-size: 0.925rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: #f1f5f9;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.65rem;
     line-height: 1.2;
 }
 
 .light-theme .settings-item-label {
-    color: #0f172a;
+    color: #1e293b;
 }
 
 .settings-item-label i {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #60a5fa;
-    width: 1.1rem;
+    width: 1.2rem;
     text-align: center;
+    opacity: 0.9;
 }
 
 .light-theme .settings-item-label i {
@@ -3702,10 +3810,12 @@ body.light-theme .openrouter-key-input-wrapper input {
 }
 
 .settings-item-description {
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     color: #94a3b8;
     line-height: 1.5;
+    padding-left: 1.85rem;
     padding-right: 3rem; /* Leave space for toggles */
+    max-width: 95%;
 }
 
 .light-theme .settings-item-description {

@@ -4,7 +4,7 @@ export const settingsModal = `
         aria-labelledby="settings-title" role="dialog" aria-modal="true">
         <div class="modal-content">
             <!-- Settings Header -->
-            <div class="flex flex-col sticky top-0 z-10 mb-6 pb-1 border-b border-gray-700/30 bg-inherit">
+            <div class="flex flex-col sticky top-0 z-20 pt-6 mb-6 pb-1 border-b border-gray-700/30 bg-inherit">
                 <div class="flex justify-between items-center mb-1">
                     <h2 id="settings-title" class="text-xl font-bold flex items-center">
                         <i class="fas fa-cog text-blue-400 mr-2"></i>Settings
@@ -26,8 +26,7 @@ export const settingsModal = `
             </div>
 
             <!-- Settings Content - Multi-step on mobile -->
-            <div id="settings-content-wrapper" class="relative px-1"
-                style="overflow-y: auto; overflow-x: hidden; touch-action: pan-y; overscroll-behavior: contain;">
+            <div id="settings-content-wrapper" class="relative px-1">
                 <!-- Step 1: Connection Settings (always visible first) -->
                 <div id="settings-step-connection" class="settings-step active" data-step-name="Connection">
                     <!-- Hidden checkbox retained for JS/event compatibility -->
@@ -418,46 +417,43 @@ export const settingsModal = `
                     </div>
                 </div>
 
-                <!-- Step 3: System Prompt -->
                 <div id="settings-step-prompt" class="settings-step hidden" data-step-name="Prompt">
-                    <div class="settings-group group-ai">
-                        <div class="settings-group-title">
-                            <i class="fas fa-comment-dots"></i>
-                            <span>System Prompt</span>
-                        </div>
-                        
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-1 system-prompt-heading" role="presentation" aria-hidden="true">
+                            <i class="fas fa-comment-dots mr-2 text-blue-400"></i>System Prompt (Optional):</label>
+
                         <!-- Hidden real textarea that holds the actual value -->
                         <textarea id="system-prompt" class="hidden" rows="4"></textarea>
 
                         <!-- Display current prompt value (non-interactive) -->
                         <div id="system-prompt-preview"
-                               class="border p-4 rounded-xl min-h-24 mb-4 whitespace-pre-wrap"
+                               class="border p-3 rounded-lg min-h-20 mb-2 whitespace-pre-wrap"
                             style="background-color: var(--settings-input-bg); color: var(--settings-input-text); border-color: var(--settings-input-border);">
                             <span class="italic" id="prompt-placeholder" style="color: var(--text-muted);"></span>
                         </div>
 
                         <!-- Edit and Save buttons -->
-                        <div class="flex gap-3">
+                        <div class="flex gap-2">
                             <button id="edit-system-prompt-btn"
                                   class="professional-button flex items-center justify-center gap-3 flex-1 h-12">
                                 <i class="fas fa-edit text-sm"></i>
-                                <span>Edit Prompt</span>
+                                <span>Edit</span>
                             </button>
                             <button id="save-system-prompt-btn"
                                   class="professional-button flex items-center justify-center gap-3 flex-1 h-12">
                                 <i class="fas fa-save text-sm"></i>
-                                <span>Save Preset</span>
+                                <span>Save to list</span>
                             </button>
                         </div>
 
-                        <section id="saved-prompts-section" class="mt-6 pt-6 border-t border-gray-700/30" aria-labelledby="saved-prompts-section-title">
+                        <section id="saved-prompts-section" class="mt-4" aria-labelledby="saved-prompts-section-title">
                             <div class="saved-prompts-section-header">
                                 <div>
-                                    <p class="saved-prompts-section-eyebrow">Prompt Library</p>
-                                    <h3 id="saved-prompts-section-title" class="saved-prompts-section-title">Reusable Personas</h3>
+                                    <p class="saved-prompts-section-eyebrow">Saved Prompts</p>
+                                    <h3 id="saved-prompts-section-title" class="saved-prompts-section-title">Reusable System Prompts</h3>
                                 </div>
                             </div>
-                            <p class="saved-prompts-section-description">Quickly switch between different AI personalities and instructions.</p>
+                            <p class="saved-prompts-section-description">Restore, edit, or delete saved prompts without leaving this page.</p>
                             <div id="saved-prompts-list" class="saved-prompts-section-list" aria-live="polite">
                                 <!-- Saved prompts will be dynamically inserted here -->
                             </div>
@@ -467,78 +463,61 @@ export const settingsModal = `
 
                 <!-- Step 4: Font -->
                 <div id="settings-step-font" class="settings-step hidden" data-step-name="Font">
-                    <div class="settings-group group-font">
-                        <div class="settings-group-title">
-                            <i class="fas fa-font"></i>
-                            <span>Typography</span>
-                        </div>
+                    <div class="mb-5">
+                        <label for="chat-font-family-select" class="block text-sm font-medium mb-2">
+                            <i class="fas fa-font mr-2 text-blue-400"></i>Chat Bubble Font</label>
+                        <select id="chat-font-family-select"
+                            class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500">
+                            <option value="system-ui, sans-serif">System Default</option>
+                            <option value="Roboto, sans-serif">Roboto</option>
+                            <option value="Arial, Helvetica, sans-serif">Sans-Serif (Arial)</option>
+                            <option value="Georgia, serif">Serif (Georgia)</option>
+                            <option value="'Courier New', monospace">Monospace (Courier)</option>
+                        </select>
+                        <p class="text-xs text-gray-400 mt-1">Select the font used in chat message bubbles</p>
+                    </div>
 
-                        <!-- Font Family -->
-                        <div class="settings-item">
-                            <div class="settings-item-header">
-                                <label for="chat-font-family-select" class="settings-item-label">
-                                    <i class="fas fa-font"></i>Chat Bubble Font
-                                </label>
-                            </div>
-                            <p class="settings-item-description">Select the font used in chat message bubbles.</p>
-                            <select id="chat-font-family-select"
-                                class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500">
-                                <option value="system-ui, sans-serif">System Default</option>
-                                <option value="Roboto, sans-serif">Roboto</option>
-                                <option value="Arial, Helvetica, sans-serif">Sans-Serif (Arial)</option>
-                                <option value="Georgia, serif">Serif (Georgia)</option>
-                                <option value="'Courier New', monospace">Monospace (Courier)</option>
-                            </select>
-                        </div>
-
-                        <!-- Font Size -->
-                        <div class="settings-item">
-                            <div class="settings-item-header">
-                                <label for="chat-font-size-select" class="settings-item-label">
-                                    <i class="fas fa-text-height"></i>Chat Bubble Font Size
-                                </label>
-                            </div>
-                            <p class="settings-item-description">Adjust the text size for optimal readability.</p>
-                            <select id="chat-font-size-select"
-                                class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500">
-                                <option value="12px">Extra Small</option>
-                                <option value="14px">Small</option>
-                                <option value="16px" selected>Medium (Default)</option>
-                                <option value="20px">Large</option>
-                                <option value="24px">Extra Large</option>
-                            </select>
-                        </div>
+                    <div class="mb-5">
+                        <label for="chat-font-size-select" class="block text-sm font-medium mb-2">
+                            <i class="fas fa-text-height mr-2 text-blue-400"></i>Chat Bubble Font Size</label>
+                        <select id="chat-font-size-select"
+                            class="w-full bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500">
+                            <option value="12px">Extra Small</option>
+                            <option value="14px">Small</option>
+                            <option value="16px" selected>Medium (Default)</option>
+                            <option value="20px">Large</option>
+                            <option value="24px">Extra Large</option>
+                        </select>
+                        <p class="text-xs text-gray-400 mt-1">Select the font size for chat messages</p>
                     </div>
                 </div>
 
                 <!-- Step 5: Actions -->
                 <div id="settings-step-actions" class="settings-step hidden" data-step-name="Actions">
-                    <div class="settings-group group-danger">
-                        <div class="settings-group-title">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>System Actions</span>
-                        </div>
-                        <div class="space-y-4">
-                            <button id="clear-chat" class="settings-action-button">
-                                <i class="fas fa-trash-alt text-sm"></i>
-                                <span>Clear All Chats</span>
-                            </button>
+                    <div class="flex flex-col space-y-4">
+                        <button id="clear-chat"
+                            class="professional-button flex items-center justify-center gap-3 w-full h-12 bg-red-600/10 border-red-500/30 text-red-400">
+                            <i class="fas fa-trash-alt text-sm"></i>
+                            <span>Clear All Chats</span>
+                        </button>
 
-                            <button id="reset-app" class="settings-action-button">
-                                <i class="fas fa-exclamation-triangle text-sm"></i>
-                                <span>Reset App</span>
-                            </button>
+                        <button id="reset-app"
+                            class="professional-button flex items-center justify-center gap-3 w-full h-12 bg-red-600/10 border-red-500/30 text-red-400">
+                            <i class="fas fa-exclamation-triangle text-sm"></i>
+                            <span>Reset App</span>
+                        </button>
 
-                            <button id="clear-openrouter-key" class="settings-action-button">
-                                <i class="fas fa-key text-sm"></i>
-                                <span>Clear OpenRouter Key</span>
-                            </button>
+                        <button id="clear-openrouter-key"
+                            class="professional-button flex items-center justify-center gap-3 w-full h-12">
+                            <i class="fas fa-key text-sm"></i>
+                            <span>Clear OpenRouter Key</span>
+                        </button>
 
-                            <button id="clear-lmstudio-token" class="settings-action-button">
-                                <i class="fas fa-key text-sm"></i>
-                                <span>Clear LM Studio Token</span>
-                            </button>
-                        </div>
+                        <button id="clear-lmstudio-token"
+                            class="professional-button flex items-center justify-center gap-3 w-full h-12">
+                            <i class="fas fa-key text-sm"></i>
+                            <span>Clear LM Studio Token</span>
+                        </button>
                     </div>
                 </div>
                 <!-- Navigation buttons container -->
