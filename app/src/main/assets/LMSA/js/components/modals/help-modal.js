@@ -1137,9 +1137,10 @@ export const helpModal = `
 
                                     <li><strong>Max Output Tokens in App:</strong> Not available on the Free tier; free users use the provider or model default</li>
                                     <li><strong>File Attachments:</strong> Not available on the Free tier; upgrade to Premium to attach files to chats</li>
+                                    <li><strong>Custom Endpoint Usage:</strong> Not available on the Free tier; upgrade to Premium to use OpenAI-compatible custom endpoints</li>
                                     <li><strong>Offline Use (Local LM Studio/Ollama):</strong> Not available on the Free tier; upgrade to Premium for full offline access</li>
                                     <li><strong>TTS (Text-to-Speech):</strong> Unlimited with the default voice; upgrade to Premium to unlock alternate voices</li>
-                                    <li><strong>Custom Templates and v2 Character Cards:</strong> Not available on the Free tier; upgrade to Premium to create, import, and use them</li>
+                                    <li><strong>Templates and v2 Character Cards:</strong> Not available on the Free tier; upgrade to Premium to use premade templates and to create, import, and use custom ones</li>
                                 </ul>
                             </div>
 
@@ -1154,10 +1155,11 @@ export const helpModal = `
 
                                     <li><strong>Max Output Tokens in App:</strong> Adjust max output tokens directly from <strong>Settings &gt; Options</strong></li>
                                     <li><strong>File Attachments:</strong> Attach files (documents, code, data) to chats for analysis</li>
+                                    <li><strong>Custom Endpoint Usage:</strong> Connect to and chat through OpenAI-compatible custom endpoints</li>
                                     <li><strong>Offline Use (Local LM Studio/Ollama):</strong> Full access to use local LM Studio and Ollama servers with no internet connection required</li>
                                     <li><strong>OpenRouter Access:</strong> Full access to cloud models via OpenRouter</li>
                                     <li><strong>TTS (Text-to-Speech):</strong> Hear AI responses with the default voice plus alternate premium voices</li>
-                                    <li><strong>Custom Templates:</strong> Create, save, edit, and reuse prompt templates</li>
+                                    <li><strong>Templates:</strong> Use every premade template and create, save, edit, and reuse custom prompt templates</li>
                                     <li><strong>v2 Character Cards:</strong> Import JSON v2 cards, edit advanced fields, and use AI to fill blank card fields</li>
                                     <li><strong>One-Time Purchase:</strong> Upgrade with a single lifetime purchase</li>
                                 </ul>
@@ -1294,7 +1296,6 @@ export const helpModal = `
                                     <strong>From Computer to Android:</strong>
                                 </p>
                                 <ul class="list-disc pl-5 space-y-1" style="color: var(--text-primary);">
-                                    <li>Find your Android phone's IP address in your router's connected devices list
                                         or in phone settings</li>
                                     <li>Open Command Prompt (Windows) or Terminal (Mac/Linux) and run
                                         <code>tracert [phone-ip]</code> (Windows) or
@@ -1313,27 +1314,6 @@ export const helpModal = `
                             LMSA Premium is a one-time lifetime purchase processed through Google Play. Refund eligibility and policies are determined by Google Play, not by LMSA.
                         </p>
 
-                        <div class="space-y-4">
-                            <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #10b981;"><i
-                                        class="fas fa-google mr-2"></i>How to Request a Refund</p>
-                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
-                                    All refund requests for LMSA Premium must go through Google Play. Visit your Google Play purchase history and submit a refund request for the LMSA Premium purchase. Google Play will determine eligibility based on their policies.
-                                </p>
-                            </div>
-
-                            <div class="p-3 rounded-lg\" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #3b82f6;\"><i
-                                        class="fas fa-question-circle mr-2"></i>Questions About Your Purchase?</p>
-                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
-                                    If you have concerns about your LMSA Premium purchase, you can reach out to:
-                                </p>
-                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
-                                    <li><strong>Google Play support</strong> — for account, payment, and refund matters</li>
-                                    <li><strong>support@lmsa.app</strong> — for app-specific questions or issues</li>
-                                </ul>
-                            </div>
-                        </div>
                     </section>
                 </div>
             </div>

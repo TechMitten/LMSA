@@ -44,7 +44,7 @@
     <div class="fixed inset-0 overflow-hidden pointer-events-none -z-50">
         <div class="absolute top-0 left-0 w-full h-full bg-slate-900"></div>
         <div
-            class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-slate-800 via-[#1e293b] to-slate-900 opacity-80">
+            class="absolute top-0 left-0 w-full h-full bg-linear-to-b from-slate-800 via-[#1e293b] to-slate-900 opacity-80">
         </div>
         <!-- Blobs inside fixed container -->
         <div
@@ -248,7 +248,7 @@
 
         </main>
         <div
-            class="template-footer absolute bottom-0 left-0 w-full bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent z-20">
+            class="template-footer absolute bottom-0 left-0 w-full bg-linear-to-t from-slate-900 via-slate-900/95 to-transparent z-20">
             <button type="button" id="start-chatting-btn"
                 class="w-full bg-primary hover:bg-blue-400 text-white font-semibold py-4 rounded-2xl shadow-lg shadow-blue-500/20 transition-all transform active:scale-[0.98] flex items-center justify-center space-x-2 opacity-50 cursor-not-allowed">
                 <span>Start Chatting</span>
@@ -458,7 +458,7 @@
                                     <label class="block text-sm text-slate-400 mb-1">Character Book JSON</label>
                                     <textarea id="character-card-book" rows="4"
                                         autocomplete="off" data-form-type="other"
-                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none font-mono text-sm"
+                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none font-mono"
                                         placeholder='{"entries": []}'></textarea>
                                 </div>
 
@@ -466,7 +466,7 @@
                                     <label class="block text-sm text-slate-400 mb-1">Extensions JSON</label>
                                     <textarea id="character-card-extensions" rows="4"
                                         autocomplete="off" data-form-type="other"
-                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none font-mono text-sm"
+                                        class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white text-base md:text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none font-mono"
                                         placeholder='{}'></textarea>
                                 </div>
                             </div>
@@ -507,7 +507,7 @@
 
     <!-- Delete Confirmation Modal -->
     <div id="delete-modal"
-        class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300 p-4">
+        class="fixed inset-0 z-60 hidden items-center justify-center bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-slate-800 w-full max-w-sm p-6 rounded-2xl transform scale-95 transition-transform duration-300 border border-slate-600 shadow-2xl relative"
             id="delete-modal-content" autocomplete="off">
             <div class="flex flex-col items-center text-center">
@@ -539,7 +539,7 @@
 
     <!-- Error Modal -->
     <div id="error-modal"
-        class="fixed inset-0 z-[70] hidden items-center justify-center bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300 p-4">
+        class="fixed inset-0 z-70 hidden items-center justify-center bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-slate-800 w-full max-w-sm p-6 rounded-2xl transform scale-95 transition-transform duration-300 border border-rose-500/30 shadow-2xl relative"
             id="error-modal-content" autocomplete="off">
             <div class="flex flex-col items-center text-center">
@@ -563,7 +563,7 @@
 
     <!-- Template Loaded Modal -->
     <div id="template-loaded-modal"
-        class="fixed inset-0 z-[80] hidden items-center justify-center bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300 p-4">
+        class="fixed inset-0 z-80 hidden items-center justify-center bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-slate-800 w-full max-w-sm p-6 rounded-2xl transform scale-95 transition-transform duration-300 border border-blue-500/30 shadow-2xl relative"
             id="template-loaded-modal-content" autocomplete="off">
             <div class="flex flex-col items-center text-center">

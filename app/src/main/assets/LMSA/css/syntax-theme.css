@@ -49,3 +49,115 @@ body.light-theme pre code .sh-property   { color: #005cc5 !important; }
 body.light-theme pre code .sh-variable   { color: #e36209 !important; }
 body.light-theme pre code .sh-decorator  { color: #6f42c1 !important; }
 body.light-theme pre code .sh-annotation { color: #6f42c1 !important; }
+
+/* ─── Highlight.js token theme ─── */
+pre code.hljs {
+	color: #f8f8f2;
+	background: transparent;
+}
+
+pre code.hljs .hljs-comment,
+pre code.hljs .hljs-quote {
+	color: #75715e !important;
+	font-style: italic;
+}
+
+pre code.hljs .hljs-keyword,
+pre code.hljs .hljs-selector-tag,
+pre code.hljs .hljs-meta,
+pre code.hljs .hljs-doctag,
+pre code.hljs .hljs-name,
+pre code.hljs .hljs-tag {
+	color: #f92672 !important;
+	font-weight: 700;
+}
+
+pre code.hljs .hljs-string,
+pre code.hljs .hljs-regexp,
+pre code.hljs .hljs-template-tag,
+pre code.hljs .hljs-attribute,
+pre code.hljs .hljs-attr {
+	color: #e6db74 !important;
+}
+
+pre code.hljs .hljs-number,
+pre code.hljs .hljs-literal,
+pre code.hljs .hljs-symbol,
+pre code.hljs .hljs-bullet {
+	color: #ae81ff !important;
+}
+
+pre code.hljs .hljs-title,
+pre code.hljs .hljs-title.function_,
+pre code.hljs .hljs-function,
+pre code.hljs .hljs-built_in,
+pre code.hljs .hljs-type,
+pre code.hljs .hljs-class .hljs-title {
+	color: #a6e22e !important;
+}
+
+pre code.hljs .hljs-variable,
+pre code.hljs .hljs-template-variable,
+pre code.hljs .hljs-params,
+pre code.hljs .hljs-property {
+	color: #66d9ef !important;
+}
+
+pre code.hljs .hljs-operator,
+pre code.hljs .hljs-punctuation {
+	color: #f8f8f2 !important;
+}
+
+body.light-theme pre code.hljs {
+	color: #24292e;
+}
+
+body.light-theme pre code.hljs .hljs-comment,
+body.light-theme pre code.hljs .hljs-quote {
+	color: #6a737d !important;
+}
+
+body.light-theme pre code.hljs .hljs-keyword,
+body.light-theme pre code.hljs .hljs-selector-tag,
+body.light-theme pre code.hljs .hljs-meta,
+body.light-theme pre code.hljs .hljs-doctag,
+body.light-theme pre code.hljs .hljs-name,
+body.light-theme pre code.hljs .hljs-tag {
+	color: #d73a49 !important;
+}
+
+body.light-theme pre code.hljs .hljs-string,
+body.light-theme pre code.hljs .hljs-regexp,
+body.light-theme pre code.hljs .hljs-template-tag,
+body.light-theme pre code.hljs .hljs-attribute,
+body.light-theme pre code.hljs .hljs-attr {
+	color: #032f62 !important;
+}
+
+body.light-theme pre code.hljs .hljs-number,
+body.light-theme pre code.hljs .hljs-literal,
+body.light-theme pre code.hljs .hljs-symbol,
+body.light-theme pre code.hljs .hljs-bullet {
+	color: #005cc5 !important;
+}
+
+body.light-theme pre code.hljs .hljs-title,
+body.light-theme pre code.hljs .hljs-title.function_,
+body.light-theme pre code.hljs .hljs-function,
+body.light-theme pre code.hljs .hljs-built_in,
+body.light-theme pre code.hljs .hljs-type,
+body.light-theme pre code.hljs .hljs-class .hljs-title {
+	color: #6f42c1 !important;
+}
+
+body.light-theme pre code.hljs .hljs-variable,
+body.light-theme pre code.hljs .hljs-template-variable,
+body.light-theme pre code.hljs .hljs-params,
+body.light-theme pre code.hljs .hljs-property {
+	color: #e36209 !important;
+}
+
+body.light-theme pre code.hljs .hljs-operator,
+body.light-theme pre code.hljs .hljs-punctuation {
+	color: #24292e !important;
+}

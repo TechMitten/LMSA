@@ -3,7 +3,7 @@ export const aboutModal = `
     <div id="about-modal"
         class="fixed inset-0 bg-black/80 backdrop-blur-sm items-center justify-center hidden modal-container z-50"
         aria-labelledby="about-title" role="dialog" aria-modal="true">
-        <div class="bg-gradient-to-b from-[#0a192f] to-[#0d1f3d] p-0 rounded-xl w-[420px] max-w-[90%] shadow-2xl modal-content border border-white/10 overflow-hidden"
+        <div class="bg-linear-to-b from-[#0a192f] to-[#0d1f3d] p-0 rounded-xl w-[420px] max-w-[90%] shadow-2xl modal-content border border-white/10 overflow-hidden"
             style="-webkit-overflow-scrolling: touch; touch-action: auto; overscroll-behavior: contain;">
             <!-- Header with app icon and title -->
             <div class="relative p-6 pb-4">
@@ -11,7 +11,7 @@ export const aboutModal = `
                     <img src="icon.png" alt="LMSA Icon" class="w-16 h-16 mb-1 filter drop-shadow-lg">
                 </div>
                 <h2 id="about-title"
-                    class="text-2xl font-bold text-center flex items-center justify-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 mb-1">
+                    class="text-2xl font-bold text-center flex items-center justify-center text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-teal-400 mb-1">
                     LMSA
                 </h2>
                 <button id="close-about"
@@ -20,13 +20,13 @@ export const aboutModal = `
                 </button>
                 <div class="version-badge px-4 py-1.5 rounded-full mx-auto w-fit mt-2">
                     <p class="text-sm font-medium text-blue-300 text-center">Version 10.15</p>
-                    <p class="text-xs font-medium text-blue-300/90 text-center mt-0.5">Build 314</p>
+                    <p class="text-xs font-medium text-blue-300/90 text-center mt-0.5">Build 316</p>
                 </div>
             </div>
 
             <!-- Main content with subtle divider -->
             <div class="p-6 pt-4">
-                <div class="h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent mb-3"></div>
+                <div class="h-px w-full bg-linear-to-r from-transparent via-white/20 to-transparent mb-3"></div>
 
                 <!-- Company info with subtle animation -->
                 <div class="flex flex-col items-center justify-center">

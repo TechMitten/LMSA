@@ -1,7 +1,5 @@
 // Debug logging utility
 import { highlightElement as shHighlight } from './syntax-highlighter.js';
-// Expose on window for non-module scripts (e.g. external-libs-loader.js)
-window.shHighlightElement = shHighlight;
 let isDebugEnabled = false; // Debug mode disabled by default
 let reasoningPanelIdCounter = 0;
 
@@ -60,6 +58,133 @@ export function normalizeReasoningTags(text) {
 
 const CODE_FENCE_LANGUAGES =
     'html|xml|css|javascript|js|typescript|ts|jsx|tsx|json|python|py|java|kotlin|kt|sql|bash|sh|shell|yaml|yml|c|cpp|plaintext|text';
+
+const LANGUAGE_ALIASES = {
+    'c#': 'csharp',
+    csharp: 'csharp',
+    cs: 'csharp',
+    'c++': 'cpp',
+    cpp: 'cpp',
+    cxx: 'cpp',
+    hpp: 'cpp',
+    js: 'javascript',
+    javascript: 'javascript',
+    node: 'javascript',
+    nodejs: 'javascript',
+    ts: 'typescript',
+    typescript: 'typescript',
+    jsx: 'jsx',
+    tsx: 'tsx',
+    py: 'python',
+    python: 'python',
+    shell: 'bash',
+    sh: 'bash',
+    zsh: 'bash',
+    yml: 'yaml',
+    kt: 'kotlin',
+    md: 'markdown',
+    markdown: 'markdown',
+    golang: 'go',
+    text: 'plaintext',
+    plain: 'plaintext',
+    'plain-text': 'plaintext',
+    'language-javascript': 'javascript',
+    'language-typescript': 'typescript',
+    'language-python': 'python',
+    'language-html': 'html',
+    'language-css': 'css',
+    'language-json': 'json',
+    'language-sql': 'sql',
+    'language-bash': 'bash',
+    'language-yaml': 'yaml',
+    'language-kotlin': 'kotlin',
+    'language-java': 'java',
+    'language-c': 'c',
+    'language-cpp': 'cpp',
+    'language-csharp': 'csharp',
+    'language-go': 'go',
+    'language-rust': 'rust',
+    'language-php': 'php',
+    'language-markdown': 'markdown'
+};
+
+function extractFenceLanguage(infoString) {
+    const raw = String(infoString || '').trim();
+    if (!raw) return '';
+    const firstToken = raw.split(/\s+/)[0] || '';
+    return firstToken.replace(/^language-/i, '');
+}
+
+function normalizeCodeLanguage(language, fallback = 'plaintext') {
+    const raw = String(language || '').trim().toLowerCase();
+    if (!raw) return fallback;
+
+    const normalizedToken = raw
+        .replace(/^language-/, '')
+        .replace(/^lang-/, '')
+        .replace(/\./g, '')
+        .replace(/_/g, '-');
+
+    if (LANGUAGE_ALIASES[normalizedToken]) {
+        return LANGUAGE_ALIASES[normalizedToken];
+    }
+
+    if (/^c\+\+([0-9]{2})?$/.test(normalizedToken)) return 'cpp';
+    if (/^(c#|csharp|dotnet)$/.test(normalizedToken)) return 'csharp';
+
+    return normalizedToken || fallback;
+}
+
+function detectLanguageFromCode(codeContent) {
+    if (!window.hljs || typeof window.hljs.highlightAuto !== 'function') return 'plaintext';
+
+    const candidates = [
+        'html', 'xml', 'css', 'javascript', 'typescript', 'json', 'yaml',
+        'python', 'sql', 'bash', 'kotlin', 'java', 'c', 'cpp', 'csharp',
+        'php', 'go', 'rust', 'markdown'
+    ];
+
+    try {
+        const detected = window.hljs.highlightAuto(String(codeContent || ''), candidates);
+        return normalizeCodeLanguage(detected && detected.language ? detected.language : 'plaintext');
+    } catch (_error) {
+        return 'plaintext';
+    }
+}
+
+function highlightCodeBlockElement(codeElement, language) {
+    if (!codeElement) return;
+
+    const normalizedLanguage = normalizeCodeLanguage(language);
+    const rawCode = codeElement.textContent || '';
+
+    if (window.hljs && typeof window.hljs.highlightElement === 'function') {
+        try {
+            let hljsLanguage = normalizedLanguage;
+
+            if (!window.hljs.getLanguage(hljsLanguage)) {
+                hljsLanguage = detectLanguageFromCode(rawCode);
+            }
+
+            if (hljsLanguage && hljsLanguage !== 'plaintext' && window.hljs.getLanguage(hljsLanguage)) {
+                codeElement.className = `language-${hljsLanguage}`;
+            } else {
+                codeElement.className = 'language-plaintext';
+            }
+
+            window.hljs.highlightElement(codeElement);
+            return;
+        } catch (_error) {
+            // Fall through to the legacy highlighter.
+        }
+    }
+
+    codeElement.className = normalizedLanguage === 'plaintext' ? 'language-plaintext' : `language-${normalizedLanguage}`;
+    shHighlight(codeElement, normalizedLanguage);
+}
+
+// Expose on window for non-module scripts (e.g. external-libs-loader.js)
+window.shHighlightElement = highlightCodeBlockElement;
 
 function normalizeOpeningFence(prefix, language, followingText) {
     const fence = language ? '```' + language : '```';
@@ -395,7 +520,7 @@ function decodeHtmlOnce(html) {
 }
 
 function renderCodeBlockHtml(language, code, extraAttributes = '') {
-    const normalizedLanguage = language || 'plaintext';
+    const normalizedLanguage = normalizeCodeLanguage(extractFenceLanguage(language), 'plaintext');
     const rawCode = decodeHtmlOnce(code).replace(/\r\n?/g, '\n').replace(/\n$/, '');
     const formattedCode = escapeHtml(rawCode).split('\n').join('<br>');
     const attributeSuffix = extraAttributes ? ' ' + extraAttributes : '';
@@ -411,9 +536,9 @@ function createCodeBlockPlaceholder(codeBlockHtml, codeBlockPlaceholders) {
 }
 
 function replaceMarkdownCodeBlocks(sanitized, extraAttributes = '', codeBlockPlaceholders = null) {
-    let rendered = sanitized.replace(/```([A-Za-z0-9+#_-]+)?[ \t]*\r?\n([\s\S]*?)```/g, (match, language, code) => {
+    let rendered = sanitized.replace(/```([^\n`]*)\r?\n([\s\S]*?)```/g, (match, languageInfo, code) => {
         return createCodeBlockPlaceholder(
-            renderCodeBlockHtml(language, code, extraAttributes),
+            renderCodeBlockHtml(languageInfo, code, extraAttributes),
             codeBlockPlaceholders
         );
     });
@@ -421,9 +546,9 @@ function replaceMarkdownCodeBlocks(sanitized, extraAttributes = '', codeBlockPla
     // While streaming, an opening fence can arrive before the closing fence.
     // Keep the trailing content inside a provisional code block so lines don't
     // jump in and out of the snippet as more chunks arrive.
-    rendered = rendered.replace(/(^|\n)```([A-Za-z0-9+#_-]+)?[ \t]*\r?\n([\s\S]*)$/g, (match, prefix, language, code) => {
+    rendered = rendered.replace(/(^|\n)```([^\n`]*)\r?\n([\s\S]*)$/g, (match, prefix, languageInfo, code) => {
         return prefix + createCodeBlockPlaceholder(
-            renderCodeBlockHtml(language, code, extraAttributes),
+            renderCodeBlockHtml(languageInfo, code, extraAttributes),
             codeBlockPlaceholders
         );
     });
@@ -942,8 +1067,9 @@ export function initializeCodeMirror(element) {
         codeBlocks.forEach(block => {
             const pre = block.closest('pre');
             if (!pre) return;
-            const languageMatch = block.className.match(/language-([A-Za-z0-9+#_-]+)/);
-            const language = (pre.getAttribute('data-language') || (languageMatch ? languageMatch[1] : '') || 'plaintext').toLowerCase();
+            const languageMatch = block.className.match(/language-([A-Za-z0-9+#_.-]+)/);
+            const requestedLanguage = pre.getAttribute('data-language') || (languageMatch ? languageMatch[1] : '') || 'plaintext';
+            const language = normalizeCodeLanguage(requestedLanguage, 'plaintext');
             
             // Add language as data attribute for styling
             pre.setAttribute('data-language', language);
@@ -995,9 +1121,8 @@ export function initializeCodeMirror(element) {
             // Update the block content
             block.textContent = codeContent;
 
-            // Apply syntax highlighting using built-in highlighter
-            block.className = language === 'plaintext' ? 'language-plaintext' : `language-${language}`;
-            shHighlight(block, language);
+            // Apply syntax highlighting using Highlight.js when available.
+            highlightCodeBlockElement(block, language);
         });
     }, 50);
 }
@@ -1227,9 +1352,13 @@ export function processCodeBlocks(content, encode = false) {
     if (!content.includes('```')) return content;
 
     // Process code blocks
-    return content.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
+    return content.replace(/```([^\n`]*)\n([\s\S]*?)```/g, (match, languageInfo, code) => {
+        const languageToken = extractFenceLanguage(languageInfo);
+        const normalizedFenceLanguage = normalizeCodeLanguage(languageToken, '');
+        const languageLabel = normalizedFenceLanguage || String(languageToken || '').trim();
+
         // Special handling for HTML code blocks
-        const isHtmlCode = language === 'html' || language === 'xml';
+        const isHtmlCode = languageLabel === 'html' || languageLabel === 'xml';
         let processedCode = code.trim();
 
         if (encode) {
@@ -1246,10 +1375,10 @@ export function processCodeBlocks(content, encode = false) {
                 // Store the raw HTML code without entity encoding
                 const decodedCode = decodeHtmlEntities(processedCode);
                 // Add special markers for HTML content to ensure exact preservation
-                return '```' + (language || '') + '\n' + '[HTML_CODE_BLOCK_START]' + decodedCode + '[HTML_CODE_BLOCK_END]' + '```';
+                return '```' + languageLabel + '\n' + '[HTML_CODE_BLOCK_START]' + decodedCode + '[HTML_CODE_BLOCK_END]' + '```';
             } else {
                 // For non-HTML code, preserve the exact content
-                return '```' + (language || '') + '\n' + processedCode + '```';
+                return '```' + languageLabel + '\n' + processedCode + '```';
             }
         } else {
             // For display: When rendering content
@@ -1270,7 +1399,7 @@ export function processCodeBlocks(content, encode = false) {
                     // For display: Return clean content without visible markers
                     // Monaco Editor will handle HTML properly without needing visible markers
                     debugLog('Using preserved HTML content for display without visible markers');
-                    return '```' + (language || '') + '\n' + rawContent + '```';
+                    return '```' + languageLabel + '\n' + rawContent + '```';
                 }
             }
 
@@ -1285,11 +1414,11 @@ export function processCodeBlocks(content, encode = false) {
                     .replace(/'/g, '&#39;')
                     .replace(/\//g, '&#x2F;');
 
-                return '```' + (language || '') + '\n' + displayCode + '```';
+                return '```' + languageLabel + '\n' + displayCode + '```';
             }
 
             // For non-HTML code blocks
-            return '```' + (language || '') + '\n' + processedCode + '```';
+            return '```' + languageLabel + '\n' + processedCode + '```';
         }
     });
 }

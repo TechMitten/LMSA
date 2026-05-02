@@ -40,6 +40,26 @@ let customTemplateLookup = new Map();
 let customTemplateNames = new Set();
 let activeTemplateEditorMode = BASIC_TEMPLATE_MODE;
 
+function hasTemplatePremiumAccess() {
+    return typeof window.hasPremiumAccess === 'function'
+        ? window.hasPremiumAccess()
+        : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
+}
+
+function requireTemplatePremiumAccess(featureName = 'Templates') {
+    if (hasTemplatePremiumAccess()) {
+        return true;
+    }
+
+    if (typeof window.openPremiumModal === 'function') {
+        window.openPremiumModal(featureName);
+    } else {
+        alert('This feature is reserved for premium users.');
+    }
+
+    return false;
+}
+
 function createTemplateId() {
     return `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
 }
@@ -448,6 +468,10 @@ function createCustomTemplateCard(t) {
 }
 
 function handleCardClick(btn) {
+    if (!requireTemplatePremiumAccess('Templates')) {
+        return;
+    }
+
     // Check if this button is already selected
     const isSelected = btn.classList.contains('ring-2');
     const allButtons = document.querySelectorAll('.glass-card');
@@ -1095,16 +1119,7 @@ function resetTemplateForm() {
 }
 
 function tryOpenCharacterCardImport() {
-    const isPremium = typeof window.hasPremiumAccess === 'function'
-        ? window.hasPremiumAccess()
-        : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
-
-    if (!isPremium) {
-        if (typeof window.openPremiumModal === 'function') {
-            window.openPremiumModal('Custom Templates');
-        } else {
-            alert('This feature is reserved for premium users.');
-        }
+    if (!requireTemplatePremiumAccess('Templates')) {
         return;
     }
 
@@ -1252,15 +1267,7 @@ function openCreateModal(editMode = false, options = {}) {
 
     // Check premium status for custom templates (both create and edit)
     // Paid users bypass this, free users get the premium modal
-    const isPremium = typeof window.hasPremiumAccess === 'function'
-        ? window.hasPremiumAccess()
-        : window.AndroidBilling && typeof window.AndroidBilling.checkPremiumStatus === 'function' && window.AndroidBilling.checkPremiumStatus();
-    if (!isPremium) {
-        if (typeof window.openPremiumModal === 'function') {
-            window.openPremiumModal('Custom Templates');
-        } else {
-            alert('This feature is reserved for premium users.');
-        }
+    if (!requireTemplatePremiumAccess('Templates')) {
         return;
     }
 
@@ -1674,6 +1681,10 @@ function showTemplateLoadedModal() {
 // Start Button Logic
 startBtn.addEventListener('click', function () {
     if (selectedPrompt) {
+        if (!requireTemplatePremiumAccess('Templates')) {
+            return;
+        }
+
         localStorage.setItem('systemPrompt', selectedPrompt);
         localStorage.setItem('isUserCreatedSystemPrompt', 'true');
         localStorage.setItem('activeTemplateName', selectedTemplateName);
