@@ -124,6 +124,19 @@
   padding: 1.5rem;
 }
 
+#settings-modal .modal-content,
+#settings-modal #settings-content-wrapper {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#settings-modal .modal-content::-webkit-scrollbar,
+#settings-modal #settings-content-wrapper::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
 @media (max-width: 640px) {
   #settings-modal .modal-content {
     padding: 1.25rem;
@@ -3621,8 +3634,8 @@ body.light-theme .openrouter-key-input-wrapper input {
 
 /* Thematic Color Variations - Dark Theme */
 .group-ai { 
-    border-left: 3px solid #8b5cf6 !important; 
-    background: linear-gradient(165deg, rgba(139, 92, 246, 0.05) 0%, rgba(30, 41, 59, 0.2) 100%) !important; 
+  border-left: 2px solid rgba(139, 92, 246, 0.58) !important; 
+  background: linear-gradient(165deg, rgba(139, 92, 246, 0.028) 0%, rgba(30, 41, 59, 0.16) 100%) !important; 
 }
 .group-ai .settings-group-title { 
     color: #a78bfa !important; 
@@ -3633,8 +3646,8 @@ body.light-theme .openrouter-key-input-wrapper input {
 .group-ai .settings-item-label i { color: #a78bfa !important; }
 
 .group-smart { 
-    border-left: 3px solid #10b981 !important; 
-    background: linear-gradient(165deg, rgba(16, 185, 129, 0.05) 0%, rgba(30, 41, 59, 0.2) 100%) !important; 
+  border-left: 2px solid rgba(16, 185, 129, 0.58) !important; 
+  background: linear-gradient(165deg, rgba(16, 185, 129, 0.028) 0%, rgba(30, 41, 59, 0.16) 100%) !important; 
 }
 .group-smart .settings-group-title { 
     color: #34d399 !important; 
@@ -3645,8 +3658,8 @@ body.light-theme .openrouter-key-input-wrapper input {
 .group-smart .settings-item-label i { color: #34d399 !important; }
 
 .group-interface { 
-    border-left: 3px solid #3b82f6 !important; 
-    background: linear-gradient(165deg, rgba(59, 130, 246, 0.05) 0%, rgba(30, 41, 59, 0.2) 100%) !important; 
+  border-left: 2px solid rgba(59, 130, 246, 0.58) !important; 
+  background: linear-gradient(165deg, rgba(59, 130, 246, 0.028) 0%, rgba(30, 41, 59, 0.16) 100%) !important; 
 }
 .group-interface .settings-group-title { 
     color: #60a5fa !important; 
@@ -3657,8 +3670,8 @@ body.light-theme .openrouter-key-input-wrapper input {
 .group-interface .settings-item-label i { color: #60a5fa !important; }
 
 .group-device { 
-    border-left: 3px solid #f59e0b !important; 
-    background: linear-gradient(165deg, rgba(245, 158, 11, 0.05) 0%, rgba(30, 41, 59, 0.2) 100%) !important; 
+  border-left: 2px solid rgba(245, 158, 11, 0.58) !important; 
+  background: linear-gradient(165deg, rgba(245, 158, 11, 0.028) 0%, rgba(30, 41, 59, 0.16) 100%) !important; 
 }
 .group-device .settings-group-title { 
     color: #fbbf24 !important; 
@@ -3669,8 +3682,8 @@ body.light-theme .openrouter-key-input-wrapper input {
 .group-device .settings-item-label i { color: #fbbf24 !important; }
 
 .group-danger { 
-    border-left: 3px solid #ef4444 !important; 
-    background: linear-gradient(165deg, rgba(239, 68, 68, 0.07) 0%, rgba(30, 41, 59, 0.3) 100%) !important; 
+  border-left: 2px solid rgba(239, 68, 68, 0.62) !important; 
+  background: linear-gradient(165deg, rgba(239, 68, 68, 0.04) 0%, rgba(30, 41, 59, 0.2) 100%) !important; 
 }
 .group-danger .settings-group-title { 
     color: #f87171 !important; 
@@ -3681,8 +3694,8 @@ body.light-theme .openrouter-key-input-wrapper input {
 .group-danger .settings-item-label i { color: #f87171 !important; }
 
 .group-font { 
-    border-left: 3px solid #ec4899 !important; 
-    background: linear-gradient(165deg, rgba(236, 72, 153, 0.07) 0%, rgba(30, 41, 59, 0.3) 100%) !important; 
+  border-left: 2px solid rgba(236, 72, 153, 0.62) !important; 
+  background: linear-gradient(165deg, rgba(236, 72, 153, 0.04) 0%, rgba(30, 41, 59, 0.2) 100%) !important; 
 }
 .group-font .settings-group-title { 
     color: #f472b6 !important; 
@@ -3695,8 +3708,8 @@ body.light-theme .openrouter-key-input-wrapper input {
 /* Light Theme Variations */
 /* Light Theme Variations - Refined */
 .light-theme .group-ai { 
-    border-left-color: #7c3aed !important; 
-    background: linear-gradient(165deg, rgba(124, 58, 237, 0.04) 0%, rgba(248, 250, 252, 0.7) 100%) !important; 
+  border-left-color: rgba(124, 58, 237, 0.62) !important; 
+  background: linear-gradient(165deg, rgba(124, 58, 237, 0.024) 0%, rgba(248, 250, 252, 0.76) 100%) !important; 
 }
 .light-theme .group-ai .settings-group-title { 
     color: #6d28d9 !important; 
@@ -3705,8 +3718,8 @@ body.light-theme .openrouter-key-input-wrapper input {
 }
 
 .light-theme .group-smart { 
-    border-left-color: #059669 !important; 
-    background: linear-gradient(165deg, rgba(5, 150, 105, 0.04) 0%, rgba(248, 250, 252, 0.7) 100%) !important; 
+  border-left-color: rgba(5, 150, 105, 0.62) !important; 
+  background: linear-gradient(165deg, rgba(5, 150, 105, 0.024) 0%, rgba(248, 250, 252, 0.76) 100%) !important; 
 }
 .light-theme .group-smart .settings-group-title { 
     color: #047857 !important; 
@@ -3715,8 +3728,8 @@ body.light-theme .openrouter-key-input-wrapper input {
 }
 
 .light-theme .group-interface { 
-    border-left-color: #2563eb !important; 
-    background: linear-gradient(165deg, rgba(37, 99, 235, 0.04) 0%, rgba(248, 250, 252, 0.7) 100%) !important; 
+  border-left-color: rgba(37, 99, 235, 0.62) !important; 
+  background: linear-gradient(165deg, rgba(37, 99, 235, 0.024) 0%, rgba(248, 250, 252, 0.76) 100%) !important; 
 }
 .light-theme .group-interface .settings-group-title { 
     color: #1d4ed8 !important; 
@@ -3725,8 +3738,8 @@ body.light-theme .openrouter-key-input-wrapper input {
 }
 
 .light-theme .group-device { 
-    border-left-color: #d97706 !important; 
-    background: linear-gradient(165deg, rgba(217, 119, 6, 0.04) 0%, rgba(248, 250, 252, 0.7) 100%) !important; 
+  border-left-color: rgba(217, 119, 6, 0.62) !important; 
+  background: linear-gradient(165deg, rgba(217, 119, 6, 0.024) 0%, rgba(248, 250, 252, 0.76) 100%) !important; 
 }
 .light-theme .group-device .settings-group-title { 
     color: #b45309 !important; 
@@ -3735,8 +3748,8 @@ body.light-theme .openrouter-key-input-wrapper input {
 }
 
 .light-theme .group-danger { 
-    border-left-color: #dc2626 !important; 
-    background: linear-gradient(165deg, rgba(220, 38, 38, 0.04) 0%, rgba(248, 250, 252, 0.7) 100%) !important; 
+  border-left-color: rgba(220, 38, 38, 0.66) !important; 
+  background: linear-gradient(165deg, rgba(220, 38, 38, 0.03) 0%, rgba(248, 250, 252, 0.76) 100%) !important; 
 }
 .light-theme .group-danger .settings-group-title { 
     color: #b91c1c !important; 
@@ -3745,8 +3758,8 @@ body.light-theme .openrouter-key-input-wrapper input {
 }
 
 .light-theme .group-font { 
-    border-left-color: #db2777 !important; 
-    background: linear-gradient(165deg, rgba(219, 39, 119, 0.04) 0%, rgba(248, 250, 252, 0.7) 100%) !important; 
+  border-left-color: rgba(219, 39, 119, 0.66) !important; 
+  background: linear-gradient(165deg, rgba(219, 39, 119, 0.03) 0%, rgba(248, 250, 252, 0.76) 100%) !important; 
 }
 .light-theme .group-font .settings-group-title { 
     color: #be185d !important; 
@@ -3837,6 +3850,18 @@ body.light-theme .openrouter-key-input-wrapper input {
 
 .settings-item .max-tokens-input-row {
     margin-top: 0.5rem;
+}
+
+#biometric-setting-container .settings-item-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+#biometric-setting-container .settings-item-label i {
+  width: 1rem;
+  font-size: 0.78rem;
 }
 
 @media (max-width: 480px) {
