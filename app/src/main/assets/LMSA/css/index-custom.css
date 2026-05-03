@@ -2468,20 +2468,39 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 /* Stable chat composer layout */
 :root {
     --chat-composer-control-size: 52px;
+    --chat-disclaimer-height: 1.2rem;
+    --chat-disclaimer-gap: 0.4rem;
 }
 
 #chat-input-area {
     padding-top: 0.75rem !important;
+    padding-bottom: calc(0.75rem + var(--chat-disclaimer-height) + var(--chat-disclaimer-gap)) !important;
+}
+
+body.chat-input-focused #chat-input-area {
     padding-bottom: 0.75rem !important;
 }
 
 #ai-disclaimer {
-    min-height: 1.2rem !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
     height: auto !important;
-    margin-top: 0.4rem !important;
+    margin-top: 0 !important;
     margin-bottom: 0 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+    transition: opacity 0.15s ease, max-height 0.15s ease, margin-top 0.15s ease !important;
+}
+
+body.chat-input-focused #ai-disclaimer {
+    min-height: 1.2rem !important;
+    max-height: 1.2rem !important;
+    margin-top: 0.4rem !important;
     opacity: 1 !important;
     visibility: visible !important;
+    pointer-events: auto !important;
     overflow: visible !important;
 }
 
@@ -4076,6 +4095,40 @@ body.light-theme .conn-modal-action-btn--cancel {
     margin-bottom: 14px !important;
 }
 
+#welcome-message .setup-dashboard-title-block {
+    --setup-dashboard-title-offset: clamp(-126px, -13.2vh, -84px);
+    width: 100%;
+    text-align: center;
+    margin: 0 0 14px 0;
+    pointer-events: none;
+    animation: setupDashboardTitleFloatIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+}
+
+@keyframes setupDashboardTitleFloatIn {
+    from {
+        opacity: 0;
+        transform: translateY(calc(var(--setup-dashboard-title-offset) + 12px));
+    }
+    to {
+        opacity: 1;
+        transform: translateY(var(--setup-dashboard-title-offset));
+    }
+}
+
+#welcome-message .setup-dashboard-title {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 1.18rem;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+    text-wrap: balance;
+}
+
+body.light-theme #welcome-message .setup-dashboard-title {
+    color: #0f172a;
+}
+
 /* === Provider Cards — Setup State (unconfigured, JS adds .grid) === */
 #welcome-message #setup-dashboard.grid {
     display: flex !important;
@@ -4404,6 +4457,17 @@ body.light-theme #welcome-message .welcome-premium-action.premium-activated {
 }
 
 @media (max-width: 420px) {
+    :root {
+        --chat-disclaimer-height: 1.1rem;
+        --chat-disclaimer-gap: 0.35rem;
+    }
+
+    body.chat-input-focused #ai-disclaimer {
+        min-height: 1.1rem !important;
+        max-height: 1.1rem !important;
+        margin-top: 0.35rem !important;
+    }
+
     #welcome-message {
         padding: 12px !important;
     }
