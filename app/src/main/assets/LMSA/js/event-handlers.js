@@ -9,10 +9,10 @@ import {
     settingsIconButton, newTopicButton, sendButton, sendContextMenu, newTopicMenuButton, scrollToBottomMenuButton,
     modelButton, importExportGroupButton, importExportContainer, systemPromptSettingsButton,
     exportChatsButton, importChatsButton, importChatsInput,
-    welcomeModelsBtn, welcomeNewChatBtn, welcomeHelpBtn,
+    welcomeModelsBtn, welcomeMcpBtn, welcomeSystemPromptBtn, welcomeTtsBtn, welcomeImportExportBtn, welcomeNewChatBtn, welcomeHelpBtn,
     setupLocalBtn, setupOpenRouterBtn, setupCustomBtn
 } from './dom-elements.js';
-import { showSettingsModal, hideSettingsModal, navigateSettingsModalToStep } from './settings-modal-manager.js';
+import { showSettingsModal, hideSettingsModal, navigateSettingsModalToStep, showLmMcpModal, navigateToTTS } from './settings-modal-manager.js';
 import { openPremiumModal } from './components/modals/premium-modal.js';
 import {
     getEnterSendsNewline,
@@ -436,6 +436,80 @@ export function initializeEventHandlers() {
                     window.location.href = 'templates.html';
                 }
             }, 110);
+        }, { passive: false });
+    }
+
+    // New Shortcut Buttons for Welcome Screen
+    if (welcomeMcpBtn) {
+        bindPressInFeedback(welcomeMcpBtn);
+        welcomeMcpBtn.addEventListener('click', () => {
+            showLmMcpModal();
+        });
+        welcomeMcpBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            runAfterPressIn(welcomeMcpBtn, () => {
+                showLmMcpModal();
+                welcomeMcpBtn.blur();
+            });
+        }, { passive: false });
+    }
+
+    if (welcomeSystemPromptBtn) {
+        bindPressInFeedback(welcomeSystemPromptBtn);
+        welcomeSystemPromptBtn.addEventListener('click', () => {
+            handleSystemPromptSettingsButtonClick();
+        });
+        welcomeSystemPromptBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            runAfterPressIn(welcomeSystemPromptBtn, () => {
+                handleSystemPromptSettingsButtonClick();
+                welcomeSystemPromptBtn.blur();
+            });
+        }, { passive: false });
+    }
+
+    if (welcomeTtsBtn) {
+        bindPressInFeedback(welcomeTtsBtn);
+        welcomeTtsBtn.addEventListener('click', () => {
+            showSettingsModal();
+            navigateToTTS();
+        });
+        welcomeTtsBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            runAfterPressIn(welcomeTtsBtn, () => {
+                showSettingsModal();
+                navigateToTTS();
+                welcomeTtsBtn.blur();
+            });
+        }, { passive: false });
+    }
+
+    if (welcomeImportExportBtn) {
+        bindPressInFeedback(welcomeImportExportBtn);
+        const openImportExport = () => {
+            toggleSidebar();
+            // Small delay to let sidebar open
+            setTimeout(() => {
+                if (importExportContainer && importExportContainer.classList.contains('hidden')) {
+                    if (typeof toggleImportExportContainer === 'function') {
+                        toggleImportExportContainer();
+                    } else {
+                        importExportGroupButton?.click();
+                    }
+                }
+            }, 300);
+        };
+        welcomeImportExportBtn.addEventListener('click', openImportExport);
+        welcomeImportExportBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            runAfterPressIn(welcomeImportExportBtn, () => {
+                openImportExport();
+                welcomeImportExportBtn.blur();
+            });
         }, { passive: false });
     }
 

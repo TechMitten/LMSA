@@ -685,6 +685,25 @@ function initializeConnectionPresetList() {
 
 
 /**
+ * Shows the LM Studio MCP integration modal
+ */
+export function showLmMcpModal() {
+    const lmMcpModal = document.getElementById('lmstudio-mcp-input-modal');
+    const addMcpIntegrationBtn = document.getElementById('add-lmstudio-mcp-integration-btn');
+    if (lmMcpModal) {
+        // We need to ensure loadWorkingMcpIntegrations and showInputModal are accessible
+        // They are currently defined inside initializeSettingsModal, which is problematic.
+        // Actually, for now, I will just trigger the click on the button if it exists,
+        // or I will have to refactor those functions to be top-level as well.
+        
+        const configBtn = document.getElementById('configure-lmstudio-mcp-btn');
+        if (configBtn) {
+            configBtn.click();
+        }
+    }
+}
+
+/**
  * Shows the settings modal
  */
 export async function showSettingsModal() {
@@ -1232,6 +1251,35 @@ export function navigateSettingsModalToStep(stepName = 'connection') {
 
     _currentSettingsStep = stepName;
     return false;
+}
+
+/**
+ * Navigates the settings modal directly to the TTS voice selection section
+ */
+export function navigateToTTS() {
+    // Navigate to options step where TTS settings reside
+    navigateSettingsModalToStep('options');
+
+    // Small delay to ensure the DOM is updated and visible before scrolling
+    setTimeout(() => {
+        const ttsSelect = document.getElementById('tts-voice-select');
+        const optionsStep = document.getElementById('settings-step-options');
+        
+        if (ttsSelect && optionsStep) {
+            // Scroll the settings item into view
+            const settingsItem = ttsSelect.closest('.settings-item');
+            if (settingsItem) {
+                settingsItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Add a brief highlight effect
+                settingsItem.style.transition = 'background-color 0.5s ease';
+                settingsItem.style.backgroundColor = 'rgba(96, 165, 250, 0.15)';
+                setTimeout(() => {
+                    settingsItem.style.backgroundColor = '';
+                }, 2000);
+            }
+        }
+    }, 400);
 }
 
 // Helper functions to disable/enable navigation

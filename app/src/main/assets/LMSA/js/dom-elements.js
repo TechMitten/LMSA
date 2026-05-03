@@ -212,6 +212,10 @@ export const modelLoadingName = document.getElementById('model-loading-name');
 // Welcome screen buttons
 export const getStartedBtn = domCache.get('get-started-btn');
 export const welcomeModelsBtn = domCache.get('welcome-models-btn');
+export const welcomeMcpBtn = domCache.get('welcome-mcp-btn');
+export const welcomeSystemPromptBtn = domCache.get('welcome-system-prompt-btn');
+export const welcomeTtsBtn = domCache.get('welcome-tts-btn');
+export const welcomeImportExportBtn = domCache.get('welcome-import-export-btn');
 export const welcomeNewChatBtn = domCache.get('welcome-new-chat-btn');
 export const welcomeTemplatesBtn = domCache.get('welcome-templates-btn');
 export const welcomeHelpBtn = domCache.get('welcome-help-btn');

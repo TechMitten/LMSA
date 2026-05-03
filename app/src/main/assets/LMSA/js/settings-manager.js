@@ -1538,17 +1538,17 @@ function formatVoiceName(voice) {
  * Loads the Ollama setting from localStorage
  */
 export function loadOllamaSetting() {
-  if (ollamaToggleCheckbox) {
-    const savedUseOllama = localStorage.getItem("useOllama");
-    if (savedUseOllama === "true") {
-      ollamaToggleCheckbox.checked = true;
-      useOllama = true;
-    } else {
-      ollamaToggleCheckbox.checked = false;
-      useOllama = false;
-    }
+  const savedUseOllama = localStorage.getItem("useOllama");
+  if (savedUseOllama === "true") {
+    useOllama = true;
+    if (ollamaToggleCheckbox) ollamaToggleCheckbox.checked = true;
+  } else {
+    useOllama = false;
+    if (ollamaToggleCheckbox) ollamaToggleCheckbox.checked = false;
+  }
 
-    // Add event listener for the checkbox
+  // Add event listener for the checkbox if it exists
+  if (ollamaToggleCheckbox) {
     ollamaToggleCheckbox.addEventListener("change", saveOllamaSetting);
   }
 }

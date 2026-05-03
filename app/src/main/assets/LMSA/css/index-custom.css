@@ -4264,3 +4264,422 @@ body.light-theme #welcome-message .welcome-premium-action.premium-activated {
     }
 }
 
+/* =========================================================
+   LM Studio MCP Input Modal - Premium Overhaul
+   ========================================================= */
+
+#lmstudio-mcp-input-modal .connection-input-modal-box {
+    border-radius: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98)) !important;
+    box-shadow: 
+        0 0 0 1px rgba(255,255,255,0.05) inset,
+        0 30px 60px -10px rgba(0,0,0,0.6),
+        0 0 40px -10px rgba(59, 130, 246, 0.1) !important;
+}
+
+body.light-theme #lmstudio-mcp-input-modal .connection-input-modal-box {
+    background: linear-gradient(145deg, #ffffff, #f8fafc) !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 
+        0 0 0 1px rgba(255,255,255,0.8) inset,
+        0 30px 60px -10px rgba(15,23,42,0.15),
+        0 0 40px -10px rgba(59, 130, 246, 0.05) !important;
+}
+
+#lmstudio-mcp-input-modal .connection-input-modal-accent--blue {
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899) !important;
+    height: 4px !important;
+}
+
+/* Typography Enhancements */
+#lmstudio-mcp-input-modal h3 {
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+    font-size: 1.15rem !important;
+}
+
+#lmstudio-mcp-input-modal .text-xs.font-semibold.uppercase {
+    letter-spacing: 0.1em !important;
+    color: #94a3b8 !important;
+    font-weight: 700 !important;
+}
+
+body.light-theme #lmstudio-mcp-input-modal .text-xs.font-semibold.uppercase {
+    color: #64748b !important;
+}
+
+/* Gray Cancel / Clear Buttons (Premium Redesign) */
+#lmstudio-mcp-input-modal .conn-modal-action-btn--cancel {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #94a3b8 !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
+}
+
+#lmstudio-mcp-input-modal .conn-modal-action-btn--cancel:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    color: #e2e8f0 !important;
+    transform: translateY(-1px) !important;
+}
+
+body.light-theme #lmstudio-mcp-input-modal .conn-modal-action-btn--cancel {
+    background: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
+    box-shadow: inset 0 1px 0 #ffffff !important;
+}
+
+body.light-theme #lmstudio-mcp-input-modal .conn-modal-action-btn--cancel:hover {
+    background: #e2e8f0 !important;
+    border-color: #cbd5e1 !important;
+    color: #1e293b !important;
+}
+
+/* Save / Done Button */
+#lmstudio-mcp-input-modal .conn-modal-action-btn--save {
+    background: linear-gradient(135deg, #2563eb, #4f46e5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    box-shadow: 
+        0 4px 12px rgba(37, 99, 235, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+#lmstudio-mcp-input-modal .conn-modal-action-btn--save:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 
+        0 6px 16px rgba(37, 99, 235, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    filter: brightness(1.1) !important;
+}
+
+/* Professional Buttons (Template Gallery & Add Buttons) */
+#lmstudio-mcp-input-modal .professional-button {
+    background: rgba(30, 41, 59, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    color: #cbd5e1 !important;
+    border-radius: 12px !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+#lmstudio-mcp-input-modal .professional-button:hover {
+    background: rgba(51, 65, 85, 0.6) !important;
+    border-color: rgba(148, 163, 184, 0.2) !important;
+    color: #f8fafc !important;
+    transform: scale(1.01) !important;
+}
+
+body.light-theme #lmstudio-mcp-input-modal .professional-button {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #334155 !important;
+}
+
+body.light-theme #lmstudio-mcp-input-modal .professional-button:hover {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+/* Tool suggestions buttons (Chips) */
+#lmstudio-mcp-input-modal [data-mcp-tool-suggestion].professional-button {
+    background: rgba(59, 130, 246, 0.1) !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+    color: #93c5fd !important;
+    border-radius: 8px !important;
+}
+
+#lmstudio-mcp-input-modal [data-mcp-tool-suggestion].professional-button:hover {
+    background: rgba(59, 130, 246, 0.2) !important;
+    border-color: rgba(59, 130, 246, 0.4) !important;
+    color: #bfdbfe !important;
+}
+
+body.light-theme #lmstudio-mcp-input-modal [data-mcp-tool-suggestion].professional-button {
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    color: #2563eb !important;
+}
+
+body.light-theme #lmstudio-mcp-input-modal [data-mcp-tool-suggestion].professional-button:hover {
+    background: #dbeafe !important;
+    border-color: #93c5fd !important;
+    color: #1d4ed8 !important;
+}
+
+/* Input fields */
+#lmstudio-mcp-input-modal .connection-modal-input {
+    background: rgba(15, 23, 42, 0.5) !important;
+    border: 1px solid rgba(148, 163, 184, 0.15) !important;
+    border-radius: 10px !important;
+    color: #e2e8f0 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+#lmstudio-mcp-input-modal .connection-modal-input:focus {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 
+        inset 0 2px 4px rgba(0,0,0,0.1),
+        0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+body.light-theme #lmstudio-mcp-input-modal .connection-modal-input {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.02) !important;
+}
+
+body.light-theme #lmstudio-mcp-input-modal .connection-modal-input:focus {
+    border-color: #2563eb !important;
+    box-shadow: 
+        inset 0 1px 2px rgba(0,0,0,0.02),
+        0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+}
+
+/* Panel Containers (Template Gallery & Integrations List) */
+#lmstudio-mcp-input-modal .p-3.rounded-xl.border.bg-white\/5 {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 16px !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02) !important;
+    transition: border-color 0.3s ease;
+}
+
+body.light-theme #lmstudio-mcp-input-modal .p-3.rounded-xl.border.bg-white\/5 {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,1) !important;
+}
+
+/* Builder Panel */
+#lmstudio-mcp-builder-panel {
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.01)) !important;
+    border: 1px solid rgba(59, 130, 246, 0.15) !important;
+    border-radius: 16px !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05) !important;
+}
+
+body.light-theme #lmstudio-mcp-builder-panel {
+    background: linear-gradient(180deg, #eff6ff, #ffffff) !important;
+    border: 1px solid #bfdbfe !important;
+}
+/* ========================================================================= */
+/* PREMIUM WELCOME MESSAGE MODAL OVERRIDES                                   */
+/* ========================================================================= */
+
+/* Main Container - Dark Theme (Default) */
+#welcome-message .welcome-content {
+    background: linear-gradient(145deg, rgba(13, 17, 28, 0.95), rgba(4, 7, 16, 0.98)) !important;
+    border: 1px solid rgba(148, 163, 184, 0.12) !important;
+    border-radius: 24px !important;
+    box-shadow: 
+        0 30px 60px -15px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+        inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(30px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(160%) !important;
+    padding: 32px 28px !important;
+}
+
+/* Main Container - Light Theme */
+body.light-theme #welcome-message .welcome-content {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95)) !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.8) inset,
+        0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Typography Overrides */
+#welcome-message #welcome-title {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.015em !important;
+    background: linear-gradient(180deg, #ffffff, #e2e8f0);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px !important;
+}
+
+body.light-theme #welcome-message #welcome-title {
+    background: linear-gradient(180deg, #0f172a, #334155);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+#welcome-message .welcome-subtitle {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    color: #94a3b8 !important;
+    font-weight: 500 !important;
+    letter-spacing: -0.005em !important;
+    margin-bottom: 28px !important;
+}
+
+body.light-theme #welcome-message .welcome-subtitle {
+    color: #64748b !important;
+}
+
+/* Provider Cards (Local Server, OpenRouter, Custom API) */
+#welcome-message .provider-card {
+    background: rgba(15, 23, 42, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 20px !important;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: 
+        inset 0 1px 0 rgba(255,255,255,0.03),
+        0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+    overflow: hidden;
+}
+
+#welcome-message .provider-card:hover {
+    background: rgba(30, 41, 59, 0.7) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    transform: translateY(-4px) !important;
+    box-shadow: 
+        0 20px 25px -5px rgba(0, 0, 0, 0.3),
+        0 10px 10px -5px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+
+/* Provider Card Accents - Stronger */
+#welcome-message .provider-card--local .provider-card-accent {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa) !important;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.6) !important;
+}
+#welcome-message .provider-card--openrouter .provider-card-accent {
+    background: linear-gradient(90deg, #a855f7, #c084fc) !important;
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.6) !important;
+}
+#welcome-message .provider-card--custom .provider-card-accent {
+    background: linear-gradient(90deg, #10b981, #34d399) !important;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6) !important;
+}
+
+body.light-theme #welcome-message .provider-card {
+    background: #ffffff !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    box-shadow: 
+        inset 0 1px 0 rgba(255,255,255,1),
+        0 2px 4px rgba(0,0,0,0.02) !important;
+}
+
+body.light-theme #welcome-message .provider-card:hover {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 
+        0 15px 25px -5px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 #ffffff !important;
+}
+
+/* Provider Card Icons */
+#welcome-message .provider-icon-wrapper {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2) !important;
+}
+
+body.light-theme #welcome-message .provider-icon-wrapper {
+    background: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
+}
+
+/* Welcome Action Cards (Settings, Models, Templates, Help) */
+#welcome-message .welcome-action-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    margin-top: 24px !important;
+}
+
+#welcome-message .welcome-action-card {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.6)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-radius: 16px !important;
+    color: #f1f5f9 !important;
+    font-weight: 600 !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        0 2px 4px rgba(0, 0, 0, 0.2) !important;
+    justify-content: flex-start !important;
+    padding: 16px 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+}
+
+#welcome-message .welcome-action-card:hover {
+    background: linear-gradient(145deg, rgba(51, 65, 85, 0.6), rgba(30, 41, 59, 0.8)) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 
+        0 8px 16px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+#welcome-message .welcome-action-card:active {
+    transform: translateY(1px) !important;
+    background: rgba(15, 23, 42, 0.8) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Icons inside action cards */
+#welcome-message .welcome-action-card i {
+    font-size: 1.15rem !important;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 4px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+body.light-theme #welcome-message .welcome-action-card {
+    background: linear-gradient(145deg, #ffffff, #f8fafc) !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #334155 !important;
+    box-shadow: 
+        inset 0 1px 0 rgba(255,255,255,1),
+        0 2px 4px rgba(0,0,0,0.02) !important;
+}
+
+body.light-theme #welcome-message .welcome-action-card:hover {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: 
+        0 8px 16px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+}
+
+body.light-theme #welcome-message .welcome-action-card i {
+    background: #f1f5f9;
+    box-shadow: inset 0 1px 0 #ffffff;
+}
+
+#welcome-message .welcome-quick-switch {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    letter-spacing: 0.01em !important;
+    margin-top: 16px !important;
+}

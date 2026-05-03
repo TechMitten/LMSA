@@ -400,20 +400,7 @@ export const settingsModal = `
                             </select>
                         </div>
 
-                        <!-- Use Ollama -->
-                        <div class="settings-item">
-                            <div class="settings-item-header">
-                                <label for="ollama-toggle" class="settings-item-label">
-                                    <i class="fas fa-network-wired"></i>Use Ollama Connection
-                                </label>
-                                <div class="toggle-container">
-                                    <input type="checkbox" id="ollama-toggle">
-                                    <div class="toggle-switch"></div>
-                                    <div class="toggle-dot"></div>
-                                </div>
-                            </div>
-                            <p class="settings-item-description">Specialized handling for local Ollama server instances.</p>
-                        </div>
+
                     </div>
                 </div>
 
