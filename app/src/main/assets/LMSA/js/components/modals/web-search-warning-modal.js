@@ -48,7 +48,7 @@ export const webSearchWarningModal = `
                             <span>Only the relevant queries, not full chat histories, are sent</span>
                         </li>
                     </ul>
-                    <p class="text-gray-400 text-xs mt-3 italic">The feature can be disabled at any time in settings.</p>
+                    <p class="text-gray-400 text-xs mt-3 italic" id="web-search-persistence-note">The feature can be disabled at any time in settings.</p>
                 </div>
             </div>
 
@@ -115,7 +115,14 @@ export function initWebSearchWarningModal() {
             webSearchCloseTimer = setTimeout(() => {
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
+                
+                // If we're closing without confirmation, trigger cancel callback
+                if (confirmationCallback === null && typeof window._webSearchCancelCallback === 'function') {
+                    window._webSearchCancelCallback();
+                }
+                
                 confirmationCallback = null;
+                window._webSearchCancelCallback = null;
                 webSearchIsClosing = false;
                 webSearchCloseTimer = null;
             }, WEB_SEARCH_WARNING_ANIMATION_MS);
@@ -135,7 +142,9 @@ export function initWebSearchWarningModal() {
                 }
 
                 if (confirmationCallback) {
-                    confirmationCallback();
+                    const cb = confirmationCallback;
+                    confirmationCallback = null; // Prevent closeModal from triggering cancel
+                    cb();
                 }
                 closeModal();
             });
@@ -168,17 +177,49 @@ export function initWebSearchWarningModal() {
 
 /**
  * Shows the Web Search Warning Modal
- * @param {Function} callback - Function to execute when user confirms
+ * @param {Function|Object} options - Callback function or options object
  */
-export function showWebSearchWarningModal(callback) {
+export function showWebSearchWarningModal(options) {
+    let callback = null;
+    let onCancel = null;
+    let isPersistent = false;
+
+    if (typeof options === 'function') {
+        callback = options;
+    } else if (typeof options === 'object') {
+        callback = options.onConfirm || options.callback;
+        onCancel = options.onCancel;
+        isPersistent = !!options.isPersistent;
+    }
+
     const modal = document.getElementById('web-search-warning-modal');
     if (!modal) {
         console.error('Web Search Warning Modal not found in DOM when trying to show');
         return;
     }
 
+    // Update persistence note
+    const persistenceNote = document.getElementById('web-search-persistence-note');
+    if (persistenceNote) {
+        if (isPersistent) {
+            persistenceNote.innerHTML = '<i class="fas fa-save mr-1"></i> Enabling here will <strong>persist</strong> across app sessions.';
+            persistenceNote.style.color = '#60a5fa';
+        } else {
+            persistenceNote.textContent = 'The feature can be disabled at any time in settings.';
+            persistenceNote.style.color = '';
+        }
+    }
+
     // Store the callback for confirmation
-    confirmationCallback = callback;
+    confirmationCallback = () => {
+        if (callback) callback();
+    };
+
+    // Store cancel callback if provided (we'll need to handle modal close for cancel)
+    // For simplicity, we'll just handle it in the initialization if we want to be thorough,
+    // but usually, it's enough to reset the toggle if user cancels.
+    // Let's add a way to handle cancel.
+    window._webSearchCancelCallback = onCancel;
 
     // Use setTimeout to ensure proper z-index stacking
     setTimeout(() => {

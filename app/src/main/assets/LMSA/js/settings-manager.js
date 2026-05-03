@@ -949,9 +949,16 @@ export function loadAutoGenerateTitlesSetting() {
 export function loadWebSearchSetting() {
   const webSearchToggle = document.getElementById("web-search-toggle");
   if (webSearchToggle) {
-    // Always default to false on app load
-    webSearchToggle.checked = false;
-    webSearchEnabled = false;
+    // Check localStorage for persistent setting
+    const saved = localStorage.getItem("webSearchPersistentEnabled");
+    if (saved !== null) {
+      webSearchEnabled = saved === "true";
+      webSearchToggle.checked = webSearchEnabled;
+    } else {
+      // Always default to false on app load if no saved setting
+      webSearchToggle.checked = false;
+      webSearchEnabled = false;
+    }
 
     // Add event listener for the checkbox with warning modal
     webSearchToggle.addEventListener("change", handleWebSearchToggle);
@@ -963,12 +970,16 @@ export function loadWebSearchSetting() {
 
 /**
  * Updates the web search state in memory
+ * @param {boolean} persist - Whether to persist the setting to localStorage
  */
-export function saveWebSearchSetting() {
+export function saveWebSearchSetting(persist = false) {
   const webSearchToggle = document.getElementById("web-search-toggle");
   if (webSearchToggle) {
     webSearchEnabled = webSearchToggle.checked;
-    // We intentionally do not save this to localStorage so it resets each session
+    
+    if (persist) {
+      localStorage.setItem("webSearchPersistentEnabled", webSearchEnabled.toString());
+    }
   }
 }
 
@@ -987,30 +998,40 @@ export function getWebSearchEnabled() {
  */
 function handleWebSearchToggle(event) {
   const isChecked = event.target.checked;
+  const isSidebarTrigger = !!event.target._triggeredBySidebar;
+  const persist = !isSidebarTrigger;
 
   if (isChecked) {
     if (localStorage.getItem("hideWebSearchWarning") === "true") {
       // User opted to hide warning, enable immediately
       const webSearchToggle = document.getElementById("web-search-toggle");
       if (webSearchToggle) webSearchToggle.checked = true;
-      saveWebSearchSetting();
+      saveWebSearchSetting(persist);
       syncWebSearchHeaderUI();
     } else {
       // Prevent checkbox from staying checked until user confirms
       event.target.checked = false;
 
-      // Show warning modal with callback
-      showWebSearchWarningModal(() => {
-        // User confirmed - enable the feature
-        const webSearchToggle = document.getElementById("web-search-toggle");
-        if (webSearchToggle) webSearchToggle.checked = true;
-        saveWebSearchSetting();
-        syncWebSearchHeaderUI();
+      // Show warning modal with callback and persistence info
+      showWebSearchWarningModal({
+        onConfirm: () => {
+          // User confirmed - enable the feature
+          const webSearchToggle = document.getElementById("web-search-toggle");
+          if (webSearchToggle) webSearchToggle.checked = true;
+          saveWebSearchSetting(persist);
+          syncWebSearchHeaderUI();
+        },
+        onCancel: () => {
+          // User canceled - keep it disabled
+          const webSearchToggle = document.getElementById("web-search-toggle");
+          if (webSearchToggle) webSearchToggle.checked = false;
+        },
+        isPersistent: persist
       });
     }
   } else {
     // User is disabling - no warning needed, save directly
-    saveWebSearchSetting();
+    saveWebSearchSetting(persist);
     syncWebSearchHeaderUI();
   }
 }
@@ -1021,7 +1042,15 @@ function handleWebSearchToggle(event) {
 export function toggleWebSearchFeature() {
   const webSearchToggle = document.getElementById("web-search-toggle");
   if (!webSearchToggle) return;
+  
+  // Set flag to indicate it was triggered from sidebar
+  webSearchToggle._triggeredBySidebar = true;
   webSearchToggle.click(); // Trigger the checkbox click event
+  
+  // Reset flag after a tick
+  setTimeout(() => {
+    webSearchToggle._triggeredBySidebar = false;
+  }, 0);
 }
 
 /**
