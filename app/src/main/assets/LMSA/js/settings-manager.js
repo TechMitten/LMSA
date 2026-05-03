@@ -97,6 +97,43 @@ const MODE_ACTIVITY_STORAGE_KEY = 'modeActivityByProvider';
 
 const ALLOWED_CHAT_FONT_SIZES = ['12px', '14px', '16px', '20px', '24px'];
 
+function initializeSettingsToggleCards() {
+  const toggleCards = document.querySelectorAll('#settings-modal .settings-item-toggle[data-toggle-checkbox]');
+
+  toggleCards.forEach((card) => {
+    if (card.dataset.toggleCardBound === 'true') {
+      return;
+    }
+
+    card.addEventListener('click', (event) => {
+      const target = event.target;
+
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      if (target.closest('a, button, select, textarea, label.settings-item-label, input:not(.settings-checkbox)')) {
+        return;
+      }
+
+      const checkboxId = card.dataset.toggleCheckbox;
+      if (!checkboxId) {
+        return;
+      }
+
+      const checkbox = document.getElementById(checkboxId);
+      if (!(checkbox instanceof HTMLInputElement) || checkbox.disabled) {
+        return;
+      }
+
+      checkbox.checked = !checkbox.checked;
+      checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    card.dataset.toggleCardBound = 'true';
+  });
+}
+
 function parseStoredMaxTokens(rawValue) {
   if (typeof rawValue !== "string" || rawValue.trim() === "") {
     return 0;
@@ -2502,6 +2539,7 @@ export function getChatFontSize() {
 }
 
 export function loadSettings() {
+  initializeSettingsToggleCards();
   initializeSystemPrompt();
   initializeTemperature();
   loadMaxTokensSetting();

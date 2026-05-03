@@ -4,7 +4,8 @@
       "Bash(git rm:*)",
       "Bash(git ls-tree:*)",
       "Bash(curl:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "mcp__magic__21st_magic_component_refiner"
     ],
     "deny": [],
     "ask": []

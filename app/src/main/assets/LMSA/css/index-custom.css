@@ -2978,23 +2978,26 @@ body.light-theme #settings-step-connection.active > .connection-settings-panel {
     min-height: 88px !important;
     padding: 13px 10px 12px !important;
     border-radius: var(--settings-radius) !important;
-    border: 1px solid var(--settings-border-quiet) !important;
+    border: 2px solid transparent !important;
     background: var(--settings-surface-raised) !important;
     box-shadow: none !important;
     gap: 10px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
 }
 
 #settings-modal .connection-type-btn.active,
 #settings-modal .connection-type-btn[aria-pressed="true"] {
-    border-color: rgba(79, 140, 255, 0.72) !important;
+    border-color: rgba(59, 130, 246, 0.8) !important;
     background: linear-gradient(180deg, rgba(79, 140, 255, 0.18), rgba(79, 140, 255, 0.08)), var(--settings-surface-raised) !important;
-    box-shadow: 0 0 0 1px rgba(79, 140, 255, 0.18) inset !important;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.3) !important;
 }
 
 #settings-modal .connection-type-btn:hover,
 #settings-modal .connection-type-btn:focus-visible {
     border-color: rgba(79, 140, 255, 0.52) !important;
-    transform: none !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(79, 140, 255, 0.15) !important;
     outline: none !important;
 }
 
@@ -3006,12 +3009,22 @@ body.light-theme #settings-step-connection.active > .connection-settings-panel {
     background: var(--settings-surface-subtle) !important;
     color: var(--settings-text-muted) !important;
     font-size: 0.95rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+}
+
+#settings-modal .connection-type-btn:hover .connection-type-icon {
+    transform: scale(1.1) !important;
+    background: rgba(79, 140, 255, 0.1) !important;
 }
 
 #settings-modal .connection-type-btn.active .connection-type-icon,
 #settings-modal .connection-type-btn[aria-pressed="true"] .connection-type-icon {
     color: #dbeafe !important;
     background: var(--settings-accent) !important;
+    transform: scale(1.05) !important;
 }
 
 #settings-modal .connection-type-name {
@@ -3025,6 +3038,11 @@ body.light-theme #settings-step-connection.active > .connection-settings-panel {
     font-size: 0.82rem !important;
     line-height: 1.2 !important;
     font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+}
+
+#settings-modal .connection-type-btn:hover .connection-type-name {
+    color: var(--settings-text-strong) !important;
 }
 
 #settings-modal .connection-type-btn.active .connection-type-name,
@@ -3115,45 +3133,273 @@ body.light-theme #settings-step-connection.active > .connection-settings-panel {
 }
 
 #settings-modal .toggle-container {
-    width: 48px !important;
-    min-width: 48px !important;
-    height: 28px !important;
+    width: 72px !important;
+    min-width: 72px !important;
+    height: 34px !important;
     margin: 0 !important;
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 999px !important;
+    box-sizing: border-box !important;
+    isolation: isolate !important;
 }
 
 #settings-modal .toggle-switch {
-    width: 48px !important;
-    height: 28px !important;
-    border-radius: 999px !important;
-    border: 1px solid var(--settings-border-strong) !important;
-    background: rgba(100, 116, 139, 0.38) !important;
-    box-shadow: none !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 72px !important;
+    height: 34px !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(148, 163, 184, 0.18) !important;
+    background:
+        linear-gradient(90deg,
+            transparent 0,
+            transparent calc(50% - 0.5px),
+            rgba(148, 163, 184, 0.12) calc(50% - 0.5px),
+            rgba(148, 163, 184, 0.12) calc(50% + 0.5px),
+            transparent calc(50% + 0.5px),
+            transparent 100%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 41, 59, 0.88) 100%) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        inset 0 0 0 1px rgba(15, 23, 42, 0.28),
+        0 8px 20px rgba(15, 23, 42, 0.16) !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    transition:
+        background 220ms ease,
+        border-color 220ms ease,
+        box-shadow 220ms ease,
+        transform 220ms ease !important;
 }
 
-#settings-modal .toggle-switch::before,
+#settings-modal .toggle-switch::before {
+    content: 'OFF' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 10px !important;
+    transform: translateY(-50%) !important;
+    font-size: 8px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.18em !important;
+    color: rgba(226, 232, 240, 0.62) !important;
+    text-shadow: none !important;
+    transition: opacity 220ms ease, color 220ms ease !important;
+    z-index: 1 !important;
+}
+
 #settings-modal .toggle-switch::after {
-    display: none !important;
-    content: none !important;
+    content: 'ON' !important;
+    display: block !important;
+    position: absolute !important;
+    top: 50% !important;
+    right: 10px !important;
+    transform: translateY(-50%) !important;
+    font-size: 8px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.18em !important;
+    color: rgba(125, 211, 252, 0.28) !important;
+    transition: opacity 220ms ease, color 220ms ease !important;
+    z-index: 1 !important;
 }
 
 #settings-modal .toggle-dot {
-    width: 22px !important;
-    height: 22px !important;
-    top: 3px !important;
-    left: 3px !important;
-    bottom: auto !important;
-    background: #ffffff !important;
-    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.24) !important;
+    position: absolute !important;
+    top: 4px !important;
+    left: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 30px !important;
+    height: 26px !important;
+    border-radius: 9px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background:
+        linear-gradient(180deg, rgba(71, 85, 105, 0.78) 0%, rgba(51, 65, 85, 0.82) 100%) !important;
+    box-shadow:
+        0 6px 12px rgba(2, 6, 23, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+    z-index: 2 !important;
+    transition:
+        transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+        background 220ms ease,
+        box-shadow 220ms ease,
+        border-color 220ms ease !important;
+}
+
+#settings-modal .toggle-dot::before {
+    content: '–' !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
+    color: rgba(226, 232, 240, 0.86) !important;
+    transform: translateY(-1px) !important;
+    transition: color 220ms ease !important;
 }
 
 #settings-modal input[type="checkbox"]:checked ~ .toggle-switch {
-    border-color: var(--settings-accent-strong) !important;
-    background: var(--settings-accent) !important;
+    border-color: rgba(56, 189, 248, 0.28) !important;
+    background:
+        linear-gradient(90deg,
+            transparent 0,
+            transparent calc(50% - 0.5px),
+            rgba(125, 211, 252, 0.16) calc(50% - 0.5px),
+            rgba(125, 211, 252, 0.16) calc(50% + 0.5px),
+            transparent calc(50% + 0.5px),
+            transparent 100%),
+        linear-gradient(180deg, rgba(12, 74, 110, 0.92) 0%, rgba(8, 47, 73, 0.9) 100%) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        inset 0 0 0 1px rgba(8, 47, 73, 0.16),
+        0 10px 24px rgba(14, 165, 233, 0.12) !important;
 }
 
-#settings-modal input[type="checkbox"]:checked ~ .toggle-switch + .toggle-dot,
+#settings-modal input[type="checkbox"]:checked ~ .toggle-switch::before {
+    color: rgba(186, 230, 253, 0.26) !important;
+}
+
+#settings-modal input[type="checkbox"]:checked ~ .toggle-switch::after {
+    color: rgba(240, 249, 255, 0.88) !important;
+}
+
 #settings-modal input[type="checkbox"]:checked ~ .toggle-dot {
-    transform: translateX(20px) !important;
+    transform: translateX(34px) !important;
+    border-color: rgba(125, 211, 252, 0.22) !important;
+    background:
+        linear-gradient(180deg, rgba(34, 211, 238, 0.94) 0%, rgba(14, 165, 233, 0.92) 100%) !important;
+    box-shadow:
+        0 8px 18px rgba(2, 132, 199, 0.24),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+#settings-modal input[type="checkbox"]:checked ~ .toggle-dot::before {
+    content: '•' !important;
+    color: rgba(255, 255, 255, 0.96) !important;
+}
+
+#settings-modal .toggle-container input[type="checkbox"] {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    position: absolute !important;
+    inset: 0 !important;
+    opacity: 0 !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    z-index: 3 !important;
+    border-radius: inherit !important;
+}
+
+#settings-modal .toggle-container:hover .toggle-switch {
+    border-color: rgba(148, 163, 184, 0.28) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        inset 0 0 0 1px rgba(15, 23, 42, 0.24),
+        0 12px 24px rgba(15, 23, 42, 0.18) !important;
+}
+
+#settings-modal .toggle-container:hover .toggle-dot {
+    box-shadow:
+        0 8px 16px rgba(15, 23, 42, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+#settings-modal .toggle-container input[type="checkbox"]:focus-visible ~ .toggle-switch {
+    border-color: rgba(96, 165, 250, 0.72) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        inset 0 0 0 1px rgba(15, 23, 42, 0.24),
+        0 0 0 3px rgba(59, 130, 246, 0.18),
+        0 12px 24px rgba(15, 23, 42, 0.18) !important;
+}
+
+#settings-modal .toggle-container input[type="checkbox"]:focus-visible ~ .toggle-dot {
+    box-shadow:
+        0 0 0 3px rgba(191, 219, 254, 0.3),
+        0 8px 16px rgba(15, 23, 42, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+
+#settings-modal input[type="checkbox"]:disabled ~ .toggle-switch {
+    opacity: 0.58 !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+#settings-modal input[type="checkbox"]:disabled ~ .toggle-dot {
+    opacity: 0.78 !important;
+    box-shadow: 0 6px 12px rgba(15, 23, 42, 0.14) !important;
+}
+
+#settings-modal input[type="checkbox"]:disabled {
+    cursor: not-allowed !important;
+}
+
+.light-theme #settings-modal .toggle-switch {
+    border-color: rgba(148, 163, 184, 0.24) !important;
+    background:
+        linear-gradient(90deg,
+            transparent 0,
+            transparent calc(50% - 0.5px),
+            rgba(148, 163, 184, 0.12) calc(50% - 0.5px),
+            rgba(148, 163, 184, 0.12) calc(50% + 0.5px),
+            transparent calc(50% + 0.5px),
+            transparent 100%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(226, 232, 240, 0.92) 100%) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.94),
+        inset 0 0 0 1px rgba(148, 163, 184, 0.08),
+        0 8px 18px rgba(148, 163, 184, 0.14) !important;
+}
+
+.light-theme #settings-modal .toggle-switch::before {
+    color: rgba(100, 116, 139, 0.64) !important;
+    text-shadow: none !important;
+}
+
+.light-theme #settings-modal .toggle-switch::after {
+    color: rgba(14, 116, 144, 0.22) !important;
+}
+
+.light-theme #settings-modal .toggle-dot {
+    border-color: rgba(148, 163, 184, 0.14) !important;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(241, 245, 249, 0.94) 100%) !important;
+    box-shadow:
+        0 6px 14px rgba(148, 163, 184, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+}
+
+.light-theme #settings-modal .toggle-dot::before {
+    color: rgba(100, 116, 139, 0.76) !important;
+}
+
+.light-theme #settings-modal input[type="checkbox"]:checked ~ .toggle-switch {
+    border-color: rgba(56, 189, 248, 0.24) !important;
+    background:
+        linear-gradient(90deg,
+            transparent 0,
+            transparent calc(50% - 0.5px),
+            rgba(125, 211, 252, 0.18) calc(50% - 0.5px),
+            rgba(125, 211, 252, 0.18) calc(50% + 0.5px),
+            transparent calc(50% + 0.5px),
+            transparent 100%),
+        linear-gradient(180deg, rgba(240, 249, 255, 0.98) 0%, rgba(224, 242, 254, 0.9) 100%) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 0 0 1px rgba(186, 230, 253, 0.24),
+        0 10px 22px rgba(14, 165, 233, 0.12) !important;
+}
+
+.light-theme #settings-modal input[type="checkbox"]:checked ~ .toggle-switch::before {
+    color: rgba(8, 47, 73, 0.18) !important;
+}
+
+.light-theme #settings-modal input[type="checkbox"]:checked ~ .toggle-switch::after {
+    color: rgba(3, 105, 161, 0.72) !important;
+}
+
+.light-theme #settings-modal input[type="checkbox"]:checked ~ .toggle-dot::before {
+    color: rgba(255, 255, 255, 0.96) !important;
 }
 
 #settings-modal input[type="range"] {
@@ -4682,4 +4928,162 @@ body.light-theme #welcome-message .welcome-action-card i {
     color: #64748b !important;
     letter-spacing: 0.01em !important;
     margin-top: 16px !important;
+}
+
+/* Settings modal feature status badges */
+#settings-modal .settings-toggle-helper {
+    margin: 0 0 12px 0 !important;
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(56, 189, 248, 0.25) !important;
+    background: linear-gradient(180deg, rgba(14, 165, 233, 0.12), rgba(14, 165, 233, 0.04)) !important;
+    color: #bae6fd !important;
+    font-size: 0.76rem !important;
+    font-weight: 600 !important;
+    line-height: 1.35 !important;
+}
+
+#settings-modal .settings-item-toggle {
+    cursor: pointer !important;
+    transition: border-color 0.2s ease, background 0.2s ease !important;
+}
+
+#settings-modal .settings-item-toggle:hover {
+    border-color: rgba(56, 189, 248, 0.28) !important;
+    background: rgba(15, 23, 42, 0.2) !important;
+}
+
+#settings-modal .settings-item-toggle .settings-item-header {
+    position: relative !important;
+    display: block !important;
+    padding-right: 56px !important;
+    min-height: 20px !important;
+}
+
+#settings-modal .settings-item-toggle .settings-item-label {
+    display: inline-flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin: 0 !important;
+    font-size: 0.88rem !important;
+    line-height: 1.1 !important;
+    font-weight: 620 !important;
+    letter-spacing: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+    hyphens: none !important;
+    text-wrap: nowrap !important;
+    cursor: pointer !important;
+}
+
+#settings-modal .settings-item-toggle .settings-item-label i {
+    width: 20px !important;
+    height: 20px !important;
+    margin-right: 6px !important;
+    font-size: 0.7rem !important;
+    flex: 0 0 auto !important;
+}
+
+#settings-modal .settings-item-toggle .settings-checkbox {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+#settings-modal .settings-item-toggle .settings-status-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    min-width: 44px !important;
+    height: 20px !important;
+    padding: 0 6px !important;
+    border-radius: 999px !important;
+    border: 1px solid rgba(148, 163, 184, 0.34) !important;
+    background: rgba(15, 23, 42, 0.45) !important;
+    color: rgba(203, 213, 225, 0.9) !important;
+    font-size: 0.58rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    line-height: 1 !important;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.22) !important;
+    flex-shrink: 0 !important;
+    transition: all 0.2s ease !important;
+}
+
+#settings-modal .settings-item-toggle .settings-status-badge::before {
+    content: 'Off' !important;
+}
+
+#settings-modal .settings-item-toggle .settings-checkbox:checked + .settings-status-badge {
+    border-color: rgba(45, 212, 191, 0.62) !important;
+    background: linear-gradient(180deg, rgba(20, 184, 166, 0.2), rgba(20, 184, 166, 0.08)) !important;
+    color: #99f6e4 !important;
+    box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.22) inset, 0 0 10px rgba(45, 212, 191, 0.18) !important;
+}
+
+#settings-modal .settings-item-toggle .settings-checkbox:checked + .settings-status-badge::before {
+    content: 'On' !important;
+}
+
+#settings-modal .settings-item-toggle .settings-checkbox:disabled + .settings-status-badge {
+    opacity: 0.6 !important;
+    border-color: rgba(148, 163, 184, 0.2) !important;
+    box-shadow: none !important;
+}
+
+#settings-modal .settings-group-title {
+    min-height: 30px !important;
+    padding: 0 12px !important;
+    gap: 8px !important;
+    font-size: 0.66rem !important;
+    font-weight: 750 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.11em !important;
+}
+
+#settings-modal .settings-group-title i {
+    font-size: 0.72rem !important;
+    line-height: 1 !important;
+}
+
+#settings-modal .settings-group-title span {
+    display: inline-block !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    line-height: 1 !important;
+    letter-spacing: inherit !important;
+}
+
+body.light-theme #settings-modal .settings-toggle-helper {
+    border-color: rgba(14, 116, 144, 0.28) !important;
+    background: linear-gradient(180deg, rgba(186, 230, 253, 0.65), rgba(224, 242, 254, 0.6)) !important;
+    color: #0e7490 !important;
+}
+
+body.light-theme #settings-modal .settings-item-toggle:hover {
+    border-color: rgba(14, 116, 144, 0.24) !important;
+    background: rgba(186, 230, 253, 0.2) !important;
+}
+
+body.light-theme #settings-modal .settings-item-toggle .settings-status-badge {
+    border-color: rgba(148, 163, 184, 0.52) !important;
+    background: rgba(248, 250, 252, 0.92) !important;
+    color: rgba(71, 85, 105, 0.94) !important;
+    box-shadow: inset 0 0 0 1px rgba(203, 213, 225, 0.55) !important;
+}
+
+body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checked + .settings-status-badge {
+    border-color: rgba(13, 148, 136, 0.58) !important;
+    background: linear-gradient(180deg, rgba(204, 251, 241, 0.95), rgba(153, 246, 228, 0.7)) !important;
+    color: #0f766e !important;
+    box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.18) inset, 0 0 8px rgba(20, 184, 166, 0.14) !important;
 }

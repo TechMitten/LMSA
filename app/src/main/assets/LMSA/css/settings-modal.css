@@ -1058,128 +1058,159 @@ body.light-theme #settings-modal #max-tokens-value.max-tokens-current-value {
   transform: translateY(-1px);
 }
 
-/* Toggle switches - improved design */
-#settings-modal .toggle-switch {
-  background: var(--toggle-bg);
-  border-radius: 1rem;
-  width: 50px;
-  height: 24px;
+/* Modern iOS-style Toggle switches */
+#settings-modal .toggle-container {
   position: relative;
-  cursor: pointer;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2),
-    0 1px 2px rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.2);
-
-  /* Enhanced appearance for light mode */
-  .light-theme & {
-    background: #e2e8f0;
-    border: 1px solid #cbd5e1;
-    box-shadow: inset 0 1px 3px rgba(148, 163, 184, 0.1),
-      0 1px 2px rgba(255, 255, 255, 0.8);
-  }
-
-  overflow: hidden;
+  width: 48px;
+  height: 28px;
+  flex-shrink: 0;
 }
 
-/* Toggle switch background glow effect */
-#settings-modal .toggle-switch::before {
-  content: "";
+#settings-modal input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  z-index: 10;
+  margin: 0;
+}
+
+#settings-modal .toggle-switch {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at 30% 50%,
-      var(--toggle-active-border),
-      transparent 50%);
-  opacity: 0;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border-radius: 28px;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    0 1px 2px rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(148, 163, 184, 0.2);
 
-  z-index: 1;
+  /* Enhanced appearance for light mode */
+  .light-theme & {
+    background: linear-gradient(145deg, #e2e8f0, #cbd5e1);
+    border: 1px solid #94a3b8;
+    box-shadow:
+      inset 0 2px 4px rgba(0, 0, 0, 0.1),
+      0 1px 2px rgba(255, 255, 255, 0.8);
+  }
 }
 
 #settings-modal .toggle-dot {
   position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 18px;
-  height: 18px;
-  background: white;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(145deg, #ffffff, #f1f5f9);
   border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    0 1px 3px rgba(0, 0, 0, 0.15),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.1);
+  z-index: 5;
 
   /* Enhanced appearance for light mode */
   .light-theme & {
-    background: white;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+    background: linear-gradient(145deg, #ffffff, #f8fafc);
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.15),
+      0 1px 2px rgba(0, 0, 0, 0.1),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.05);
   }
-
-  z-index: 2;
 }
 
-/* Remove toggle dot inner glow for cleaner appearance */
-#settings-modal .toggle-dot::after {
-  display: none;
+/* Hover states */
+#settings-modal .toggle-container:hover .toggle-switch {
+  border-color: rgba(148, 163, 184, 0.4);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    0 1px 3px rgba(255, 255, 255, 0.08);
 }
 
-/* Improved active toggle with subtle effect */
+#settings-modal .toggle-container:hover .toggle-dot {
+  transform: scale(1.05);
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.25),
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Active/Checked state */
 #settings-modal input[type="checkbox"]:checked~.toggle-switch {
-  background: #3b82f6;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #2563eb;
+  background: linear-gradient(145deg, #3b82f6, #2563eb);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.2),
+    0 0 0 3px rgba(59, 130, 246, 0.15),
+    0 1px 3px rgba(59, 130, 246, 0.3);
 
   /* Enhanced appearance for light mode */
   .light-theme & {
-    background: #3b82f6;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-    border: 1px solid #2563eb;
+    background: linear-gradient(145deg, #3b82f6, #2563eb);
+    border-color: #3b82f6;
+    box-shadow:
+      inset 0 2px 4px rgba(0, 0, 0, 0.15),
+      0 0 0 3px rgba(59, 130, 246, 0.2),
+      0 1px 3px rgba(59, 130, 246, 0.4);
   }
-}
-
-/* Active toggle switch inner glow */
-#settings-modal input[type="checkbox"]:checked~.toggle-switch::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 70% 50%,
-      rgba(96, 165, 250, 0.6),
-      transparent 70%);
-  z-index: 1;
-  opacity: 0.8;
-  border-radius: 1rem;
 }
 
 #settings-modal input[type="checkbox"]:checked~.toggle-dot {
-  background: white;
-  transform: translateX(28px);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateX(20px);
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  box-shadow:
+    0 2px 8px rgba(59, 130, 246, 0.3),
+    0 1px 4px rgba(59, 130, 246, 0.2),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.1);
 
   /* Enhanced appearance for light mode */
   .light-theme & {
-    background: white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(145deg, #ffffff, #f8fafc);
+    box-shadow:
+      0 2px 6px rgba(59, 130, 246, 0.25),
+      0 1px 3px rgba(59, 130, 246, 0.15),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.05);
   }
 }
 
-/* Subtle hover effects */
-#settings-modal .toggle-container:hover .toggle-dot {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+/* Active hover state */
+#settings-modal input[type="checkbox"]:checked~.toggle-container:hover .toggle-dot {
+  transform: translateX(20px) scale(1.05);
+  box-shadow:
+    0 3px 12px rgba(59, 130, 246, 0.4),
+    0 2px 6px rgba(59, 130, 246, 0.3),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.1);
+}
 
-  /* Enhanced appearance for light mode */
-  .light-theme & {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
+/* Focus state for accessibility */
+#settings-modal input[type="checkbox"]:focus~.toggle-switch {
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    0 0 0 4px rgba(59, 130, 246, 0.25),
+    0 1px 3px rgba(255, 255, 255, 0.05);
+}
+
+#settings-modal input[type="checkbox"]:checked:focus~.toggle-switch {
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.2),
+    0 0 0 4px rgba(59, 130, 246, 0.35),
+    0 1px 3px rgba(59, 130, 246, 0.4);
+}
 }
 
 #settings-modal .toggle-container:hover input[type="checkbox"]:checked~.toggle-dot {
-  transform: translateX(28px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  transform: translateX(22px);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.32);
 
   /* Enhanced appearance for light mode */
   .light-theme & {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
   }
 }
 
@@ -1194,7 +1225,7 @@ body.light-theme #settings-modal #max-tokens-value.max-tokens-current-value {
   /* Add more spacing from the label */
   margin-right: 4px;
   /* Add spacing on the right to prevent being cut off */
-  min-width: 50px;
+  min-width: 42px;
   /* Ensure minimum width for the toggle */
 }
 
@@ -1976,7 +2007,7 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
       /* Add spacing between label and toggle */
       font-size: 0.9rem;
       /* Slightly smaller font on very small screens */
-      max-width: calc(100% - 70px);
+      max-width: calc(100% - 104px);
       /* Reserve space for toggle */
       overflow-wrap: break-word;
       /* Allow long text to wrap */
@@ -3827,7 +3858,7 @@ body.light-theme .openrouter-key-input-wrapper input {
     color: #94a3b8;
     line-height: 1.5;
     padding-left: 1.85rem;
-    padding-right: 3rem; /* Leave space for toggles */
+  padding-right: 4.75rem; /* Leave space for larger segmented toggles */
     max-width: 95%;
 }
 

@@ -164,11 +164,15 @@ export const settingsModal = `
 
                 <!-- Step 2: Options -->
                 <div id="settings-step-options" class="settings-step hidden" data-step-name="Options">
+                    <p class="settings-toggle-helper" role="note" aria-live="polite">
+                        Tap any feature card to switch it on or off. The badge on the right shows the current state.
+                    </p>
+
                     <!-- AI Model Settings Group -->
                     <div class="settings-group group-ai">
                         <div class="settings-group-title">
                             <i class="fas fa-microchip"></i>
-                            <span>AI Model Settings</span>
+                            <span>AI Settings</span>
                         </div>
                         
                         <!-- Temperature -->
@@ -227,16 +231,13 @@ export const settingsModal = `
                         </div>
 
                         <!-- Hide Thinking -->
-                        <div class="settings-item">
+                        <div class="settings-item settings-item-toggle" data-toggle-checkbox="hide-thinking">
                             <div class="settings-item-header">
                                 <label for="hide-thinking" class="settings-item-label">
-                                    <i class="fas fa-eye-slash"></i>Hide Thinking Text
+                                    <i class="fas fa-eye-slash"></i>Hide Thinking
                                 </label>
-                                <div class="toggle-container">
-                                    <input type="checkbox" id="hide-thinking">
-                                    <div class="toggle-switch"></div>
-                                    <div class="toggle-dot"></div>
-                                </div>
+                                <input type="checkbox" id="hide-thinking" class="settings-checkbox" aria-label="Toggle Hide Thinking Text">
+                                <span class="settings-status-badge" aria-hidden="true"></span>
                             </div>
                             <p class="settings-item-description">Hides the internal "thought process" block often seen in reasoning models.</p>
                         </div>
@@ -250,46 +251,37 @@ export const settingsModal = `
                         </div>
 
                         <!-- Generate Chat Titles -->
-                        <div class="settings-item" id="auto-generate-titles-setting">
+                        <div class="settings-item settings-item-toggle" id="auto-generate-titles-setting" data-toggle-checkbox="auto-generate-titles">
                             <div class="settings-item-header">
                                 <label for="auto-generate-titles" class="settings-item-label">
-                                    <i class="fas fa-magic"></i>Generate Chat Titles
+                                    <i class="fas fa-magic"></i>Chat Titles
                                 </label>
-                                <div class="toggle-container">
-                                    <input type="checkbox" id="auto-generate-titles">
-                                    <div class="toggle-switch"></div>
-                                    <div class="toggle-dot"></div>
-                                </div>
+                                <input type="checkbox" id="auto-generate-titles" class="settings-checkbox" aria-label="Toggle Generate Chat Titles">
+                                <span class="settings-status-badge" aria-hidden="true"></span>
                             </div>
                             <p class="settings-item-description">Automatically generates a title for your chat after the first message.</p>
                         </div>
 
                         <!-- Enable Smart Reply -->
-                        <div class="settings-item" id="smart-reply-setting">
+                        <div class="settings-item settings-item-toggle" id="smart-reply-setting" data-toggle-checkbox="auto-smart-reply">
                             <div class="settings-item-header">
                                 <label for="auto-smart-reply" class="settings-item-label">
-                                    <i class="fas fa-reply"></i>Enable Smart Reply
+                                    <i class="fas fa-reply"></i>Smart Reply
                                 </label>
-                                <div class="toggle-container">
-                                    <input type="checkbox" id="auto-smart-reply">
-                                    <div class="toggle-switch"></div>
-                                    <div class="toggle-dot"></div>
-                                </div>
+                                <input type="checkbox" id="auto-smart-reply" class="settings-checkbox" aria-label="Toggle Smart Reply">
+                                <span class="settings-status-badge" aria-hidden="true"></span>
                             </div>
                             <p class="settings-item-description">Suggests quick reply options based on the conversation context.</p>
                         </div>
 
                         <!-- Enable Web Search -->
-                        <div class="settings-item" id="web-search-setting">
+                        <div class="settings-item settings-item-toggle" id="web-search-setting" data-toggle-checkbox="web-search-toggle">
                             <div class="settings-item-header">
                                 <label for="web-search-toggle" class="settings-item-label">
-                                    <i class="fas fa-globe"></i>Enable Web Search
+                                    <i class="fas fa-globe"></i>Web Search
                                 </label>
-                                <div class="toggle-container">
-                                    <input type="checkbox" id="web-search-toggle">
-                                    <div class="toggle-switch"></div>
-                                    <div class="toggle-dot"></div>
-                                </div>
+                                <input type="checkbox" id="web-search-toggle" class="settings-checkbox" aria-label="Toggle Web Search">
+                                <span class="settings-status-badge" aria-hidden="true"></span>
                             </div>
                             <p class="settings-item-description">Allows the AI to search the internet to provide real-time information.</p>
                         </div>
@@ -303,61 +295,49 @@ export const settingsModal = `
                         </div>
 
                         <!-- Auto-Scroll -->
-                        <div class="settings-item">
+                        <div class="settings-item settings-item-toggle" data-toggle-checkbox="auto-scroll">
                             <div class="settings-item-header">
                                 <label for="auto-scroll" class="settings-item-label">
-                                    <i class="fas fa-arrow-down"></i>Auto-Scroll to Bottom
+                                    <i class="fas fa-arrow-down"></i>Auto Scroll
                                 </label>
-                                <div class="toggle-container">
-                                    <input type="checkbox" id="auto-scroll">
-                                    <div class="toggle-switch"></div>
-                                    <div class="toggle-dot"></div>
-                                </div>
+                                <input type="checkbox" id="auto-scroll" class="settings-checkbox" aria-label="Toggle Auto-Scroll to Bottom">
+                                <span class="settings-status-badge" aria-hidden="true"></span>
                             </div>
                             <p class="settings-item-description">Automatically scrolls the chat as new text arrives from the model.</p>
                         </div>
 
                         <!-- Enter for New Line -->
-                        <div class="settings-item">
+                        <div class="settings-item settings-item-toggle" data-toggle-checkbox="enter-newline-toggle">
                             <div class="settings-item-header">
                                 <label for="enter-newline-toggle" class="settings-item-label">
-                                    <i class="fas fa-keyboard"></i>Enter for New Line
+                                    <i class="fas fa-keyboard"></i>Enter New Line
                                 </label>
-                                <div class="toggle-container">
-                                    <input type="checkbox" id="enter-newline-toggle">
-                                    <div class="toggle-switch"></div>
-                                    <div class="toggle-dot"></div>
-                                </div>
+                                <input type="checkbox" id="enter-newline-toggle" class="settings-checkbox" aria-label="Toggle Enter for New Line">
+                                <span class="settings-status-badge" aria-hidden="true"></span>
                             </div>
                             <p class="settings-item-description">Pressing Enter adds a newline instead of sending the message.</p>
                         </div>
 
                         <!-- Show Model Name -->
-                        <div class="settings-item">
+                        <div class="settings-item settings-item-toggle" data-toggle-checkbox="show-model-label">
                             <div class="settings-item-header">
                                 <label for="show-model-label" class="settings-item-label">
-                                    <i class="fas fa-robot"></i>Show Model Name
+                                    <i class="fas fa-robot"></i>Model Name
                                 </label>
-                                <div class="toggle-container">
-                                    <input type="checkbox" id="show-model-label">
-                                    <div class="toggle-switch"></div>
-                                    <div class="toggle-dot"></div>
-                                </div>
+                                <input type="checkbox" id="show-model-label" class="settings-checkbox" aria-label="Toggle Show Model Name">
+                                <span class="settings-status-badge" aria-hidden="true"></span>
                             </div>
                             <p class="settings-item-description">Displays which AI model generated the specific response.</p>
                         </div>
 
                         <!-- Show Chat Scrollbar -->
-                        <div class="settings-item">
+                        <div class="settings-item settings-item-toggle" data-toggle-checkbox="show-chat-scrollbar">
                             <div class="settings-item-header">
                                 <label for="show-chat-scrollbar" class="settings-item-label">
-                                    <i class="fas fa-bars"></i>Show Chat Scrollbar
+                                    <i class="fas fa-bars"></i>Chat Scrollbar
                                 </label>
-                                <div class="toggle-container">
-                                    <input type="checkbox" id="show-chat-scrollbar">
-                                    <div class="toggle-switch"></div>
-                                    <div class="toggle-dot"></div>
-                                </div>
+                                <input type="checkbox" id="show-chat-scrollbar" class="settings-checkbox" aria-label="Toggle Show Chat Scrollbar">
+                                <span class="settings-status-badge" aria-hidden="true"></span>
                             </div>
                             <p class="settings-item-description">Toggles the visibility of the scrollbar in the chat area.</p>
                         </div>
@@ -372,16 +352,13 @@ export const settingsModal = `
                         </div>
 
                         <!-- Require Biometric Unlock -->
-                        <div class="settings-item" id="biometric-setting-container">
+                        <div class="settings-item settings-item-toggle" id="biometric-setting-container" data-toggle-checkbox="require-biometric">
                             <div class="settings-item-header">
                                 <label for="require-biometric" class="settings-item-label">
-                                    <i class="fas fa-fingerprint"></i>Require Biometric Unlock
+                                    <i class="fas fa-fingerprint"></i>Biometric Unlock
                                 </label>
-                                <div class="toggle-container">
-                                    <input type="checkbox" id="require-biometric">
-                                    <div class="toggle-switch"></div>
-                                    <div class="toggle-dot"></div>
-                                </div>
+                                <input type="checkbox" id="require-biometric" class="settings-checkbox" aria-label="Toggle Require Biometric Unlock">
+                                <span class="settings-status-badge" aria-hidden="true"></span>
                             </div>
                             <p class="settings-item-description">Prompts for fingerprint or PIN when opening the application.</p>
                         </div>
