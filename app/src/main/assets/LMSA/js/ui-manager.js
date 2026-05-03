@@ -3,7 +3,7 @@ import {
     messagesContainer, welcomeMessage, sidebar, settingsModal,
     loadingIndicator, sendButton, stopButton, loadedModelDisplay,
     smartRepliesContainer, userInput,
-    setupDashboard, configuredActions, welcomeTitle, welcomeSubtitle,
+    setupDashboard, welcomeTitle, welcomeSubtitle,
     setupLocalBtn, setupOpenRouterBtn, setupCustomBtn
 } from './dom-elements.js';
 import { basicSanitizeInput, sanitizeInput, initializeCodeMirror, scrollToBottom, copyToClipboard, debugLog, debugError, processCodeBlocks, decodeHtmlEntities, htmlToFormattedText, getReasoningStreamState, normalizeReasoningTags, stripReasoningSections } from './utils.js';
@@ -155,6 +155,12 @@ function getAttachmentPreviewSrc(file) {
 export function showWelcomeMessage() {
     // Performance monitoring removed
 
+    // Keep the provider-selection overlay for unconfigured installs only.
+    if (isAppConfigured()) {
+        hideWelcomeMessage();
+        return;
+    }
+
     // Batch DOM operations to prevent layout thrashing
     domBatcher.write(() => {
         if (welcomeMessage) {
@@ -163,23 +169,13 @@ export function showWelcomeMessage() {
             welcomeMessage.style.pointerEvents = 'auto';
             welcomeMessage.style.opacity = '1';
 
-            // Toggle between setup dashboard and configured actions
-            const isConfigured = isAppConfigured();
-            if (setupDashboard && configuredActions) {
-                if (isConfigured) {
-                    setupDashboard.classList.remove('grid');
-                    setupDashboard.classList.add('flex', 'justify-center', 'gap-4', 'scale-90', 'opacity-80');
-                    configuredActions.classList.remove('hidden');
-                    if (welcomeTitle) welcomeTitle.textContent = 'Welcome to LMSA';
-                    if (welcomeSubtitle) welcomeSubtitle.textContent = 'Your AI workspace is ready';
-                } else {
-                    setupDashboard.classList.add('grid');
-                    setupDashboard.classList.remove('flex', 'justify-center', 'gap-4', 'scale-90', 'opacity-80');
-                    configuredActions.classList.add('hidden');
-                    if (welcomeTitle) welcomeTitle.textContent = 'Choose Your AI Provider';
-                    if (welcomeSubtitle) welcomeSubtitle.textContent = 'Select a connection method to start chatting';
-                }
+            if (setupDashboard) {
+                setupDashboard.classList.add('grid');
+                setupDashboard.classList.remove('flex', 'justify-center', 'gap-4', 'scale-90', 'opacity-80');
             }
+
+            if (welcomeTitle) welcomeTitle.textContent = 'Choose Your AI Provider';
+            if (welcomeSubtitle) welcomeSubtitle.textContent = 'Select a connection method to start chatting';
 
             // Update active provider indicator on cards
             const useOpenRouter = getUseOpenRouter();
