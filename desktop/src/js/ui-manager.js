@@ -7,7 +7,7 @@ import {
     setupLocalBtn, setupOpenRouterBtn, setupCustomBtn
 } from './dom-elements.js';
 import { basicSanitizeInput, sanitizeInput, initializeCodeMirror, scrollToBottom, copyToClipboard, debugLog, debugError, processCodeBlocks, decodeHtmlEntities, htmlToFormattedText, getReasoningStreamState, normalizeReasoningTags, stripReasoningSections } from './utils.js';
-import { getHideThinking, getShowModelLabel, getWebSearchEnabled, isAppConfigured, getUseOpenRouter, getUseOpenAICompatible } from './settings-manager.js';
+import { getHideThinking, getShowModelLabel, getWebSearchEnabled, getUseOpenRouter, getUseOpenAICompatible } from './settings-manager.js';
 import { domBatcher, rafThrottle } from './optimized-utils.js';
 
 
@@ -153,49 +153,39 @@ function getAttachmentPreviewSrc(file) {
  * Shows the welcome message and hides the messages container
  */
 export function showWelcomeMessage() {
-    // Performance monitoring removed
-
     // Batch DOM operations to prevent layout thrashing
     domBatcher.write(() => {
         if (welcomeMessage) {
+            welcomeMessage.classList.remove('hidden');
             welcomeMessage.style.display = 'flex';
             welcomeMessage.style.visibility = 'visible';
             welcomeMessage.style.pointerEvents = 'auto';
             welcomeMessage.style.opacity = '1';
 
-            // Toggle between setup dashboard and configured actions
-            const isConfigured = isAppConfigured();
-            if (setupDashboard && configuredActions) {
-                if (isConfigured) {
-                    setupDashboard.classList.remove('grid');
-                    setupDashboard.classList.add('flex', 'justify-center', 'gap-4', 'scale-90', 'opacity-80');
-                    configuredActions.classList.remove('hidden');
-                    if (welcomeTitle) welcomeTitle.textContent = 'Welcome to LMSA';
-                    if (welcomeSubtitle) welcomeSubtitle.textContent = 'Your AI workspace is ready';
-                } else {
-                    setupDashboard.classList.add('grid');
-                    setupDashboard.classList.remove('flex', 'justify-center', 'gap-4', 'scale-90', 'opacity-80');
-                    configuredActions.classList.add('hidden');
-                    if (welcomeTitle) welcomeTitle.textContent = 'Choose Your AI Provider';
-                    if (welcomeSubtitle) welcomeSubtitle.textContent = 'Select a connection method to start chatting';
-                }
+            // Always default to provider selection on empty/new chats.
+            if (setupDashboard) {
+                setupDashboard.classList.add('grid');
+                setupDashboard.classList.remove('flex', 'justify-center', 'gap-4', 'scale-90', 'opacity-80');
             }
+            if (configuredActions) {
+                configuredActions.classList.add('hidden');
+            }
+            if (welcomeTitle) welcomeTitle.textContent = 'Choose Your AI Provider';
+            if (welcomeSubtitle) welcomeSubtitle.textContent = 'Select a connection method to start chatting';
 
-            // Update active provider indicator on cards
             const useOpenRouter = getUseOpenRouter();
             const useOpenAICompatible = getUseOpenAICompatible();
-            
             if (setupLocalBtn) setupLocalBtn.classList.toggle('active', !useOpenRouter && !useOpenAICompatible);
             if (setupOpenRouterBtn) setupOpenRouterBtn.classList.toggle('active', useOpenRouter);
             if (setupCustomBtn) setupCustomBtn.classList.toggle('active', useOpenAICompatible);
         }
+
         if (messagesContainer) {
             messagesContainer.style.opacity = '0';
             messagesContainer.style.visibility = 'hidden';
             messagesContainer.style.display = 'none';
         }
     }).then(() => {
-        // Force reflow and position adjustment after DOM writes
         if (welcomeMessage) {
             void welcomeMessage.offsetWidth;
             ensureWelcomeMessagePosition();
@@ -212,6 +202,7 @@ export function hideWelcomeMessage() {
     // Batch DOM operations to prevent layout thrashing
     domBatcher.write(() => {
         if (welcomeMessage) {
+            welcomeMessage.classList.add('hidden');
             welcomeMessage.style.display = 'none';
             welcomeMessage.style.visibility = 'hidden';
             welcomeMessage.style.opacity = '1';

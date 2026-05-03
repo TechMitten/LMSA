@@ -5,14 +5,16 @@
 
 header {
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 24%),
-        linear-gradient(180deg, rgba(30, 41, 59, 0.96) 0%, rgba(15, 23, 42, 0.94) 58%, rgba(10, 15, 28, 0.98) 100%) !important;
-    border-bottom: 1px solid rgba(71, 85, 105, 0.34) !important;
+        linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0) 30%),
+        radial-gradient(circle at 18% -20%, rgba(96, 165, 250, 0.2) 0%, rgba(96, 165, 250, 0) 58%),
+        linear-gradient(180deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.96) 56%, rgba(8, 12, 22, 0.99) 100%) !important;
+    border-bottom: 1px solid rgba(71, 85, 105, 0.28) !important;
     box-shadow:
-        0 16px 30px rgba(2, 6, 23, 0.28),
-        0 4px 12px rgba(15, 23, 42, 0.18),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1),
-        inset 0 -1px 0 rgba(15, 23, 42, 0.45) !important;
+        0 20px 36px rgba(2, 6, 23, 0.3),
+        0 8px 16px rgba(15, 23, 42, 0.2),
+        0 1px 0 rgba(96, 165, 250, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14),
+        inset 0 -1px 0 rgba(15, 23, 42, 0.34) !important;
     backdrop-filter: blur(14px) saturate(140%);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
 }
@@ -22,7 +24,18 @@ header::before {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(circle at top center, rgba(96, 165, 250, 0.14) 0%, rgba(96, 165, 250, 0) 58%);
+        radial-gradient(circle at top center, rgba(96, 165, 250, 0.22) 0%, rgba(96, 165, 250, 0) 58%);
+    pointer-events: none;
+}
+
+header::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -24px;
+    height: 24px;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.36) 0%, rgba(15, 23, 42, 0) 100%);
     pointer-events: none;
 }
 
@@ -33,19 +46,25 @@ header>* {
 
 body.light-theme header {
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.52) 22%),
-        linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(241, 245, 249, 0.97) 58%, rgba(226, 232, 240, 0.98) 100%) !important;
-    border-bottom-color: rgba(148, 163, 184, 0.34) !important;
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.58) 24%),
+        radial-gradient(circle at 18% -20%, rgba(59, 130, 246, 0.14) 0%, rgba(59, 130, 246, 0) 62%),
+        linear-gradient(180deg, rgba(248, 250, 252, 0.99) 0%, rgba(241, 245, 249, 0.98) 56%, rgba(226, 232, 240, 0.99) 100%) !important;
+    border-bottom-color: rgba(148, 163, 184, 0.3) !important;
     box-shadow:
-        0 14px 28px rgba(148, 163, 184, 0.2),
-        0 4px 10px rgba(148, 163, 184, 0.12),
+        0 18px 30px rgba(148, 163, 184, 0.2),
+        0 8px 14px rgba(148, 163, 184, 0.12),
+        0 1px 0 rgba(59, 130, 246, 0.12),
         inset 0 1px 0 rgba(255, 255, 255, 0.92),
-        inset 0 -1px 0 rgba(203, 213, 225, 0.72) !important;
+        inset 0 -1px 0 rgba(203, 213, 225, 0.58) !important;
 }
 
 body.light-theme header::before {
     background:
-        radial-gradient(circle at top center, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0) 60%);
+    radial-gradient(circle at top center, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0) 60%);
+}
+
+body.light-theme header::after {
+    background: linear-gradient(180deg, rgba(203, 213, 225, 0.38) 0%, rgba(203, 213, 225, 0) 100%);
 }
 
 #settings-content-wrapper {
@@ -4258,5 +4277,61 @@ body.light-theme #welcome-message .welcome-premium-action.premium-activated {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Final header depth override: keep top bar elevated and non-flat across breakpoints. */
+body #main-app-container > header {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 36%),
+        radial-gradient(circle at 18% -22%, rgba(56, 189, 248, 0.34) 0%, rgba(56, 189, 248, 0) 62%),
+        linear-gradient(180deg, rgba(41, 58, 92, 1) 0%, rgba(24, 36, 61, 0.98) 52%, rgba(11, 17, 31, 1) 100%) !important;
+    border-bottom: 1px solid rgba(96, 165, 250, 0.34) !important;
+    box-shadow:
+        0 26px 44px rgba(2, 6, 23, 0.38),
+        0 10px 20px rgba(15, 23, 42, 0.3),
+        0 1px 0 rgba(125, 211, 252, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        inset 0 -1px 0 rgba(8, 47, 73, 0.42) !important;
+}
+
+body #main-app-container > header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top center, rgba(125, 211, 252, 0.34) 0%, rgba(125, 211, 252, 0) 62%);
+    pointer-events: none;
+}
+
+body #main-app-container > header::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -24px;
+    height: 24px;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.46) 0%, rgba(15, 23, 42, 0) 100%);
+    pointer-events: none;
+}
+
+body.light-theme #main-app-container > header {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.62) 24%),
+        radial-gradient(circle at 20% -18%, rgba(59, 130, 246, 0.16) 0%, rgba(59, 130, 246, 0) 64%),
+        linear-gradient(180deg, rgba(248, 250, 252, 1) 0%, rgba(241, 245, 249, 0.99) 56%, rgba(226, 232, 240, 1) 100%) !important;
+    border-bottom-color: rgba(148, 163, 184, 0.32) !important;
+    box-shadow:
+        0 18px 30px rgba(148, 163, 184, 0.22),
+        0 8px 14px rgba(148, 163, 184, 0.13),
+        0 1px 0 rgba(59, 130, 246, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.94),
+        inset 0 -1px 0 rgba(203, 213, 225, 0.6) !important;
+}
+
+body.light-theme #main-app-container > header::before {
+    background: radial-gradient(circle at top center, rgba(59, 130, 246, 0.14) 0%, rgba(59, 130, 246, 0) 62%);
+}
+
+body.light-theme #main-app-container > header::after {
+    background: linear-gradient(180deg, rgba(203, 213, 225, 0.4) 0%, rgba(203, 213, 225, 0) 100%);
 }
 
