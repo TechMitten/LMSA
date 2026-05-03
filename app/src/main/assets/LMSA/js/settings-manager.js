@@ -2028,6 +2028,19 @@ export function applyConnectionProviderSelection(provider) {
     ? provider
     : 'local';
 
+  const syncWelcomeProviderCardState = (cardId, isActive) => {
+    const cardElement = document.getElementById(cardId);
+    if (!cardElement) {
+      return;
+    }
+
+    cardElement.classList.toggle('active', isActive);
+    const selectControl = cardElement.querySelector('.provider-select-light');
+    if (selectControl) {
+      selectControl.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    }
+  };
+
   useOpenRouter = normalizedProvider === 'openrouter';
   useOpenAICompatible = normalizedProvider === 'openai-compatible';
 
@@ -2049,6 +2062,10 @@ export function applyConnectionProviderSelection(provider) {
       ollamaToggleCheckbox.checked = false;
     }
   }
+
+  syncWelcomeProviderCardState('setup-local-btn', normalizedProvider === 'local');
+  syncWelcomeProviderCardState('setup-openrouter-btn', normalizedProvider === 'openrouter');
+  syncWelcomeProviderCardState('setup-custom-btn', normalizedProvider === 'openai-compatible');
 
   updateProviderUI();
 

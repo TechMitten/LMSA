@@ -175,9 +175,21 @@ export function showWelcomeMessage() {
 
             const useOpenRouter = getUseOpenRouter();
             const useOpenAICompatible = getUseOpenAICompatible();
-            if (setupLocalBtn) setupLocalBtn.classList.toggle('active', !useOpenRouter && !useOpenAICompatible);
-            if (setupOpenRouterBtn) setupOpenRouterBtn.classList.toggle('active', useOpenRouter);
-            if (setupCustomBtn) setupCustomBtn.classList.toggle('active', useOpenAICompatible);
+            const syncSetupCardState = (cardElement, isActive) => {
+                if (!cardElement) {
+                    return;
+                }
+
+                cardElement.classList.toggle('active', isActive);
+                const selectControl = cardElement.querySelector('.provider-select-light');
+                if (selectControl) {
+                    selectControl.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                }
+            };
+
+            syncSetupCardState(setupLocalBtn, !useOpenRouter && !useOpenAICompatible);
+            syncSetupCardState(setupOpenRouterBtn, useOpenRouter);
+            syncSetupCardState(setupCustomBtn, useOpenAICompatible);
         }
 
         if (messagesContainer) {

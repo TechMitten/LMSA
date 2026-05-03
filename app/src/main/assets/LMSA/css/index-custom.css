@@ -189,7 +189,7 @@ body.light-theme #main-app-container > header {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 16px 16px 16px 20px;
+    padding: 16px 16px 16px 40px;
 }
 
 /* ── Left accent stripe ───────────────────────────────────── */
@@ -263,23 +263,45 @@ body.light-theme #main-app-container > header {
 
 /* ── Arrow indicator ──────────────────────────────────────── */
 .provider-card-arrow {
-    color: rgba(148, 163, 184, 0.35);
+    appearance: none;
+    -webkit-appearance: none;
+    background: none;
+    border: none;
+    padding: 6px;
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.96);
     font-size: 0.75rem;
     flex-shrink: 0;
-    transition: color 0.2s ease, transform 0.2s ease;
+    line-height: 1;
+    cursor: pointer;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.55);
+    transition: color 0.2s ease, transform 0.2s ease, text-shadow 0.2s ease;
 }
 
 .provider-card:hover .provider-card-arrow {
-    color: rgba(148, 163, 184, 0.7);
+    color: rgba(255, 255, 255, 1);
     transform: translateX(2px);
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.7);
 }
 
 /* ── Active badge ─────────────────────────────────────────── */
 .current-provider-badge {
     position: absolute;
-    top: 14px;
-    right: 14px;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
     align-items: center;
+    justify-content: center;
+    display: flex;
+    cursor: pointer;
+    z-index: 2;
 }
 
 .provider-active-dot {
@@ -287,15 +309,23 @@ body.light-theme #main-app-container > header {
     width: 8px;
     height: 8px;
     border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.provider-card.active .current-provider-badge {
-    display: flex !important;
+.provider-select-light {
+    appearance: none;
+    -webkit-appearance: none;
 }
 
 .provider-card.active .provider-card-arrow {
-    color: rgba(255, 255, 255, 0.55);
     transform: translateX(2px);
+}
+
+.provider-select-light:hover .provider-active-dot,
+.provider-select-light:focus-visible .provider-active-dot {
+    transform: scale(1.08);
 }
 
 /* ── Local Server — Blue ──────────────────────────────────── */
@@ -316,7 +346,8 @@ body.light-theme #main-app-container > header {
 }
 
 .provider-card--local.active .provider-card-title { color: #93c5fd; }
-.provider-card--local .provider-active-dot { background: #3b82f6; box-shadow: 0 0 8px rgba(59, 130, 246, 0.8); }
+.provider-card--local.active .provider-active-dot { background: #60a5fa; box-shadow: 0 0 12px rgba(59, 130, 246, 0.72); }
+.provider-card--local.active .provider-card-arrow { color: #60a5fa; text-shadow: 0 0 12px rgba(59, 130, 246, 0.65); }
 
 /* ── OpenRouter — Purple ──────────────────────────────────── */
 .provider-card--openrouter .provider-card-accent {
@@ -336,7 +367,8 @@ body.light-theme #main-app-container > header {
 }
 
 .provider-card--openrouter.active .provider-card-title { color: #d8b4fe; }
-.provider-card--openrouter .provider-active-dot { background: #a855f7; box-shadow: 0 0 8px rgba(168, 85, 247, 0.8); }
+.provider-card--openrouter.active .provider-active-dot { background: #c084fc; box-shadow: 0 0 12px rgba(168, 85, 247, 0.72); }
+.provider-card--openrouter.active .provider-card-arrow { color: #c084fc; text-shadow: 0 0 12px rgba(168, 85, 247, 0.65); }
 
 /* ── Custom API — Emerald ─────────────────────────────────── */
 .provider-card--custom .provider-card-accent {
@@ -356,7 +388,8 @@ body.light-theme #main-app-container > header {
 }
 
 .provider-card--custom.active .provider-card-title { color: #6ee7b7; }
-.provider-card--custom .provider-active-dot { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.8); }
+.provider-card--custom.active .provider-active-dot { background: #34d399; box-shadow: 0 0 12px rgba(16, 185, 129, 0.72); }
+.provider-card--custom.active .provider-card-arrow { color: #34d399; text-shadow: 0 0 12px rgba(16, 185, 129, 0.65); }
 
 /* ── Welcome container ────────────────────────────────────── */
 .welcome-content {
@@ -391,8 +424,8 @@ body.light-theme .provider-card:hover {
 body.light-theme .provider-card-title { color: #0f172a; }
 body.light-theme .provider-card-desc { color: #475569; }
 body.light-theme .provider-tag { color: #64748b; border-color: rgba(15, 23, 42, 0.1); background: rgba(15, 23, 42, 0.04); }
-body.light-theme .provider-card-arrow { color: rgba(100, 116, 139, 0.45); }
-body.light-theme .provider-card:hover .provider-card-arrow { color: rgba(71, 85, 105, 0.75); }
+body.light-theme .provider-card-arrow { color: rgba(255, 255, 255, 0.98); text-shadow: 0 0 10px rgba(255, 255, 255, 0.85), 0 0 1px rgba(15, 23, 42, 0.3); }
+body.light-theme .provider-card:hover .provider-card-arrow { color: rgba(255, 255, 255, 1); text-shadow: 0 0 12px rgba(255, 255, 255, 0.95), 0 0 1px rgba(15, 23, 42, 0.35); }
 
 body.light-theme .provider-card--local.active {
     background: linear-gradient(135deg, rgba(219, 234, 254, 0.88) 0%, rgba(239, 246, 255, 0.96) 100%);
@@ -400,6 +433,7 @@ body.light-theme .provider-card--local.active {
     box-shadow: 0 4px 20px -6px rgba(37, 99, 235, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 body.light-theme .provider-card--local.active .provider-card-title { color: #1d4ed8; }
+body.light-theme .provider-card--local.active .provider-card-arrow { color: #2563eb; text-shadow: 0 0 10px rgba(59, 130, 246, 0.35); }
 
 body.light-theme .provider-card--openrouter.active {
     background: linear-gradient(135deg, rgba(243, 232, 255, 0.88) 0%, rgba(250, 245, 255, 0.96) 100%);
@@ -407,6 +441,7 @@ body.light-theme .provider-card--openrouter.active {
     box-shadow: 0 4px 20px -6px rgba(124, 58, 237, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 body.light-theme .provider-card--openrouter.active .provider-card-title { color: #7c3aed; }
+body.light-theme .provider-card--openrouter.active .provider-card-arrow { color: #9333ea; text-shadow: 0 0 10px rgba(168, 85, 247, 0.35); }
 
 body.light-theme .provider-card--custom.active {
     background: linear-gradient(135deg, rgba(209, 250, 229, 0.88) 0%, rgba(236, 253, 245, 0.96) 100%);
@@ -414,6 +449,7 @@ body.light-theme .provider-card--custom.active {
     box-shadow: 0 4px 20px -6px rgba(5, 150, 105, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 body.light-theme .provider-card--custom.active .provider-card-title { color: #059669; }
+body.light-theme .provider-card--custom.active .provider-card-arrow { color: #059669; text-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
 
 body.light-theme .welcome-content {
     background: rgba(255, 255, 255, 0.8);

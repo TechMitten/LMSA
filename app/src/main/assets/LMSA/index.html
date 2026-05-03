@@ -346,26 +346,14 @@
                         style="transform: none !important; left: 0; right: 0; color: var(--text-muted);">
                         <div class="welcome-content glass-card p-4 sm:p-8 max-w-3xl mx-auto w-full">
                             <div class="welcome-content-inner">
-                                <!-- Header Section -->
-                                <div class="welcome-header mb-5 sm:mb-7">
-                                    <div class="relative mx-auto mb-4 flex items-center justify-center welcome-brand-mark"
-                                        style="width: 4rem; height: 4rem; padding: 0.5rem;">
-                                        <img src="icon.png" alt="LMSA Icon" class="relative z-10 object-contain"
-                                            style="width: 2.5rem; height: 2.5rem;">
-                                    </div>
-                                    <div class="welcome-title-block">
-                                        <h1 id="welcome-title" class="text-2xl sm:text-3xl font-bold mb-2 tracking-tight text-white">Choose Your AI Provider</h1>
-                                        <p id="welcome-subtitle" class="welcome-subtitle opacity-80 leading-relaxed text-sm sm:text-base">
-                                            Select a connection method to start chatting
-                                        </p>
-                                    </div>
-                                </div>
-
                                 <!-- Configuration Dashboard (State A: First Run / Not Configured) -->
                                 <div id="setup-dashboard" class="provider-grid grid grid-cols-3 gap-2.5 sm:gap-4 mb-4 sm:mb-5">
                                     <!-- Local Server Card -->
-                                    <button id="setup-local-btn" class="provider-card provider-card--local group relative transition-all duration-300">
+                                    <div id="setup-local-btn" class="provider-card provider-card--local group relative transition-all duration-300" role="group" aria-label="Local Server provider">
                                         <div class="provider-card-accent"></div>
+                                        <button type="button" class="current-provider-badge provider-select-light" data-provider-action="settings" aria-label="Open Local Server settings" aria-pressed="false">
+                                            <span class="provider-active-dot"></span>
+                                        </button>
                                         <div class="provider-card-body">
                                             <div class="provider-icon-wrapper">
                                                 <i class="fas fa-server"></i>
@@ -378,18 +366,18 @@
                                                     <span class="provider-tag">Offline</span>
                                                 </div>
                                             </div>
-                                            <div class="provider-card-arrow">
+                                            <button type="button" class="provider-card-arrow" data-provider-action="select" aria-label="Select Local Server provider">
                                                 <i class="fas fa-chevron-right"></i>
-                                            </div>
+                                            </button>
                                         </div>
-                                        <div class="current-provider-badge hidden">
-                                            <span class="provider-active-dot"></span>
-                                        </div>
-                                    </button>
+                                    </div>
 
                                     <!-- OpenRouter Card -->
-                                    <button id="setup-openrouter-btn" class="provider-card provider-card--openrouter group relative transition-all duration-300">
+                                    <div id="setup-openrouter-btn" class="provider-card provider-card--openrouter group relative transition-all duration-300" role="group" aria-label="OpenRouter provider">
                                         <div class="provider-card-accent"></div>
+                                        <button type="button" class="current-provider-badge provider-select-light" data-provider-action="settings" aria-label="Open OpenRouter settings" aria-pressed="false">
+                                            <span class="provider-active-dot"></span>
+                                        </button>
                                         <div class="provider-card-body">
                                             <div class="provider-icon-wrapper">
                                                 <i class="fas fa-cloud"></i>
@@ -402,18 +390,18 @@
                                                     <span class="provider-tag">BYOK</span>
                                                 </div>
                                             </div>
-                                            <div class="provider-card-arrow">
+                                            <button type="button" class="provider-card-arrow" data-provider-action="select" aria-label="Select OpenRouter provider">
                                                 <i class="fas fa-chevron-right"></i>
-                                            </div>
+                                            </button>
                                         </div>
-                                        <div class="current-provider-badge hidden">
-                                            <span class="provider-active-dot"></span>
-                                        </div>
-                                    </button>
+                                    </div>
 
                                     <!-- Custom Endpoint Card -->
-                                    <button id="setup-custom-btn" class="provider-card provider-card--custom group relative transition-all duration-300">
+                                    <div id="setup-custom-btn" class="provider-card provider-card--custom group relative transition-all duration-300" role="group" aria-label="Custom API provider">
                                         <div class="provider-card-accent"></div>
+                                        <button type="button" class="current-provider-badge provider-select-light" data-provider-action="settings" aria-label="Open Custom API settings" aria-pressed="false">
+                                            <span class="provider-active-dot"></span>
+                                        </button>
                                         <div class="provider-card-body">
                                             <div class="provider-icon-wrapper">
                                                 <i class="fas fa-plug"></i>
@@ -426,14 +414,11 @@
                                                     <span class="provider-tag">Flexible</span>
                                                 </div>
                                             </div>
-                                            <div class="provider-card-arrow">
+                                            <button type="button" class="provider-card-arrow" data-provider-action="select" aria-label="Select Custom API provider">
                                                 <i class="fas fa-chevron-right"></i>
-                                            </div>
+                                            </button>
                                         </div>
-                                        <div class="current-provider-badge hidden">
-                                            <span class="provider-active-dot"></span>
-                                        </div>
-                                    </button>
+                                    </div>
                                 </div>
 
                                 <!-- Standard Welcome Actions (State B: Configured) -->

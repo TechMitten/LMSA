@@ -280,59 +280,33 @@ export function initializeEventHandlers() {
 
     // "Continue with Character" button has been removed
     // Event listeners for it are no longer needed
-    // Setup Local Button
-    if (setupLocalBtn) {
-        bindPressInFeedback(setupLocalBtn);
-        const handleSetupLocal = () => {
-            applyConnectionProviderSelection('local');
-            showSettingsModal();
-        };
-        setupLocalBtn.addEventListener('click', handleSetupLocal);
-        setupLocalBtn.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            runAfterPressIn(setupLocalBtn, () => {
-                handleSetupLocal();
-                setupLocalBtn.blur();
-            });
-        }, { passive: false });
-    }
+    const bindSetupProviderCard = (cardElement, provider) => {
+        if (!cardElement) {
+            return;
+        }
 
-    // Setup OpenRouter Button
-    if (setupOpenRouterBtn) {
-        bindPressInFeedback(setupOpenRouterBtn);
-        const handleSetupOpenRouter = () => {
-            applyConnectionProviderSelection('openrouter');
-            showSettingsModal();
-        };
-        setupOpenRouterBtn.addEventListener('click', handleSetupOpenRouter);
-        setupOpenRouterBtn.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            runAfterPressIn(setupOpenRouterBtn, () => {
-                handleSetupOpenRouter();
-                setupOpenRouterBtn.blur();
-            });
-        }, { passive: false });
-    }
+        const selectControl = cardElement.querySelector('.provider-select-light');
+        const settingsControl = cardElement.querySelector('.provider-card-arrow');
 
-    // Setup Custom Button
-    if (setupCustomBtn) {
-        bindPressInFeedback(setupCustomBtn);
-        const handleSetupCustom = () => {
-            applyConnectionProviderSelection('openai-compatible');
-            showSettingsModal();
-        };
-        setupCustomBtn.addEventListener('click', handleSetupCustom);
-        setupCustomBtn.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            runAfterPressIn(setupCustomBtn, () => {
-                handleSetupCustom();
-                setupCustomBtn.blur();
+        if (selectControl) {
+            bindPressInFeedback(selectControl);
+            bindSidebarScrollableTap(selectControl, () => {
+                applyConnectionProviderSelection(provider);
+                showSettingsModal();
             });
-        }, { passive: false });
-    }
+        }
+
+        if (settingsControl) {
+            bindPressInFeedback(settingsControl);
+            bindSidebarScrollableTap(settingsControl, () => {
+                applyConnectionProviderSelection(provider);
+            });
+        }
+    };
+
+    bindSetupProviderCard(setupLocalBtn, 'local');
+    bindSetupProviderCard(setupOpenRouterBtn, 'openrouter');
+    bindSetupProviderCard(setupCustomBtn, 'openai-compatible');
 
     // Settings button in welcome message
     const getStartedBtn = document.getElementById('get-started-btn');
