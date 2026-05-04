@@ -1062,6 +1062,7 @@ function handleWebSearchToggle(event) {
           // User canceled - keep it disabled
           const webSearchToggle = document.getElementById("web-search-toggle");
           if (webSearchToggle) webSearchToggle.checked = false;
+          syncWebSearchHeaderUI();
         },
         isPersistent: persist
       });
@@ -1080,11 +1081,14 @@ export function toggleWebSearchFeature() {
   const webSearchToggle = document.getElementById("web-search-toggle");
   if (!webSearchToggle) return;
   
-  // Set flag to indicate it was triggered from sidebar
   webSearchToggle._triggeredBySidebar = true;
-  webSearchToggle.click(); // Trigger the checkbox click event
-  
-  // Reset flag after a tick
+  webSearchToggle.checked = !webSearchToggle.checked;
+  try {
+    handleWebSearchToggle({ target: webSearchToggle });
+  } finally {
+    webSearchToggle._triggeredBySidebar = false;
+  }
+
   setTimeout(() => {
     webSearchToggle._triggeredBySidebar = false;
   }, 0);

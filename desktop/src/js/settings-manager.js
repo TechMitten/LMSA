@@ -16,7 +16,7 @@ import {
 
 import { applyThinkingVisibility, refreshAllMessages, applyModelLabelVisibility } from "./ui-manager.js";
 import { refreshChatScrollbar } from "./chat-scrollbar.js";
-import { debugLog, refreshAllCodeBlocks } from "./utils.js";
+import { debugLog, debugError, refreshAllCodeBlocks } from "./utils.js";
 import { showSmartReplyWarningModal } from "./components/modals/smart-reply-warning-modal.js";
 import { showOpenRouterWarningModal } from "./components/modals/openrouter-warning-modal.js";
 import { showWebSearchWarningModal } from "./components/modals/web-search-warning-modal.js";
@@ -968,9 +968,11 @@ function handleWebSearchToggle(event) {
       // User opted to hide warning, enable immediately
       const webSearchToggle = document.getElementById("web-search-toggle");
       if (webSearchToggle) webSearchToggle.checked = true;
+      debugLog('[Web Search] Warning hidden, enabling immediately');
       saveWebSearchSetting();
       syncWebSearchHeaderUI();
     } else {
+      debugLog('[Web Search] Showing warning modal');
       // Prevent checkbox from staying checked until user confirms
       event.target.checked = false;
 
@@ -995,8 +997,19 @@ function handleWebSearchToggle(event) {
  */
 export function toggleWebSearchFeature() {
   const webSearchToggle = document.getElementById("web-search-toggle");
-  if (!webSearchToggle) return;
-  webSearchToggle.click(); // Trigger the checkbox click event
+  if (!webSearchToggle) {
+    debugError('[Web Search] Toggle element not found');
+    return;
+  }
+
+  debugLog(`[Web Search] Toggling via sidebar button. Current state: ${webSearchToggle.checked}`);
+
+  // Programmatically toggle the state
+  webSearchToggle.checked = !webSearchToggle.checked;
+
+  // Directly trigger the handler logic instead of relying on .click()
+  // which can be unreliable in hidden/collapsed elements in Android WebViews
+  handleWebSearchToggle({ target: webSearchToggle });
 }
 
 /**

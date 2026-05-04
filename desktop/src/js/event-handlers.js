@@ -1377,34 +1377,14 @@ export function initializeEventHandlers() {
         });
     }
 
-    // Web search header button
+    // Web search header button - use the same reliable tap system as all other sidebar buttons
     if (webSearchHeaderButton) {
-        // Only trigger clicks to avoid double-firing with touch
-        webSearchHeaderButton.addEventListener('click', (e) => {
-            // Prevent default behavior
-            e.preventDefault();
-            
-            // Trigger web search toggle functionality
-            toggleWebSearchFeature();
-            
-            // Remove focus to prevent the button from staying highlighted
-            webSearchHeaderButton.blur();
+        bindSidebarScrollableTap(webSearchHeaderButton, () => {
+            closeSidebar();
+            // Delay toggle until sidebar finishes animating out, so the warning
+            // modal isn't rendered behind the sidebar overlay on Android WebView.
+            setTimeout(() => toggleWebSearchFeature(), 380);
         });
-        
-        webSearchHeaderButton.addEventListener('touchstart', (e) => {
-            // Prevent default touch highlight
-            if (e.cancelable) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-
-        webSearchHeaderButton.addEventListener('touchend', (e) => {
-            // Prevent default behavior that might cause highlight
-            e.preventDefault();
-            // Trigger functionality
-            toggleWebSearchFeature();
-            webSearchHeaderButton.blur();
-        }, { passive: false });
     }
 
     // About button

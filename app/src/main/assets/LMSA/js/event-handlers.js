@@ -1453,32 +1453,7 @@ export function initializeEventHandlers() {
 
     // Web search header button
     if (webSearchHeaderButton) {
-        // Only trigger clicks to avoid double-firing with touch
-        webSearchHeaderButton.addEventListener('click', (e) => {
-            // Prevent default behavior
-            e.preventDefault();
-            
-            // Trigger web search toggle functionality
-            toggleWebSearchFeature();
-            
-            // Remove focus to prevent the button from staying highlighted
-            webSearchHeaderButton.blur();
-        });
-        
-        webSearchHeaderButton.addEventListener('touchstart', (e) => {
-            // Prevent default touch highlight
-            if (e.cancelable) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-
-        webSearchHeaderButton.addEventListener('touchend', (e) => {
-            // Prevent default behavior that might cause highlight
-            e.preventDefault();
-            // Trigger functionality
-            toggleWebSearchFeature();
-            webSearchHeaderButton.blur();
-        }, { passive: false });
+        bindSidebarScrollableTap(webSearchHeaderButton, toggleWebSearchFeature);
     }
 
     // About button

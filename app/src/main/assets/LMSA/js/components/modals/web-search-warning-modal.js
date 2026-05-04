@@ -74,6 +74,7 @@ const WEB_SEARCH_WARNING_ANIMATION_MS = 180;
 
 let webSearchCloseTimer = null;
 let webSearchIsClosing = false;
+let webSearchWasConfirmed = false;
 
 /**
  * Initializes the Web Search Warning Modal
@@ -117,12 +118,13 @@ export function initWebSearchWarningModal() {
                 modal.classList.remove('flex');
                 
                 // If we're closing without confirmation, trigger cancel callback
-                if (confirmationCallback === null && typeof window._webSearchCancelCallback === 'function') {
+                if (!webSearchWasConfirmed && typeof window._webSearchCancelCallback === 'function') {
                     window._webSearchCancelCallback();
                 }
                 
                 confirmationCallback = null;
                 window._webSearchCancelCallback = null;
+                webSearchWasConfirmed = false;
                 webSearchIsClosing = false;
                 webSearchCloseTimer = null;
             }, WEB_SEARCH_WARNING_ANIMATION_MS);
@@ -143,6 +145,7 @@ export function initWebSearchWarningModal() {
 
                 if (confirmationCallback) {
                     const cb = confirmationCallback;
+                    webSearchWasConfirmed = true;
                     confirmationCallback = null; // Prevent closeModal from triggering cancel
                     cb();
                 }
@@ -211,6 +214,7 @@ export function showWebSearchWarningModal(options) {
     }
 
     // Store the callback for confirmation
+    webSearchWasConfirmed = false;
     confirmationCallback = () => {
         if (callback) callback();
     };
