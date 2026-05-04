@@ -181,10 +181,6 @@ export function showWelcomeMessage() {
                 }
 
                 cardElement.classList.toggle('active', isActive);
-                const selectControl = cardElement.querySelector('.provider-select-light');
-                if (selectControl) {
-                    selectControl.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-                }
             };
 
             syncSetupCardState(setupLocalBtn, !useOpenRouter && !useOpenAICompatible);

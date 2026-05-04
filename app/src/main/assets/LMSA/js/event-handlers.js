@@ -285,21 +285,14 @@ export function initializeEventHandlers() {
             return;
         }
 
-        const selectControl = cardElement.querySelector('.provider-select-light');
         const settingsControl = cardElement.querySelector('.provider-card-arrow');
 
-        if (selectControl) {
-            bindPressInFeedback(selectControl);
-            bindSidebarScrollableTap(selectControl, () => {
+        if (settingsControl && settingsControl.dataset.providerEntryBound !== 'true') {
+            settingsControl.dataset.providerEntryBound = 'true';
+            settingsControl.addEventListener('click', () => {
                 applyConnectionProviderSelection(provider);
                 showSettingsModal();
-            });
-        }
-
-        if (settingsControl) {
-            bindPressInFeedback(settingsControl);
-            bindSidebarScrollableTap(settingsControl, () => {
-                applyConnectionProviderSelection(provider);
+                settingsControl.blur();
             });
         }
     };
