@@ -48,7 +48,7 @@ export const webSearchWarningModal = `
                             <span>Only the relevant queries, not full chat histories, are sent</span>
                         </li>
                     </ul>
-                    <p class="text-gray-400 text-xs mt-3 italic" id="web-search-persistence-note">The feature can be disabled at any time in settings.</p>
+                    <p class="text-gray-400 text-xs mt-3 italic" id="web-search-persistence-note">The feature stays enabled only for this app session and can be disabled at any time.</p>
                 </div>
             </div>
 
@@ -205,10 +205,10 @@ export function showWebSearchWarningModal(options) {
     const persistenceNote = document.getElementById('web-search-persistence-note');
     if (persistenceNote) {
         if (isPersistent) {
-            persistenceNote.innerHTML = '<i class="fas fa-save mr-1"></i> Enabling here will <strong>persist</strong> across app sessions.';
+            persistenceNote.textContent = 'The feature stays enabled only for this app session and can be disabled at any time.';
             persistenceNote.style.color = '#60a5fa';
         } else {
-            persistenceNote.textContent = 'The feature can be disabled at any time in settings.';
+            persistenceNote.textContent = 'The feature stays enabled only for this app session and can be disabled at any time.';
             persistenceNote.style.color = '';
         }
     }
