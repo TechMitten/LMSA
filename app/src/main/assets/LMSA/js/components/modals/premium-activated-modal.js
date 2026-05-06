@@ -59,27 +59,41 @@ export const premiumActivatedModal = `
 
                 <button id="premium-activated-continue-button"
                     style="width: 100%; border: 0; border-radius: 0.9rem; padding: 0.8rem 1rem; font-size: 0.9rem; font-weight: 700; color: #1c1917; background: linear-gradient(135deg, #fde68a 0%, #fbbf24 45%, #f59e0b 100%); box-shadow: 0 16px 30px rgba(245, 158, 11, 0.22); cursor: pointer;">
-                    Continue
+                    Close
                 </button>
             </div>
         </div>
     </div>
 
     <style>
-        #premium-activated-modal .modal-content {
-            animation: premiumActivatedPopIn 0.22s ease-out;
+        #premium-activated-modal {
+            transition: opacity 0.22s ease-in-out;
+            opacity: 0;
         }
 
-        @keyframes premiumActivatedPopIn {
-            from {
-                opacity: 0;
-                transform: translateY(14px) scale(0.98);
-            }
+        #premium-activated-modal.show {
+            opacity: 1;
+        }
 
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+        #premium-activated-modal.hide {
+            opacity: 0;
+        }
+
+        #premium-activated-modal .modal-content {
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.22s ease-out;
+            transform: translateY(16px) scale(0.98);
+            opacity: 0;
+        }
+
+        #premium-activated-modal.show .modal-content {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        #premium-activated-modal.hide .modal-content {
+            transform: translateY(12px) scale(0.97);
+            opacity: 0;
+            transition: transform 0.18s ease-in, opacity 0.18s ease-in;
         }
 
         #premium-activated-continue-button:hover {
