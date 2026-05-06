@@ -235,29 +235,6 @@ body.light-theme #welcome-message .setup-dashboard-title {
     transition: all 0.3s ease;
 }
 
-.pulse-dot {
-    width: 8px;
-    height: 8px;
-    background-color: var(--status-color, #94a3b8);
-    border-radius: 50%;
-    position: relative;
-}
-
-.pulse-dot::after {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: 50%;
-    background-color: var(--status-color, #94a3b8);
-    opacity: 0.4;
-    animation: pulse-dot-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-@keyframes pulse-dot-ping {
-    0% { transform: scale(1); opacity: 0.6; }
-    100% { transform: scale(2.5); opacity: 0; }
-}
-
 /* Provider Themes */
 .provider-status-wrapper[data-provider="local"] {
     --status-color: #3b82f6;
@@ -4026,13 +4003,6 @@ body.light-theme .conn-modal-action-btn--cancel {
     -webkit-backdrop-filter: blur(20px) saturate(130%);
     overflow: visible !important;
     animation: welcomeContentFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@media (min-height: 700px) {
-    #welcome-message {
-        justify-content: flex-end !important;
-        padding-bottom: 10px !important;
-    }
 }
 
 @keyframes welcomeContentFadeIn {
