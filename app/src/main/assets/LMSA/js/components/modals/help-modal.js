@@ -1075,6 +1075,10 @@ export const helpModal = `
                                 <li><strong>Direct LM Studio connection</strong> - Messages go straight from LMSA to
                                     your LM Studio server</li>
                             </ul>
+                            <p style="color: var(--text-primary); margin-top: 1rem;">
+                                The <strong>Free tier includes ads</strong>, while <strong>Premium removes ads</strong>.
+                                That does not change your chat privacy: your conversations are still not visible to us.
+                            </p>
                             <p style="color: var(--text-primary); margin-top: 1rem;">We believe in transparency and your right to private conversations.</p>
                         </div>
 
@@ -1126,11 +1130,12 @@ export const helpModal = `
                                     Free users have unlimited chats with the following limits and feature access:</p>
                                 <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
                                     <li><strong>Chats:</strong> Unlimited chat usage</li>
+                                    <li><strong>Ads:</strong> Free users will see ads in the app</li>
                                     <li><strong>Web Search Limit: 2 per day</strong> — Free users can augment two prompts per day with real-time web results</li>
                                     <li><strong>Automatic Reset: Midnight (Local Time)</strong> — Web search counts reset at midnight in your timezone</li>
 
                                     <li><strong>Max Output Tokens in App:</strong> Not available on the Free tier; free users use the provider or model default</li>
-                                    <li><strong>File Attachments:</strong> Not available on the Free tier; upgrade to Premium to attach files to chats</li>
+                                    <li><strong>File Attachments:</strong> Attach files (documents, code, data) to chats for analysis</li>
                                     <li><strong>Offline Use (Local LM Studio/Ollama):</strong> Not available on the Free tier; upgrade to Premium for full offline access</li>
                                     <li><strong>TTS (Text-to-Speech):</strong> Unlimited with the default voice; upgrade to Premium to unlock alternate voices</li>
                                     <li><strong>Custom Templates and v2 Character Cards:</strong> Not available on the Free tier; upgrade to Premium to create, import, and use them</li>
@@ -1144,6 +1149,7 @@ export const helpModal = `
                                     Premium users keep unlimited chats and unlock the following benefits:</p>
                                     <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
                                     <li><strong>Chats:</strong> Unlimited chat usage</li>
+                                    <li><strong>Ads:</strong> No ads for Premium users</li>
                                     <li><strong>Unlimited Web Search</strong> — No daily cap on real-time web-augmented prompts</li>
 
                                     <li><strong>Max Output Tokens in App:</strong> Adjust max output tokens directly from <strong>Settings &gt; Options</strong></li>
@@ -1164,7 +1170,7 @@ export const helpModal = `
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>Tap the <strong>Unlock Premium</strong> button in the Premium Settings menu</li>
                                     <li>Complete a one-time lifetime purchase</li>
-                                    <li>Unlock premium-only features like offline access, file attachments, and in-app token controls</li>
+                                    <li>Unlock premium-only features like offline access, alternate TTS voices, and in-app token controls</li>
                                 </ul>
                             </div>
                         </div>

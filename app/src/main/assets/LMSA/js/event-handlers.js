@@ -14,6 +14,7 @@ import {
 } from './dom-elements.js';
 import { showSettingsModal, hideSettingsModal, navigateSettingsModalToStep, showLmMcpModal, navigateToTTS } from './settings-modal-manager.js';
 import { openPremiumModal } from './components/modals/premium-modal.js';
+import { openPremiumHeaderModal } from './components/modals/premium-activated-modal.js';
 import {
     getEnterSendsNewline,
     clearOpenRouterApiKey,
@@ -1192,6 +1193,29 @@ export function initializeEventHandlers() {
             toggleSidebar();
             // Remove focus
             sidebarToggle.blur();
+        }, { passive: false });
+    }
+
+    const premiumHeaderButton = document.getElementById('premium-header-button');
+    if (premiumHeaderButton) {
+        bindPressInFeedback(premiumHeaderButton);
+
+        const openHeaderPremiumPanel = () => {
+            openPremiumHeaderModal();
+            premiumHeaderButton.blur();
+        };
+
+        premiumHeaderButton.addEventListener('click', openHeaderPremiumPanel);
+        premiumHeaderButton.addEventListener('touchstart', (e) => {
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        premiumHeaderButton.addEventListener('touchend', (e) => {
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+            openHeaderPremiumPanel();
         }, { passive: false });
     }
 

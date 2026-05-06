@@ -1693,9 +1693,39 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
         border: 1px solid rgba(148, 163, 184, 0.12);
     }
 
+    header .header-premium-btn {
+        background: linear-gradient(180deg, rgba(251, 191, 36, 0.16), rgba(245, 158, 11, 0.08));
+        border-color: rgba(251, 191, 36, 0.28);
+    }
+
+    header .header-premium-btn .header-crown-icon {
+        color: #fbbf24 !important;
+        transition: color 0.2s ease, transform 0.2s ease;
+    }
+
+    header .header-premium-btn:hover .header-crown-icon {
+        color: #fde68a !important;
+        transform: translateY(-1px);
+    }
+
+    header .header-premium-btn[data-premium-state="premium"] {
+        background: linear-gradient(180deg, rgba(251, 191, 36, 0.22), rgba(245, 158, 11, 0.14));
+        border-color: rgba(253, 224, 71, 0.45);
+        box-shadow: 0 10px 24px rgba(245, 158, 11, 0.18);
+    }
+
+    header .header-premium-btn[data-premium-state="premium"] .header-crown-icon {
+        color: #fde68a !important;
+    }
+
     body.light-theme header .header-btn {
         background: rgba(255, 255, 255, 0.7);
         border-color: rgba(148, 163, 184, 0.18);
+    }
+
+    body.light-theme header .header-premium-btn {
+        background: linear-gradient(180deg, rgba(254, 240, 138, 0.62), rgba(251, 191, 36, 0.34));
+        border-color: rgba(217, 119, 6, 0.24);
     }
 
     #main-app-container > .flex.flex-1.overflow-hidden {
