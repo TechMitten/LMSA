@@ -31,6 +31,38 @@ window.loadJSZipLibrary = function () {
     });
 };
 
+// Lazy load marked.js for markdown parsing
+window.loadMarkedLibrary = function () {
+    return new Promise((resolve, reject) => {
+        if (window.marked) {
+            resolve(window.marked);
+            return;
+        }
+
+        if (window._markedLoading) {
+            window._markedLoading.then(resolve).catch(reject);
+            return;
+        }
+
+        window._markedLoading = new Promise((loadResolve, loadReject) => {
+            const script = document.createElement('script');
+            // Prefer the non-module version for global window.marked availability
+            script.src = 'vendor/js/marked.min.js';
+            script.onload = () => {
+                console.log('Marked library loaded successfully');
+                loadResolve(window.marked);
+            };
+            script.onerror = (e) => {
+                console.error('Failed to load marked library:', e);
+                loadReject(e);
+            };
+            document.head.appendChild(script);
+        });
+
+        window._markedLoading.then(resolve).catch(reject);
+    });
+};
+
 // Lazy load Tesseract only when needed
 window.loadTesseractLibrary = function () {
     return new Promise((resolve, reject) => {

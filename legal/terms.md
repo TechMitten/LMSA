@@ -1,11 +1,11 @@
-export const termsContentString = `# Terms of Service
+# Terms of Service
 
 **Effective:** Feb 28, 2026  
 **Last Updated:** May 6, 2026
 
 Please read these Terms of Service ("Terms") carefully before using the LMSA: Chat with LM Studio mobile application ("App") provided by TechMitten LLC ("we", "us", or "our").
 
-By clicking "I Agree" or by downloading, installing, or using the App, you ("User") agree to be bound by these Terms between you and TechMitten LLC. If you do not agree to these Terms, you may not use the App. Your use of LMSA is also governed by our Privacy Policy.
+By clicking "I Agree" or by downloading, installing, or using the App, you ("User") agree to be bound by these Terms between you and TechMitten LLC. If you do not agree to these Terms, you may not use the App. Your use of LMSA is also governed by our [Privacy Policy](/privacy-policy).
 
 ---
 
@@ -63,7 +63,7 @@ You agree not to use the App for any unlawful purpose or in any way that could d
 
 The App integrates with OpenRouter, a cloud-based AI routing service that provides access to a variety of AI models hosted by third parties. When you use OpenRouter through LMSA, your prompts and AI responses are transmitted over the internet to OpenRouter's servers and the model providers they route to — not through TechMitten LLC's servers. By using OpenRouter through LMSA, you agree that:
 
-- Your use of OpenRouter is subject to OpenRouter's Terms of Service and Privacy Policy.
+- Your use of OpenRouter is subject to OpenRouter's [Terms of Service](https://openrouter.ai/terms) and [Privacy Policy](https://openrouter.ai/privacy).
 - TechMitten LLC does not control and is not responsible for OpenRouter's data handling practices, content, or availability.
 - Once you transmit prompts or data to OpenRouter, those third-party terms govern that data.
 
@@ -169,7 +169,7 @@ Disputes shall be resolved by binding arbitration. You understand that you are w
 
 ### 25.2 Class Action Waiver
 
-Arbitlation shall be limited to the individual dispute. No right exists for class-action arbitration.
+Arbitration shall be limited to the individual dispute. No right exists for class-action arbitration.
 
 ## 26. Changes to Terms
 
@@ -196,51 +196,3 @@ The free version of the App is supported by advertisements provided by Google Ad
 ## 29. Contact Information
 
 Reach us at support@lmsa.app for any questions regarding TechMitten LLC.
-`;
-
-export const termsModal = `
-    <!-- Terms of Service Acceptance Modal -->
-    <div id="terms-modal" class="hidden">
-        <div class="terms-modal-panel max-w-4xl w-full max-h-[90vh] flex flex-col">
-            <!-- Modal Header -->
-            <div class="terms-modal-header border-b border-gray-700/50">
-                <div class="terms-modal-header-row">
-                    <div class="terms-modal-badge" aria-hidden="true">
-                        <i class="fas fa-scale-balanced"></i>
-                    </div>
-                    <div class="terms-modal-header-copy">
-                        <p class="terms-modal-eyebrow">Legal Agreement</p>
-                        <h2>Terms of Service</h2>
-                        <p class="terms-modal-subtitle">Please accept to continue using LMSA</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Terms Content -->
-            <div id="terms-content" class="terms-modal-body">
-                <div class="flex flex-col items-center justify-center py-12 text-center" id="terms-loading">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-                    <p class="text-gray-400">Loading Terms of Service...</p>
-                </div>
-            </div>
-
-            <!-- Modal Footer - Acceptance Mode -->
-            <div id="terms-acceptance-footer" class="terms-modal-footer border-t border-gray-700/50">
-                <button id="accept-terms-btn" class="terms-primary-action">
-                    <i class="fas fa-check-circle" aria-hidden="true"></i>
-                    <span>I Accept the Terms of Service</span>
-                </button>
-                <p class="terms-footer-caption">By accepting, you agree to be bound by these terms.</p>
-            </div>
-
-            <!-- Modal Footer - Review Mode -->
-            <div id="terms-review-footer" class="terms-modal-footer hidden border-t border-gray-700/50">
-                <button id="close-terms-btn" class="terms-primary-action">
-                    <i class="fas fa-times" aria-hidden="true"></i>
-                    <span>Close</span>
-                </button>
-                <p class="terms-footer-caption">You've already accepted these terms.</p>
-            </div>
-        </div>
-    </div>
-`;

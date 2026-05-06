@@ -12,6 +12,9 @@ import {
     welcomeModelsBtn, welcomeMcpBtn, welcomeSystemPromptBtn, welcomeTtsBtn, welcomeImportExportBtn, welcomeNewChatBtn, welcomeHelpBtn,
     setupLocalBtn, setupOpenRouterBtn, setupCustomBtn
 } from './dom-elements.js';
+import { privacyPolicyContent } from './components/modals/privacy-policy-modal.js';
+import { termsContentString } from './components/modals/terms-modal.js';
+
 import { showSettingsModal, hideSettingsModal, navigateSettingsModalToStep, showLmMcpModal, navigateToTTS } from './settings-modal-manager.js';
 import { openPremiumModal } from './components/modals/premium-modal.js';
 import { openPremiumHeaderModal } from './components/modals/premium-activated-modal.js';
@@ -1034,7 +1037,8 @@ export function initializeEventHandlers() {
 
     // Privacy Policy Logic
     const privacyPolicyBtn = document.getElementById('privacy-policy-btn');
-    const privacyPolicyCloseBtn = document.getElementById('privacy-policy-close-btn');
+    const privacyPolicyCloseBtn = document.getElementById('close-privacy-policy-btn');
+    const privacyPolicyFooterCloseBtn = document.getElementById('close-privacy-policy-footer-btn');
     const privacyPolicyModal = document.getElementById('privacy-policy-modal');
 
     // Function to close privacy policy modal
@@ -1080,7 +1084,7 @@ export function initializeEventHandlers() {
             closeSidebar();
 
             // Then open the Privacy Policy modal
-            const privacyPolicyContent = document.getElementById('privacy-policy-content');
+            const privacyPolicyContentContainer = document.getElementById('privacy-policy-content');
             if (privacyPolicyModal) {
                 privacyPolicyModal.classList.remove('hidden');
                 privacyPolicyModal.classList.remove('hide');
@@ -1094,9 +1098,44 @@ export function initializeEventHandlers() {
                 document.body.style.width = '100%';
                 document.body.style.height = '100%';
 
-                // Reset scroll position
-                if (privacyPolicyContent) {
-                    privacyPolicyContent.scrollTop = 0;
+                // Reset scroll position and show loading
+                if (privacyPolicyContentContainer) {
+                    privacyPolicyContentContainer.scrollTop = 0;
+                    
+                    // Render markdown content
+                    const renderPrivacy = (marked) => {
+                        try {
+                            const html = (typeof marked.parse === 'function') 
+                                ? marked.parse(privacyPolicyContent) 
+                                : (typeof marked === 'function' ? marked(privacyPolicyContent) : null);
+
+                            if (html) {
+                                privacyPolicyContentContainer.innerHTML = html;
+                                // Apply syntax highlighting if any code blocks exist
+                                if (window.shHighlightElement) {
+                                    privacyPolicyContentContainer.querySelectorAll('pre code').forEach(el => {
+                                        window.shHighlightElement(el);
+                                    });
+                                }
+                            } else {
+                                throw new Error('Marked parser failed to produce HTML');
+                            }
+                        } catch (err) {
+                            console.error('Error parsing privacy markdown:', err);
+                            privacyPolicyContentContainer.innerHTML = '<p class="text-red-400">Error rendering privacy policy. Please contact support.</p>';
+                        }
+                    };
+
+                    if (window.marked) {
+                        renderPrivacy(window.marked);
+                    } else if (window.loadMarkedLibrary) {
+                        window.loadMarkedLibrary().then(renderPrivacy).catch(err => {
+                            console.error('Failed to load marked for privacy policy:', err);
+                            privacyPolicyContentContainer.innerHTML = '<p class="text-red-400">Error loading privacy policy content.</p>';
+                        });
+                    } else {
+                        privacyPolicyContentContainer.innerHTML = '<p class="text-red-400">Markdown renderer unavailable.</p>';
+                    }
                 }
 
                 // Add temporary event listeners
@@ -1106,9 +1145,12 @@ export function initializeEventHandlers() {
         });
     }
 
-    // Privacy Policy modal close button
+    // Privacy Policy modal close buttons
     if (privacyPolicyCloseBtn) {
         privacyPolicyCloseBtn.addEventListener('click', closePrivacyPolicyModal);
+    }
+    if (privacyPolicyFooterCloseBtn) {
+        privacyPolicyFooterCloseBtn.addEventListener('click', closePrivacyPolicyModal);
     }
 
     // Locate order number link (in Legacy Access modal) - opens external site modal
@@ -3791,8 +3833,58 @@ function showTermsReviewModal() {
     acceptanceFooter.classList.add('hidden');
     reviewFooter.classList.remove('hidden');
 
-    // Reset scroll to top
+    // Reset scroll to top and render content
     termsContent.scrollTop = 0;
+
+    const renderTerms = (marked) => {
+        try {
+            const html = (typeof marked.parse === 'function') 
+                ? marked.parse(termsContentString) 
+                : (typeof marked === 'function' ? marked(termsContentString) : null);
+
+            if (html) {
+                termsContent.innerHTML = html;
+                
+                // Add listener for the Privacy Policy link if it exists in the rendered HTML
+                const privacyLink = termsContent.querySelector('a[href*="privacy"]');
+                if (privacyLink) {
+                    privacyLink.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        // Close terms modal first
+                        const closeTermsBtn = document.getElementById('close-terms-btn');
+                        if (closeTermsBtn) closeTermsBtn.click();
+                        
+                        // Then trigger privacy policy
+                        const privacyBtn = document.getElementById('privacy-policy-btn');
+                        if (privacyBtn) privacyBtn.click();
+                    });
+                }
+
+                // Apply syntax highlighting if any code blocks exist
+                if (window.shHighlightElement) {
+                    termsContent.querySelectorAll('pre code').forEach(el => {
+                        window.shHighlightElement(el);
+                    });
+                }
+            } else {
+                throw new Error('Marked parser failed to produce HTML');
+            }
+        } catch (err) {
+            console.error('Error parsing terms markdown:', err);
+            termsContent.innerHTML = '<p class="text-red-400">Error rendering terms of service.</p>';
+        }
+    };
+
+    if (window.marked) {
+        renderTerms(window.marked);
+    } else if (window.loadMarkedLibrary) {
+        window.loadMarkedLibrary().then(renderTerms).catch(err => {
+            console.error('Failed to load marked for terms:', err);
+            termsContent.innerHTML = '<p class="text-red-400">Error loading terms of service content.</p>';
+        });
+    } else {
+        termsContent.innerHTML = '<p class="text-red-400">Markdown renderer unavailable.</p>';
+    }
 
     // Set up review mode event listeners
     setupTermsReviewListeners(termsContent, closeTermsBtn, termsModal);

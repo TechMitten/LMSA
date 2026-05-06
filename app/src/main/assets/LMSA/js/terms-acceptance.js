@@ -6,7 +6,46 @@
 // Constants
 const TERMS_ACCEPTED_KEY = 'lmsa_terms_accepted';
 const TERMS_VERSION_KEY = 'lmsa_terms_version';
-const CURRENT_TERMS_VERSION = '2025-11-07'; // Matches effective date
+const CURRENT_TERMS_VERSION = '2026-05-06'; // Matches effective date in legal/terms.md
+import { termsContentString } from './components/modals/terms-modal.js';
+
+/**
+ * Renders terms markdown content into the modal
+ * @param {Object} marked - The marked library instance
+ */
+const renderTerms = (marked) => {
+    if (!termsContent || !termsContentString) return;
+
+    try {
+        // Handle different versions of marked API
+        const html = (typeof marked.parse === 'function') 
+            ? marked.parse(termsContentString) 
+            : (typeof marked === 'function' ? marked(termsContentString) : null);
+
+        if (html) {
+            termsContent.innerHTML = html;
+            
+            // Add listener for the Privacy Policy link if it exists in the rendered HTML
+            // This allows opening the local privacy modal from the terms modal
+            const privacyLink = termsContent.querySelector('a[href*="privacy"]');
+            if (privacyLink) {
+                privacyLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // Find and click the privacy policy button in the sidebar or trigger its handler
+                    const privacyBtn = document.getElementById('privacy-policy-btn');
+                    if (privacyBtn) {
+                        privacyBtn.click();
+                    }
+                });
+            }
+        } else {
+            throw new Error('Marked parser failed to produce HTML');
+        }
+    } catch (err) {
+        console.error('Error parsing terms markdown:', err);
+        termsContent.innerHTML = '<p class="text-red-400">Error rendering terms of service. Please contact support.</p>';
+    }
+};
 
 // DOM Elements
 let termsModal;
@@ -63,6 +102,11 @@ function hasAcceptedCurrentTerms() {
  * Show the terms modal and prevent body scroll
  */
 function showTermsModal() {
+    if (!termsModal || !termsContent) {
+        console.error('Terms modal elements not found');
+        return;
+    }
+
     termsModal.classList.remove('hidden');
     termsModal.classList.add('flex');
     document.body.classList.add('terms-modal-open');
@@ -70,14 +114,22 @@ function showTermsModal() {
     document.body.style.position = 'fixed';
     document.body.style.width = '100%';
     document.body.style.height = '100%';
+    
+    // Show loading state initially
+    termsContent.innerHTML = '<div class="flex justify-center p-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div></div>';
 
-    // Reset scroll state
-    hasScrolledToBottom = false;
-
-
-    // Scroll to top of terms
-    termsContent.scrollTop = 0;
-
+    // Load and render terms
+    if (window.marked) {
+        renderTerms(window.marked);
+    } else if (window.loadMarkedLibrary) {
+        window.loadMarkedLibrary().then(renderTerms).catch(err => {
+            console.error('Failed to load marked for terms acceptance:', err);
+            termsContent.innerHTML = '<p class="text-red-400">Error loading terms of service content. Please check your internet connection.</p>';
+        });
+    } else {
+        termsContent.innerHTML = '<p class="text-red-400">Markdown renderer unavailable.</p>';
+    }
+    
     // Prevent any app interactions
     hideMainApp();
 }
