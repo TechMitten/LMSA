@@ -4158,7 +4158,7 @@ body.light-theme #clear-system-prompt-modal #close-clear-system-prompt-modal:hov
     }
 
     /* Improve touch targets for tablets */
-    .modal-content button {
+    .modal-content button:not(#close-about) {
         min-height: 44px;
         /* Larger touch target */
         padding: 0.6rem 1.2rem;
@@ -6023,6 +6023,19 @@ body.light-theme #about-modal #close-about {
 body.light-theme #about-modal #close-about:hover {
     color: #1e293b;
     background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Keep About close button pinned to top-right across all breakpoints */
+#about-modal #close-about {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    left: auto;
+    margin: 0;
+    padding: 0;
+    min-width: 2rem;
+    min-height: 2rem;
+    z-index: 2;
 }
 
 /* Light theme styles for Contact Form modal */

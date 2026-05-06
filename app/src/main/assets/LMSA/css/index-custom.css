@@ -2060,7 +2060,15 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 
     #smart-replies-container,
     #ai-disclaimer {
+        width: 100%;
         max-width: var(--tablet-landscape-composer-width);
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    #ai-disclaimer {
+        text-align: center;
+        justify-content: center;
     }
 
     #chat-form {

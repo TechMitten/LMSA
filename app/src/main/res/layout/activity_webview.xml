@@ -27,14 +27,12 @@
             android:layout_width="match_parent"
             android:layout_height="24dp"
             android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@+id/adView" />
+            app:layout_constraintBottom_toTopOf="@+id/adContainer" />
 
-        <com.google.android.gms.ads.AdView
-            android:id="@+id/adView"
+        <FrameLayout
+            android:id="@+id/adContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:adSize="BANNER"
-            app:adUnitId="ca-app-pub-1388425042154340/3920449156"
             android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@+id/bottomSpacer"
             app:layout_constraintStart_toStartOf="parent"
