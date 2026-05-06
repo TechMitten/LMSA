@@ -576,13 +576,6 @@ export function initializeFileUpload() {
 
             // Add click event to open file dialog
             newPaperclipButton.addEventListener('click', async () => {
-                // Check if user is premium for file attachment
-                if (!isPremiumUser()) {
-                    if (typeof openPremiumModal === 'function') {
-                        openPremiumModal('File Attachments');
-                    }
-                    return;
-                }
                 // console.log('Paperclip button clicked, triggering file input');
                 // Update accept attribute before opening dialog
                 await updateFileInputAccept();
@@ -592,13 +585,6 @@ export function initializeFileUpload() {
             // If no parent node, add event listener directly
             // console.log('Paperclip button has no parent node, adding event listener directly');
             paperclipButton.addEventListener('click', async () => {
-                // Check if user is premium for file attachment
-                if (!isPremiumUser()) {
-                    if (typeof openPremiumModal === 'function') {
-                        openPremiumModal('File Attachments');
-                    }
-                    return;
-                }
                 // console.log('Paperclip button clicked, triggering file input');
                 // Update accept attribute before opening dialog
                 await updateFileInputAccept();

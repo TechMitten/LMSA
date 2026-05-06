@@ -488,18 +488,6 @@ class WebViewActivity : AppCompatActivity() {
                 filePathCallbackIn: ValueCallback<Array<Uri>>?,
                 fileChooserParams: FileChooserParams?
             ): Boolean {
-                val effectivePremium = hasEffectivePremium()
-                if (!effectivePremium) {
-                    filePathCallbackIn?.onReceiveValue(null)
-                    webView?.post {
-                        webView.evaluateJavascript(
-                            "if (typeof window.openPremiumModal === 'function') { window.openPremiumModal('File Attachments'); }",
-                            null
-                        )
-                    }
-                    return false
-                }
-
                 if (filePathCallback != null) {
                     filePathCallback!!.onReceiveValue(null)
                     filePathCallback = null

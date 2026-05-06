@@ -620,7 +620,7 @@ export const helpModal = `
                                     <li><strong>Local LM Studio Models</strong> — Run models loaded in your LM Studio server on your computer</li>
                                     <li><strong>Ollama Models</strong> — Use models from your Ollama installation</li>
                                     <li><strong>Standard Chat</strong> — Send messages and receive responses from your local model</li>
-                                    <li><strong>File Attachments</strong> — Attach files to chats for analysis (Premium feature)</li>
+                                    <li><strong>File Attachments</strong> — Attach files to chats for analysis</li>
                                     <li><strong>Text-to-Speech</strong> — Synthesize AI responses using available voices</li>
                                     <li><strong>Templates & Character Cards</strong> — Use system prompts and roleplay characters</li>
                                 </ul>
@@ -861,13 +861,7 @@ export const helpModal = `
                                 </p>
                             </div>
 
-                            <div class="mt-4 p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: #8b5cf6;">
-                                <p class="font-medium flex items-center" style="color: #8b5cf6;"><i
-                                        class="fas fa-crown mr-2"></i>Premium Feature:</p>
-                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
-                                    File attachments are <strong>only available to Premium users</strong>. Free users cannot attach files to chats. Upgrade to Premium to unlock this feature along with other benefits.
-                                </p>
-                            </div>
+
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #10b981;"><i

@@ -1730,12 +1730,7 @@ export function initializeEventHandlers() {
     const paperclipButton = document.getElementById('paperclip-button');
     const fileUploadInput = document.getElementById('file-upload-input');
     if (paperclipButton && fileUploadInput) {
-        const openFileSelectorIfPremium = () => {
-            if (!isPremiumUser()) {
-                openPremiumModal('File Attachments');
-                return false;
-            }
-
+        const openFileSelector = () => {
             fileUploadInput.click();
             return true;
         };
@@ -1743,11 +1738,8 @@ export function initializeEventHandlers() {
         // Click handler for desktop
         paperclipButton.addEventListener('click', (e) => {
             e.stopPropagation(); // Prevent event bubbling
-            if (openFileSelectorIfPremium()) {
-                debugLog('Paperclip button clicked, opening file selector');
-            } else {
-                debugLog('Paperclip button clicked by non-premium user, opening premium modal');
-            }
+            openFileSelector();
+            debugLog('Paperclip button clicked, opening file selector');
 
             // Remove auto-scroll when clicking paperclip button
         });
@@ -1773,11 +1765,8 @@ export function initializeEventHandlers() {
 
             // Only trigger if we're still on the paperclip button or its children
             if (elementAtTouch === paperclipButton || paperclipButton.contains(elementAtTouch)) {
-                if (openFileSelectorIfPremium()) {
-                    debugLog('Paperclip button touched, opening file selector');
-                } else {
-                    debugLog('Paperclip button touched by non-premium user, opening premium modal');
-                }
+                openFileSelector();
+                debugLog('Paperclip button touched, opening file selector');
             }
         }, { passive: false });
 

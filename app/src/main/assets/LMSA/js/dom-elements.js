@@ -228,6 +228,8 @@ export const welcomeSubtitle = domCache.get('welcome-subtitle');
 export const setupLocalBtn = domCache.get('setup-local-btn');
 export const setupOpenRouterBtn = domCache.get('setup-openrouter-btn');
 export const setupCustomBtn = domCache.get('setup-custom-btn');
+export const providerStatusContainer = domCache.get('provider-status-container');
+export const activeProviderName = domCache.get('active-provider-name');
 
 // Saved System Prompts Elements
 export const savedPromptsButton = document.getElementById('saved-prompts-btn');

@@ -119,6 +119,147 @@ body.light-theme header::after {
     animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Setup Dashboard Title */
+#welcome-message .setup-dashboard-title-block {
+    --setup-dashboard-title-offset: clamp(-84px, -9vh, -60px);
+    width: 100%;
+    text-align: center;
+    margin: 0 0 14px 0;
+    pointer-events: none;
+    animation: setupDashboardTitleFloatIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+}
+
+@keyframes setupDashboardTitleFloatIn {
+    from {
+        opacity: 0;
+        transform: translateY(calc(var(--setup-dashboard-title-offset) + 12px));
+    }
+    to {
+        opacity: 1;
+        transform: translateY(var(--setup-dashboard-title-offset));
+    }
+}
+
+#welcome-message .setup-dashboard-title {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 1.18rem;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+    text-wrap: balance;
+}
+
+body.light-theme #welcome-message .setup-dashboard-title {
+    color: #0f172a;
+}
+
+/* Provider Status Indicator */
+.provider-status-wrapper {
+    position: relative;
+    z-index: 10;
+    margin-bottom: 1.5rem;
+}
+
+.provider-status-content {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.status-icon-glow {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--status-color, #94a3b8);
+    font-size: 1.1rem;
+    box-shadow: 0 0 15px -3px var(--status-color-alpha, rgba(148, 163, 184, 0));
+    transition: all 0.3s ease;
+}
+
+.provider-status-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--status-color, #94a3b8);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--status-color, #94a3b8);
+    border-radius: 50%;
+    position: relative;
+}
+
+.pulse-dot::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    background-color: var(--status-color, #94a3b8);
+    opacity: 0.4;
+    animation: pulse-dot-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes pulse-dot-ping {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* Provider Themes */
+.provider-status-wrapper[data-provider="local"] {
+    --status-color: #3b82f6;
+    --status-color-alpha: rgba(59, 130, 246, 0.3);
+}
+
+.provider-status-wrapper[data-provider="openrouter"] {
+    --status-color: #a855f7;
+    --status-color-alpha: rgba(168, 85, 247, 0.3);
+}
+
+.provider-status-wrapper[data-provider="openai-compatible"] {
+    --status-color: #10b981;
+    --status-color-alpha: rgba(16, 185, 129, 0.3);
+}
+
+.provider-status-wrapper[data-provider="none"] {
+    --status-color: #94a3b8;
+    --status-color-alpha: rgba(148, 163, 184, 0.3);
+}
+
+/* Light Theme Overrides */
+body.light-theme .provider-status-content {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(241, 245, 249, 0.9) 100%);
+    border-color: rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 15px -5px rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .status-icon-glow, 
+body.light-theme .provider-status-pill {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.05);
+}
+
 /* AI Provider Dashboard Styles */
 
 /* ── Base card shell ──────────────────────────────────────── */
@@ -157,7 +298,7 @@ body.light-theme header::after {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 16px 16px 16px 40px;
+    padding: 18px 20px; /* Balanced padding after indicator dot removal */
 }
 
 /* ── Left accent stripe ───────────────────────────────────── */
@@ -253,34 +394,7 @@ body.light-theme header::after {
 }
 
 /* ── Active badge ─────────────────────────────────────────── */
-.current-provider-badge {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 18px;
-    height: 18px;
-    padding: 0;
-    border: none;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.05);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-    align-items: center;
-    justify-content: center;
-    display: flex;
-    cursor: pointer;
-    z-index: 2;
-}
-
-.provider-active-dot {
-    display: block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-}
+/* Active indicator dots removed as requested */
 
 .provider-select-light {
     appearance: none;
@@ -314,7 +428,6 @@ body.light-theme header::after {
 }
 
 .provider-card--local.active .provider-card-title { color: #93c5fd; }
-.provider-card--local.active .provider-active-dot { background: #60a5fa; box-shadow: 0 0 12px rgba(59, 130, 246, 0.72); }
 .provider-card--local.active .provider-card-arrow { color: #60a5fa; text-shadow: 0 0 12px rgba(59, 130, 246, 0.65); }
 
 /* ── OpenRouter — Purple ──────────────────────────────────── */
@@ -335,7 +448,6 @@ body.light-theme header::after {
 }
 
 .provider-card--openrouter.active .provider-card-title { color: #d8b4fe; }
-.provider-card--openrouter.active .provider-active-dot { background: #c084fc; box-shadow: 0 0 12px rgba(168, 85, 247, 0.72); }
 .provider-card--openrouter.active .provider-card-arrow { color: #c084fc; text-shadow: 0 0 12px rgba(168, 85, 247, 0.65); }
 
 /* ── Custom API — Emerald ─────────────────────────────────── */
@@ -356,7 +468,6 @@ body.light-theme header::after {
 }
 
 .provider-card--custom.active .provider-card-title { color: #6ee7b7; }
-.provider-card--custom.active .provider-active-dot { background: #34d399; box-shadow: 0 0 12px rgba(16, 185, 129, 0.72); }
 .provider-card--custom.active .provider-card-arrow { color: #34d399; text-shadow: 0 0 12px rgba(16, 185, 129, 0.65); }
 
 /* ── Welcome container ────────────────────────────────────── */

@@ -346,14 +346,30 @@
                         style="transform: none !important; left: 0; right: 0; color: var(--text-muted);">
                         <div class="welcome-content glass-card p-4 sm:p-8 max-w-3xl mx-auto w-full">
                             <div class="welcome-content-inner">
+                                <!-- Provider Status Indicator -->
+                                <div id="provider-status-container" class="provider-status-wrapper mb-4 sm:mb-6" data-provider="none">
+                                    <div class="provider-status-content glass-card p-3 sm:p-4 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="status-icon-glow">
+                                                <i class="fas fa-plug"></i>
+                                            </div>
+                                            <div class="flex flex-col text-left">
+                                                <span class="text-xs font-semibold uppercase tracking-wider opacity-60">Active Connection</span>
+                                                <span id="active-provider-name" class="text-sm sm:text-base font-bold">Initializing...</span>
+                                            </div>
+                                        </div>
+                                        <div id="provider-status-badge" class="provider-status-pill">
+                                            <span class="pulse-dot"></span>
+                                            <span class="pill-text">Active</span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Configuration Dashboard (State A: First Run / Not Configured) -->
                                 <div id="setup-dashboard" class="provider-grid grid grid-cols-3 gap-2.5 sm:gap-4 mb-4 sm:mb-5">
                                     <!-- Local Server Card -->
                                     <div id="setup-local-btn" class="provider-card provider-card--local group relative transition-all duration-300" role="group" aria-label="Local Server provider">
                                         <div class="provider-card-accent"></div>
-                                        <button type="button" class="current-provider-badge provider-select-light" data-provider-action="settings" aria-label="Open Local Server settings" aria-pressed="false">
-                                            <span class="provider-active-dot"></span>
-                                        </button>
                                         <div class="provider-card-body">
                                             <div class="provider-icon-wrapper">
                                                 <i class="fas fa-server"></i>
@@ -375,9 +391,6 @@
                                     <!-- OpenRouter Card -->
                                     <div id="setup-openrouter-btn" class="provider-card provider-card--openrouter group relative transition-all duration-300" role="group" aria-label="OpenRouter provider">
                                         <div class="provider-card-accent"></div>
-                                        <button type="button" class="current-provider-badge provider-select-light" data-provider-action="settings" aria-label="Open OpenRouter settings" aria-pressed="false">
-                                            <span class="provider-active-dot"></span>
-                                        </button>
                                         <div class="provider-card-body">
                                             <div class="provider-icon-wrapper">
                                                 <i class="fas fa-cloud"></i>
@@ -399,9 +412,6 @@
                                     <!-- Custom Endpoint Card -->
                                     <div id="setup-custom-btn" class="provider-card provider-card--custom group relative transition-all duration-300" role="group" aria-label="Custom API provider">
                                         <div class="provider-card-accent"></div>
-                                        <button type="button" class="current-provider-badge provider-select-light" data-provider-action="settings" aria-label="Open Custom API settings" aria-pressed="false">
-                                            <span class="provider-active-dot"></span>
-                                        </button>
                                         <div class="provider-card-body">
                                             <div class="provider-icon-wrapper">
                                                 <i class="fas fa-plug"></i>
