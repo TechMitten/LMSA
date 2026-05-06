@@ -1,6 +1,5 @@
 // Import the checkAndShowWelcomeMessage function
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
-import { showExternalSiteModal } from './external-site-confirmation-modal.js';
 
 // DOM Elements
 let whatsNewModal;
@@ -277,7 +276,11 @@ function attachLocateOrderNumberHandler() {
 
             setTimeout(() => {
                 const orderNumberUrl = 'https://support.google.com/store/answer/13714320?hl=en';
-                showExternalSiteModal(orderNumberUrl);
+                if (typeof window.openExternalUrl === 'function') {
+                    window.openExternalUrl(orderNumberUrl);
+                } else {
+                    window.open(orderNumberUrl, '_blank', 'noopener');
+                }
                 whatsNewLocateOrderLink.classList.remove('active-scale');
             }, 200);
         });

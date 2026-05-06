@@ -1,6 +1,5 @@
 // Import the checkAndShowWelcomeMessage function
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
-import { showExternalSiteModal } from './external-site-confirmation-modal.js';
 import { setDebugEnabled } from './utils.js';
 
 // Get DOM elements

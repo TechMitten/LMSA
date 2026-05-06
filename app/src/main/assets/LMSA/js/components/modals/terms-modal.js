@@ -30,7 +30,7 @@ export const termsModal = `
                     <div class="terms-link-content">
                         <p class="terms-link-kicker">Full Terms Available Online</p>
                         <p class="terms-link-description">Open the complete Terms of Service in your browser for the full legal text and detailed policies.</p>
-                        <a href="https://lmsa.app/terms-of-service" target="_blank" class="terms-full-link">
+                        <a id="terms-full-link" href="https://lmsa.app/terms-of-service" target="_blank" rel="noopener" data-external-link-button="true" class="terms-full-link">
                             <i class="fas fa-external-link-alt" aria-hidden="true"></i>
                             <span>View Full Terms</span>
                         </a>

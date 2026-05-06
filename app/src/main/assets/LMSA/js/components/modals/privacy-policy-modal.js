@@ -20,7 +20,7 @@ export const privacyPolicyModal = `
                     Please review our Privacy Policy at the link below.
                 </p>
 
-                <a href="https://lmsa.app/privacy-policy" target="_blank"
+                <a id="privacy-policy-link" href="https://lmsa.app/privacy-policy" target="_blank" rel="noopener" data-external-link-button="true"
                     class="mb-8 inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg">
                     <i class="fas fa-external-link-alt mr-2"></i>
                     View Privacy Policy

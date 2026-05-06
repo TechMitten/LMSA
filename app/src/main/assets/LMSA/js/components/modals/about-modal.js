@@ -20,7 +20,7 @@ export const aboutModal = `
                 </button>
                 <div class="version-badge px-4 py-1.5 rounded-full mx-auto w-fit mt-2">
                     <p class="text-sm font-medium text-blue-300 text-center">Version 10.17</p>
-                    <p class="text-xs font-medium text-blue-300/90 text-center mt-0.5">Build 324</p>
+                    <p class="text-xs font-medium text-blue-300/90 text-center mt-0.5">Build 326</p>
                 </div>
             </div>
 

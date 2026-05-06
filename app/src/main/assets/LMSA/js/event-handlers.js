@@ -58,14 +58,21 @@ import { setActionToPerform, getActionToPerform } from './shared-state.js';
 import { closeSidebarExport } from './export-import.js';
 import { showModelModal } from './model-manager.js';
 import { showWhatsNewModal } from './whats-new.js';
-
-import { showExternalSiteModal } from './external-site-confirmation-modal.js';
 import { debugLog, debugError, formatDate, closeApplication, copyToClipboard, sanitizeInput, initializeCodeMirror, stripReasoningSections, scrollToBottom, scrollToBottomManual, handleScroll, ensureCursorVisible } from './utils.js';
 
 let abortController = null;
 let sidebar = document.getElementById('sidebar');
 const OFFLINE_ACCESS_LOCK_REASON = 'offline-access';
 const OFFLINE_ACCESS_NOTICE_HTML = 'Only premium users can use the app offline. Free users need an active internet connection.';
+
+function openExternalLink(url) {
+    if (typeof window.openExternalUrl === 'function') {
+        window.openExternalUrl(url);
+        return;
+    }
+
+    window.open(url, '_blank', 'noopener');
+}
 
 function isConfirmationModalVisible() {
     const confirmationModal = document.getElementById('confirmation-modal');
@@ -1113,7 +1120,7 @@ export function initializeEventHandlers() {
 
             setTimeout(() => {
                 const orderNumberUrl = 'https://support.google.com/store/answer/13714320?hl=en';
-                showExternalSiteModal(orderNumberUrl);
+                openExternalLink(orderNumberUrl);
                 locateOrderLink.classList.remove('active-scale');
             }, 200);
         });
@@ -1128,7 +1135,7 @@ export function initializeEventHandlers() {
 
             setTimeout(() => {
                 const orderNumberUrl = 'https://support.google.com/store/answer/13714320?hl=en';
-                showExternalSiteModal(orderNumberUrl);
+                openExternalLink(orderNumberUrl);
                 helpLocateOrderLink.classList.remove('active-scale');
             }, 200);
         });
@@ -1143,7 +1150,7 @@ export function initializeEventHandlers() {
 
             setTimeout(() => {
                 const orderNumberUrl = 'https://support.google.com/store/answer/13714320?hl=en';
-                showExternalSiteModal(orderNumberUrl);
+                openExternalLink(orderNumberUrl);
                 whatsNewLocateOrderLink.classList.remove('active-scale');
             }, 200);
         });

@@ -12,6 +12,70 @@ import { initializeTermsAcceptance, hasAcceptedCurrentTerms } from './terms-acce
 // Import the main module which initializes everything
 import './main.js';
 
+function getExternalTargetBlankLink(event) {
+    if (!(event.target instanceof Element)) {
+        return null;
+    }
+
+    const link = event.target.closest('a[target="_blank"]');
+    if (!(link instanceof HTMLAnchorElement)) {
+        return null;
+    }
+
+    const href = link.getAttribute('href');
+    if (!href || !/^https?:\/\//i.test(href)) {
+        return null;
+    }
+
+    return link;
+}
+
+function openExternalTargetBlankLink(link, event) {
+    const href = link.getAttribute('href');
+    if (!href) {
+        return false;
+    }
+
+    event.preventDefault();
+
+    if (typeof event.stopPropagation === 'function') {
+        event.stopPropagation();
+    }
+
+    if (typeof window.openExternalUrl === 'function') {
+        window.openExternalUrl(href);
+    } else {
+        window.open(href, '_blank', 'noopener');
+    }
+
+    return true;
+}
+
+function bindDirectExternalLink(link) {
+    if (!(link instanceof HTMLAnchorElement) || link.dataset.externalLinkBound === 'true') {
+        return;
+    }
+
+    let lastTouchOpenAt = 0;
+
+    link.addEventListener('touchend', (event) => {
+        lastTouchOpenAt = Date.now();
+        openExternalTargetBlankLink(link, event);
+    }, { passive: false });
+
+    link.addEventListener('click', (event) => {
+        if (Date.now() - lastTouchOpenAt < 750) {
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+        }
+
+        openExternalTargetBlankLink(link, event);
+    });
+
+    link.dataset.externalLinkBound = 'true';
+}
+
 // Add event listeners for the sidebar overlay
 document.addEventListener('DOMContentLoaded', function () {
     const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -34,22 +98,25 @@ document.addEventListener('DOMContentLoaded', function () {
         }, { passive: false });
     }
 
+    document.querySelectorAll('a[data-external-link-button="true"]').forEach((link) => {
+        bindDirectExternalLink(link);
+    });
+
+    document.addEventListener('touchend', function (event) {
+        const externalLink = getExternalTargetBlankLink(event);
+        if (!externalLink || externalLink.dataset.externalLinkBound === 'true') {
+            return;
+        }
+
+        openExternalTargetBlankLink(externalLink, event);
+    }, { passive: false });
+
     document.addEventListener('click', function (event) {
-        const externalLink = event.target instanceof Element ? event.target.closest('a[target="_blank"]') : null;
-        if (!externalLink) {
+        const externalLink = getExternalTargetBlankLink(event);
+        if (!externalLink || externalLink.dataset.externalLinkBound === 'true') {
             return;
         }
 
-        const href = externalLink.getAttribute('href');
-        if (!href || !/^https?:\/\//i.test(href)) {
-            return;
-        }
-
-        if (typeof window.openExternalUrl !== 'function') {
-            return;
-        }
-
-        event.preventDefault();
-        window.openExternalUrl(href);
+        openExternalTargetBlankLink(externalLink, event);
     });
 });

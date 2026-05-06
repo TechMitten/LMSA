@@ -1,6 +1,5 @@
 // Import required functions
 import { checkAndShowWelcomeMessage, closeSidebar } from './ui-manager.js';
-import { showExternalSiteModal } from './external-site-confirmation-modal.js';
 import { showSettingsModal } from './settings-modal-manager.js';
 
 // Export openHelpModal so other modules can use it
