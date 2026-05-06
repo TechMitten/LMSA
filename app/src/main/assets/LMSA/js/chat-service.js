@@ -777,6 +777,47 @@ function getSelectedModel() {
     return availableModels.length > 0 ? availableModels[0] : 'unknown_model';
 }
 
+const PROVIDER_CONNECTION_UNAVAILABLE = 'PROVIDER_CONNECTION_UNAVAILABLE';
+
+function isProviderConnectionUnavailableError(error) {
+    const message = error?.message || '';
+    return message === PROVIDER_CONNECTION_UNAVAILABLE || message === 'LM_STUDIO_SERVER_NOT_RUNNING' || message === 'LM Studio server is not running';
+}
+
+function getProviderConnectionErrorHtml() {
+    if (getUseOpenRouter()) {
+        return '<div class="error-message-content">' +
+            '<div class="error-title">Unable to connect to OpenRouter</div>' +
+            '<div class="error-body">' +
+            'Please check that:<br>' +
+            '• Your OpenRouter API key is configured correctly in <a href="#" onclick="event.preventDefault(); window.showSettingsModal && window.showSettingsModal();">Settings</a><br>' +
+            '• Your device has an active internet connection<br>' +
+            '• OpenRouter is reachable and not currently unavailable' +
+            '</div>' +
+            '<div class="error-help-link">' +
+            '<a href="#" onclick="event.preventDefault(); window.openHelpModal && window.openHelpModal();">View Help Guide</a> for setup instructions' +
+            '</div>' +
+            '</div>';
+    }
+
+    if (getUseOpenAICompatible()) {
+        return '<div class="error-message-content">' +
+            '<div class="error-title">Unable to connect to your OpenAI-compatible endpoint</div>' +
+            '<div class="error-body">' +
+            'Please check that:<br>' +
+            '• The endpoint URL is configured correctly in <a href="#" onclick="event.preventDefault(); window.showSettingsModal && window.showSettingsModal();">Settings</a><br>' +
+            '• The API key is valid if your provider requires one<br>' +
+            '• The endpoint is reachable from this device and the service is running' +
+            '</div>' +
+            '<div class="error-help-link">' +
+            '<a href="#" onclick="event.preventDefault(); window.openHelpModal && window.openHelpModal();">View Help Guide</a> for setup instructions' +
+            '</div>' +
+            '</div>';
+    }
+
+    return getLocalConnectionErrorHtml();
+}
+
 function getLocalConnectionErrorHtml() {
     if (getUseOllama()) {
         return '<div class="error-message-content">' +
@@ -2747,7 +2788,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
 
     try {
         if (!(await isServerRunning())) {
-            throw new Error('LM_STUDIO_SERVER_NOT_RUNNING');
+            throw new Error(PROVIDER_CONNECTION_UNAVAILABLE);
         }
 
         // Get the latest available models
@@ -3619,21 +3660,8 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                     '</div>' +
                     '</div>'
                 );
-            } else if (error.message === 'LM_STUDIO_SERVER_NOT_RUNNING') {
-                appendMessage('error',
-                    '<div class="error-message-content">' +
-                    '<div class="error-title">Unable to connect to LM Studio</div>' +
-                    '<div class="error-body">' +
-                    'Please check that:<br>' +
-                    '• LM Studio application is running<br>' +
-                    '• The server is started (green toggle switch in LM Studio)<br>' +
-                    '• Correct IP address and port are configured in <a href="#" onclick="event.preventDefault(); window.showSettingsModal && window.showSettingsModal();">Settings</a>' +
-                    '</div>' +
-                    '<div class="error-help-link">' +
-                    '<a href="#" onclick="event.preventDefault(); window.openHelpModal && window.openHelpModal();">View Help Guide</a> for detailed setup instructions' +
-                    '</div>' +
-                    '</div>'
-                );
+            } else if (isProviderConnectionUnavailableError(error)) {
+                appendMessage('error', getProviderConnectionErrorHtml());
             } else if (error.message === 'No models available') {
                 // Don't show any error message during initial startup
                 if (!window.isInitialStartup) {
@@ -5803,7 +5831,7 @@ export async function regenerateLastResponse(isRetry = false) {
         try {
             // Check if the server is running
             if (!(await isServerRunning())) {
-                throw new Error('LM Studio server is not running');
+                throw new Error(PROVIDER_CONNECTION_UNAVAILABLE);
             }
 
             // Get the model to use
@@ -6505,21 +6533,8 @@ export async function regenerateLastResponse(isRetry = false) {
         debugError('Error in regenerateLastResponse:', error);
 
         // Special handling for specific error messages
-        if (error.message === 'LM_STUDIO_SERVER_NOT_RUNNING') {
-            appendMessage('error',
-                '<div class="error-message-content">' +
-                '<div class="error-title">Unable to connect to LM Studio</div>' +
-                '<div class="error-body">' +
-                'Please check that:<br>' +
-                '• LM Studio application is running<br>' +
-                '• The server is started (green play button in LM Studio)<br>' +
-                '• Correct IP address and port are configured in Settings' +
-                '</div>' +
-                '<div class="error-help-link">' +
-                '<a href="#" onclick="event.preventDefault(); window.openHelpModal && window.openHelpModal();">View Help Guide</a> for detailed setup instructions' +
-                '</div>' +
-                '</div>'
-            );
+        if (isProviderConnectionUnavailableError(error)) {
+            appendMessage('error', getProviderConnectionErrorHtml());
         } else if (error.message === 'No models available') {
             // Don't show any error message during initial startup
             if (!window.isInitialStartup) {
