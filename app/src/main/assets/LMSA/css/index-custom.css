@@ -237,18 +237,18 @@ body.light-theme #welcome-message .setup-dashboard-title {
 
 /* Provider Themes */
 .provider-status-wrapper[data-provider="local"] {
-    --status-color: #3b82f6;
-    --status-color-alpha: rgba(59, 130, 246, 0.3);
+    --status-color: #4b86de;
+    --status-color-alpha: rgba(75, 134, 222, 0.24);
 }
 
 .provider-status-wrapper[data-provider="openrouter"] {
-    --status-color: #a855f7;
-    --status-color-alpha: rgba(168, 85, 247, 0.3);
+    --status-color: #9a66df;
+    --status-color-alpha: rgba(154, 102, 223, 0.24);
 }
 
 .provider-status-wrapper[data-provider="openai-compatible"] {
-    --status-color: #10b981;
-    --status-color-alpha: rgba(16, 185, 129, 0.3);
+    --status-color: #2fa77f;
+    --status-color-alpha: rgba(47, 167, 127, 0.24);
 }
 
 .provider-status-wrapper[data-provider="none"] {
@@ -427,63 +427,63 @@ body.light-theme .provider-status-pill {
 
 /* ── Local Server — Blue ──────────────────────────────────── */
 .provider-card--local .provider-card-accent {
-    background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+    background: linear-gradient(180deg, #4b86de 0%, #2f66b8 100%);
 }
 
 .provider-card--local .provider-icon-wrapper {
-    background: rgba(59, 130, 246, 0.14);
-    color: #60a5fa;
-    box-shadow: inset 0 1px 0 rgba(147, 197, 253, 0.12), 0 0 0 1px rgba(59, 130, 246, 0.18);
+    background: rgba(75, 134, 222, 0.12);
+    color: #79a8e3;
+    box-shadow: inset 0 1px 0 rgba(159, 197, 235, 0.1), 0 0 0 1px rgba(75, 134, 222, 0.16);
 }
 
 .provider-card--local.active {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.18) 0%, rgba(37, 99, 235, 0.08) 100%);
-    border-color: rgba(96, 165, 250, 0.52);
-    box-shadow: 0 4px 24px -6px rgba(37, 99, 235, 0.38), inset 0 1px 0 rgba(147, 197, 253, 0.14);
+    background: linear-gradient(135deg, rgba(75, 134, 222, 0.15) 0%, rgba(47, 102, 184, 0.07) 100%);
+    border-color: rgba(121, 168, 227, 0.45);
+    box-shadow: 0 4px 24px -6px rgba(47, 102, 184, 0.3), inset 0 1px 0 rgba(159, 197, 235, 0.12);
 }
 
-.provider-card--local.active .provider-card-title { color: #93c5fd; }
-.provider-card--local.active .provider-card-arrow { color: #60a5fa; text-shadow: 0 0 12px rgba(59, 130, 246, 0.65); }
+.provider-card--local.active .provider-card-title { color: #9ebfe7; }
+.provider-card--local.active .provider-card-arrow { color: #79a8e3; text-shadow: 0 0 12px rgba(75, 134, 222, 0.45); }
 
 /* ── OpenRouter — Purple ──────────────────────────────────── */
 .provider-card--openrouter .provider-card-accent {
-    background: linear-gradient(180deg, #a855f7 0%, #7c3aed 100%);
+    background: linear-gradient(180deg, #9a66df 0%, #714ab9 100%);
 }
 
 .provider-card--openrouter .provider-icon-wrapper {
-    background: rgba(168, 85, 247, 0.14);
-    color: #c084fc;
-    box-shadow: inset 0 1px 0 rgba(216, 180, 254, 0.12), 0 0 0 1px rgba(168, 85, 247, 0.18);
+    background: rgba(154, 102, 223, 0.12);
+    color: #b695e3;
+    box-shadow: inset 0 1px 0 rgba(211, 183, 235, 0.1), 0 0 0 1px rgba(154, 102, 223, 0.16);
 }
 
 .provider-card--openrouter.active {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.18) 0%, rgba(124, 58, 237, 0.08) 100%);
-    border-color: rgba(192, 132, 252, 0.52);
-    box-shadow: 0 4px 24px -6px rgba(124, 58, 237, 0.38), inset 0 1px 0 rgba(216, 180, 254, 0.14);
+    background: linear-gradient(135deg, rgba(154, 102, 223, 0.15) 0%, rgba(113, 74, 185, 0.07) 100%);
+    border-color: rgba(182, 149, 227, 0.45);
+    box-shadow: 0 4px 24px -6px rgba(113, 74, 185, 0.3), inset 0 1px 0 rgba(211, 183, 235, 0.12);
 }
 
-.provider-card--openrouter.active .provider-card-title { color: #d8b4fe; }
-.provider-card--openrouter.active .provider-card-arrow { color: #c084fc; text-shadow: 0 0 12px rgba(168, 85, 247, 0.65); }
+.provider-card--openrouter.active .provider-card-title { color: #d1b7eb; }
+.provider-card--openrouter.active .provider-card-arrow { color: #b695e3; text-shadow: 0 0 12px rgba(154, 102, 223, 0.45); }
 
 /* ── Custom API — Emerald ─────────────────────────────────── */
 .provider-card--custom .provider-card-accent {
-    background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(180deg, #2fa77f 0%, #1f8566 100%);
 }
 
 .provider-card--custom .provider-icon-wrapper {
-    background: rgba(16, 185, 129, 0.14);
-    color: #34d399;
-    box-shadow: inset 0 1px 0 rgba(110, 231, 183, 0.12), 0 0 0 1px rgba(16, 185, 129, 0.18);
+    background: rgba(47, 167, 127, 0.12);
+    color: #63c7a2;
+    box-shadow: inset 0 1px 0 rgba(148, 219, 190, 0.1), 0 0 0 1px rgba(47, 167, 127, 0.16);
 }
 
 .provider-card--custom.active {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(5, 150, 105, 0.08) 100%);
-    border-color: rgba(52, 211, 153, 0.52);
-    box-shadow: 0 4px 24px -6px rgba(5, 150, 105, 0.38), inset 0 1px 0 rgba(110, 231, 183, 0.14);
+    background: linear-gradient(135deg, rgba(47, 167, 127, 0.15) 0%, rgba(31, 133, 102, 0.07) 100%);
+    border-color: rgba(99, 199, 162, 0.45);
+    box-shadow: 0 4px 24px -6px rgba(31, 133, 102, 0.3), inset 0 1px 0 rgba(148, 219, 190, 0.12);
 }
 
-.provider-card--custom.active .provider-card-title { color: #6ee7b7; }
-.provider-card--custom.active .provider-card-arrow { color: #34d399; text-shadow: 0 0 12px rgba(16, 185, 129, 0.65); }
+.provider-card--custom.active .provider-card-title { color: #94dbbe; }
+.provider-card--custom.active .provider-card-arrow { color: #63c7a2; text-shadow: 0 0 12px rgba(47, 167, 127, 0.45); }
 
 /* ── Welcome container ────────────────────────────────────── */
 .welcome-content {
@@ -524,27 +524,27 @@ body.light-theme .provider-card-arrow:focus-visible { color: rgba(255, 255, 255,
 
 body.light-theme .provider-card--local.active {
     background: linear-gradient(135deg, rgba(219, 234, 254, 0.88) 0%, rgba(239, 246, 255, 0.96) 100%);
-    border-color: rgba(59, 130, 246, 0.38);
+    border-color: rgba(75, 134, 222, 0.32);
     box-shadow: 0 4px 20px -6px rgba(37, 99, 235, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
-body.light-theme .provider-card--local.active .provider-card-title { color: #1d4ed8; }
-body.light-theme .provider-card--local.active .provider-card-arrow { color: #2563eb; text-shadow: 0 0 10px rgba(59, 130, 246, 0.35); }
+body.light-theme .provider-card--local.active .provider-card-title { color: #2f66b8; }
+body.light-theme .provider-card--local.active .provider-card-arrow { color: #3f74c4; text-shadow: 0 0 10px rgba(75, 134, 222, 0.28); }
 
 body.light-theme .provider-card--openrouter.active {
     background: linear-gradient(135deg, rgba(243, 232, 255, 0.88) 0%, rgba(250, 245, 255, 0.96) 100%);
-    border-color: rgba(168, 85, 247, 0.38);
+    border-color: rgba(154, 102, 223, 0.32);
     box-shadow: 0 4px 20px -6px rgba(124, 58, 237, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
-body.light-theme .provider-card--openrouter.active .provider-card-title { color: #7c3aed; }
-body.light-theme .provider-card--openrouter.active .provider-card-arrow { color: #9333ea; text-shadow: 0 0 10px rgba(168, 85, 247, 0.35); }
+body.light-theme .provider-card--openrouter.active .provider-card-title { color: #714ab9; }
+body.light-theme .provider-card--openrouter.active .provider-card-arrow { color: #8653ca; text-shadow: 0 0 10px rgba(154, 102, 223, 0.28); }
 
 body.light-theme .provider-card--custom.active {
     background: linear-gradient(135deg, rgba(209, 250, 229, 0.88) 0%, rgba(236, 253, 245, 0.96) 100%);
-    border-color: rgba(16, 185, 129, 0.38);
+    border-color: rgba(47, 167, 127, 0.32);
     box-shadow: 0 4px 20px -6px rgba(5, 150, 105, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
-body.light-theme .provider-card--custom.active .provider-card-title { color: #059669; }
-body.light-theme .provider-card--custom.active .provider-card-arrow { color: #059669; text-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
+body.light-theme .provider-card--custom.active .provider-card-title { color: #1f8566; }
+body.light-theme .provider-card--custom.active .provider-card-arrow { color: #1f8566; text-shadow: 0 0 10px rgba(47, 167, 127, 0.24); }
 
 body.light-theme .welcome-content {
     background: rgba(255, 255, 255, 0.8);
@@ -5108,16 +5108,16 @@ body.light-theme #welcome-message .welcome-subtitle {
 
 /* Provider Card Accents - Stronger */
 #welcome-message .provider-card--local .provider-card-accent {
-    background: linear-gradient(90deg, #3b82f6, #60a5fa) !important;
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.6) !important;
+    background: linear-gradient(90deg, #4b86de, #79a8e3) !important;
+    box-shadow: 0 0 15px rgba(75, 134, 222, 0.42) !important;
 }
 #welcome-message .provider-card--openrouter .provider-card-accent {
-    background: linear-gradient(90deg, #a855f7, #c084fc) !important;
-    box-shadow: 0 0 15px rgba(168, 85, 247, 0.6) !important;
+    background: linear-gradient(90deg, #9a66df, #b695e3) !important;
+    box-shadow: 0 0 15px rgba(154, 102, 223, 0.42) !important;
 }
 #welcome-message .provider-card--custom .provider-card-accent {
-    background: linear-gradient(90deg, #10b981, #34d399) !important;
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6) !important;
+    background: linear-gradient(90deg, #2fa77f, #63c7a2) !important;
+    box-shadow: 0 0 15px rgba(47, 167, 127, 0.42) !important;
 }
 
 body.light-theme #welcome-message .provider-card {
