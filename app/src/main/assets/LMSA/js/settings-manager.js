@@ -68,6 +68,7 @@ let openAICompatibleApiKey = ''; // Optional API key for custom endpoint
 let lmStudioApiToken = ''; // Optional LM Studio API token for authenticated servers
 let lmStudioMcpIntegrations = []; // Optional LM Studio native chat integrations payload
 let reasoningLevel = 'default'; // Thinking effort level (default, disabled, low, medium, high)
+let braveApiKey = ''; // Brave Search API key
 
 /**
  * Checks if the application has a valid connection configuration
@@ -1016,6 +1017,14 @@ export function saveWebSearchSetting() {
  */
 export function getWebSearchEnabled() {
   return webSearchEnabled;
+}
+
+/**
+ * Gets the current Brave Search API key
+ * @returns {string}
+ */
+export function getBraveApiKey() {
+  return braveApiKey || localStorage.getItem('braveApiKey') || '';
 }
 
 /**
@@ -2616,6 +2625,7 @@ export function loadSettings() {
   loadReasoningLevelSetting();
   loadAutoGenerateTitlesSetting();
   loadWebSearchSetting();
+  loadBraveSearchSettings();
   loadAutoSmartReplySetting();
   loadBiometricSetting();
   loadAutoScrollSetting();
@@ -2949,5 +2959,19 @@ export function loadDefaultModelSetting() {
   } else {
     defaultModelId = null;
     debugLog("No default model set");
+  }
+}
+
+/**
+ * Loads the Brave Search settings from localStorage
+ */
+export function loadBraveSearchSettings() {
+  const savedBraveApiKey = localStorage.getItem('braveApiKey');
+  if (savedBraveApiKey) {
+    braveApiKey = savedBraveApiKey;
+  } else {
+    // Initial setup with provided key
+    braveApiKey = 'REPLACED_BRAVE_KEY';
+    localStorage.setItem('braveApiKey', braveApiKey);
   }
 }

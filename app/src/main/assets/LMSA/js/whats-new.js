@@ -10,7 +10,7 @@ let versionElement;
 let neverShowCheckbox;
 
 // Local storage keys
-const WHATS_NEW_VERSION = '10.15'; // Updated to version 10.15
+const WHATS_NEW_VERSION = '10.17'; // Updated to version 10.17
 const WHATS_NEW_NEVER_SHOW_KEY = 'whatsNewNeverShow'; // Flag to never show modal again
 const WHATS_NEW_AUTO_SHOWN_VERSION_KEY = 'whatsNewAutoShownVersion'; // Tracks auto-display per version
 

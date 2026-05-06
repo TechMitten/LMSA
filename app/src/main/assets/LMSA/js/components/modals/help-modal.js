@@ -33,14 +33,13 @@ export const helpModal = `
                         <p class="text-xs mb-3" style="color: var(--text-muted);">Click categories to expand</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                             <details class="md:col-span-2 p-2 rounded toc-group-setup"
-                                style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);">
+                                style="background: rgba(255, 255, 255, 0.03);">
                                 <summary class="flex items-center font-semibold cursor-pointer"
                                     style="color: var(--text-primary); list-style: none;">
                                     <i class="fas fa-folder-tree mr-2 text-sm" style="pointer-events: none;"></i>
                                     <span style="pointer-events: none;">Setup</span>
                                 </summary>
-                                <div class="mt-2 pl-2 space-y-1"
-                                    style="border-left: 1px solid rgba(255, 255, 255, 0.12);">
+                                <div class="mt-2 pl-2 space-y-1">
                                      <a href="#section-app-setup"
                                          class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                          <i class="fas fa-wand-magic-sparkles mr-2 text-sm"></i>
@@ -103,12 +102,12 @@ export const helpModal = `
                                     </a>
                                 </div>
                             </details>
-                            <details class="md:col-span-2 p-2 rounded toc-group-privacy" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <details class="md:col-span-2 p-2 rounded toc-group-privacy" style="background: rgba(255, 255, 255, 0.03);">
                                 <summary class="flex items-center font-semibold cursor-pointer" style="color: var(--text-primary); list-style: none;">
                                     <i class="fas fa-shield-alt mr-2 text-sm" style="pointer-events: none;"></i>
                                     <span style="pointer-events: none;">Privacy</span>
                                 </summary>
-                                <div class="mt-2 pl-2 space-y-1" style="border-left: 1px solid rgba(255, 255, 255, 0.12);">
+                                <div class="mt-2 pl-2 space-y-1">
                                     <a href="#section-security-privacy" class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-lock mr-2 text-sm"></i>
                                         <span>Security & Privacy</span>
@@ -124,14 +123,13 @@ export const helpModal = `
                                 </div>
                             </details>
                             <details class="md:col-span-2 p-2 rounded toc-group-management"
-                                style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);">
+                                style="background: rgba(255, 255, 255, 0.03);">
                                 <summary class="flex items-center font-semibold cursor-pointer"
                                     style="color: var(--text-primary); list-style: none;">
                                     <i class="fas fa-tasks mr-2 text-sm" style="pointer-events: none;"></i>
                                     <span style="pointer-events: none;">Management</span>
                                 </summary>
-                                <div class="mt-2 pl-2 space-y-1"
-                                    style="border-left: 1px solid rgba(255, 255, 255, 0.12);">
+                                <div class="mt-2 pl-2 space-y-1">
                                     <a href="#section-legacy-access"
                                         class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-key mr-2 text-sm"></i>
@@ -162,7 +160,7 @@ export const helpModal = `
                             <h3 class="text-lg font-semibold mb-3 flex items-center" style="color: #6366f1;">
                                 <i class="fas fa-wand-magic-sparkles mr-2"></i>New UI & Setup
                             </h3>
-                            <div class="p-4 rounded-xl border border-indigo-500/30 bg-indigo-500/5 shadow-sm">
+                            <div class="p-4 rounded-xl bg-indigo-500/5 shadow-sm">
                                 <p class="mb-3" style="color: var(--text-primary);">
                                     We've streamlined the interface to make it easier to use:
                                 </p>
@@ -232,7 +230,7 @@ export const helpModal = `
                             </div>
 
                              <div class="mt-4 p-3 rounded-lg"
-                                 style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(251, 191, 36, 0.1) 100%); border: 1px solid rgba(245, 158, 11, 0.45); box-shadow: 0 2px 10px rgba(245, 158, 11, 0.18);">
+                                 style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(251, 191, 36, 0.08) 100%);">
                                  <p class="font-medium flex items-center" style="color: #f59e0b;"><i
                                          class="fas fa-network-wired mr-2"></i>LMSA Connection Address</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">
@@ -561,7 +559,7 @@ export const helpModal = `
                                     </ul>
                                 </div>
 
-                                <div class="p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: #60a5fa;">
+                                <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
                                     <p class="font-medium flex items-center" style="color: #60a5fa;"><i
                                             class="fas fa-info-circle mr-2"></i>What "Default" Means</p>
                                     <p style="color: var(--text-primary); margin-top: 0.5rem;">
@@ -574,7 +572,7 @@ export const helpModal = `
                                     </p>
                                 </div>
 
-                                <div class="p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: #a78bfa;">
+                                <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
                                     <p class="font-medium flex items-center" style="color: #a78bfa;"><i
                                             class="fas fa-lightbulb mr-2"></i>When This Setting Is Useful</p>
                                     <ul class="list-disc pl-5 mt-2 space-y-1"
@@ -586,7 +584,7 @@ export const helpModal = `
                                     </ul>
                                 </div>
 
-                                <div class="p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: #ef4444;">
+                                <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
                                     <p class="font-medium flex items-center" style="color: #ef4444;"><i
                                             class="fas fa-exclamation-circle mr-2"></i>Good to Know</p>
                                     <ul class="list-disc pl-5 mt-2 space-y-1"
@@ -604,8 +602,8 @@ export const helpModal = `
                                     class="fas fa-server mr-2"></i>Offline Use</h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">Offline mode allows you to chat with AI models running on your own computer without requiring an internet connection. This feature is exclusive to Premium users.</p>
 
-                            <div class="mt-4 p-3 rounded-lg border"
-                                style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(34, 197, 94, 0.1) 100%); border: 1px solid rgba(16, 185, 129, 0.45);">
+                            <div class="mt-4 p-3 rounded-lg"
+                                style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(34, 197, 94, 0.08) 100%);">
                                 <p class="font-medium flex items-center" style="color: #10b981;"><i
                                         class="fas fa-lock mr-2"></i>Premium Feature</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">Offline use is available to <strong>Premium users only</strong>. Free users are limited to cloud-based services and cannot access local servers. <a href="#" id="open-premium-modal-offline"
@@ -626,8 +624,8 @@ export const helpModal = `
                                 </ul>
                             </div>
 
-                            <div class="mt-4 p-3 rounded-lg border"
-                                style="background: var(--settings-label-bg); border: 1px solid rgba(239, 68, 68, 0.4);">
+                            <div class="mt-4 p-3 rounded-lg"
+                                style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #ef4444;"><i
                                         class="fas fa-ban mr-2"></i>What's NOT Available Offline</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.75rem;">The following features require an internet connection and are not available when using local servers:</p>
@@ -827,8 +825,8 @@ export const helpModal = `
                                 </ol>
                             </div>
 
-                            <div class="mt-4 p-3 rounded-lg border"
-                                style="background: var(--settings-label-bg); border-color: #c084fc;">
+                            <div class="mt-4 p-3 rounded-lg"
+                                style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #c084fc;"><i
                                         class="fas fa-info-circle mr-2"></i>Important:</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">
@@ -845,7 +843,7 @@ export const helpModal = `
                                 When chatting with LMSA, you can attach files to share content with the AI. The app accepts a wide variety of file types for analysis and discussion.
                             </p>
 
-                            <div class="mt-3 p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: #f59e0b;">
+                            <div class="mt-3 p-3 rounded-lg" style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #f59e0b;"><i
                                         class="fas fa-exclamation-circle mr-2"></i>Important:</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">
@@ -921,7 +919,7 @@ export const helpModal = `
                                 </p>
                             </div>
 
-                            <div class="mt-4 p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: #60a5fa;">
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #60a5fa;"><i
                                         class="fas fa-lightbulb mr-2"></i>Tips for File Attachments:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
@@ -955,16 +953,29 @@ export const helpModal = `
                                 <p class="font-medium flex items-center" style="color: #3b82f6;"><i
                                         class="fas fa-robot mr-2"></i>How It Works:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
-                                    <li>When you send a prompt, if the system determines a web search is helpful, LMSA privately queries a search engine.</li>
-                                    <li>The search results are then fed to your selected AI model to generate a comprehensive and accurate reply.</li>
+                                    <li>When you send a prompt, LMSA analyzes if a web search would be beneficial.</li>
+                                    <li>If needed, a focused search query is generated and sent to our privacy-first search providers.</li>
+                                    <li>The relevant results are then provided to your AI model as additional context to ensure the most accurate and current response possible.</li>
                                 </ul>
                             </div>
 
-                            <div class="mt-4 p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: #f59e0b;">
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                        class="fas fa-user-shield mr-2"></i>Privacy-Respecting Features:</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li><strong>Privacy-First Search</strong>: We primarily use <strong>Brave Search</strong>, a leading independent search engine that does not track you or your search history.</li>
+                                    <li><strong>Anonymized Queries</strong>: Your original message is not sent to the search engine. Only a short, topical query derived from your prompt is used.</li>
+                                    <li><strong>No Tracking</strong>: We do not use tracking cookies or persistent identifiers for search requests.</li>
+                                    <li><strong>No Data Retention</strong>: Search results are used only for the duration of the current chat generation and are not stored on any servers.</li>
+                                    <li><strong>Local Fallbacks</strong>: We use private instances of SearXNG as fallbacks to ensure search availability without compromising your privacy.</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
                                 <p class="font-medium flex items-center" style="color: #f59e0b;"><i
                                         class="fas fa-shield-alt mr-2"></i>Privacy Note:</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">
-                                    When Web Search is active, a focused search query derived from your prompt may be shared with an API that performs a web search using popular search engines and other services. <strong>Do not include sensitive or personal information</strong> in your messages while Web Search is enabled.
+                                    While we take extensive measures to protect your privacy, a focused search query derived from your prompt is shared with search providers to fetch results. <strong>Avoid including highly sensitive personal information</strong> (like passwords or private IDs) in your messages while Web Search is enabled.
                                 </p>
                             </div>
                         </section>
@@ -972,8 +983,8 @@ export const helpModal = `
                             <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa;">
                                 <i class="fas fa-lock mr-2"></i>Security & Privacy
                             </h3>
-                            <div class="p-3 rounded-lg border"
-                                style="background: var(--settings-label-bg); border-color: var(--border-color);">
+                            <div class="p-3 rounded-lg"
+                                style="background: var(--settings-label-bg);">
                                 <p style="color: var(--text-primary);">For your privacy and security, all chat messages
                                     are stored locally on your device. LMSA does not store your conversations on LMSA
                                     servers. However, if you enable OpenRouter, your prompts and model responses are
@@ -988,8 +999,8 @@ export const helpModal = `
                                     <li>These actions cannot be undone as data is stored only on your device</li>
                                 </ul>
 
-                                <div class="mt-3 rounded border"
-                                    style="background: var(--settings-label-bg); border-color: var(--border-color); padding: 0.75rem;">
+                                <div class="mt-3 rounded"
+                                    style="background: var(--settings-label-bg); padding: 0.75rem;">
                                     <p class="font-medium flex items-center" style="color: #ef4444;"><i
                                             class="fas fa-shield-alt mr-2"></i>Network Security:</p>
                                     <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.5rem;">
@@ -1049,7 +1060,7 @@ export const helpModal = `
                     <section id="section-biometric-unlock">
                         <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa;"><i
                                 class="fas fa-fingerprint mr-2"></i>Biometric Unlock</h3>
-                        <div class="p-3 rounded-lg border" style="background: var(--settings-label-bg); border-color: var(--border-color);">
+                        <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
                             <p class="font-medium flex items-center" style="color: #8b5cf6;"><i
                                     class="fas fa-user-lock mr-2"></i>Protect Your Chats</p>
                             <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
@@ -1094,7 +1105,7 @@ export const helpModal = `
                                     code.
                                 </p>
 
-                                <div class="mt-2 p-2 rounded" style="background: rgba(59,130,246,0.03); border: 1px solid rgba(59,130,246,0.06);">
+                                <div class="mt-2 p-3 rounded-lg" style="background: rgba(59,130,246,0.03);">
                                     <p style="color: var(--text-primary); margin-bottom: 0.5rem;"><strong>How to get your legacy promo
                                             code:</strong></p>
                                     <ol class="list-decimal pl-5 mt-2" style="color: var(--text-primary);">
@@ -1322,8 +1333,8 @@ export const helpModal = `
                                 </p>
                             </div>
 
-                            <div class="p-3 rounded-lg\" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #3b82f6;\"><i
+                            <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i
                                         class="fas fa-question-circle mr-2"></i>Questions About Your Purchase?</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">
                                     If you have concerns about your LMSA Premium purchase, you can reach out to:

@@ -13,7 +13,7 @@ export const whatsNewModal = `
                     <div class="flex flex-col">
                         <span class="text-blue-400 font-extrabold">What's New</span>
                         <span class="text-xs text-blue-300/80 font-medium">v<span
-                            id="whats-new-version">10.15</span></span>
+                            id="whats-new-version">10.17</span></span>
                     </div>
                 </h2>
                 <button id="close-whats-new"
@@ -24,6 +24,25 @@ export const whatsNewModal = `
 
                     <div class="features-container overflow-y-auto grow px-1 py-2">
                 <div class="space-y-3">
+                    <div class="feature-item">
+                        <div class="relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-orange-500/10 to-red-700/5 rounded-full blur-xl"></div>
+                            <div class="flex items-start relative z-10">
+                                <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-orange-500/20 w-10 h-10 shadow-sm">
+                                    <i class="fas fa-shield-alt text-orange-300"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <h3 class="feature-title underline decoration-orange-500/30 underline-offset-4">Brave Search Integration</h3>
+                                    </div>
+                                    <div class="feature-description">
+                                        <p class="mb-3 text-sm">Web Search is now powered by the <span class="font-semibold text-blue-300">Brave Search API</span>! Enjoy faster, more accurate, and privacy-respecting search results as the primary engine for real-time data.</p>
+                                        <p class="mb-3 text-sm">We've maintained <span class="font-semibold text-blue-300">SearXNG</span> as a reliable fallback, ensuring your AI always has access to the information it needs, even if one service is unavailable.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="feature-item">
                         <div class="relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-indigo-500/10 to-blue-700/5 rounded-full blur-xl"></div>

@@ -3,7 +3,7 @@ import { messagesContainer, userInput, loadedModelDisplay } from './dom-elements
 import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll, renderSmartReplies, hideSmartReplies, showSmartRepliesLoading, addWebSearchIndicator } from './ui-manager.js';
 import { openHelpModal } from './help.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
-import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOpenAICompatible, getUseOllama, getOpenRouterApiKey, getOpenAICompatibleApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations, getWebSearchEnabled, getConfiguredMaxTokens, getReasoningLevel } from './settings-manager.js';
+import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOpenAICompatible, getUseOllama, getOpenRouterApiKey, getOpenAICompatibleApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations, getWebSearchEnabled, getConfiguredMaxTokens, getReasoningLevel, getBraveApiKey } from './settings-manager.js';
 import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags, normalizeMalformedCodeFences, isAndroidWebView } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
 import { canSendCompletion, recordCompletion, canSendOpenRouterCompletion, recordOpenRouterCompletion, canUseWebSearch, recordWebSearch } from './usage-limiter.js';
@@ -81,6 +81,7 @@ const WEB_SEARCH_DECISION_MAX_TOKENS = 96;
 const WEB_SEARCH_DECISION_MAX_MESSAGES = 6;
 const WEB_SEARCH_DECISION_MAX_CHARS_PER_MESSAGE = 700;
 const WEB_SEARCH_PROVIDERS = [
+    { name: 'Brave Search API', type: 'brave', url: 'https://api.search.brave.com/res/v1/web/search' },
     { name: 'SearXNG TechMitten', type: 'searxng', url: 'https://searxng.techmitten.com/search' },
     { name: 'SearXNG Inetol', type: 'searxng', url: 'https://search.inetol.net/search' },
     { name: 'SearXNG Tiekoetter', type: 'searxng', url: 'https://searx.tiekoetter.com/search' },
@@ -1728,7 +1729,9 @@ function shouldUseRecentContext(text) {
     // If the query is short and semantically sparse, prepend recent context to ground search.
     const keywordCount = extractKeywordQuery(text, 6).split(/\s+/).filter(Boolean).length;
     const startsWithQuestionWord = /^(what|when|where|why|how|which|who|is|are|can|could|would|should|did|do|does)\b/i.test(text);
-    const isLikelyContextDependent = startsWithQuestionWord && keywordCount <= 3 && wordCount <= 10;
+    // Include short phrases (<= 4 words) that are likely follow-ups needing context grounding
+    const isLikelyContextDependent = (startsWithQuestionWord && keywordCount <= 3 && wordCount <= 10) ||
+                                     (keywordCount <= 2 && wordCount <= 4);
 
     if (isLikelyContextDependent) {
         return true;
@@ -1949,8 +1952,21 @@ async function performWebSearch(query) {
 
 async function fetchWebSearchProviderResults(provider, query) {
     const searchUrl = new URL(provider.url);
+    const options = {
+        headers: {
+            'Accept': 'application/json'
+        }
+    };
 
-    if (provider.type === 'duckduckgo') {
+    if (provider.type === 'brave') {
+        const braveKey = getBraveApiKey();
+        if (!braveKey) {
+            console.warn('Brave Search API key not configured, skipping...');
+            return [];
+        }
+        searchUrl.searchParams.set('q', query);
+        options.headers['X-Subscription-Token'] = braveKey;
+    } else if (provider.type === 'duckduckgo') {
         searchUrl.searchParams.set('q', query);
         searchUrl.searchParams.set('format', 'json');
         searchUrl.searchParams.set('no_html', '1');
@@ -1961,9 +1977,13 @@ async function fetchWebSearchProviderResults(provider, query) {
         searchUrl.searchParams.set('categories', 'general');
     }
 
-    const resultData = await fetchJsonWithNativeFallback(searchUrl.toString());
+    const resultData = await fetchJsonWithNativeFallback(searchUrl.toString(), options);
     if (!resultData) {
         return [];
+    }
+
+    if (provider.type === 'brave') {
+        return extractBraveResults(resultData);
     }
 
     if (provider.type === 'duckduckgo') {
@@ -1973,8 +1993,11 @@ async function fetchWebSearchProviderResults(provider, query) {
     return extractSearxngResults(resultData);
 }
 
-async function fetchJsonWithNativeFallback(urlString) {
+async function fetchJsonWithNativeFallback(urlString, options = {}) {
     if (window.nativeFetch && typeof window.nativeFetch === 'function') {
+        // Note: nativeFetch bridge currently only supports URL. 
+        // If the bridge doesn't support headers, Brave API requests might fail natively 
+        // and fall back to the browser's fetch below.
         const nativeResult = await window.nativeFetch(urlString);
         if (nativeResult) {
             try {
@@ -1986,7 +2009,7 @@ async function fetchJsonWithNativeFallback(urlString) {
     }
 
     try {
-        const response = await fetchWithTimeout(urlString, WEB_SEARCH_FETCH_TIMEOUT_MS);
+        const response = await fetchWithTimeout(urlString, WEB_SEARCH_FETCH_TIMEOUT_MS, options);
         if (response.ok) {
             return await response.json();
         }
@@ -2014,29 +2037,99 @@ async function fetchJsonWithNativeFallback(urlString) {
     return null;
 }
 
-async function fetchWithTimeout(url, timeoutMs) {
+async function fetchWithTimeout(url, timeoutMs, options = {}) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-        return await fetch(url, { signal: controller.signal });
+        return await fetch(url, { 
+            ...options,
+            signal: controller.signal 
+        });
     } finally {
         clearTimeout(timeoutId);
     }
 }
 
 function extractSearxngResults(resultData) {
-    if (!Array.isArray(resultData?.results)) {
-        return [];
+    const combinedResults = [];
+
+    // 1. Process Infoboxes (High-priority factual summaries)
+    if (Array.isArray(resultData?.infoboxes)) {
+        resultData.infoboxes.forEach(box => {
+            // Infoboxes use 'infobox' for the title and 'content' for the body
+            const title = normalizeSearchResultText(box?.infobox || "Knowledge Summary");
+            const content = normalizeSearchResultText(box?.content || "");
+            
+            // Extract the first available URL from the 'urls' array or the root 'url'
+            const sourceUrl = box?.urls?.[0]?.url || box?.url || "";
+            const url = normalizeSearchResultText(sourceUrl);
+
+            if (content) {
+                combinedResults.push({
+                    title: `[Knowledge Box] ${title}`,
+                    content: content,
+                    url: url
+                });
+            }
+        });
     }
 
-    return resultData.results
-        .map(item => ({
-            title: normalizeSearchResultText(item?.title),
-            content: normalizeSearchResultText(item?.content || item?.url),
-            url: normalizeSearchResultText(item?.url)
-        }))
-        .filter(item => item.title && (item.content || item.url));
+    // 2. Process Standard Results
+    if (Array.isArray(resultData?.results)) {
+        resultData.results.forEach(item => {
+            combinedResults.push({
+                title: normalizeSearchResultText(item?.title),
+                content: normalizeSearchResultText(item?.content || item?.url),
+                url: normalizeSearchResultText(item?.url)
+            });
+        });
+    }
+
+    // 3. Filter out duplicates or entries with no useful info
+    return combinedResults.filter((item, index, self) => 
+        item.title && 
+        (item.content || item.url) &&
+        index === self.findIndex((t) => t.url === item.url) // Basic de-duplication by URL
+    );
+}
+
+function extractBraveResults(resultData) {
+    const combinedResults = [];
+
+    // 1. Process Infoboxes (High-priority factual summaries)
+    if (resultData?.infobox?.results) {
+        resultData.infobox.results.forEach(box => {
+            const title = normalizeSearchResultText(box?.label || box?.long_desc?.substring(0, 50) || "Knowledge Summary");
+            const content = normalizeSearchResultText(box?.long_desc || "");
+            
+            // Extract the first available URL
+            const sourceUrl = box?.website_url || (box?.found_in_urls?.[0]) || "";
+            const url = normalizeSearchResultText(sourceUrl);
+
+            if (content) {
+                combinedResults.push({
+                    title: `[Knowledge Box] ${title}`,
+                    content: content,
+                    url: url
+                });
+            }
+        });
+    }
+
+    // 2. Process Web Results
+    if (Array.isArray(resultData?.web?.results)) {
+        resultData.web.results.forEach(item => {
+            combinedResults.push({
+                title: normalizeSearchResultText(item?.title),
+                content: normalizeSearchResultText(item?.description || item?.url),
+                url: normalizeSearchResultText(item?.url)
+            });
+        });
+    }
+
+    // 3. Filter out entries with no useful info
+    return combinedResults.filter(item => item.title && (item.content || item.url));
 }
 
 function extractDuckDuckGoResults(resultData) {
@@ -2410,10 +2503,19 @@ async function resolveWebSearchQuery(userMessage, requestMessages, chatMessages,
     if (latestWebSearchEntry?.payload?.context) {
         const sameTopicAsLatestSearch = areWebSearchTopicsRelated(normalizedPrompt, latestWebSearchEntry.text)
             || (shouldUseRecentContext(normalizedPrompt) && Boolean(latestWebSearchEntry.text));
+        
+        // Specific follow-up questions (identified by shouldUseRecentContext or question markers)
+        // should trigger a fresh search that incorporates prior context keywords, rather than 
+        // just re-using the previous turn's results which might not cover the new specific query.
+        const isLikelyQuestion = /^(what|when|where|why|how|which|who|is|are|can|could|would|should|did|do|does)\b/i.test(normalizedPrompt)
+            || normalizedPrompt.includes('?');
+
         const shouldReuseLatestSearch = sameTopicAsLatestSearch
             && !explicitFreshSearch
             && !topicSwitch
-            && (shouldUseRecentContext(normalizedPrompt) || countWords(normalizedPrompt) <= WEB_SEARCH_REUSE_MAX_WORDS);
+            && !isLikelyQuestion
+            && !shouldUseRecentContext(normalizedPrompt)
+            && countWords(normalizedPrompt) <= WEB_SEARCH_REUSE_MAX_WORDS;
 
         if (shouldReuseLatestSearch) {
             return {
