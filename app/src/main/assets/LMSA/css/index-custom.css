@@ -115,18 +115,18 @@ body.light-theme #main-app-container > header {
 #settings-step-actions.active {
     display: flex !important;
     flex-direction: column;
-    flex: 1 1 auto;
-    min-height: 100%;
+    flex: 0 0 auto;
+    min-height: auto;
 }
 
 #settings-step-actions.active > .mb-4 {
     display: flex !important;
     flex-direction: column;
-    flex: 1 1 auto;
-    min-height: 100%;
-    margin-top: auto !important;
-    margin-bottom: auto !important;
-    transform: translateY(0.25in);
+    flex: 0 0 auto;
+    min-height: auto;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    transform: none;
 }
 
 #settings-step-actions.active > .mb-4 > h3 {
@@ -153,7 +153,7 @@ body.light-theme #main-app-container > header {
 
 /* Setup Dashboard Title */
 #welcome-message .setup-dashboard-title-block {
-    --setup-dashboard-title-offset: clamp(-84px, -9vh, -60px);
+    --setup-dashboard-title-offset: 0px;
     width: 100%;
     text-align: center;
     margin: 0 0 14px 0;
@@ -3819,6 +3819,20 @@ body.light-theme #settings-step-actions #clear-lmstudio-token.settings-action-bu
     filter: none !important;
     border-color: var(--settings-border-strong) !important;
     box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.12) !important;
+}
+
+#settings-modal.settings-actions-compact .modal-content {
+    height: auto !important;
+    min-height: auto !important;
+    grid-template-rows: auto auto !important;
+    max-height: calc(100dvh - 20px) !important;
+}
+
+#settings-modal.settings-actions-compact #settings-content-wrapper {
+    height: auto !important;
+    min-height: auto !important;
+    align-self: start !important;
+    overflow-y: auto !important;
 }
 
 #settings-step-font.active {

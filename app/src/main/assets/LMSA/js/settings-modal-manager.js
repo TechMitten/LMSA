@@ -1020,6 +1020,11 @@ export function initializeSettingsModalNavigation() {
             steps[stepName].classList.remove('hidden');
             steps[stepName].classList.add('active');
 
+            const settingsModal = document.getElementById('settings-modal');
+            if (settingsModal) {
+                settingsModal.classList.toggle('settings-actions-compact', stepName === 'actions');
+            }
+
             if (direction === 'right') {
                 steps[stepName].classList.add('slide-in-right');
             } else if (direction === 'left') {
@@ -1283,6 +1288,10 @@ function enableNavigation() {
  */
 function resetModalState() {
     _currentSettingsStep = 'connection';
+
+    if (settingsModal) {
+        settingsModal.classList.remove('settings-actions-compact');
+    }
 
     // Get all steps
     const steps = {
