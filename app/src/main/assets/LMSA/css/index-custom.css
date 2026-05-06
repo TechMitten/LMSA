@@ -1654,7 +1654,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 }
 
 /* Tablet-only polish layer. Keep phone layouts untouched. */
-@media (min-width: 641px) and (max-width: 1024px) {
+@media (min-width: 641px) and (max-width: 1023px) {
     :root {
         --tablet-shell-width: min(980px, calc(100vw - 40px));
         --tablet-content-width: min(900px, calc(100vw - 64px));
@@ -1975,7 +1975,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     }
 }
 
-@media (min-width: 768px) and (max-width: 1024px) {
+@media (min-width: 768px) and (max-width: 1023px) {
     .welcome-content > .grid.grid-cols-1 {
         grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
         gap: 0.95rem !important;
@@ -2121,7 +2121,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 }
 
 /* Dedicated tablet layout for the settings modal. */
-@media (min-width: 641px) and (max-width: 1024px) {
+@media (min-width: 641px) and (max-width: 1023px) {
     #settings-modal {
         padding: 8px !important;
         align-items: center !important;
@@ -5342,5 +5342,24 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
         transform: none !important;
         transform-origin: center center !important;
         margin-bottom: 0 !important;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+    #settings-modal {
+        display: grid !important;
+        place-items: center !important;
+        padding-left: max(8px, env(safe-area-inset-left)) !important;
+        padding-right: max(8px, env(safe-area-inset-right)) !important;
+        box-sizing: border-box !important;
+    }
+
+    #settings-modal .modal-content {
+        width: min(980px, 100%) !important;
+        max-width: min(980px, 100%) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        left: auto !important;
+        right: auto !important;
     }
 }
