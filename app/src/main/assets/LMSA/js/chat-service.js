@@ -1245,8 +1245,7 @@ function buildLmStudioMcpRequest(messages, shouldInlineChatTitle) {
         integrations: sanitizeLmStudioMcpIntegrations(getLMStudioMcpIntegrations()),
         temperature: getTemperature(),
         stream: false,
-        store: true,
-        context_length: 8000
+        context_length: Math.max(8000, getConfiguredMaxTokens())
     };
 
     const systemPrompt = buildNativeSystemPrompt(shouldInlineChatTitle);
