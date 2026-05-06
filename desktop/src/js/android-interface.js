@@ -114,9 +114,34 @@ function syncPremiumMenuState(isPremium) {
 function updateUiForPremium(isPremium) {
     const premiumState = setPremiumState(isPremium);
     const isDebugEnabled = !!window.isDebugMode || !!(window.AndroidBilling && typeof window.AndroidBilling.checkDebugMode === 'function' && window.AndroidBilling.checkDebugMode());
-    isPremium = premiumState.isPremium && !isDebugEnabled;
-    console.log('Premium status updated:', isPremium, '(debug:', isDebugEnabled, ')');
-    syncPremiumMenuState(isPremium);
+    const effectivePremium = premiumState.isPremium && !isDebugEnabled;
+    console.log('Premium status updated:', effectivePremium, '(debug:', isDebugEnabled, ')');
+    syncPremiumMenuState(effectivePremium);
+
+    // Toggle ad banner placeholder visibility in HTML
+    const admobContainer = document.getElementById('admob-banner-container');
+    if (admobContainer) {
+        if (effectivePremium) {
+            admobContainer.classList.add('hidden');
+        } else {
+            admobContainer.classList.remove('hidden');
+        }
+    }
+
+    // Synchronize native AdView visibility via bridge
+    if (window.AndroidAds && typeof window.AndroidAds.updateAdVisibility === 'function') {
+        window.AndroidAds.updateAdVisibility();
+    }
+
+    // Toggle privacy settings button visibility
+    const privacyBtn = document.getElementById('show-privacy-form-btn');
+    if (privacyBtn) {
+        if (effectivePremium) {
+            privacyBtn.classList.add('hidden');
+        } else {
+            privacyBtn.classList.remove('hidden');
+        }
+    }
 }
 
 if (document.readyState === 'loading') {

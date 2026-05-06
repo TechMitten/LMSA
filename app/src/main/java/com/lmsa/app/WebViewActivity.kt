@@ -62,6 +62,15 @@ import androidx.browser.customtabs.CustomTabsService
 import java.util.concurrent.Executor
 import java.net.HttpURLConnection
 import java.net.URL
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.ump.ConsentInformation
+import com.google.android.ump.ConsentRequestParameters
+import com.google.android.ump.UserMessagingPlatform
+import com.google.android.ump.FormError
 
 import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
@@ -126,6 +135,9 @@ class WebViewActivity : AppCompatActivity() {
 
     // Billing Client
     private lateinit var billingClient: BillingClient
+    private lateinit var consentInformation: ConsentInformation
+    private var isAdsInitialized = false
+    private var isKeyboardVisible = false
     private val PRODUCT_ID = "ad_removal"
     private val PREFS_NAME = "LMSA_PREFS"
     private val PREF_IS_PREMIUM = "is_premium"
@@ -179,6 +191,8 @@ class WebViewActivity : AppCompatActivity() {
 
         startStartupEntitlementResolution()
         startBillingConnection()
+        
+        setupConsent()
         
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         isPremium = prefs.getBoolean(PREF_IS_PREMIUM, false)
@@ -441,6 +455,7 @@ class WebViewActivity : AppCompatActivity() {
         webView.addJavascriptInterface(HapticInterface(), "AndroidHaptics")
         webView.addJavascriptInterface(BiometricInterface(), "AndroidBiometrics")
         webView.addJavascriptInterface(ExternalLinkInterface(), "AndroidExternalLinks")
+        webView.addJavascriptInterface(AdInterface(), "AndroidAds")
 
         // Register native bridge for network requests (bypasses CORS)
         webView.addJavascriptInterface(NetworkInterface(), "AndroidNetwork")
@@ -583,6 +598,86 @@ class WebViewActivity : AppCompatActivity() {
             val jsCommand = "if(typeof updateUiForPremium === 'function') { updateUiForPremium($effectivePremium); }"
             webView.evaluateJavascript(jsCommand, null)
             syncCurrentTTSVoiceToAccessLevel()
+            updateAdVisibility()
+        }
+    }
+
+    private fun setupConsent() {
+        val params = ConsentRequestParameters.Builder()
+            .setTagForUnderAgeOfConsent(false)
+            .build()
+
+        consentInformation = UserMessagingPlatform.getConsentInformation(this)
+        consentInformation.requestConsentInfoUpdate(
+            this,
+            params,
+            {
+                UserMessagingPlatform.loadAndShowConsentFormIfRequired(this) { formError ->
+                    if (formError != null) {
+                        Log.e(TAG, "UMP: Form error: ${formError.message}")
+                    }
+                    if (consentInformation.canRequestAds()) {
+                        initializeAds()
+                    }
+                }
+            },
+            { requestConsentError ->
+                Log.e(TAG, "UMP: Consent update failed: ${requestConsentError.message}")
+                if (consentInformation.canRequestAds()) {
+                    initializeAds()
+                }
+            }
+        )
+        
+        // If consent information is already available (not first launch), try initializing
+        if (consentInformation.canRequestAds()) {
+            initializeAds()
+        }
+    }
+
+    private fun initializeAds() {
+        if (isAdsInitialized) return
+        
+        runOnUiThread {
+            Log.d(TAG, "Initializing AdMob SDK")
+            MobileAds.initialize(this) {}
+            isAdsInitialized = true
+            
+            val adView: AdView = findViewById(R.id.adView)
+            adView.adListener = object : AdListener() {
+                override fun onAdLoaded() {
+                    Log.d(TAG, "AdMob: Ad loaded successfully")
+                    updateAdVisibility()
+                }
+                override fun onAdFailedToLoad(adError : LoadAdError) {
+                    Log.e(TAG, "AdMob: Ad failed to load: ${adError.message}")
+                }
+            }
+            val adRequest = AdRequest.Builder().build()
+            adView.loadAd(adRequest)
+            updateAdVisibility()
+        }
+    }
+
+    private fun updateAdVisibility() {
+        runOnUiThread {
+            val adView: AdView = findViewById(R.id.adView)
+            val adTopMargin: View = findViewById(R.id.adTopMargin)
+            val shouldShowAds = !hasEffectivePremium() && !isKeyboardVisible
+            
+            if (shouldShowAds) {
+                adView.visibility = View.VISIBLE
+                adTopMargin.visibility = View.VISIBLE
+                Log.d(TAG, "AdMob: Showing banner for free tier")
+            } else {
+                adView.visibility = View.GONE
+                adTopMargin.visibility = View.GONE
+                when {
+                    hasEffectivePremium() -> Log.d(TAG, "AdMob: Hiding banner for premium tier")
+                    isKeyboardVisible -> Log.d(TAG, "AdMob: Hiding banner while native keyboard is visible")
+                    else -> Log.d(TAG, "AdMob: Hiding banner")
+                }
+            }
         }
     }
 
@@ -678,7 +773,13 @@ class WebViewActivity : AppCompatActivity() {
             // edge-to-edge is enforced and adjustResize no longer shrinks the content
             // automatically — we must consume the ime inset ourselves.
             val imeBottom = if (imeInsets.bottom > 0) imeInsets.bottom + imeBreathingRoomPx else 0
+            val keyboardVisible = imeInsets.bottom > 0
             val targetHeight = maxOf(navigationInsets.bottom, imeBottom).coerceAtLeast(1)
+
+            if (isKeyboardVisible != keyboardVisible) {
+                isKeyboardVisible = keyboardVisible
+                updateAdVisibility()
+            }
 
             if (bottomSpacer.layoutParams.height != targetHeight) {
                 bottomSpacer.layoutParams = bottomSpacer.layoutParams.apply {
@@ -2679,6 +2780,24 @@ class WebViewActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e(TAG, "NetworkInterface exception: ${e.message}")
                 null
+            }
+        }
+    }
+
+    inner class AdInterface {
+        @JavascriptInterface
+        fun updateAdVisibility() {
+            this@WebViewActivity.updateAdVisibility()
+        }
+
+        @JavascriptInterface
+        fun showPrivacyOptionsForm() {
+            runOnUiThread {
+                UserMessagingPlatform.showPrivacyOptionsForm(this@WebViewActivity) { formError ->
+                    if (formError != null) {
+                        Log.e(TAG, "UMP: Privacy options form error: ${formError.message}")
+                    }
+                }
             }
         }
     }

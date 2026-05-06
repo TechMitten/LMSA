@@ -1,7 +1,7 @@
 // Only proceed if sidebar exists and is currently active/visible
 // Event Handlers for the application
 import {
-    chatForm, userInput, clearChatButton, newChatButton, settingsButton,
+    chatForm, userInput, clearChatButton, showPrivacyFormButton, newChatButton, settingsButton,
     closeSettingsButton, closeSettingsXButton, settingsModal, welcomeMessage, messagesContainer,
     sidebarToggle, closeSidebarButton, confirmActionButton, cancelActionButton,
     helpButton, newChatHeaderButton, webSearchHeaderButton, webSearchHeaderIcon, whatsNewButton, aboutButton, stopButton, contextMenu, copyTextButton,
@@ -751,6 +751,16 @@ export function initializeEventHandlers() {
                 setActionToPerform('clearAllChats');
                 showConfirmationModal('Are you sure you want to clear all chats? This action cannot be undone.');
             }, 100);
+        });
+    }
+
+    if (showPrivacyFormButton) {
+        showPrivacyFormButton.addEventListener('click', () => {
+            if (window.AndroidAds && typeof window.AndroidAds.showPrivacyOptionsForm === 'function') {
+                window.AndroidAds.showPrivacyOptionsForm();
+            } else {
+                console.warn('Privacy options form is only available on Android');
+            }
         });
     }
 

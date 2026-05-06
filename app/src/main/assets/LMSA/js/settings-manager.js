@@ -2038,7 +2038,7 @@ export function saveOpenAICompatibleSettings() {
 }
 
 /**
- * Updates the visual status indicator for the active provider.
+ * Updates the visual status indicator for the selected provider.
  * @param {string} [provider] - Optional provider name. If omitted, uses current state.
  */
 export function updateProviderStatusIndicator(provider) {
@@ -2075,7 +2075,7 @@ export function updateProviderStatusIndicator(provider) {
   // Update the status pill text based on state
   const statusPillText = providerStatusContainer.querySelector('.pill-text');
   if (statusPillText) {
-    statusPillText.textContent = currentProvider === 'none' ? 'Ready' : 'Active';
+    statusPillText.textContent = currentProvider === 'none' ? 'Ready' : 'Selected';
   }
 
   // Update icon to match selected provider

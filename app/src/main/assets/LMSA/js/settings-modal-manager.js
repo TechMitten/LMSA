@@ -7,7 +7,6 @@ import { showToastNotice } from './toast-notice.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { getApiUrl, getAvailableModels, isServerRunning, validateIpPort, saveServerSettings, fetchAvailableModels } from './api-service.js';
 import { openPremiumModal } from './components/modals/premium-modal.js';
-import { showOpenRouterKeyRequiredModal, initOpenRouterKeyRequiredModal } from './components/modals/openrouter-key-required-modal.js';
 import {
     getUseOpenRouter,
     getOpenRouterApiKey,
@@ -869,30 +868,6 @@ export async function showSettingsModal() {
  */
 export function hideSettingsModal() {
     if (!settingsModal) return;
-
-    // --- OpenRouter key validation ---
-    // Show advisory modal if the user enabled OpenRouter but hasn't entered an API key.
-    const orToggle = document.getElementById('openrouter-toggle');
-    const orKeyInput = document.getElementById('openrouter-api-key');
-    if (orToggle && orToggle.checked && orKeyInput && orKeyInput.value.trim() === '') {
-        // Show the advisory modal with options to cancel (disable) or later (close and keep enabled)
-        showOpenRouterKeyRequiredModal(
-            // Cancel callback - disable OpenRouter and return to settings
-            () => {
-                orToggle.checked = false;
-                // Trigger the change event to save the state
-                const event = new Event('change', { bubbles: true });
-                orToggle.dispatchEvent(event);
-                // Stay in settings modal - don't close it
-            },
-            // Later callback - close the settings modal and keep OpenRouter enabled
-            () => {
-                proceedWithHideSettingsModal();
-            }
-        );
-        return;  // Don't proceed with closing yet
-    }
-    // --- end validation ---
 
     proceedWithHideSettingsModal();
 }
@@ -3926,9 +3901,6 @@ export function initializeSettingsModal() {
 
     // Initialize help link from settings
     initializeSettingsHelpLink();
-
-    // Initialize OpenRouter key required modal
-    initOpenRouterKeyRequiredModal();
 }
 
 /**

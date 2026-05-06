@@ -1772,7 +1772,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     }
 
     #chat-input-area {
-        padding: 1.15rem clamp(1rem, 2.8vw, 1.6rem) 0.7rem !important;
+        padding: 0.575rem clamp(1rem, 2.8vw, 1.6rem) 0.7rem !important;
         border-top-color: rgba(148, 163, 184, 0.18) !important;
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, 0.08),
@@ -2591,7 +2591,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 }
 
 #chat-input-area {
-    padding-top: 0.75rem !important;
+    padding-top: 0.375rem !important;
     padding-bottom: calc(0.75rem + var(--chat-disclaimer-height) + var(--chat-disclaimer-gap)) !important;
 }
 
@@ -4026,6 +4026,13 @@ body.light-theme .conn-modal-action-btn--cancel {
     -webkit-backdrop-filter: blur(20px) saturate(130%);
     overflow: visible !important;
     animation: welcomeContentFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (min-height: 700px) {
+    #welcome-message {
+        justify-content: flex-end !important;
+        padding-bottom: 10px !important;
+    }
 }
 
 @keyframes welcomeContentFadeIn {

@@ -443,6 +443,11 @@ export const settingsModal = `
                             <i class="fas fa-key text-sm"></i>
                             <span>Clear LM Studio Token</span>
                         </button>
+
+                        <button id="show-privacy-form-btn" class="settings-action-button">
+                            <i class="fas fa-user-shield text-sm"></i>
+                            <span>Privacy Settings</span>
+                        </button>
                     </div>
                 </div>
                 <!-- Navigation buttons container -->

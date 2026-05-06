@@ -67,6 +67,8 @@ dependencies {
     // Billing dependencies
     implementation("com.android.billingclient:billing-ktx:7.0.0")
     implementation("androidx.biometric:biometric:1.1.0")
+    implementation(libs.play.services.ads)
+    implementation(libs.user.messaging.platform)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

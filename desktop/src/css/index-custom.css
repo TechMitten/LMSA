@@ -203,6 +203,33 @@ body.light-theme #welcome-message .setup-dashboard-title {
     transition: all 0.3s ease;
 }
 
+/* AdMob Banner for Free Tier */
+#admob-banner-container {
+    width: 100%;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    z-index: 5;
+}
+
+#admob-banner-container.hidden {
+    display: none !important;
+}
+
+.ad-placeholder-text {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+}
+
 .pulse-dot {
     width: 8px;
     height: 8px;
