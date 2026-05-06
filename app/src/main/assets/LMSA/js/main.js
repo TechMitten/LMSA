@@ -1,6 +1,6 @@
 // Main entry point for the application
 import { loadServerSettings, fetchAvailableModels } from './api-service.js';
-import { loadSettings, getRequireBiometric } from './settings-manager.js';
+import { loadSettings, getRequireBiometric, updateProviderStatusIndicator } from './settings-manager.js';
 import { loadChatHistory, loadChat, chatHistoryData, activatePendingTemplateCharacterCard } from './chat-service.js';
 import { initializeFileUpload } from './file-upload.js';
 import { initializeEventHandlers } from './event-handlers.js';
@@ -648,6 +648,10 @@ export async function initializeApp() {
     } catch (error) {
         console.warn('Server settings load failed (non-blocking):', error);
     }
+    
+    // Explicitly sync the provider status indicator once all settings are hydrated
+    updateProviderStatusIndicator();
+    
     ensureBiometricUnlockButton();
 
     // Check biometric requirement right after loading settings

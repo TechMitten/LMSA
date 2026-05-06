@@ -1824,7 +1824,7 @@ function updateProviderUI() {
     syncAutoGenerateTitlesUI();
   }
 
-  updateProviderStatusIndicator();
+  updateProviderStatusIndicator(currentProvider);
 }
 
 function refreshLocalLmStudioLoadedModelState() {
@@ -1946,7 +1946,6 @@ export function loadOpenRouterSettings() {
   }
 
   updateProviderUI();
-  updateProviderStatusIndicator();
   refreshLocalLmStudioLoadedModelState();
 }
 
@@ -2059,17 +2058,7 @@ export function updateProviderStatusIndicator(provider) {
   } else {
     if (useOpenRouter) currentProvider = 'openrouter';
     else if (useOpenAICompatible) currentProvider = 'openai-compatible';
-    else {
-      // For local mode, we only show 'local' if it's actually configured
-      // otherwise we show 'none' to prompt selection
-      const serverIp = localStorage.getItem('serverIp');
-      const serverPort = localStorage.getItem('serverPort');
-      if (serverIp && serverPort) {
-        currentProvider = 'local';
-      } else {
-        currentProvider = 'none';
-      }
-    }
+    else currentProvider = 'local';
   }
 
   providerStatusContainer.setAttribute('data-provider', currentProvider);
