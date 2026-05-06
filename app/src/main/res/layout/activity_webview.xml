@@ -55,7 +55,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/new_splash"
-            android:scaleType="centerCrop"
+            android:scaleType="fitCenter"
             android:background="@color/splash_background"
             android:visibility="visible"
             android:elevation="10dp"
