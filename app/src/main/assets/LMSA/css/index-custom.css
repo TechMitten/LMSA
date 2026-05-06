@@ -2123,14 +2123,17 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 /* Dedicated tablet layout for the settings modal. */
 @media (min-width: 641px) and (max-width: 1024px) {
     #settings-modal {
-        padding: 24px !important;
+        padding: 8px !important;
         align-items: center !important;
     }
 
     #settings-modal .modal-content {
-        width: min(920px, calc(100vw - 48px)) !important;
-        max-width: min(920px, calc(100vw - 48px)) !important;
-        max-height: min(880px, calc(100vh - 40px)) !important;
+        width: min(980px, calc(100vw - 16px)) !important;
+        max-width: min(980px, calc(100vw - 16px)) !important;
+        height: calc(100vh - 16px) !important;
+        height: calc(100dvh - 16px) !important;
+        max-height: calc(100vh - 16px) !important;
+        max-height: calc(100dvh - 16px) !important;
         padding: 0 !important;
         border-radius: 1.6rem !important;
         overflow: hidden !important;
@@ -2157,7 +2160,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 
     #settings-modal > .modal-content > .flex.flex-col {
         margin-bottom: 0 !important;
-        padding: 1.35rem 1.5rem 1.1rem !important;
+        padding: 1.15rem 1.25rem 0.9rem !important;
         border-bottom: 1px solid rgba(148, 163, 184, 0.12);
         background:
             linear-gradient(180deg, rgba(15, 23, 42, 0.82) 0%, rgba(15, 23, 42, 0.58) 100%);
@@ -2216,7 +2219,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 
     #settings-content-wrapper {
         max-height: none !important;
-        padding: 1.35rem 1.5rem 0.6rem !important;
+        padding: 1.05rem 1.25rem 0.35rem !important;
         scrollbar-width: thin;
     }
 
@@ -2782,12 +2785,12 @@ body.light-theme #settings-modal {
 }
 
 #settings-modal .modal-content {
-    width: min(720px, calc(100vw - 36px)) !important;
-    max-width: min(720px, calc(100vw - 36px)) !important;
-    height: min(760px, calc(100dvh - 36px)) !important;
-    min-height: min(760px, calc(100dvh - 36px)) !important;
-    max-height: calc(100vh - 36px) !important;
-    max-height: calc(100dvh - 36px) !important;
+    width: min(960px, calc(100vw - 20px)) !important;
+    max-width: min(960px, calc(100vw - 20px)) !important;
+    height: min(920px, calc(100dvh - 20px)) !important;
+    min-height: min(920px, calc(100dvh - 20px)) !important;
+    max-height: calc(100vh - 20px) !important;
+    max-height: calc(100dvh - 20px) !important;
     padding: 0 !important;
     border-radius: 16px !important;
     overflow: hidden !important;
@@ -2813,7 +2816,7 @@ body.light-theme #settings-modal .modal-content {
 #settings-modal > .modal-content > .flex.flex-col {
     position: relative !important;
     margin: 0 !important;
-    padding: 18px 22px 14px !important;
+    padding: 16px 20px 12px !important;
     border: 0 !important;
     border-bottom: 1px solid var(--settings-border-quiet) !important;
     background: rgba(17, 28, 47, 0.96) !important;
@@ -2925,7 +2928,7 @@ body.light-theme #settings-modal > .modal-content > .flex.flex-col {
     min-height: 0 !important;
     height: 100% !important;
     max-height: none !important;
-    padding: 18px 22px !important;
+    padding: 16px 20px !important;
     margin: 0 !important;
     background: var(--settings-surface) !important;
     scrollbar-color: rgba(79, 140, 255, 0.42) transparent !important;
@@ -3640,12 +3643,12 @@ body.light-theme #settings-navigation-buttons + .mt-2 {
 }
 
 #settings-navigation-buttons {
-    padding: 16px 22px 8px !important;
+    padding: 14px 20px 8px !important;
     border-top: 1px solid var(--settings-border-quiet) !important;
 }
 
 #settings-navigation-buttons + .mt-2 {
-    padding: 0 22px 18px !important;
+    padding: 0 20px 16px !important;
 }
 
 #settings-navigation-buttons .navigation-buttons {
@@ -5288,4 +5291,56 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
     background: linear-gradient(180deg, rgba(204, 251, 241, 0.95), rgba(153, 246, 228, 0.7)) !important;
     color: #0f766e !important;
     box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.18) inset, 0 0 8px rgba(20, 184, 166, 0.14) !important;
+}
+
+/* Desktop fit-and-alignment corrections for settings modal. */
+@media (min-width: 1024px) {
+    #settings-modal .modal-content {
+        width: min(840px, calc(100vw - 48px)) !important;
+        max-width: min(840px, calc(100vw - 48px)) !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: calc(100dvh - 32px) !important;
+    }
+
+    #settings-modal .connection-type-selector {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    #settings-modal .connection-type-btn {
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    #settings-modal .connection-type-name {
+        min-width: 0 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    #settings-navigation-buttons .navigation-buttons {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        width: 100% !important;
+    }
+
+    #settings-navigation-buttons #connection-step-buttons,
+    #settings-navigation-buttons #actions-step-buttons {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    #settings-navigation-buttons .navigation-buttons > button,
+    #settings-modal #close-settings {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    #settings-modal #settings-navigation-buttons .navigation-buttons > button {
+        transform: none !important;
+        transform-origin: center center !important;
+        margin-bottom: 0 !important;
+    }
 }
