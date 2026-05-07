@@ -10,6 +10,7 @@ import {
     modelButton, importExportGroupButton, importExportContainer, systemPromptSettingsButton,
     exportChatsButton, importChatsButton, importChatsInput,
     welcomeModelsBtn, welcomeMcpBtn, welcomeSystemPromptBtn, welcomeTtsBtn, welcomeImportExportBtn, welcomeNewChatBtn, welcomeHelpBtn,
+    modelsHeaderButton,
     setupLocalBtn, setupOpenRouterBtn, setupCustomBtn
 } from './dom-elements.js';
 import { privacyPolicyContent } from './components/modals/privacy-policy-modal.js';
@@ -367,23 +368,18 @@ export function initializeEventHandlers() {
     }
 
 
+    const openModelsModal = () => {
+        debugLog('Models button clicked, opening models modal');
+
+        try {
+            showModelModal();
+        } catch (error) {
+            debugError('Error in model button handler:', error);
+        }
+    };
+
     // Models button in welcome screen
     if (welcomeModelsBtn) {
-        // Function to open models modal
-        const openModelsModal = () => {
-            debugLog('Models button clicked, opening models modal');
-
-            // Import the module and handle potential errors
-            try {
-                import('./model-manager.js').then(module => {
-                    module.showModelModal();
-                }).catch(error => {
-                    debugError('Error importing model-manager.js:', error);
-                });
-            } catch (error) {
-                debugError('Error in model button handler:', error);
-            }
-        };
 
         // Remove any existing event listeners to prevent duplicates
         const newWelcomeModelsBtn = welcomeModelsBtn.cloneNode(true);
@@ -404,6 +400,28 @@ export function initializeEventHandlers() {
                 openModelsModal();
                 updatedWelcomeModelsBtn.blur();
             });
+        }, { passive: false });
+    }
+
+    if (modelsHeaderButton) {
+        bindPressInFeedback(modelsHeaderButton);
+
+        const openHeaderModelsPanel = () => {
+            openModelsModal();
+            modelsHeaderButton.blur();
+        };
+
+        modelsHeaderButton.addEventListener('click', openHeaderModelsPanel);
+        modelsHeaderButton.addEventListener('touchstart', (e) => {
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        modelsHeaderButton.addEventListener('touchend', (e) => {
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+            openHeaderModelsPanel();
         }, { passive: false });
     }
 
