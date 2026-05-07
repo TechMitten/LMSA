@@ -353,31 +353,9 @@
                         <div class="welcome-content glass-card p-4 sm:p-8 max-w-3xl mx-auto w-full">
                             <div class="welcome-content-inner">
                                 <!-- Configuration Dashboard (State A: First Run / Not Configured) -->
-                                <div class="setup-dashboard-title-block" aria-hidden="true">
-                                    <h2 class="setup-dashboard-title">Local Model Smart Assistant</h2>
-                                </div>
-
-                                <!-- Provider Status Indicator -->
-                                <div id="provider-status-container" class="provider-status-wrapper mb-4 sm:mb-6" data-provider="none">
-                                    <div class="provider-status-content glass-card p-3 sm:p-4 flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
-                                            <div class="status-icon-glow">
-                                                <i class="fas fa-plug"></i>
-                                            </div>
-                                            <div class="flex flex-col text-left">
-                                                <span class="text-xs font-semibold uppercase tracking-wider opacity-60">Selected Provider</span>
-                                                <span id="active-provider-name" class="text-sm sm:text-base font-bold">Initializing...</span>
-                                            </div>
-                                        </div>
-                                        <div id="provider-status-badge" class="provider-status-pill">
-                                            <span class="pill-text">Selected</span>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 <div id="setup-dashboard" class="provider-grid grid grid-cols-3 gap-2.5 sm:gap-4 mb-4 sm:mb-5">
                                     <!-- Local Server Card -->
-                                    <div id="setup-local-btn" class="provider-card provider-card--local group relative transition-all duration-300" role="group" aria-label="Local Server provider">
+                                    <div id="setup-local-btn" class="provider-card provider-card--local group relative transition-all duration-300" role="button" tabindex="0" aria-label="Select Local Server provider and open settings" aria-pressed="false">
                                         <div class="provider-card-accent"></div>
 
                                         <div class="provider-card-body">
@@ -392,14 +370,14 @@
                                                     <span class="provider-tag">Offline</span>
                                                 </div>
                                             </div>
-                                            <button type="button" class="provider-card-arrow" data-provider-action="settings" aria-label="Select Local Server provider and open settings">
+                                            <div class="provider-card-arrow" aria-hidden="true">
                                                 <i class="fas fa-chevron-right"></i>
-                                            </button>
+                                            </div>
                                         </div>
                                     </div>
 
                                     <!-- OpenRouter Card -->
-                                    <div id="setup-openrouter-btn" class="provider-card provider-card--openrouter group relative transition-all duration-300" role="group" aria-label="OpenRouter provider">
+                                    <div id="setup-openrouter-btn" class="provider-card provider-card--openrouter group relative transition-all duration-300" role="button" tabindex="0" aria-label="Select OpenRouter provider and open settings" aria-pressed="false">
                                         <div class="provider-card-accent"></div>
 
                                         <div class="provider-card-body">
@@ -414,14 +392,14 @@
                                                     <span class="provider-tag">BYOK</span>
                                                 </div>
                                             </div>
-                                            <button type="button" class="provider-card-arrow" data-provider-action="settings" aria-label="Select OpenRouter provider and open settings">
+                                            <div class="provider-card-arrow" aria-hidden="true">
                                                 <i class="fas fa-chevron-right"></i>
-                                            </button>
+                                            </div>
                                         </div>
                                     </div>
 
                                     <!-- Custom Endpoint Card -->
-                                    <div id="setup-custom-btn" class="provider-card provider-card--custom group relative transition-all duration-300" role="group" aria-label="Custom API provider">
+                                    <div id="setup-custom-btn" class="provider-card provider-card--custom group relative transition-all duration-300" role="button" tabindex="0" aria-label="Select Custom API provider and open settings" aria-pressed="false">
                                         <div class="provider-card-accent"></div>
 
                                         <div class="provider-card-body">
@@ -436,9 +414,9 @@
                                                     <span class="provider-tag">Flexible</span>
                                                 </div>
                                             </div>
-                                            <button type="button" class="provider-card-arrow" data-provider-action="settings" aria-label="Select Custom API provider and open settings">
+                                            <div class="provider-card-arrow" aria-hidden="true">
                                                 <i class="fas fa-chevron-right"></i>
-                                            </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -537,7 +515,7 @@
                     <!-- AI Disclaimer Text -->
                     <div id="ai-disclaimer" class="text-center text-xs mt-1.5 mb-1"
                         style="color: var(--text-muted); font-weight: normal;">
-                        AI models can be inaccurate. Check for errors.
+                        AI models can be inaccurate. .
                     </div>
                 </div>
 

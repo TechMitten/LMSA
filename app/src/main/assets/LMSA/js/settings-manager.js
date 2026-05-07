@@ -12,8 +12,6 @@ import {
   openAICompatibleApiKeyInput,
   showModelLabelCheckbox,
   modeIndicator,
-  providerStatusContainer,
-  activeProviderName,
 } from "./dom-elements.js";
 
 import { applyThinkingVisibility, refreshAllMessages, applyModelLabelVisibility } from "./ui-manager.js";
@@ -1734,10 +1732,7 @@ function syncWelcomeProviderCardState(cardId, isActive) {
   }
 
   cardElement.classList.toggle('active', isActive);
-  const selectControl = cardElement.querySelector('.provider-card-arrow');
-  if (selectControl) {
-    selectControl.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-  }
+  cardElement.setAttribute('aria-pressed', isActive ? 'true' : 'false');
 }
 
 function updateProviderUI() {
@@ -1824,7 +1819,6 @@ function updateProviderUI() {
     syncAutoGenerateTitlesUI();
   }
 
-  updateProviderStatusIndicator(currentProvider);
 }
 
 function refreshLocalLmStudioLoadedModelState() {
@@ -2045,46 +2039,6 @@ export function saveOpenAICompatibleSettings() {
   }
 }
 
-/**
- * Updates the visual status indicator for the selected provider.
- * @param {string} [provider] - Optional provider name. If omitted, uses current state.
- */
-export function updateProviderStatusIndicator(provider) {
-  if (!providerStatusContainer || !activeProviderName) return;
-
-  let currentProvider = 'none';
-  if (provider) {
-    currentProvider = provider;
-  } else {
-    if (useOpenRouter) currentProvider = 'openrouter';
-    else if (useOpenAICompatible) currentProvider = 'openai-compatible';
-    else currentProvider = 'local';
-  }
-
-  providerStatusContainer.setAttribute('data-provider', currentProvider);
-
-  let displayName = 'No Provider Selected';
-  if (currentProvider === 'local') displayName = 'Local Server';
-  else if (currentProvider === 'openrouter') displayName = 'OpenRouter';
-  else if (currentProvider === 'openai-compatible') displayName = 'Custom API';
-
-  activeProviderName.textContent = displayName;
-  
-  // Update the status pill text based on state
-  const statusPillText = providerStatusContainer.querySelector('.pill-text');
-  if (statusPillText) {
-    statusPillText.textContent = currentProvider === 'none' ? 'Ready' : 'Selected';
-  }
-
-  // Update icon to match selected provider
-  const statusIcon = providerStatusContainer.querySelector('.status-icon-glow i');
-  if (statusIcon) {
-    if (currentProvider === 'local') statusIcon.className = 'fas fa-server';
-    else if (currentProvider === 'openrouter') statusIcon.className = 'fas fa-cloud';
-    else statusIcon.className = 'fas fa-plug';
-  }
-}
-
 export function applyConnectionProviderSelection(provider) {
   const normalizedProvider = provider === 'openrouter' || provider === 'openai-compatible'
     ? provider
@@ -2117,7 +2071,6 @@ export function applyConnectionProviderSelection(provider) {
   syncWelcomeProviderCardState('setup-custom-btn', normalizedProvider === 'openai-compatible');
 
   updateProviderUI();
-  updateProviderStatusIndicator(normalizedProvider);
 
   if (useOpenRouter) {
     window.currentLoadedModel = localStorage.getItem('openRouterSelectedModel') || null;

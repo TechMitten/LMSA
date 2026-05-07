@@ -296,14 +296,22 @@ export function initializeEventHandlers() {
             return;
         }
 
-        const settingsControl = cardElement.querySelector('.provider-card-arrow');
-
-        if (settingsControl && settingsControl.dataset.providerEntryBound !== 'true') {
-            settingsControl.dataset.providerEntryBound = 'true';
-            settingsControl.addEventListener('click', () => {
+        if (cardElement.dataset.providerEntryBound !== 'true') {
+            const openProviderSettings = () => {
                 applyConnectionProviderSelection(provider);
                 showSettingsModal();
-                settingsControl.blur();
+                cardElement.blur();
+            };
+
+            cardElement.dataset.providerEntryBound = 'true';
+            cardElement.addEventListener('click', openProviderSettings);
+            cardElement.addEventListener('keydown', (event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') {
+                    return;
+                }
+
+                event.preventDefault();
+                openProviderSettings();
             });
         }
     };

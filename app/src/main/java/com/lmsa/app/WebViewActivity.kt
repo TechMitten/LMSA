@@ -72,7 +72,6 @@ import com.google.android.gms.ads.LoadAdError
 import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
-import com.google.android.ump.FormError
 
 import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
@@ -87,6 +86,7 @@ import com.android.billingclient.api.*
 class WebViewActivity : AppCompatActivity() {
 
     private val TAG = "LMSA_WebView"
+    private lateinit var webView: WebView
 
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private lateinit var fileChooserLauncher: ActivityResultLauncher<Intent>
@@ -138,6 +138,7 @@ class WebViewActivity : AppCompatActivity() {
     // Billing Client
     private lateinit var billingClient: BillingClient
     private lateinit var consentInformation: ConsentInformation
+    private var hasStartedLaunchConsentFlow = false
     private var isAdsInitialized = false
     private var isKeyboardVisible = false
     private var bannerAdView: AdView? = null
@@ -178,6 +179,7 @@ class WebViewActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         hideSystemBars()
         setContentView(R.layout.activity_webview)
+        webView = findViewById(R.id.webView)
         applySystemBarInsets()
 
         // Set up global exception handler
@@ -193,16 +195,15 @@ class WebViewActivity : AppCompatActivity() {
             .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
             .build()
 
-        startStartupEntitlementResolution()
-        startBillingConnection()
-        
-        setupConsent()
-        
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         isPremium = prefs.getBoolean(PREF_IS_PREMIUM, false)
         isDebugMode = prefs.getBoolean(PREF_IS_DEBUG_MODE, false)
-        
+
+        startStartupEntitlementResolution()
+        startBillingConnection()
+
         updatePremiumUiState()
+        startLaunchConsentFlow()
 
         // Initialize AudioManager for TTS audio focus management
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -279,7 +280,6 @@ class WebViewActivity : AppCompatActivity() {
                                     outputStream.write(imageBytes)
                                     Log.d(TAG, "Image file saved successfully to: $uri")
                                     // Notify JavaScript that the image was saved successfully
-                                    val webView: WebView = findViewById(R.id.webView)
                                     webView.post {
                                         webView.evaluateJavascript(
                                             "if (window.onImageSaved) window.onImageSaved(true);",
@@ -291,7 +291,6 @@ class WebViewActivity : AppCompatActivity() {
                                     outputStream.write(pendingFileContent!!.toByteArray())
                                     Log.d(TAG, "Text file saved successfully to: $uri")
                                     // Notify JavaScript that the file was saved successfully
-                                    val webView: WebView = findViewById(R.id.webView)
                                     webView.post {
                                         webView.evaluateJavascript(
                                             "if (window.onFileSaved) window.onFileSaved(true);",
@@ -303,7 +302,6 @@ class WebViewActivity : AppCompatActivity() {
                         } catch (e: IOException) {
                             Log.e(TAG, "Error saving file", e)
                             // Notify JavaScript that the file save failed
-                            val webView: WebView = findViewById(R.id.webView)
                             webView.post {
                                 if (isImageFile) {
                                     webView.evaluateJavascript(
@@ -321,7 +319,6 @@ class WebViewActivity : AppCompatActivity() {
                     } else {
                         Log.e(TAG, "File save cancelled or no content to save")
                         // Notify JavaScript that the file save was cancelled
-                        val webView: WebView = findViewById(R.id.webView)
                         webView.post {
                             if (isImageFile) {
                                 webView.evaluateJavascript(
@@ -339,7 +336,6 @@ class WebViewActivity : AppCompatActivity() {
                 } else {
                     Log.d(TAG, "File save cancelled by user")
                     // Notify JavaScript that the file save was cancelled
-                    val webView: WebView = findViewById(R.id.webView)
                     webView.post {
                         if (isImageFile) {
                             webView.evaluateJavascript(
@@ -399,7 +395,6 @@ class WebViewActivity : AppCompatActivity() {
 
         syncWebContentsDebuggingState()
 
-        val webView: WebView = findViewById(R.id.webView)
         val webSettings: WebSettings = webView.settings
         // Include a stable app token so Cloudflare can allow trusted app requests.
         // Keep the default UA prefix for compatibility with sites that inspect browser capabilities.
@@ -575,7 +570,6 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun updateGestureExclusionRects() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val webView: WebView = findViewById(R.id.webView)
             val density = resources.displayMetrics.density
             
             // Reverting to a strict 200dp height cap, as providing a full-height rect 
@@ -597,7 +591,6 @@ class WebViewActivity : AppCompatActivity() {
     private fun updatePremiumUiState() {
         runOnUiThread {
             val effectivePremium = hasEffectivePremium()
-            val webView: WebView = findViewById(R.id.webView)
 
             val jsCommand = "if(typeof updateUiForPremium === 'function') { updateUiForPremium($effectivePremium); }"
             webView.evaluateJavascript(jsCommand, null)
@@ -606,20 +599,41 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
+    private fun startLaunchConsentFlow() {
+        if (hasStartedLaunchConsentFlow) {
+            Log.d(TAG, "UMP: Launch consent flow already started")
+            return
+        }
+
+        hasStartedLaunchConsentFlow = true
+        Log.d(
+            TAG,
+            "UMP: Starting launch consent flow (premium=${hasEffectivePremium()}, debug=$isDebugMode)"
+        )
+        setupConsent()
+    }
+
     private fun setupConsent() {
         val params = ConsentRequestParameters.Builder()
             .setTagForUnderAgeOfConsent(false)
             .build()
 
         consentInformation = UserMessagingPlatform.getConsentInformation(this)
+        Log.d(
+            TAG,
+            "UMP: Requesting consent info update (cached canRequestAds=${consentInformation.canRequestAds()})"
+        )
         consentInformation.requestConsentInfoUpdate(
             this,
             params,
             {
+                Log.d(TAG, "UMP: Consent info update succeeded; loading consent form if required")
                 UserMessagingPlatform.loadAndShowConsentFormIfRequired(this) { formError ->
                     if (formError != null) {
                         Log.e(TAG, "UMP: Form error: ${formError.message}")
                     }
+                    Log.d(TAG, "UMP: Consent flow completed (canRequestAds=${consentInformation.canRequestAds()})")
+                    notifyConsentUpdated()
                     if (consentInformation.canRequestAds()) {
                         initializeAds()
                     }
@@ -627,20 +641,37 @@ class WebViewActivity : AppCompatActivity() {
             },
             { requestConsentError ->
                 Log.e(TAG, "UMP: Consent update failed: ${requestConsentError.message}")
+                Log.d(
+                    TAG,
+                    "UMP: Using cached consent state after failure (canRequestAds=${consentInformation.canRequestAds()})"
+                )
                 if (consentInformation.canRequestAds()) {
                     initializeAds()
                 }
+                notifyConsentUpdated()
             }
         )
-        
-        // If consent information is already available (not first launch), try initializing
+
+        // If consent information is already cached from a prior launch, initialize ads immediately.
         if (consentInformation.canRequestAds()) {
+            Log.d(TAG, "UMP: Cached consent already allows ads during launch")
             initializeAds()
+        }
+    }
+
+    private fun notifyConsentUpdated() {
+        runOnUiThread {
+            webView.evaluateJavascript("document.dispatchEvent(new CustomEvent('ump-consent-updated'));", null)
         }
     }
 
     private fun initializeAds() {
         if (isAdsInitialized) return
+
+        if (hasEffectivePremium()) {
+            Log.d(TAG, "AdMob: Skipping SDK initialization because premium is active")
+            return
+        }
         
         runOnUiThread {
             Log.d(TAG, "Initializing AdMob SDK")
@@ -901,7 +932,6 @@ class WebViewActivity : AppCompatActivity() {
     private fun setupBackPressHandler() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                val webView: WebView = findViewById(R.id.webView)
                 if (webView.canGoBack()) {
                     webView.goBack()
                 } else {
@@ -932,7 +962,6 @@ class WebViewActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        val webView: WebView = findViewById(R.id.webView)
         webView.onPause()
         // Stop any ongoing TTS cleanly so audio doesn't bleed into the background.
         if (isSpeakingChunks || textToSpeech?.isSpeaking == true) {
@@ -966,7 +995,6 @@ class WebViewActivity : AppCompatActivity() {
             startBillingConnection()
         }
         updatePremiumUiState()
-        val webView: WebView = findViewById(R.id.webView)
         webView.onResume()
         hasCompletedInitialResume = true
         
@@ -1102,7 +1130,6 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun dispatchOfflineGateInternetProbeResult(hasInternet: Boolean) {
         runOnUiThread {
-            val webView: WebView = findViewById(R.id.webView)
             webView.evaluateJavascript(
                 "if (typeof window.onNativeOfflineInternetProbeResult === 'function') { window.onNativeOfflineInternetProbeResult($hasInternet); }",
                 null
@@ -1194,14 +1221,12 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun runTTSJavascript(script: String) {
-        val webView: WebView = findViewById(R.id.webView)
         webView.post {
             webView.evaluateJavascript(script, null)
         }
     }
 
     private fun runLifecycleJavascript(script: String) {
-        val webView: WebView = findViewById(R.id.webView)
         webView.post {
             webView.evaluateJavascript(script, null)
         }
@@ -1444,7 +1469,6 @@ class WebViewActivity : AppCompatActivity() {
         content: String? = null,
         errorMessage: String? = null
     ) {
-        val webView: WebView = findViewById(R.id.webView)
         val jsCommand = buildString {
             append("if (window.onLmStudioSystemPromptImportResult) window.onLmStudioSystemPromptImportResult({")
             append("success:")
@@ -1540,7 +1564,6 @@ class WebViewActivity : AppCompatActivity() {
                 clearExternalLaunchMarker()
                 Log.e(TAG, "Error launching file saver", e)
                 // Notify JavaScript that the save failed
-                val webView: WebView = findViewById(R.id.webView)
                 webView.post {
                     webView.evaluateJavascript(
                         "if (window.onFileSaved) window.onFileSaved(false);",
@@ -1589,7 +1612,6 @@ class WebViewActivity : AppCompatActivity() {
                 clearExternalLaunchMarker()
                 Log.e(TAG, "Error launching image file saver", e)
                 // Notify JavaScript that the save failed
-                val webView: WebView = findViewById(R.id.webView)
                 webView.post {
                     webView.evaluateJavascript(
                         "if (window.onImageSaved) window.onImageSaved(false);",
@@ -1657,7 +1679,6 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun notifyRestorePurchasesResult(success: Boolean, message: String) {
         runOnUiThread {
-            val webView: WebView = findViewById(R.id.webView)
             val escapedMessage = escapeJsString(message)
             val jsCommand = "if (window.onRestorePurchasesResult) window.onRestorePurchasesResult(${if (success) "true" else "false"}, '$escapedMessage');"
             webView.evaluateJavascript(jsCommand, null)
@@ -2618,7 +2639,6 @@ class WebViewActivity : AppCompatActivity() {
         @JavascriptInterface
         fun dismissKeyboard() {
             runOnUiThread {
-                val webView: WebView = findViewById(R.id.webView)
                 val targetView = currentFocus ?: webView
                 val windowToken = targetView.windowToken ?: webView.windowToken ?: window.decorView.windowToken
                 val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
@@ -2649,7 +2669,6 @@ class WebViewActivity : AppCompatActivity() {
     inner class HapticInterface {
         private fun performHaptic(type: String) {
             runOnUiThread {
-                val webView: WebView = findViewById(R.id.webView)
                 webView.isHapticFeedbackEnabled = true
 
                 val feedbackConstant = when (type.lowercase(Locale.US)) {
@@ -2755,7 +2774,6 @@ class WebViewActivity : AppCompatActivity() {
                             biometricPromptShowing = false
                             Log.e(TAG, "Biometric auth error: $errString")
                             // You might want to notify JS here, depending on needs. Let's send a failure call
-                            val webView: WebView = findViewById(R.id.webView)
                             webView.evaluateJavascript("if(window.onBiometricFailure) window.onBiometricFailure('$errString');", null)
                         }
 
@@ -2763,7 +2781,6 @@ class WebViewActivity : AppCompatActivity() {
                             super.onAuthenticationSucceeded(result)
                             biometricPromptShowing = false
                             Log.d(TAG, "Biometric auth succeeded")
-                            val webView: WebView = findViewById(R.id.webView)
                             webView.evaluateJavascript("if(window.onBiometricSuccess) window.onBiometricSuccess();", null)
                         }
 
@@ -2847,12 +2864,34 @@ class WebViewActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun isPrivacyOptionsRequired(): Boolean {
+            return if (::consentInformation.isInitialized) {
+                consentInformation.privacyOptionsRequirementStatus ==
+                        ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED
+            } else {
+                false
+            }
+        }
+
+        @JavascriptInterface
         fun showPrivacyOptionsForm() {
             runOnUiThread {
                 UserMessagingPlatform.showPrivacyOptionsForm(this@WebViewActivity) { formError ->
                     if (formError != null) {
                         Log.e(TAG, "UMP: Privacy options form error: ${formError.message}")
                     }
+                    // Sync ad visibility immediately after form dismissal in case consent was revoked
+                    this@WebViewActivity.updateAdVisibility()
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun resetConsent() {
+            runOnUiThread {
+                if (::consentInformation.isInitialized) {
+                    consentInformation.reset()
+                    Log.d(TAG, "UMP: Consent information reset for testing")
                 }
             }
         }

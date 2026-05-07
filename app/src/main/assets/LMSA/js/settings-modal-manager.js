@@ -48,7 +48,7 @@ function hasPremiumAccess() {
 }
 
 function requiresPremiumForConnectionPreset(type) {
-    return type === 'openrouter' || type === 'openai-compatible';
+    return type === 'openrouter';
 }
 
 function requestConnectionPresetPremiumAccess(type) {
@@ -2630,11 +2630,6 @@ function initializeConnectionInputModals() {
     const configOpenAICompatibleBtn = document.getElementById('configure-openai-compatible-btn');
     if (configOpenAICompatibleBtn) {
         configOpenAICompatibleBtn.addEventListener('click', () => {
-            if (!hasPremiumAccess()) {
-                openPremiumModal('Custom Endpoint');
-                return;
-            }
-
             const endpointInput = document.getElementById('openai-compatible-endpoint');
             const keyInput = document.getElementById('openai-compatible-api-key');
             const modelInput = document.getElementById('openai-compatible-model-name');
