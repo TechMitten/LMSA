@@ -3,8 +3,7 @@ export const modelModals = `
     <div id="model-modal"
         class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center hidden modal-container"
         aria-labelledby="model-title" role="dialog" aria-modal="true" style="z-index: 2000;">
-        <div class="model-modal-panel rounded-2xl w-[520px] max-w-[95%] max-h-[85vh] overflow-hidden flex flex-col modal-content"
-            style="background: var(--modal-bg);">
+        <div class="model-modal-panel rounded-2xl w-[520px] max-w-[95%] max-h-[85vh] overflow-hidden flex flex-col modal-content">
 
             <!-- Header -->
             <div class="model-modal-header px-5 py-4">
