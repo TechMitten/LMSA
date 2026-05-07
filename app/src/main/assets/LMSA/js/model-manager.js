@@ -778,20 +778,11 @@ function displayCurrentModel(modelName) {
         } else {
             currentModelFullName = modelName;
             currentModelDisplay.innerHTML = `
-                <button class="model-current-line model-current-line--interactive" id="current-model-clickable" type="button" title="Click to see full model name">
+                <div class="model-current-line">
                     <span class="model-current-label">Current model</span>
                     <span class="model-current-value model-current-value--title">${modelName}</span>
-                </button>
+                </div>
             `;
-        }
-
-        const clickable = document.getElementById('current-model-clickable');
-        if (clickable) {
-            clickable.onclick = function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                showFullModelNameModal();
-            };
         }
 
 
@@ -966,7 +957,7 @@ function displayAvailableModels(models, loadedModelId) {
                 const orProviderName = isCloud ? model.id.split('/')[0] : 'local';
                 modelElement.innerHTML = `
                 <div class="model-card-body">
-                    <div class="model-card-info" data-model-id="${model.id}" title="Click to see full model name">
+                    <div class="model-card-info" data-model-id="${model.id}">
                         <span class="model-name">${orDisplayName}</span>
                         <span class="model-provider">${orProviderName}</span>
                     </div>
@@ -1006,17 +997,6 @@ function displayAvailableModels(models, loadedModelId) {
                             loadButton.classList.remove('hover:from-blue-600', 'hover:to-blue-700');
                         }
                     }
-                }
-
-                // Add event listener to model info area to show full model name
-                const cardInfo = modelElement.querySelector('.model-card-info');
-                if (cardInfo) {
-                    cardInfo.onclick = function (e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        currentModelFullName = model.id;
-                        showFullModelNameModal();
-                    };
                 }
 
                 // Add event listener to the "Set Default" button
@@ -1108,7 +1088,7 @@ function displayPotentialModels(models) {
                 modelElement.className = 'model-item model-card';
                 modelElement.innerHTML = `
                 <div class="model-card-body">
-                    <div class="model-card-info" data-model-id="${model.id}" title="Click to see full model name">
+                    <div class="model-card-info" data-model-id="${model.id}">
                         <span class="model-name">${displayName}</span>
                         <span class="model-provider">${providerName}</span>
                     </div>
@@ -1146,17 +1126,6 @@ function displayPotentialModels(models) {
                         loadButton.classList.add('opacity-50', 'cursor-not-allowed');
                         loadButton.classList.remove('hover:from-blue-600', 'hover:to-blue-700');
                     }
-                }
-
-                // Add event listener to model info area to show full model name
-                const cardInfo = modelElement.querySelector('.model-card-info');
-                if (cardInfo) {
-                    cardInfo.onclick = function (e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        currentModelFullName = model.id;
-                        showFullModelNameModal();
-                    };
                 }
 
                 // Add event listener to the "Set Default" button

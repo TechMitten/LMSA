@@ -1742,7 +1742,6 @@ body.keyboard-visible #chat-form,
     .model-card-info {
         flex: 1;
         min-width: 0;
-        cursor: pointer;
     }
     .model-card-info .model-name {
         display: block;
@@ -1750,9 +1749,9 @@ body.keyboard-visible #chat-form,
         font-weight: 600;
         color: #eef2f7;
         line-height: 1.3;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
     body.light-theme .model-card-info .model-name {
         color: #1e293b;
