@@ -7,33 +7,45 @@ export const modelModals = `
             style="background: var(--modal-bg);">
 
             <!-- Header -->
-            <div class="model-modal-header flex justify-between items-center px-5 py-4" style="padding-top:1rem;padding-bottom:1rem;">
-                <h2 id="model-title" class="text-base font-semibold flex items-center gap-2.5 text-white light:text-gray-900">
-                    Models
-                </h2>
-                <button id="close-model"
-                    class="text-gray-200 light:text-gray-700 hover:text-white light:hover:text-gray-900 transition-colors focus:outline-none rounded-lg w-10 h-10 flex items-center justify-center bg-white/10 light:bg-gray-100/90 hover:bg-white/20 light:hover:bg-gray-200 border border-white/15 light:border-gray-300">
-                    <i class="fas fa-times text-base"></i>
-                </button>
+            <div class="model-modal-header px-5 py-4">
+                <div class="model-modal-header-main">
+                    <div class="model-modal-title-group">
+                        <p class="model-modal-eyebrow">Model Picker</p>
+                        <h2 id="model-title" class="text-base font-semibold flex items-center gap-2.5 text-white light:text-gray-900">
+                            Local Server
+                        </h2>
+                    </div>
+                    <div class="model-modal-header-actions">
+                        <button id="refresh-models-btn" class="model-modal-refresh-btn" type="button" aria-label="Refresh models">
+                            <i class="fas fa-rotate-right" aria-hidden="true"></i>
+                        </button>
+                        <button id="close-model"
+                            class="text-gray-200 light:text-gray-700 hover:text-white light:hover:text-gray-900 transition-colors focus:outline-none rounded-full w-10 h-10 flex items-center justify-center">
+                            <i class="fas fa-times text-base"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="current-model" class="model-current-inline" title="Click to see full model name">
+                    Loading...
+                </div>
+            </div>
+
+            <div class="model-modal-toolbar px-5 py-3">
+                <div class="model-modal-toolbar-row">
+                    <div id="model-source-pill" class="model-modal-pill" aria-live="polite">
+                        <i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>
+                        <span>Checking models...</span>
+                    </div>
+                </div>
+                <div id="model-search-container" class="mt-3"></div>
+                <div id="mobile-instructions" class="model-mobile-tip hidden">
+                    <i class="fas fa-hand-pointer" aria-hidden="true"></i>
+                    <span>Tap a model name to view the full ID before loading it.</span>
+                </div>
             </div>
 
             <!-- Body -->
-            <div class="overflow-y-auto flex-grow px-5 pb-5 model-modal-scroll" style="padding-top:1rem;">
-
-                <!-- Active model -->
-                <div id="active-model-section" style="margin-bottom:1rem;">
-                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:0 2px;">
-                        <span class="model-status-dot" style="width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 6px rgba(52,211,153,0.6);display:inline-block;flex-shrink:0;"></span>
-                        <span style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6ee7b7;">Currently Loaded</span>
-                    </div>
-                    <div id="current-model"
-                        class="model-active-display"
-                        style="font-size:13px;font-weight:500;color:#e2e8f0;padding:10px 14px;border-radius:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
-                        title="Click to see full model name">
-                        Loading...
-                    </div>
-                </div>
-
+            <div class="overflow-y-auto grow px-5 pb-5 model-modal-scroll" style="padding-top:0.9rem;">
                 <!-- Available models list -->
                 <div id="available-models-list" class="space-y-1">
                     <div class="animate-pulse space-y-1.5 pt-1">
@@ -58,13 +70,16 @@ export const modelModals = `
                     Model Name
                 </h2>
                 <button id="close-full-model-name"
-                    class="text-gray-200 light:text-gray-700 hover:text-white light:hover:text-gray-900 transition-colors focus:outline-none rounded-lg w-10 h-10 flex items-center justify-center bg-white/10 light:bg-gray-100/90 hover:bg-white/20 light:hover:bg-gray-200 border border-white/15 light:border-gray-300">
+                    class="model-name-modal-close text-gray-200 light:text-gray-700 hover:text-white light:hover:text-gray-900 transition-colors focus:outline-none rounded-lg w-10 h-10 flex items-center justify-center">
                     <i class="fas fa-times text-base"></i>
                 </button>
             </div>
-            <div class="px-5 pb-5">
+            <div class="model-name-modal-content px-5 pb-5">
+                <div class="model-name-modal-id-shell">
+                    <p class="model-name-modal-id-label">Full model ID</p>
                 <div id="full-model-name"
-                    class="model-active-display text-sm font-medium text-white light:text-gray-800 px-3.5 py-3 rounded-lg break-all">
+                    class="model-active-display model-name-modal-id text-sm font-medium text-white light:text-gray-800 px-3.5 py-3 rounded-lg break-all">
+                </div>
                 </div>
             </div>
         </div>

@@ -57,6 +57,50 @@ function syncTransientModelBodyLock() {
     }
 }
 
+function getModelSourceMeta(modelCount = allAvailableModels.length) {
+    if (getUseOpenRouter()) {
+        return {
+            icon: 'fa-cloud',
+            label: 'OpenRouter Catalog',
+            detail: ''
+        };
+    }
+
+    if (getUseOpenAICompatible()) {
+        return {
+            icon: 'fa-plug',
+            label: 'Connected Provider',
+            detail: ''
+        };
+    }
+
+    return {
+        icon: 'fa-microchip',
+        label: 'Local Server',
+        detail: ''
+    };
+}
+
+function updateModelSourcePill(modelCount = allAvailableModels.length) {
+    const sourcePill = document.getElementById('model-source-pill');
+    if (!sourcePill) {
+        return;
+    }
+
+    const meta = getModelSourceMeta(modelCount);
+    sourcePill.innerHTML = meta.detail
+        ? `
+        <i class="fas ${meta.icon}" aria-hidden="true"></i>
+        <span>${meta.label}</span>
+        <span class="model-modal-pill-divider" aria-hidden="true"></span>
+        <span>${meta.detail}</span>
+    `
+        : `
+        <i class="fas ${meta.icon}" aria-hidden="true"></i>
+        <span>${meta.label}</span>
+    `;
+}
+
 /**
  * Initializes the model manager
  */
@@ -124,6 +168,7 @@ export function showModelModal() {
         if (currentModelDisplay) {
             currentModelDisplay.textContent = 'Loading...';
         }
+        updateModelSourcePill(0);
 
         if (availableModelsList) {
             availableModelsList.innerHTML = `
@@ -152,12 +197,15 @@ export function showModelModal() {
             if (mobileInstructionsEl) mobileInstructionsEl.classList.add('hidden');
         }
 
-        // Update section heading to match mode
-        const currentModelSectionHeading = modelModal.querySelector('.mb-6.p-5 h3');
-        if (currentModelSectionHeading) {
-            currentModelSectionHeading.innerHTML = (getUseOpenRouter() || getUseOpenAICompatible())
-                ? '<i class="fas fa-check-circle mr-2"></i>Active Model'
-                : '<i class="fas fa-check-circle mr-2"></i>Currently Loaded Model';
+        const modalTitle = document.getElementById('model-title');
+        if (modalTitle) {
+            if (getUseOpenRouter()) {
+                modalTitle.textContent = 'OpenRouter';
+            } else if (getUseOpenAICompatible()) {
+                modalTitle.textContent = 'Connected Provider';
+            } else {
+                modalTitle.textContent = 'Local Server';
+            }
         }
 
         // Load model information
@@ -403,8 +451,9 @@ async function refreshModels() {
     // Add visual feedback to the refresh button if it exists
     if (refreshModelsButton) {
         refreshModelsButton.disabled = true;
-        refreshModelsButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Refreshing...';
+        refreshModelsButton.innerHTML = '<i class="fas fa-rotate-right fa-spin" aria-hidden="true"></i>';
     }
+    updateModelSourcePill(0);
 
     try {
         // When refreshing models, temporarily set isInitialStartup to true
@@ -424,7 +473,7 @@ async function refreshModels() {
         // Reset the refresh button if it exists
         if (refreshModelsButton) {
             refreshModelsButton.disabled = false;
-            refreshModelsButton.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Refresh Models';
+            refreshModelsButton.innerHTML = '<i class="fas fa-rotate-right" aria-hidden="true"></i>';
         }
     }
 }
@@ -721,18 +770,18 @@ function displayCurrentModel(modelName) {
         if (modelName === 'dummy/no-model-selected') {
             currentModelFullName = 'No Model Selected';
             currentModelDisplay.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-exclamation-circle text-yellow-400 text-sm flex-shrink-0"></i>
-                    <span class="truncate" style="color: #facc15;">Please select a model to continue</span>
+                <div class="model-current-line model-current-line--warning">
+                    <span class="model-current-label">Current model:</span>
+                    <span class="model-current-value">Please select a model</span>
                 </div>
             `;
         } else {
             currentModelFullName = modelName;
             currentModelDisplay.innerHTML = `
-                <div class="flex items-center gap-3 cursor-pointer" id="current-model-clickable" title="Click to see full model name">
-                    <i class="fas fa-robot text-emerald-400 text-sm flex-shrink-0"></i>
-                    <span class="truncate">${modelName}</span>
-                </div>
+                <button class="model-current-line model-current-line--interactive" id="current-model-clickable" type="button" title="Click to see full model name">
+                    <span class="model-current-label">Current model:</span>
+                    <span class="model-current-value">${modelName}</span>
+                </button>
             `;
         }
 
@@ -750,32 +799,38 @@ function displayCurrentModel(modelName) {
 }
 
 /**
- * Attaches a live search/filter bar to the model list (OpenRouter only).
+ * Attaches a live search/filter bar to the model list.
  * Must be called after the section title has been appended but before model items.
- * @param {HTMLElement} container - The parent list container
+ * @param {HTMLElement} searchContainer - The container where the search input will be inserted
+ * @param {HTMLElement} itemsContainer - The container where the model items are located
+ * @param {string} initialQuery - Search text to restore after a re-render
  */
-function attachModelSearch(container) {
+function attachModelSearch(searchContainer, itemsContainer, initialQuery = '') {
+    if (!searchContainer || !itemsContainer) {
+        return null;
+    }
+
+    searchContainer.innerHTML = '';
+
     const wrapper = document.createElement('div');
     wrapper.id = 'or-model-search-wrapper';
-    wrapper.className = 'mb-5 pb-1';
+    wrapper.className = 'model-search-shell';
     wrapper.innerHTML = `
-        <div style="position:relative;width:100%;">
-            <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:12px;color:#4b5563;pointer-events:none;"></i>
+        <div class="model-search-field" style="position:relative;width:100%;">
+            <i class="fas fa-search model-search-icon" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none;"></i>
             <input id="or-model-search"
                 type="text"
-                placeholder="Search models…"
+                placeholder="Search models..."
                 autocomplete="off"
-                style="width:100%;box-sizing:border-box;padding:10px 36px 10px 34px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:#e2e8f0;font-size:13px;outline:none;transition:border-color 0.15s;"
-                onfocus="this.style.borderColor='rgba(59,130,246,0.4)'"
-                onblur="this.style.borderColor='rgba(255,255,255,0.08)'"
+                class="model-search-input"
             />
-            <button id="or-model-search-clear" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);display:none;background:none;border:none;cursor:pointer;color:#6b7280;padding:4px;border-radius:4px;">
+            <button id="or-model-search-clear" class="model-search-clear" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);display:none;">
                 <i class="fas fa-times" style="font-size:11px;"></i>
             </button>
         </div>
-        <div id="or-model-search-count" style="margin-top:6px;font-size:11px;text-align:right;color:#4b5563;padding-right:4px;"></div>
+        <div id="or-model-search-count" class="model-search-count" style="margin-top:6px;font-size:11px;text-align:right;padding-right:4px;"></div>
     `;
-    container.appendChild(wrapper);
+    searchContainer.appendChild(wrapper);
 
     const searchInput = wrapper.querySelector('#or-model-search');
     const clearBtn = wrapper.querySelector('#or-model-search-clear');
@@ -784,30 +839,34 @@ function attachModelSearch(container) {
     function applyFilter() {
         const q = searchInput.value.toLowerCase().trim();
         clearBtn.style.display = q === '' ? 'none' : 'block';
-        const items = container.querySelectorAll('.model-item');
+        const items = itemsContainer.querySelectorAll('.model-item');
         let visible = 0;
         items.forEach(item => {
-            const name = (item.querySelector('.model-name')?.textContent || '').toLowerCase();
-            const show = q === '' || name.includes(q);
+            const haystack = item.dataset.search || [
+                item.querySelector('.model-name')?.textContent || '',
+                item.querySelector('.model-provider')?.textContent || ''
+            ].join(' ').toLowerCase();
+            const show = q === '' || haystack.includes(q);
             item.style.display = show ? '' : 'none';
             if (show) visible++;
         });
         const noResultsId = 'or-model-search-empty';
-        let noResults = container.querySelector('#' + noResultsId);
+        let noResults = itemsContainer.querySelector('#' + noResultsId);
         if (q !== '' && visible === 0) {
             if (!noResults) {
                 noResults = document.createElement('div');
                 noResults.id = noResultsId;
-                noResults.className = 'py-4 text-center text-sm';
-                noResults.style.color = '#9ca3af';
+                noResults.className = 'model-search-empty py-4 text-center text-sm';
                 noResults.innerHTML = '<i class="fas fa-search mr-2 opacity-50"></i>No models match your search';
-                container.appendChild(noResults);
+                itemsContainer.appendChild(noResults);
             }
             noResults.style.display = '';
         } else if (noResults) {
             noResults.style.display = 'none';
         }
-        countDisplay.textContent = q !== '' ? `${visible} of ${items.length} models` : '';
+        countDisplay.textContent = q !== ''
+            ? `${visible} of ${items.length} models`
+            : '';
     }
 
     searchInput.addEventListener('input', applyFilter);
@@ -816,6 +875,19 @@ function attachModelSearch(container) {
         applyFilter();
         searchInput.focus();
     });
+
+    if (initialQuery) {
+        searchInput.value = initialQuery;
+    }
+    applyFilter();
+
+    return {
+        applyFilter,
+        setValue(value) {
+            searchInput.value = value;
+            applyFilter();
+        }
+    };
 }
 
 /**
@@ -825,54 +897,38 @@ function attachModelSearch(container) {
  */
 function displayAvailableModels(models, loadedModelId) {
     if (availableModelsList) {
-        const textClass = 'text-gray-300';
-        const mutedTextClass = 'text-gray-400';
-        const bgClass = 'bg-darkBg-70';
-        const borderClass = 'border-white/5';
-
         if (models.length === 0) {
-            const noModelsTextColor = '#9ca3af';
             availableModelsList.innerHTML = `
-                <div class="p-4 ${bgClass} rounded-xl ${borderClass} border flex items-center" style="color: ${noModelsTextColor} !important;">
+                <div class="p-4 bg-darkBg-70 rounded-xl border border-white/5 flex items-center" style="color: #9ca3af !important;">
                     <i class="fas fa-info-circle mr-3 text-blue-400"></i>
                     <span>No models available</span>
                 </div>
             `;
+            updateModelSourcePill(0);
             return;
         }
 
+        updateModelSourcePill(models.length);
+
         // Preserve any active search query so it survives the re-render
-        const existingSearchQuery = availableModelsList.querySelector('#or-model-search')?.value || '';
+        const existingSearchQuery = document.getElementById('or-model-search')?.value || '';
 
         // Clear the list
         availableModelsList.innerHTML = '';
 
         // Add a section title / divider
         const titleElement = document.createElement('div');
-        titleElement.style.cssText = 'margin-bottom:14px;';
+        titleElement.className = 'model-list-header flex items-center justify-between px-0.5 mb-2 pb-2';
+        titleElement.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:14px;';
         titleElement.innerHTML = `
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                <span style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#93c5fd;">Available Models</span>
-                <div style="flex:1;height:1px;background:rgba(147,197,253,0.15);"></div>
-            </div>
-            <p style="font-size:12px;color:#94a3b8;margin:0;">Click &quot;Select&quot; to switch to a different model</p>
+            <span class="model-list-title">Available Models</span>
+            <div class="model-list-rule" style="flex:1;height:1px;"></div>
+            <span class="model-list-count">${models.length}</span>
         `;
         availableModelsList.appendChild(titleElement);
 
-        // Inject live search bar for OpenRouter (catalog can have hundreds of models)
-        if (getUseOpenRouter() || getUseOpenAICompatible()) {
-            attachModelSearch(availableModelsList);
-
-            // Restore the previous search query (and re-apply the filter) so that
-            // selecting a model while a search is active doesn't reset the list.
-            if (existingSearchQuery) {
-                const newSearchInput = availableModelsList.querySelector('#or-model-search');
-                if (newSearchInput) {
-                    newSearchInput.value = existingSearchQuery;
-                    newSearchInput.dispatchEvent(new Event('input'));
-                }
-            }
-        }
+        const searchContainer = document.getElementById('model-search-container');
+        const searchController = attachModelSearch(searchContainer, availableModelsList, existingSearchQuery);
 
         // IMPORTANT: Use the SAME loadedModelId that was passed in to ensure consistency between
         // the "Currently loaded model" header and the model marked as loaded in the list
@@ -903,11 +959,9 @@ function displayAvailableModels(models, loadedModelId) {
                 const defaultModelId = getDefaultModelId();
                 const isDefaultModel = defaultModelId && model.id === defaultModelId;
 
-                modelElement.className = isCurrentModel ? 'model-item model-card loaded' : 'model-item model-card';
-                const displayModelName = model.id === 'dummy/no-model-selected' 
+                modelElement.className = isCurrentModel ? 'model-item model-card loaded' : 'model-item model-card'; /*
                     ? '⚠️ No Model Selected'
-                    : model.id;
-                const isCloud = model.id.includes('/');
+                */ const isCloud = model.id.includes('/');
                 const orDisplayName = isCloud ? model.id.split('/').pop() : model.id;
                 const orProviderName = isCloud ? model.id.split('/')[0] : 'local';
                 modelElement.innerHTML = `
@@ -927,18 +981,14 @@ function displayAvailableModels(models, loadedModelId) {
                     </div>
                 </div>
             `;
+                modelElement.dataset.search = `${model.id} ${orDisplayName} ${orProviderName}`.toLowerCase();
 
                 availableModelsList.appendChild(modelElement);
 
-                // Immediately apply the active search filter so items appended
-                // in later chunks are correctly hidden if they don't match.
-                if (getUseOpenRouter() || getUseOpenAICompatible()) {
-                    const si = availableModelsList.querySelector('#or-model-search');
-                    if (si) {
-                        const q = si.value.toLowerCase().trim();
-                        if (q && !model.id.toLowerCase().includes(q)) {
-                            modelElement.style.display = 'none';
-                        }
+                if (searchController) {
+                    const activeQuery = availableModelsList.querySelector('#or-model-search')?.value.toLowerCase().trim();
+                    if (activeQuery && !modelElement.dataset.search.includes(activeQuery)) {
+                        modelElement.style.display = 'none';
                     }
                 }
 
@@ -985,10 +1035,8 @@ function displayAvailableModels(models, loadedModelId) {
                     });
                 }
             }
-            // Update the search count display after each chunk
-            if (getUseOpenRouter() || getUseOpenAICompatible()) {
-                const si = availableModelsList.querySelector('#or-model-search');
-                if (si && si.value.trim()) si.dispatchEvent(new Event('input'));
+            if (searchController) {
+                searchController.applyFilter();
             }
             if (renderIndex < models.length) setTimeout(renderNextChunk, 0);
         })();
@@ -1001,21 +1049,20 @@ function displayAvailableModels(models, loadedModelId) {
  */
 function displayPotentialModels(models) {
     if (availableModelsList) {
-        const textClass = 'text-gray-300';
-        const mutedTextClass = 'text-gray-400';
-        const bgClass = 'bg-darkBg-70';
-        const borderClass = 'border-white/5';
-
         if (models.length === 0) {
-            const noModelsTextColor = '#9ca3af';
             availableModelsList.innerHTML = `
-                <div class="p-4 ${bgClass} rounded-xl ${borderClass} border flex items-center" style="color: ${noModelsTextColor} !important;">
+                <div class="p-4 bg-darkBg-70 rounded-xl border border-white/5 flex items-center" style="color: #9ca3af !important;">
                     <i class="fas fa-info-circle mr-3 text-blue-400"></i>
                     <span>No models available</span>
                 </div>
             `;
+            updateModelSourcePill(0);
             return;
         }
+
+        updateModelSourcePill(models.length);
+
+        const existingSearchQuery = document.getElementById('or-model-search')?.value || '';
 
         // Clear the list
         availableModelsList.innerHTML = '';
@@ -1025,16 +1072,14 @@ function displayPotentialModels(models) {
         titleElement.className = 'model-list-header flex items-center justify-between px-0.5 mb-2 pb-2';
         titleElement.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:14px;';
         titleElement.innerHTML = `
-            <span style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#93c5fd;">Available Models</span>
-            <div style="flex:1;height:1px;background:rgba(147,197,253,0.15);"></div>
-            <span style="font-size:11px;font-weight:700;color:#93c5fd;">${models.length}</span>
+            <span class="model-list-title">Available Models</span>
+            <div class="model-list-rule" style="flex:1;height:1px;"></div>
+            <span class="model-list-count">${models.length}</span>
         `;
         availableModelsList.appendChild(titleElement);
 
-        // Inject live search bar for OpenRouter (catalog can have hundreds of models)
-        if (getUseOpenRouter() || getUseOpenAICompatible()) {
-            attachModelSearch(availableModelsList);
-        }
+        const searchContainer = document.getElementById('model-search-container');
+        const searchController = attachModelSearch(searchContainer, availableModelsList, existingSearchQuery);
 
         // Render models in chunks to avoid blocking the WebView's main thread.
         // OpenRouter catalogs can have 300+ entries; appending them all synchronously
@@ -1078,18 +1123,14 @@ function displayPotentialModels(models) {
                     </div>
                 </div>
             `;
+                modelElement.dataset.search = `${model.id} ${displayName} ${providerName}`.toLowerCase();
 
                 availableModelsList.appendChild(modelElement);
 
-                // Immediately apply the active search filter so items appended
-                // in later chunks are correctly hidden if they don't match.
-                if (getUseOpenRouter() || getUseOpenAICompatible()) {
-                    const si = availableModelsList.querySelector('#or-model-search');
-                    if (si) {
-                        const q = si.value.toLowerCase().trim();
-                        if (q && !model.id.toLowerCase().includes(q)) {
-                            modelElement.style.display = 'none';
-                        }
+                if (searchController) {
+                    const activeQuery = availableModelsList.querySelector('#or-model-search')?.value.toLowerCase().trim();
+                    if (activeQuery && !modelElement.dataset.search.includes(activeQuery)) {
+                        modelElement.style.display = 'none';
                     }
                 }
 
@@ -1134,10 +1175,8 @@ function displayPotentialModels(models) {
                     });
                 }
             }
-            // Update the search count display after each chunk
-            if (getUseOpenRouter() || getUseOpenAICompatible()) {
-                const si = availableModelsList.querySelector('#or-model-search');
-                if (si && si.value.trim()) si.dispatchEvent(new Event('input'));
+            if (searchController) {
+                searchController.applyFilter();
             }
             if (renderIndex < models.length) setTimeout(renderNextChunk, 0);
         })();
@@ -1148,6 +1187,7 @@ function displayPotentialModels(models) {
  * Displays a message when no models are available
  */
 function displayNoModelsAvailable() {
+    updateModelSourcePill(0);
     if (currentModelDisplay) {
         currentModelDisplay.innerHTML = `
             <div class="flex items-center">
@@ -1168,6 +1208,7 @@ function displayNoModelsAvailable() {
  * Displays a message when models are available but not loaded
  */
 function displayNoModelsLoaded() {
+    updateModelSourcePill(allAvailableModels.length);
     if (currentModelDisplay) {
         currentModelDisplay.innerHTML = `
             <div class="flex items-center">
@@ -1188,6 +1229,14 @@ function displayNoModelsLoaded() {
  * Displays a server error message
  */
 function displayServerError() {
+    const sourcePill = document.getElementById('model-source-pill');
+    if (sourcePill) {
+        sourcePill.innerHTML = `
+            <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+            <span>Connection issue</span>
+        `;
+    }
+
     if (currentModelDisplay) {
         currentModelDisplay.innerHTML = `
             <div class="flex items-center">
