@@ -771,16 +771,16 @@ function displayCurrentModel(modelName) {
             currentModelFullName = 'No Model Selected';
             currentModelDisplay.innerHTML = `
                 <div class="model-current-line model-current-line--warning">
-                    <span class="model-current-label">Current model:</span>
-                    <span class="model-current-value">Please select a model</span>
+                    <span class="model-current-label">Current model</span>
+                    <span class="model-current-value model-current-value--title">Please select a model</span>
                 </div>
             `;
         } else {
             currentModelFullName = modelName;
             currentModelDisplay.innerHTML = `
                 <button class="model-current-line model-current-line--interactive" id="current-model-clickable" type="button" title="Click to see full model name">
-                    <span class="model-current-label">Current model:</span>
-                    <span class="model-current-value">${modelName}</span>
+                    <span class="model-current-label">Current model</span>
+                    <span class="model-current-value model-current-value--title">${modelName}</span>
                 </button>
             `;
         }

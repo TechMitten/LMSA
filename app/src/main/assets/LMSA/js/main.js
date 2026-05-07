@@ -968,6 +968,16 @@ function initializeAndroidKeyboardFix() {
         return modal instanceof HTMLElement ? modal : null;
     }
 
+    function modalShouldSkipKeyboardFit(modal) {
+        if (!(modal instanceof HTMLElement)) {
+            return false;
+        }
+
+        // Keep the model picker layout stable while searching so opening the IME
+        // does not trigger full-screen modal-fit styles that appear as font scaling.
+        return modal.id === 'model-modal';
+    }
+
     function syncVisibleModalContainers(keyboardOpen) {
         // Native (WebViewActivity.applySystemBarInsets) consumes the IME inset and
         // shrinks the WebView above the keyboard, so the visual viewport already
@@ -996,6 +1006,10 @@ function initializeAndroidKeyboardFix() {
             modal.style.bottom = '';
 
             if (!keyboardOpen) {
+                return;
+            }
+
+            if (modalShouldSkipKeyboardFit(modal)) {
                 return;
             }
 

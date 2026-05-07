@@ -925,11 +925,12 @@ body.keyboard-visible #chat-form,
 
     .model-current-line {
         display: flex;
-        align-items: flex-start;
-        gap: 10px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
         width: 100%;
         min-width: 0;
-        padding: 9px 12px;
+        padding: 12px 14px;
         margin: 0;
         border: 1px solid rgba(101, 122, 159, 0.34);
         border-radius: 12px;
@@ -943,29 +944,42 @@ body.keyboard-visible #chat-form,
 
     .model-current-line--interactive {
         cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    }
+    .model-current-line--interactive:hover {
+        background: rgba(24, 36, 57, 0.82);
+        border-color: rgba(125, 151, 193, 0.46);
     }
 
     .model-current-label,
     .model-current-value {
         min-width: 0;
-        font-size: 12px;
-        line-height: 1.35;
     }
 
     .model-current-label {
         color: #a5b5cb;
-        white-space: nowrap;
-        flex-shrink: 0;
-        padding-top: 2px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        line-height: 1.2;
+        text-transform: uppercase;
     }
 
     .model-current-value {
-        flex: 1;
         color: #f2f5f9;
         white-space: normal;
+        overflow-wrap: anywhere;
         word-break: break-word;
         font-weight: 600;
-        line-height: 1.4;
+        line-height: 1.35;
+    }
+
+    .model-current-value--title {
+        display: block;
+        font-size: 1.28rem;
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
     }
 
     .model-current-line--warning .model-current-value {
@@ -983,6 +997,10 @@ body.keyboard-visible #chat-form,
     }
     body.light-theme .model-current-value {
         color: #334155;
+    }
+    body.light-theme .model-current-line--interactive:hover {
+        background: #ffffff;
+        border-color: #c7d5e6;
     }
 
     .model-modal-toolbar {
@@ -1128,6 +1146,66 @@ body.keyboard-visible #chat-form,
     .model-modal-scroll::-webkit-scrollbar-track { background: transparent; }
     .model-modal-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
     body.light-theme .model-modal-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.06); }
+
+    /* Prevent Android WebView text inflation inside the model picker when the IME opens. */
+    #model-modal,
+    #model-modal .modal-content,
+    #model-modal .modal-content * {
+        -webkit-text-size-adjust: none;
+        text-size-adjust: none;
+    }
+
+    body.modal-keyboard-visible #model-modal,
+    .android-webview.modal-keyboard-visible #model-modal,
+    body.modal-keyboard-visible #model-modal .modal-content,
+    .android-webview.modal-keyboard-visible #model-modal .modal-content {
+        font-size: 16px !important;
+    }
+
+    body.modal-keyboard-visible #model-modal #model-title,
+    .android-webview.modal-keyboard-visible #model-modal #model-title {
+        font-size: 1.38rem !important;
+        line-height: 1.12 !important;
+    }
+
+    body.modal-keyboard-visible #model-modal .model-modal-eyebrow,
+    .android-webview.modal-keyboard-visible #model-modal .model-modal-eyebrow {
+        font-size: 10px !important;
+    }
+
+    body.modal-keyboard-visible #model-modal .model-current-label,
+    .android-webview.modal-keyboard-visible #model-modal .model-current-label,
+    body.modal-keyboard-visible #model-modal .model-current-value,
+    .android-webview.modal-keyboard-visible #model-modal .model-current-value,
+    body.modal-keyboard-visible #model-modal .model-card-info .model-name,
+    .android-webview.modal-keyboard-visible #model-modal .model-card-info .model-name,
+    body.modal-keyboard-visible #model-modal .load-model-btn,
+    .android-webview.modal-keyboard-visible #model-modal .load-model-btn,
+    body.modal-keyboard-visible #model-modal .set-default-btn,
+    .android-webview.modal-keyboard-visible #model-modal .set-default-btn,
+    body.modal-keyboard-visible #model-modal .model-search-input,
+    .android-webview.modal-keyboard-visible #model-modal .model-search-input {
+        font-size: 13px !important;
+    }
+
+    body.modal-keyboard-visible #model-modal .model-current-value--title,
+    .android-webview.modal-keyboard-visible #model-modal .model-current-value--title {
+        font-size: 1.02rem !important;
+        line-height: 1.2 !important;
+    }
+
+    body.modal-keyboard-visible #model-modal .model-card-info .model-provider,
+    .android-webview.modal-keyboard-visible #model-modal .model-card-info .model-provider,
+    body.modal-keyboard-visible #model-modal .model-search-count,
+    .android-webview.modal-keyboard-visible #model-modal .model-search-count,
+    body.modal-keyboard-visible #model-modal .model-search-empty,
+    .android-webview.modal-keyboard-visible #model-modal .model-search-empty,
+    body.modal-keyboard-visible #model-modal .model-modal-pill,
+    .android-webview.modal-keyboard-visible #model-modal .model-modal-pill,
+    body.modal-keyboard-visible #model-modal .model-mobile-tip,
+    .android-webview.modal-keyboard-visible #model-modal .model-mobile-tip {
+        font-size: 11.5px !important;
+    }
 
     /* Keep the model modal tip visually light inside the toolbar. */
     #model-modal #mobile-instructions {
@@ -1942,8 +2020,15 @@ body.keyboard-visible #chat-form,
         .model-current-value {
             font-size: 12px;
         }
+        .model-current-label {
+            font-size: 9.5px;
+        }
+        .model-current-value--title {
+            font-size: 1.1rem;
+        }
         .model-current-line {
-            padding: 6px 9px;
+            padding: 10px 11px;
+            gap: 5px;
         }
         .model-card-body {
             padding: 11px 12px;
