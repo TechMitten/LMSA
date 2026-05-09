@@ -2613,10 +2613,12 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
         transform: translateY(-1px);
     }
 
+    header .header-premium-btn[hidden],
     header .header-premium-btn[data-premium-state="premium"] {
         background: linear-gradient(180deg, rgba(251, 191, 36, 0.22), rgba(245, 158, 11, 0.14));
         border-color: rgba(253, 224, 71, 0.45);
         box-shadow: 0 10px 24px rgba(245, 158, 11, 0.18);
+        display: none !important;
     }
 
     header .header-premium-btn[data-premium-state="premium"] .header-crown-icon {

@@ -115,6 +115,19 @@ function syncPremiumMenuState(isPremium) {
     }
 }
 
+function syncPremiumHeaderState(isPremium) {
+    const premiumHeaderButton = document.getElementById('premium-header-button');
+    if (!premiumHeaderButton) {
+        return;
+    }
+
+    premiumHeaderButton.dataset.premiumState = isPremium ? 'premium' : 'free';
+    premiumHeaderButton.hidden = !!isPremium;
+    premiumHeaderButton.style.setProperty('display', isPremium ? 'none' : 'flex', 'important');
+    premiumHeaderButton.title = isPremium ? 'View Premium Status' : 'Open Premium';
+    premiumHeaderButton.setAttribute('aria-label', isPremium ? 'View Premium Status' : 'Open Premium');
+}
+
 // Updated UI function to manage premium status
 function updateUiForPremium(isPremium) {
     const premiumState = setPremiumState(isPremium);
@@ -122,14 +135,19 @@ function updateUiForPremium(isPremium) {
     isPremium = premiumState.isPremium && !isDebugEnabled;
     console.log('Premium status updated:', isPremium, '(debug:', isDebugEnabled, ')');
     syncPremiumMenuState(isPremium);
+    syncPremiumHeaderState(isPremium);
 }
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        syncPremiumMenuState(hasPremiumAccess());
+        const isPremium = hasPremiumAccess();
+        syncPremiumMenuState(isPremium);
+        syncPremiumHeaderState(isPremium);
     }, { once: true });
 } else {
-    syncPremiumMenuState(hasPremiumAccess());
+    const isPremium = hasPremiumAccess();
+    syncPremiumMenuState(isPremium);
+    syncPremiumHeaderState(isPremium);
 }
 
 window.showPostAppOpenPremiumCta = function() { console.log('Post-ad CTA disabled.'); };

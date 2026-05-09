@@ -18,7 +18,7 @@ import { termsContentString } from './components/modals/terms-modal.js';
 
 import { showSettingsModal, hideSettingsModal, navigateSettingsModalToStep, showLmMcpModal, navigateToTTS } from './settings-modal-manager.js';
 import { openPremiumModal } from './components/modals/premium-modal.js';
-import { openPremiumHeaderModal } from './components/modals/premium-activated-modal.js';
+import { openPremiumActivatedModal, openPremiumHeaderModal } from './components/modals/premium-activated-modal.js';
 import {
     getEnterSendsNewline,
     clearOpenRouterApiKey,
@@ -571,6 +571,16 @@ export function initializeEventHandlers() {
         };
 
         bindSidebarScrollableTap(sidebarPremiumButton, openSidebarPremiumFlow);
+    }
+
+    const premiumActivatedButton = document.getElementById('premium-activated-button');
+    if (premiumActivatedButton) {
+        bindPressInFeedback(premiumActivatedButton);
+
+        bindSidebarScrollableTap(premiumActivatedButton, () => {
+            closeSidebar();
+            openPremiumActivatedModal();
+        });
     }
 
     const restorePurchasesBtn = document.getElementById('restore-purchases-button');

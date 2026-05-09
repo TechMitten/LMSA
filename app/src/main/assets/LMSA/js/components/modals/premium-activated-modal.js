@@ -155,6 +155,8 @@ export function syncPremiumHeaderButtonState() {
 
     const isPremium = typeof window.hasPremiumAccess === 'function' && window.hasPremiumAccess();
     button.dataset.premiumState = isPremium ? 'premium' : 'free';
+    button.hidden = isPremium;
+    button.style.setProperty('display', isPremium ? 'none' : 'flex', 'important');
     button.title = isPremium ? 'View Premium Status' : 'Open Premium';
     button.setAttribute('aria-label', isPremium ? 'View Premium Status' : 'Open Premium');
 }
