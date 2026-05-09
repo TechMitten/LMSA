@@ -6,7 +6,8 @@ import {
     setupDashboard, configuredActions, welcomeTitle, welcomeSubtitle,
     setupLocalBtn, setupOpenRouterBtn, setupCustomBtn
 } from './dom-elements.js';
-import { openImageViewerModal } from './components/modals/image-viewer-modal.js';
+import { downloadImageAsset, openImageViewerModal } from './components/modals/image-viewer-modal.js';
+import { showToastNotice } from './toast-notice.js';
 import { basicSanitizeInput, sanitizeInput, initializeCodeMirror, scrollToBottom, copyToClipboard, debugLog, debugError, processCodeBlocks, decodeHtmlEntities, htmlToFormattedText, getReasoningStreamState, normalizeReasoningTags, stripReasoningSections } from './utils.js';
 import { getHideThinking, getShowModelLabel, getWebSearchEnabled, getUseOpenRouter, getUseOpenAICompatible } from './settings-manager.js';
 import { domBatcher, rafThrottle } from './optimized-utils.js';
@@ -1044,6 +1045,7 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                     loadingPreview.appendChild(loadingSubtitle);
                     fileAttachment.appendChild(loadingPreview);
                 } else if (isImageFile && previewSrc) {
+                    const imageDownloadUrl = typeof file.remoteUrl === 'string' && file.remoteUrl ? file.remoteUrl : previewSrc;
                     if (file.generatedImage === true && generatedImagePrompt) {
                         const imageTitle = document.createElement('div');
                         imageTitle.classList.add('generated-image-title');
@@ -1068,7 +1070,7 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                             filename: fileName,
                             title: file.generatedImage && generatedImagePrompt ? generatedImagePrompt : fileName,
                             prompt: generatedImagePrompt,
-                            downloadUrl: typeof file.remoteUrl === 'string' && file.remoteUrl ? file.remoteUrl : previewSrc
+                            downloadUrl: imageDownloadUrl
                         });
                     });
                     thumbnail.addEventListener('keydown', (event) => {
@@ -1100,6 +1102,49 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                 }
 
                 if (file.generatedImage === true && !isPendingGeneratedImageAttachment(file)) {
+                    const actionRow = document.createElement('div');
+                    actionRow.classList.add('generated-image-action-row');
+
+                    const downloadButton = document.createElement('button');
+                    downloadButton.type = 'button';
+                    downloadButton.classList.add('generated-image-download-button');
+                    downloadButton.innerHTML = '<i class="fas fa-download" aria-hidden="true"></i>';
+                    downloadButton.title = 'Download image';
+                    downloadButton.setAttribute('aria-label', 'Download generated image');
+                    downloadButton.addEventListener('click', async () => {
+                        const originalMarkup = downloadButton.innerHTML;
+                        downloadButton.disabled = true;
+                        downloadButton.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>';
+
+                        const imageSrc = getAttachmentPreviewSrc(file);
+                        const downloadUrl = typeof file.remoteUrl === 'string' && file.remoteUrl ? file.remoteUrl : imageSrc;
+
+                        try {
+                            await downloadImageAsset({
+                                imageSrc,
+                                downloadUrl,
+                                filename: fileName
+                            });
+                            showToastNotice({
+                                message: 'Image saved successfully.',
+                                tone: 'success',
+                                iconClass: 'fas fa-check-circle',
+                                duration: 2800
+                            });
+                        } catch (error) {
+                            console.error('Generated image download failed:', error);
+                            showToastNotice({
+                                message: error instanceof Error ? error.message : 'Unable to save image.',
+                                tone: 'error',
+                                iconClass: 'fas fa-circle-exclamation',
+                                duration: 4200
+                            });
+                        } finally {
+                            downloadButton.disabled = false;
+                            downloadButton.innerHTML = originalMarkup;
+                        }
+                    });
+
                     const reportLink = document.createElement('button');
                     reportLink.type = 'button';
                     reportLink.classList.add('generated-image-report-link');
@@ -1113,7 +1158,10 @@ export function appendMessage(sender, message, files = null, isStreaming = false
 
                         window.location.href = OFFENSIVE_IMAGE_REPORT_URL;
                     });
-                    fileAttachment.appendChild(reportLink);
+
+                    actionRow.appendChild(downloadButton);
+                    actionRow.appendChild(reportLink);
+                    fileAttachment.appendChild(actionRow);
                 }
 
                 fileAttachmentsContainer.appendChild(fileAttachment);

@@ -4628,10 +4628,48 @@ span.visible-content {
     display: block;
 }
 
-.generated-image-report-link {
-    display: block;
+.generated-image-action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
     margin-top: 4px;
-    margin-right: auto;
+}
+
+.generated-image-download-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #d1d5db;
+    cursor: pointer;
+    transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.generated-image-download-button:hover,
+.generated-image-download-button:focus-visible {
+    background: transparent;
+    color: #3b82f6;
+    transform: translateY(-1px);
+}
+
+.generated-image-download-button:disabled {
+    cursor: wait;
+    opacity: 0.72;
+    transform: none;
+}
+
+.generated-image-report-link {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 0;
+    margin-right: 0;
     padding: 0;
     border: 0;
     background: transparent;
@@ -4647,6 +4685,17 @@ span.visible-content {
 .generated-image-report-link:hover,
 .generated-image-report-link:focus-visible {
     color: #fecaca;
+}
+
+body.light-theme .generated-image-download-button {
+    background: transparent;
+    color: #000000;
+}
+
+body.light-theme .generated-image-download-button:hover,
+body.light-theme .generated-image-download-button:focus-visible {
+    background: transparent;
+    color: #2563eb;
 }
 
 .user:hover .message-controls {
@@ -7614,6 +7663,11 @@ body.light-theme .gradient-text {
 .file-attachment i {
     margin-right: 6px;
     color: #3498db;
+}
+
+.generated-image-attachment .generated-image-download-button i {
+    margin-right: 0;
+    color: inherit;
 }
 
 .file-attachment span {

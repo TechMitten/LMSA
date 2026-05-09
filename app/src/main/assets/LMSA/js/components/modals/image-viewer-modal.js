@@ -1,5 +1,7 @@
 const IMAGE_VIEWER_ANIMATION_MS = 180;
 
+import { showToastNotice } from '../../toast-notice.js';
+
 let imageViewerInitialized = false;
 let imageViewerCloseTimer = null;
 let imageViewerIsClosing = false;
@@ -72,27 +74,101 @@ async function fetchImageAsDataUrl(imageUrl) {
 }
 
 function withNativeImageSaveCallback(saveAction) {
-    const previousOnImageSaved = window.onImageSaved;
+    return new Promise((resolve, reject) => {
+        const previousOnImageSaved = window.onImageSaved;
 
-    window.onImageSaved = (success) => {
-        if (typeof previousOnImageSaved === 'function') {
-            window.onImageSaved = previousOnImageSaved;
-        } else {
-            delete window.onImageSaved;
+        const restorePreviousHandler = () => {
+            if (typeof previousOnImageSaved === 'function') {
+                window.onImageSaved = previousOnImageSaved;
+            } else {
+                delete window.onImageSaved;
+            }
+        };
+
+        window.onImageSaved = (success) => {
+            restorePreviousHandler();
+
+            if (typeof previousOnImageSaved === 'function') {
+                previousOnImageSaved(success);
+            }
+
+            resolve(Boolean(success));
+        };
+
+        try {
+            saveAction();
+        } catch (error) {
+            restorePreviousHandler();
+            reject(error);
+        }
+    });
+}
+
+export async function downloadImageAsset({ imageSrc = '', downloadUrl = '', filename = '' } = {}) {
+    const resolvedImageSrc = typeof imageSrc === 'string' ? imageSrc : '';
+    const resolvedDownloadUrl = typeof downloadUrl === 'string' && downloadUrl ? downloadUrl : resolvedImageSrc;
+    const normalizedFilename = normalizeDownloadFilename(filename);
+
+    if (!resolvedImageSrc && !resolvedDownloadUrl) {
+        throw new Error('Unable to save image.');
+    }
+
+    if (window.AndroidFileOps) {
+        if (resolvedImageSrc.startsWith('data:image/') && typeof window.AndroidFileOps.saveImageFile === 'function') {
+            const saved = await withNativeImageSaveCallback(() => {
+                window.AndroidFileOps.saveImageFile(resolvedImageSrc, normalizedFilename);
+            });
+            if (!saved) {
+                throw new Error('Unable to save image.');
+            }
+            return;
         }
 
-        if (typeof previousOnImageSaved === 'function') {
-            previousOnImageSaved(success);
+        if (isRemoteHttpUrl(resolvedDownloadUrl) && typeof window.AndroidFileOps.saveImageFromUrl === 'function') {
+            const saved = await withNativeImageSaveCallback(() => {
+                window.AndroidFileOps.saveImageFromUrl(resolvedDownloadUrl, normalizedFilename);
+            });
+            if (!saved) {
+                throw new Error('Unable to save image.');
+            }
+            return;
         }
 
-        if (success) {
-            alert('Image saved successfully.');
-        } else {
-            alert('Unable to save image.');
+        if (typeof window.AndroidFileOps.saveImageFile === 'function') {
+            const fetchSource = resolvedDownloadUrl || resolvedImageSrc;
+            if (!fetchSource) {
+                throw new Error('Unable to save image.');
+            }
+            const dataUrl = await fetchImageAsDataUrl(fetchSource);
+            const saved = await withNativeImageSaveCallback(() => {
+                window.AndroidFileOps.saveImageFile(dataUrl, normalizedFilename);
+            });
+            if (!saved) {
+                throw new Error('Unable to save image.');
+            }
+            return;
         }
-    };
+    }
 
-    saveAction();
+    const fetchSource = resolvedDownloadUrl || resolvedImageSrc;
+    if (!fetchSource) {
+        throw new Error('Unable to save image.');
+    }
+
+    const response = await fetch(fetchSource);
+    if (!response.ok) {
+        throw new Error(`Unable to download image (${response.status})`);
+    }
+
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = normalizedFilename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(objectUrl);
 }
 
 async function downloadImageFromViewer() {
@@ -103,7 +179,7 @@ async function downloadImageFromViewer() {
 
     const imageSrc = modal.dataset.imageSrc || '';
     const downloadUrl = modal.dataset.downloadUrl || imageSrc;
-    const filename = normalizeDownloadFilename(modal.dataset.filename);
+    const filename = modal.dataset.filename || '';
     if (!imageSrc) {
         return;
     }
@@ -113,47 +189,21 @@ async function downloadImageFromViewer() {
     downloadButton.textContent = 'Saving...';
 
     try {
-        if (window.AndroidFileOps) {
-            if (imageSrc.startsWith('data:image/') && typeof window.AndroidFileOps.saveImageFile === 'function') {
-                withNativeImageSaveCallback(() => {
-                    window.AndroidFileOps.saveImageFile(imageSrc, filename);
-                });
-                return;
-            }
-
-            if (isRemoteHttpUrl(downloadUrl) && typeof window.AndroidFileOps.saveImageFromUrl === 'function') {
-                withNativeImageSaveCallback(() => {
-                    window.AndroidFileOps.saveImageFromUrl(downloadUrl, filename);
-                });
-                return;
-            }
-
-            if (typeof window.AndroidFileOps.saveImageFile === 'function') {
-                const dataUrl = await fetchImageAsDataUrl(downloadUrl || imageSrc);
-                withNativeImageSaveCallback(() => {
-                    window.AndroidFileOps.saveImageFile(dataUrl, filename);
-                });
-                return;
-            }
-        }
-
-        const response = await fetch(downloadUrl || imageSrc);
-        if (!response.ok) {
-            throw new Error(`Unable to download image (${response.status})`);
-        }
-
-        const blob = await response.blob();
-        const objectUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = objectUrl;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(objectUrl);
+        await downloadImageAsset({ imageSrc, downloadUrl, filename });
+        showToastNotice({
+            message: 'Image saved successfully.',
+            tone: 'success',
+            iconClass: 'fas fa-check-circle',
+            duration: 2800
+        });
     } catch (error) {
         console.error('Image download failed:', error);
-        alert(error instanceof Error ? error.message : 'Unable to save image.');
+        showToastNotice({
+            message: error instanceof Error ? error.message : 'Unable to save image.',
+            tone: 'error',
+            iconClass: 'fas fa-circle-exclamation',
+            duration: 4200
+        });
     } finally {
         downloadButton.disabled = false;
         downloadButton.innerHTML = originalMarkup;
