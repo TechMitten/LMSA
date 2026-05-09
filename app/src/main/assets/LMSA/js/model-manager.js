@@ -45,6 +45,30 @@ const transientModelModalDurations = {
     'local-model-loaded-modal': 2000
 };
 
+function forceModelActionButtonsRepaint(targets) {
+    if (!targets || typeof targets.forEach !== 'function') {
+        return;
+    }
+
+    const repaintTargets = [];
+    targets.forEach((target) => {
+        if (target && target.classList && target.classList.contains('load-model-btn')) {
+            repaintTargets.push(target);
+        }
+    });
+
+    if (repaintTargets.length === 0) {
+        return;
+    }
+
+    repaintTargets.forEach((button) => button.classList.add('model-button-repaint-fix'));
+    void repaintTargets[0].offsetHeight;
+
+    requestAnimationFrame(() => {
+        repaintTargets.forEach((button) => button.classList.remove('model-button-repaint-fix'));
+    });
+}
+
 function syncTransientModelBodyLock() {
     const hasVisibleTransientModal = Boolean(
         document.querySelector('#openrouter-model-selected-modal:not(.hidden), #local-model-loaded-modal:not(.hidden)')
@@ -701,6 +725,7 @@ function showActionError(modelId, errorMsg) {
             loadButton.disabled = true;
             loadButton.setAttribute('aria-disabled', 'true');
             loadButton.classList.add('opacity-50', 'cursor-not-allowed');
+            forceModelActionButtonsRepaint([loadButton]);
 
             setTimeout(() => {
                 syncModelActionButtons();
@@ -759,6 +784,8 @@ function syncModelActionButtons() {
             button.classList.add('opacity-50', 'cursor-not-allowed');
         }
     });
+
+    forceModelActionButtonsRepaint(loadButtons);
 }
 
 /**
@@ -935,6 +962,7 @@ function displayAvailableModels(models, loadedModelId) {
         let renderIndex = 0;
         (function renderNextChunk() {
             const end = Math.min(renderIndex + CHUNK_SIZE, models.length);
+            const chunkLoadButtons = [];
             for (; renderIndex < end; renderIndex++) {
                 const model = models[renderIndex];
                 
@@ -987,6 +1015,7 @@ function displayAvailableModels(models, loadedModelId) {
                 if (!isCurrentModel) {
                     const loadButton = modelElement.querySelector('.load-model-btn');
                     if (loadButton) {
+                        chunkLoadButtons.push(loadButton);
                         loadButton.addEventListener('click', async (e) => {
                             e.preventDefault();
                             await loadModel(model.id);
@@ -996,6 +1025,11 @@ function displayAvailableModels(models, loadedModelId) {
                             loadButton.classList.add('opacity-50', 'cursor-not-allowed');
                             loadButton.classList.remove('hover:from-blue-600', 'hover:to-blue-700');
                         }
+                    }
+                } else {
+                    const loadButton = modelElement.querySelector('.load-model-btn');
+                    if (loadButton) {
+                        chunkLoadButtons.push(loadButton);
                     }
                 }
 
@@ -1015,6 +1049,7 @@ function displayAvailableModels(models, loadedModelId) {
                     });
                 }
             }
+            forceModelActionButtonsRepaint(chunkLoadButtons);
             if (searchController) {
                 searchController.applyFilter();
             }
@@ -1068,6 +1103,7 @@ function displayPotentialModels(models) {
         let renderIndex = 0;
         (function renderNextChunk() {
             const end = Math.min(renderIndex + CHUNK_SIZE, models.length);
+            const chunkLoadButtons = [];
             for (; renderIndex < end; renderIndex++) {
                 const model = models[renderIndex];
                 
@@ -1117,6 +1153,7 @@ function displayPotentialModels(models) {
                 // Add event listener to the load button
                 const loadButton = modelElement.querySelector('.load-model-btn');
                 if (loadButton) {
+                    chunkLoadButtons.push(loadButton);
                     loadButton.addEventListener('click', async (e) => {
                         e.preventDefault();
                         await loadModel(model.id);
@@ -1144,6 +1181,7 @@ function displayPotentialModels(models) {
                     });
                 }
             }
+            forceModelActionButtonsRepaint(chunkLoadButtons);
             if (searchController) {
                 searchController.applyFilter();
             }

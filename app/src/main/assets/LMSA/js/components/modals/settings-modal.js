@@ -217,7 +217,7 @@ export const settingsModal = `
                                     <i class="fas fa-text-width"></i>Max Output Tokens
                                 </label>
                             </div>
-                            <p class="settings-item-description">Limits how long the AI response can be. Premium feature.</p>
+                            <p class="settings-item-description">Limits how long the AI response can be.</p>
                             <div class="flex items-center max-tokens-input-row">
                                 <input type="text" id="max-tokens-input" min="1" step="1"
                                     class="bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500 max-tokens-input-field"

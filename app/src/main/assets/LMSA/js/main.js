@@ -23,6 +23,7 @@ import { initSmartReplyWarningModal } from './components/modals/smart-reply-warn
 import { initOpenRouterWarningModal } from './components/modals/openrouter-warning-modal.js';
 import { initWebSearchWarningModal } from './components/modals/web-search-warning-modal.js';
 import { initBiometricUnavailableModal, showBiometricUnavailableModal } from './components/modals/biometric-unavailable-modal.js';
+import { initImageViewerModal } from './components/modals/image-viewer-modal.js';
 import { initializeTemplateIndicator } from './template-indicator.js';
 import { initializeHapticFeedback } from './haptics.js';
 import { updateConfirmationModalTheme, updateExportImportModalsTheme } from './confirmation-modal-fix.js';
@@ -759,6 +760,7 @@ export async function initializeApp() {
     initOpenRouterWarningModal();
     initWebSearchWarningModal();
     initBiometricUnavailableModal();
+    initImageViewerModal();
     window.showBiometricUnavailableModal = showBiometricUnavailableModal;
     initializeTemplateIndicator();
 

@@ -6,6 +6,7 @@ import {
     setupDashboard, configuredActions, welcomeTitle, welcomeSubtitle,
     setupLocalBtn, setupOpenRouterBtn, setupCustomBtn
 } from './dom-elements.js';
+import { openImageViewerModal } from './components/modals/image-viewer-modal.js';
 import { basicSanitizeInput, sanitizeInput, initializeCodeMirror, scrollToBottom, copyToClipboard, debugLog, debugError, processCodeBlocks, decodeHtmlEntities, htmlToFormattedText, getReasoningStreamState, normalizeReasoningTags, stripReasoningSections } from './utils.js';
 import { getHideThinking, getShowModelLabel, getWebSearchEnabled, getUseOpenRouter, getUseOpenAICompatible } from './settings-manager.js';
 import { domBatcher, rafThrottle } from './optimized-utils.js';
@@ -14,6 +15,7 @@ import { domBatcher, rafThrottle } from './optimized-utils.js';
 let selectedText = '';
 let selectedMessageElement = null;
 let longPressTimer;
+const OFFENSIVE_IMAGE_REPORT_URL = 'mailto:report@lmsa.app?subject=report%20offensive%20photo';
 
 function forceSidebarRepaint(element) {
     if (!element) return;
@@ -121,7 +123,12 @@ function isImageAttachment(file) {
     }
 
     return file.isImage === true ||
+        (typeof file.remoteUrl === 'string' && file.remoteUrl.trim() !== '') ||
         (typeof file.type === 'string' && file.type.startsWith('image/'));
+}
+
+function isPendingGeneratedImageAttachment(file) {
+    return !!(file && file.generatedImage === true && file.isPendingGeneration === true);
 }
 
 function getAttachmentPreviewSrc(file) {
@@ -139,6 +146,10 @@ function getAttachmentPreviewSrc(file) {
 
     if (typeof file.chatBubbleBlobUrl === 'string' && file.chatBubbleBlobUrl) {
         return file.chatBubbleBlobUrl;
+    }
+
+    if (typeof file.remoteUrl === 'string' && file.remoteUrl) {
+        return file.remoteUrl;
     }
 
     if (file instanceof Blob) {
@@ -925,6 +936,12 @@ export function appendMessage(sender, message, files = null, isStreaming = false
 
     const messageElement = document.createElement('div');
     messageElement.classList.add(sender, 'animate-fade-in', 'mb-4', 'p-4', 'rounded-lg');
+    const hasGeneratedImageAttachment = Array.isArray(files) && files.some(file => file && file.generatedImage === true);
+    const hasPendingGeneratedImageAttachment = Array.isArray(files) && files.some(isPendingGeneratedImageAttachment);
+
+    if (hasPendingGeneratedImageAttachment) {
+        messageElement.classList.add('message--pending-generated-image');
+    }
 
     // Store the original message content for reprocessing if needed
     messageElement.originalContent = message;
@@ -933,6 +950,7 @@ export function appendMessage(sender, message, files = null, isStreaming = false
         // Create a container for the message content
         const contentContainer = document.createElement('div');
         contentContainer.classList.add('message-content');
+        const shouldRenderGeneratedImageStatus = sender === 'ai' && hasGeneratedImageAttachment && !hasPendingGeneratedImageAttachment;
 
         const normalizedMessage = normalizeReasoningTags(message);
         const hasThinkTags = getReasoningStreamState(normalizedMessage).hasThinking;
@@ -950,14 +968,22 @@ export function appendMessage(sender, message, files = null, isStreaming = false
             messageElement.dataset.hasThinking = 'false';
         }
 
-        // Add the content container to the message
-        messageElement.appendChild(contentContainer);
+        if (shouldRenderGeneratedImageStatus) {
+            contentContainer.textContent = 'AI Generated Image';
+            contentContainer.classList.add('generated-image-status-text');
+        } else {
+            // Add the content container to the message
+            messageElement.appendChild(contentContainer);
+        }
 
         // Add file attachments to the message if provided
         if (files && files.length > 0) {
             // Create a container for file attachments
             const fileAttachmentsContainer = document.createElement('div');
             fileAttachmentsContainer.classList.add('file-attachments');
+            if (shouldRenderGeneratedImageStatus) {
+                fileAttachmentsContainer.classList.add('file-attachments--generated-image-message');
+            }
 
             // Add each file as an attachment
             files.forEach(file => {
@@ -965,10 +991,14 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                 fileAttachment.classList.add('file-attachment');
                 const fileType = typeof file.type === 'string' ? file.type : '';
                 const fileName = typeof file.name === 'string' ? file.name : 'Attachment';
+                const generatedImagePrompt = typeof file.sourcePrompt === 'string' ? file.sourcePrompt.trim() : '';
 
                 const isImageFile = isImageAttachment(file);
                 if (isImageFile) {
                     fileAttachment.classList.add('file-attachment--image');
+                    if (file.generatedImage === true) {
+                        fileAttachment.classList.add('generated-image-attachment');
+                    }
                 }
 
                 // Choose icon based on file type
@@ -983,12 +1013,70 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                 else if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) iconClass = 'fa-file-word';
 
                 const previewSrc = getAttachmentPreviewSrc(file);
-                if (isImageFile && previewSrc) {
+                if (isPendingGeneratedImageAttachment(file)) {
+                    const loadingPreview = document.createElement('div');
+                    loadingPreview.classList.add('generated-image-loading-preview');
+                    loadingPreview.setAttribute('role', 'status');
+                    loadingPreview.setAttribute('aria-live', 'polite');
+
+                    const loadingSpinner = document.createElement('div');
+                    loadingSpinner.classList.add('generated-image-loading-spinner');
+                    loadingSpinner.setAttribute('aria-hidden', 'true');
+
+                    const loadingSpinnerTrack = document.createElement('div');
+                    loadingSpinnerTrack.classList.add('generated-image-loading-spinner-track');
+                    loadingSpinner.appendChild(loadingSpinnerTrack);
+
+                    const loadingSpinnerRing = document.createElement('div');
+                    loadingSpinnerRing.classList.add('generated-image-loading-spinner-ring');
+                    loadingSpinner.appendChild(loadingSpinnerRing);
+
+                    const loadingHeadline = document.createElement('div');
+                    loadingHeadline.classList.add('generated-image-loading-title');
+                    loadingHeadline.textContent = 'Rendering your image';
+
+                    const loadingSubtitle = document.createElement('div');
+                    loadingSubtitle.classList.add('generated-image-loading-subtitle');
+                    loadingSubtitle.textContent = 'Waiting for the image API to finish.';
+
+                    loadingPreview.appendChild(loadingSpinner);
+                    loadingPreview.appendChild(loadingHeadline);
+                    loadingPreview.appendChild(loadingSubtitle);
+                    fileAttachment.appendChild(loadingPreview);
+                } else if (isImageFile && previewSrc) {
+                    if (file.generatedImage === true && generatedImagePrompt) {
+                        const imageTitle = document.createElement('div');
+                        imageTitle.classList.add('generated-image-title');
+                        imageTitle.title = generatedImagePrompt;
+                        imageTitle.textContent = generatedImagePrompt;
+                        fileAttachment.appendChild(imageTitle);
+                    }
+
                     const thumbnail = document.createElement('img');
                     thumbnail.classList.add('file-attachment-thumbnail');
+                    if (file.generatedImage === true) {
+                        thumbnail.classList.add('generated-image-thumbnail');
+                    }
                     thumbnail.src = previewSrc;
                     thumbnail.alt = fileName || 'Attached image';
                     thumbnail.loading = 'lazy';
+                    thumbnail.style.cursor = 'pointer';
+                    thumbnail.setAttribute('role', 'button');
+                    thumbnail.setAttribute('tabindex', '0');
+                    thumbnail.addEventListener('click', () => {
+                        openImageViewerModal(previewSrc, {
+                            filename: fileName,
+                            title: file.generatedImage && generatedImagePrompt ? generatedImagePrompt : fileName,
+                            prompt: generatedImagePrompt,
+                            downloadUrl: typeof file.remoteUrl === 'string' && file.remoteUrl ? file.remoteUrl : previewSrc
+                        });
+                    });
+                    thumbnail.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            thumbnail.click();
+                        }
+                    });
                     fileAttachment.appendChild(thumbnail);
                 } else {
                     const icon = document.createElement('i');
@@ -999,18 +1087,48 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                 const fileLabel = document.createElement('span');
                 fileLabel.classList.add('file-attachment-label');
                 fileLabel.title = fileName;
-                fileLabel.textContent = fileName;
-                fileAttachment.appendChild(fileLabel);
+                if (file.generatedImage === true && generatedImagePrompt) {
+                    fileLabel.classList.add('file-attachment-label--multiline');
+                    fileLabel.title = generatedImagePrompt;
+                    fileLabel.textContent = generatedImagePrompt;
+                } else {
+                    fileLabel.textContent = fileName;
+                }
+
+                if (!(file.generatedImage === true && generatedImagePrompt && !isPendingGeneratedImageAttachment(file))) {
+                    fileAttachment.appendChild(fileLabel);
+                }
+
+                if (file.generatedImage === true && !isPendingGeneratedImageAttachment(file)) {
+                    const reportLink = document.createElement('button');
+                    reportLink.type = 'button';
+                    reportLink.classList.add('generated-image-report-link');
+                    reportLink.textContent = 'Report';
+                    reportLink.setAttribute('aria-label', 'Report offensive photo');
+                    reportLink.addEventListener('click', () => {
+                        if (typeof window.openExternalUrl === 'function') {
+                            window.openExternalUrl(OFFENSIVE_IMAGE_REPORT_URL);
+                            return;
+                        }
+
+                        window.location.href = OFFENSIVE_IMAGE_REPORT_URL;
+                    });
+                    fileAttachment.appendChild(reportLink);
+                }
 
                 fileAttachmentsContainer.appendChild(fileAttachment);
             });
 
             // Add file attachments container to message
             messageElement.appendChild(fileAttachmentsContainer);
+
+            if (shouldRenderGeneratedImageStatus) {
+                messageElement.appendChild(contentContainer);
+            }
         }
 
         // Add message controls
-        if (!isStreaming) {
+        if (!isStreaming && !hasPendingGeneratedImageAttachment) {
             // Create controls container
             const controlsContainer = document.createElement('div');
             controlsContainer.classList.add('message-controls', 'mt-2', 'flex', 'justify-end', 'text-xs', 'text-gray-400', 'space-x-2');
@@ -1276,16 +1394,16 @@ export function appendMessage(sender, message, files = null, isStreaming = false
             }
 
             messageElement.appendChild(controlsContainer);
+        }
 
-            // Add model label for AI messages
-            if (sender === 'ai') {
-                const effectiveModel = modelName || window.currentLoadedModel;
-                if (effectiveModel) {
-                    const modelLabelEl = document.createElement('div');
-                    modelLabelEl.classList.add('model-label');
-                    modelLabelEl.textContent = effectiveModel;
-                    messageElement.appendChild(modelLabelEl);
-                }
+        // Add model label for AI messages
+        if (!hasPendingGeneratedImageAttachment && sender === 'ai' && !hasGeneratedImageAttachment) {
+            const effectiveModel = modelName || window.currentLoadedModel;
+            if (effectiveModel) {
+                const modelLabelEl = document.createElement('div');
+                modelLabelEl.classList.add('model-label');
+                modelLabelEl.textContent = effectiveModel;
+                messageElement.appendChild(modelLabelEl);
             }
         }
     } else if (sender === 'system' || sender === 'error' || sender === 'warning') {

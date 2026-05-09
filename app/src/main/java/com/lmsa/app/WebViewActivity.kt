@@ -1394,6 +1394,22 @@ class WebViewActivity : AppCompatActivity() {
         val uri = Uri.parse(normalizedUrl)
         val scheme = uri.scheme?.lowercase(Locale.US)
 
+        if (scheme == "mailto") {
+            val emailIntent = Intent(Intent.ACTION_SENDTO, uri).apply {
+                addCategory(Intent.CATEGORY_DEFAULT)
+            }
+
+            try {
+                markExternalLaunch()
+                startActivity(emailIntent)
+            } catch (error: ActivityNotFoundException) {
+                Log.e(TAG, "No email client available for: $normalizedUrl", error)
+            } catch (error: Exception) {
+                Log.e(TAG, "Failed to open email client for: $normalizedUrl", error)
+            }
+            return
+        }
+
         if ((scheme != "http" && scheme != "https") || uri.host.isNullOrBlank()) {
             Log.w(TAG, "Rejected unsupported external URL: $normalizedUrl")
             return
@@ -1619,6 +1635,78 @@ class WebViewActivity : AppCompatActivity() {
                     )
                 }
             }
+        }
+
+        @JavascriptInterface
+        fun saveImageFromUrl(url: String, filename: String) {
+            Log.d(TAG, "JavaScript requested to save remote image: $filename from $url")
+
+            Thread {
+                try {
+                    val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                    connection.requestMethod = "GET"
+                    connection.connectTimeout = 15000
+                    connection.readTimeout = 15000
+                    connection.instanceFollowRedirects = true
+                    connection.setRequestProperty("Accept", "image/*,*/*;q=0.8")
+                    connection.setRequestProperty("User-Agent", "LMSA/1.0")
+
+                    val responseCode = connection.responseCode
+                    if (responseCode != java.net.HttpURLConnection.HTTP_OK) {
+                        throw IOException("Image download failed with HTTP $responseCode")
+                    }
+
+                    val imageBytes = connection.inputStream.use { it.readBytes() }
+                    if (imageBytes.isEmpty()) {
+                        throw IOException("Downloaded image is empty")
+                    }
+
+                    pendingFileContent = Base64.encodeToString(imageBytes, Base64.NO_WRAP)
+                    pendingFileName = filename
+                    isImageFile = true
+
+                    val mimeType = when {
+                        filename.lowercase().endsWith(".jpg") || filename.lowercase().endsWith(".jpeg") -> "image/jpeg"
+                        filename.lowercase().endsWith(".png") -> "image/png"
+                        filename.lowercase().endsWith(".gif") -> "image/gif"
+                        filename.lowercase().endsWith(".webp") -> "image/webp"
+                        else -> "image/jpeg"
+                    }
+
+                    runOnUiThread {
+                        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                            type = mimeType
+                            putExtra(Intent.EXTRA_TITLE, filename)
+                        }
+
+                        try {
+                            markExternalLaunch()
+                            fileSaverLauncher.launch(intent)
+                        } catch (e: Exception) {
+                            clearExternalLaunchMarker()
+                            Log.e(TAG, "Error launching remote image saver", e)
+                            webView.post {
+                                webView.evaluateJavascript(
+                                    "if (window.onImageSaved) window.onImageSaved(false);",
+                                    null
+                                )
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error downloading image from URL", e)
+                    pendingFileContent = null
+                    pendingFileName = null
+                    isImageFile = false
+                    webView.post {
+                        webView.evaluateJavascript(
+                            "if (window.onImageSaved) window.onImageSaved(false);",
+                            null
+                        )
+                    }
+                }
+            }.start()
         }
 
         @JavascriptInterface

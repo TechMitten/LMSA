@@ -167,11 +167,6 @@ function normalizeMaxTokensInputValue(maxTokensInput) {
 }
 
 function handleMaxTokensBeforeInput(event) {
-  if (!isPremiumUser()) {
-    handleMaxTokensPremiumLockedInteraction(event);
-    return;
-  }
-
   if (event.inputType && event.inputType.startsWith("delete")) {
     return;
   }
@@ -182,11 +177,6 @@ function handleMaxTokensBeforeInput(event) {
 }
 
 function handleMaxTokensPaste(event) {
-  if (!isPremiumUser()) {
-    handleMaxTokensPremiumLockedInteraction(event);
-    return;
-  }
-
   const pastedText = event.clipboardData?.getData("text") || "";
   const sanitizedPaste = sanitizeMaxTokensInputValue(pastedText);
 
@@ -223,14 +213,6 @@ function updateMaxTokensUI(maxTokensInput, maxTokensValue) {
   }
 }
 
-function requestMaxTokensPremiumAccess() {
-  if (typeof window.openPremiumModal === "function") {
-    window.openPremiumModal("Max Output Tokens");
-  } else {
-    alert("Custom max output tokens are reserved for premium users.");
-  }
-}
-
 function updateMaxTokensPremiumState(
   maxTokensInput = document.getElementById("max-tokens-input"),
   maxTokensValue = document.getElementById("max-tokens-value"),
@@ -240,25 +222,17 @@ function updateMaxTokensPremiumState(
     return;
   }
 
-  const isPremium = isPremiumUser();
-
-  maxTokensInput.dataset.premiumLocked = isPremium ? "false" : "true";
-  maxTokensInput.readOnly = !isPremium;
-  maxTokensInput.title = isPremium
-    ? "Set max output tokens for chat requests"
-    : "Premium required to customize max output tokens";
+  maxTokensInput.dataset.premiumLocked = "false";
+  maxTokensInput.readOnly = false;
+  maxTokensInput.title = "Set max output tokens for chat requests";
 
   if (maxTokensValue) {
-    maxTokensValue.title = isPremium
-      ? ""
-      : "Free users use server default max output tokens";
+    maxTokensValue.title = "";
   }
 
   if (clearMaxTokensButton) {
-    clearMaxTokensButton.dataset.premiumLocked = isPremium ? "false" : "true";
-    clearMaxTokensButton.title = isPremium
-      ? "Reset max output tokens to server default"
-      : "Free users are already locked to server default";
+    clearMaxTokensButton.dataset.premiumLocked = "false";
+    clearMaxTokensButton.title = "Reset max output tokens to server default";
   }
 }
 
@@ -267,35 +241,8 @@ function syncMaxTokensForAccess(
   maxTokensValue = document.getElementById("max-tokens-value"),
   clearMaxTokensButton = document.getElementById("clear-max-tokens-btn")
 ) {
-  if (!isPremiumUser()) {
-    maxTokens = 0;
-    localStorage.removeItem("maxTokens");
-  }
-
   updateMaxTokensUI(maxTokensInput, maxTokensValue);
   updateMaxTokensPremiumState(maxTokensInput, maxTokensValue, clearMaxTokensButton);
-}
-
-function handleMaxTokensPremiumLockedInteraction(event) {
-  if (isPremiumUser()) {
-    return;
-  }
-
-  if (event) {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-
-  const maxTokensInput = document.getElementById("max-tokens-input");
-  const maxTokensValue = document.getElementById("max-tokens-value");
-  const clearMaxTokensButton = document.getElementById("clear-max-tokens-btn");
-
-  if (maxTokensInput) {
-    maxTokensInput.blur();
-  }
-
-  syncMaxTokensForAccess(maxTokensInput, maxTokensValue, clearMaxTokensButton);
-  requestMaxTokensPremiumAccess();
 }
 
 /**
@@ -478,10 +425,7 @@ export function loadMaxTokensSetting() {
   const savedMaxTokens = localStorage.getItem("maxTokens");
   maxTokens = parseStoredMaxTokens(savedMaxTokens);
 
-  if (!isPremiumUser()) {
-    maxTokens = 0;
-    localStorage.removeItem("maxTokens");
-  } else if (savedMaxTokens !== null && maxTokens === 0) {
+  if (savedMaxTokens !== null && maxTokens === 0) {
     localStorage.removeItem("maxTokens");
   }
 
@@ -493,19 +437,11 @@ export function loadMaxTokensSetting() {
     maxTokensInput.addEventListener("paste", handleMaxTokensPaste);
     maxTokensInput.addEventListener("input", saveMaxTokensSetting);
     maxTokensInput.addEventListener("change", saveMaxTokensSetting);
-    maxTokensInput.addEventListener("focus", handleMaxTokensPremiumLockedInteraction);
-    maxTokensInput.addEventListener("click", handleMaxTokensPremiumLockedInteraction);
-    maxTokensInput.addEventListener("touchstart", handleMaxTokensPremiumLockedInteraction, { passive: false });
     maxTokensInput.dataset.maxTokensListenerAttached = "true";
   }
 
   if (clearMaxTokensButton && clearMaxTokensButton.dataset.maxTokensClearListenerAttached !== "true") {
     clearMaxTokensButton.addEventListener("click", () => {
-      if (!isPremiumUser()) {
-        syncMaxTokensForAccess(maxTokensInput, maxTokensValue, clearMaxTokensButton);
-        return;
-      }
-
       maxTokens = 0;
       localStorage.removeItem("maxTokens");
       updateMaxTokensUI(maxTokensInput, maxTokensValue);
@@ -520,12 +456,6 @@ export function saveMaxTokensSetting() {
   const clearMaxTokensButton = document.getElementById("clear-max-tokens-btn");
 
   if (!maxTokensInput) {
-    return;
-  }
-
-  if (!isPremiumUser()) {
-    syncMaxTokensForAccess(maxTokensInput, maxTokensValue, clearMaxTokensButton);
-    requestMaxTokensPremiumAccess();
     return;
   }
 

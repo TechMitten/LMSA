@@ -602,8 +602,98 @@ body.light-theme .welcome-action-card span {
 }
 
 /* Active Template Indicator in Sidebar */
-#template-indicator {
-    transition: all 0.2s ease;
+#sidebar-scroll-content > #template-indicator {
+    position: static !important;
+    top: auto !important;
+    z-index: 1;
+    margin: 0.38rem 0 0;
+    padding: 0.55rem 0.75rem 0.6rem;
+    border-bottom: 1px solid rgba(96, 165, 250, 0.28);
+    background: linear-gradient(180deg, rgba(37, 99, 235, 0.2) 0%, rgba(30, 64, 175, 0.1) 100%);
+    box-shadow: inset 0 -1px 0 rgba(15, 23, 42, 0.35);
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#template-indicator .template-indicator-content {
+    padding: 0.4rem 0.55rem;
+    border-radius: 0.6rem;
+    border: 1px solid rgba(147, 197, 253, 0.32);
+    background: rgba(15, 23, 42, 0.62);
+    box-shadow: 0 6px 14px rgba(2, 6, 23, 0.32);
+}
+
+#template-indicator .template-indicator-label-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.2rem;
+}
+
+#template-indicator .template-indicator-dot {
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 999px;
+    background: #60a5fa;
+    box-shadow: 0 0 8px rgba(96, 165, 250, 0.45);
+}
+
+#template-indicator .template-indicator-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #bfdbfe;
+    opacity: 1;
+}
+
+#template-indicator .template-indicator-main-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+}
+
+#template-indicator .template-indicator-name-wrap {
+    min-width: 0;
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+#template-indicator .template-indicator-name-wrap i {
+    color: #60a5fa;
+    font-size: 0.72rem;
+    flex-shrink: 0;
+}
+
+#template-indicator .template-indicator-name {
+    min-width: 0;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #f8fbff;
+}
+
+#template-indicator #disable-template-btn.template-indicator-disable-btn {
+    width: 1.45rem;
+    height: 1.45rem;
+    border-radius: 999px;
+    border: 1px solid rgba(147, 197, 253, 0.5);
+    background: rgba(30, 41, 59, 0.82);
+    color: #dbeafe;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+#template-indicator #disable-template-btn.template-indicator-disable-btn i {
+    font-size: 0.7rem;
 }
 
 /* Keep sidebar content scrollable but never show a visual scrollbar in WebView. */
@@ -620,12 +710,33 @@ body.light-theme .welcome-action-card span {
 }
 
 #template-indicator #disable-template-btn:hover {
-    background: rgba(96, 165, 250, 0.2) !important;
-    transform: scale(1.1);
+    background: rgba(59, 130, 246, 0.35) !important;
+    border-color: rgba(191, 219, 254, 0.9) !important;
+    transform: translateY(-1px);
 }
 
 #template-indicator #disable-template-btn:active {
-    transform: scale(0.95);
+    transform: translateY(0);
+}
+
+body.light-theme #template-indicator {
+    border-bottom-color: rgba(59, 130, 246, 0.32);
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.22) 0%, rgba(59, 130, 246, 0.08) 100%);
+    box-shadow: inset 0 -1px 0 rgba(148, 163, 184, 0.25);
+}
+
+body.light-theme #template-indicator .template-indicator-content {
+    background: rgba(255, 255, 255, 0.88);
+    border-color: rgba(59, 130, 246, 0.35);
+    box-shadow: 0 4px 10px rgba(30, 64, 175, 0.12);
+}
+
+body.light-theme #template-indicator .template-indicator-label {
+    color: #1e40af;
+}
+
+body.light-theme #template-indicator .template-indicator-name {
+    color: #020617;
 }
 
 /* Keep chat bubble text readable even when compact mobile rules apply. */
@@ -1923,6 +2034,12 @@ body.keyboard-visible #chat-form,
     }
     .model-card .load-model-btn.is-active:active {
         background: rgba(60, 118, 100, 0.94);
+    }
+    .model-card .load-model-btn.model-button-repaint-fix {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
     }
     body.light-theme .model-card .load-model-btn.is-active {
         background: #1b7a69;
@@ -3511,9 +3628,59 @@ body.keyboard-visible #chat-form > .flex-grow,
     min-width: 0 !important;
     min-height: var(--chat-composer-control-size) !important;
     margin: 0 !important;
-    padding-right: 3.5rem !important;
+    padding-right: 6rem !important;
     border-radius: 0.95rem !important;
     border-right: 1px solid var(--input-border) !important;
+}
+
+#chat-form .chat-input-actions,
+body.keyboard-visible #chat-form .chat-input-actions,
+.android-webview #chat-form .chat-input-actions,
+.android-webview.keyboard-visible #chat-form .chat-input-actions {
+    position: absolute !important;
+    top: 50% !important;
+    right: 0.75rem !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    z-index: 10 !important;
+}
+
+#chat-form .chat-input-actions #image-prompt-button,
+#chat-form .chat-input-actions #paperclip-button,
+body.keyboard-visible #chat-form .chat-input-actions #image-prompt-button,
+body.keyboard-visible #chat-form .chat-input-actions #paperclip-button,
+.android-webview #chat-form .chat-input-actions #image-prompt-button,
+.android-webview #chat-form .chat-input-actions #paperclip-button,
+.android-webview.keyboard-visible #chat-form .chat-input-actions #image-prompt-button,
+.android-webview.keyboard-visible #chat-form .chat-input-actions #paperclip-button {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    transform: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+    transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+#chat-form .chat-input-actions #image-prompt-button:hover,
+#chat-form .chat-input-actions #paperclip-button:hover,
+#chat-form .chat-input-actions #image-prompt-button.active,
+#chat-form .chat-input-actions #paperclip-button.active {
+    background-color: rgba(148, 163, 184, 0.14) !important;
+}
+
+body.light-theme #chat-form .chat-input-actions #image-prompt-button:hover,
+body.light-theme #chat-form .chat-input-actions #paperclip-button:hover,
+body.light-theme #chat-form .chat-input-actions #image-prompt-button.active,
+body.light-theme #chat-form .chat-input-actions #paperclip-button.active {
+    background-color: rgba(37, 99, 235, 0.12) !important;
 }
 
 #chat-form button#send-button,

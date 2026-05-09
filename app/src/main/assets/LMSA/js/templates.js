@@ -60,6 +60,14 @@ function requireTemplatePremiumAccess(featureName = 'Templates') {
     return false;
 }
 
+function isCustomTemplateName(name) {
+    return Boolean(name && customTemplateLookup.has(name));
+}
+
+function isCustomTemplateRecord(record) {
+    return Boolean(record && isCustomTemplateName(record.name));
+}
+
 function createTemplateId() {
     return `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
 }
@@ -468,7 +476,11 @@ function createCustomTemplateCard(t) {
 }
 
 function handleCardClick(btn) {
-    if (!requireTemplatePremiumAccess('Templates')) {
+    const titleSpan = btn.querySelector('span.font-semibold');
+    const templateName = titleSpan ? titleSpan.textContent.trim() : '';
+    const isCustomTemplate = isCustomTemplateName(templateName);
+
+    if (isCustomTemplate && !requireTemplatePremiumAccess('Custom Templates')) {
         return;
     }
 
@@ -494,10 +506,9 @@ function handleCardClick(btn) {
         btn.classList.add('ring-2', 'ring-blue-500', 'bg-slate-800/80');
 
         // Get Data
-        const titleSpan = btn.querySelector('span.font-semibold');
         if (titleSpan) {
-            const title = titleSpan.textContent.trim();
-            const customTemplate = customTemplateLookup.get(title);
+            const title = templateName;
+            const customTemplate = customTemplateLookup.get(templateName);
             if (customTemplate) {
                 selectedPrompt = customTemplate.prompt;
                 selectedTemplateName = title;
@@ -1119,7 +1130,7 @@ function resetTemplateForm() {
 }
 
 function tryOpenCharacterCardImport() {
-    if (!requireTemplatePremiumAccess('Templates')) {
+    if (!requireTemplatePremiumAccess('Custom Templates')) {
         return;
     }
 
@@ -1267,7 +1278,7 @@ function openCreateModal(editMode = false, options = {}) {
 
     // Check premium status for custom templates (both create and edit)
     // Paid users bypass this, free users get the premium modal
-    if (!requireTemplatePremiumAccess('Templates')) {
+    if (!requireTemplatePremiumAccess('Custom Templates')) {
         return;
     }
 
@@ -1359,6 +1370,10 @@ function closeCreateModal() {
 }
 
 function saveNewTemplate() {
+    if (!requireTemplatePremiumAccess('Custom Templates')) {
+        return;
+    }
+
     const basicFields = getBasicTemplateFields();
     const name = basicFields.name.value.trim();
 
@@ -1456,6 +1471,11 @@ function saveNewTemplate() {
 
 function deleteTemplate(event, name) {
     event.stopPropagation(); // Prevent card selection
+
+    if (!requireTemplatePremiumAccess('Custom Templates')) {
+        return;
+    }
+
     document.body.style.overflow = 'hidden';
     templateToDelete = name;
 
@@ -1548,6 +1568,10 @@ function confirmDelete() {
 
 function editTemplate(event, name) {
     event.stopPropagation(); // Prevent card selection
+
+    if (!requireTemplatePremiumAccess('Custom Templates')) {
+        return;
+    }
 
     // Find the template
     const customTemplates = getStoredCustomTemplates().map(normalizeCustomTemplate);
@@ -1681,7 +1705,7 @@ function showTemplateLoadedModal() {
 // Start Button Logic
 startBtn.addEventListener('click', function () {
     if (selectedPrompt) {
-        if (!requireTemplatePremiumAccess('Templates')) {
+        if (isCustomTemplateRecord(selectedTemplateRecord) && !requireTemplatePremiumAccess('Custom Templates')) {
             return;
         }
 

@@ -12,12 +12,17 @@ function watchRewardedPremiumAd() {
 
 function openExternalUrl(url) {
     const normalizedUrl = typeof url === 'string' ? url.trim() : '';
-    if (!/^https?:\/\//i.test(normalizedUrl)) {
+    if (!/^(https?:\/\/|mailto:)/i.test(normalizedUrl)) {
         return false;
     }
 
     if (window.AndroidExternalLinks && typeof window.AndroidExternalLinks.openUrl === 'function') {
         window.AndroidExternalLinks.openUrl(normalizedUrl);
+        return true;
+    }
+
+    if (/^mailto:/i.test(normalizedUrl)) {
+        window.location.href = normalizedUrl;
         return true;
     }
 

@@ -53,7 +53,9 @@ import {
     saveChatHistory,
     loadChatHistory,
     updateChatHistoryUI,
-    addUserMessageToHistory
+    addUserMessageToHistory,
+    addGeneratedImageResponseToHistory,
+    getImagePromptModerationResult
 } from './chat-service.js';
 import { resetApp, initializeResetAppButton } from './reset-app.js';
 import { fetchAvailableModels, isServerRunning, getAvailableModels } from './api-service.js';
@@ -88,6 +90,48 @@ function isConfirmationModalVisible() {
 function getSingleLineHeight(textarea) {
     const minHeight = parseFloat(window.getComputedStyle(textarea).minHeight);
     return Number.isFinite(minHeight) && minHeight > 0 ? Math.round(minHeight) : 52;
+}
+
+function parseImageCommand(message) {
+    if (typeof message !== 'string') {
+        return null;
+    }
+
+    const match = message.match(/^\/image(?:\s+([\s\S]+))?$/i);
+    if (!match) {
+        return null;
+    }
+
+    return {
+        prompt: typeof match[1] === 'string' ? match[1].trim() : ''
+    };
+}
+
+function prependImageCommandTag(message) {
+    const normalizedMessage = typeof message === 'string' ? message.trim() : '';
+
+    if (!normalizedMessage) {
+        return '/image ';
+    }
+
+    if (/^\/image(?:\s|$)/i.test(normalizedMessage)) {
+        return normalizedMessage === '/image' ? '/image ' : normalizedMessage;
+    }
+
+    return `/image ${normalizedMessage}`;
+}
+
+function createPendingGeneratedImageAttachment(prompt) {
+    const cleanPrompt = typeof prompt === 'string' ? prompt.trim() : '';
+
+    return {
+        name: 'Generating image',
+        type: 'image/jpeg',
+        isImage: true,
+        generatedImage: true,
+        isPendingGeneration: true,
+        sourcePrompt: cleanPrompt
+    };
 }
 
 /**
@@ -1888,8 +1932,55 @@ export function initializeEventHandlers() {
     }
 
     // Paperclip button in the input field
+    const imagePromptButton = document.getElementById('image-prompt-button');
     const paperclipButton = document.getElementById('paperclip-button');
     const fileUploadInput = document.getElementById('file-upload-input');
+
+    if (imagePromptButton && userInput) {
+        const activateImagePrompt = () => {
+            userInput.value = prependImageCommandTag(userInput.value);
+            userInput.dispatchEvent(new Event('input', { bubbles: true }));
+            hideWelcomeMessage();
+            userInput.focus();
+
+            const selectionIndex = userInput.value.length;
+            userInput.setSelectionRange(selectionIndex, selectionIndex);
+            return true;
+        };
+
+        imagePromptButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            activateImagePrompt();
+            debugLog('Image prompt button clicked, prepending /image tag');
+        });
+
+        imagePromptButton.addEventListener('touchstart', () => {
+            imagePromptButton.classList.add('active');
+        }, { passive: true });
+
+        imagePromptButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            imagePromptButton.classList.remove('active');
+
+            const touch = e.changedTouches[0];
+            const elementAtTouch = touch
+                ? document.elementFromPoint(touch.clientX, touch.clientY)
+                : null;
+
+            if (elementAtTouch === imagePromptButton || imagePromptButton.contains(elementAtTouch)) {
+                activateImagePrompt();
+                debugLog('Image prompt button touched, prepending /image tag');
+            }
+        }, { passive: false });
+
+        imagePromptButton.addEventListener('touchcancel', () => {
+            imagePromptButton.classList.remove('active');
+        }, { passive: true });
+    }
+
     if (paperclipButton && fileUploadInput) {
         const openFileSelector = () => {
             fileUploadInput.click();
@@ -2099,6 +2190,7 @@ async function handleChatFormSubmit(e) {
 
     try {
         const message = userInput.value.trim();
+        const imageCommand = parseImageCommand(message);
 
         // Process local files if any
         let fileContents = [];
@@ -2121,6 +2213,24 @@ async function handleChatFormSubmit(e) {
 
         if (!canFreeUserContinueWhenOffline()) {
             debugLog('Chat submission blocked: free user is offline');
+            return;
+        }
+
+        if (imageCommand && !imageCommand.prompt) {
+            appendMessage('error', 'Enter a prompt after /image to generate an image.');
+            return;
+        }
+
+        if (imageCommand) {
+            const moderationResult = getImagePromptModerationResult(imageCommand.prompt);
+            if (moderationResult.blocked) {
+                appendMessage('error', 'Image generation is blocked for sexual or illegal requests. Try a safer, non-explicit description.');
+                return;
+            }
+        }
+
+        if (imageCommand && hasUploadedFiles) {
+            appendMessage('error', 'Image generation does not support file attachments yet.');
             return;
         }
 
@@ -2148,6 +2258,30 @@ async function handleChatFormSubmit(e) {
         const singleLineHeight = getSingleLineHeight(userInput);
         userInput.style.height = singleLineHeight + 'px';
         userInput.style.overflowY = 'hidden';
+
+        if (imageCommand) {
+            const pendingImageMessage = appendMessage(
+                'ai',
+                'Generating image...',
+                [createPendingGeneratedImageAttachment(imageCommand.prompt)]
+            );
+            scrollToBottom(messagesContainer, true);
+
+            try {
+                const generatedImageMessage = await addGeneratedImageResponseToHistory(imageCommand.prompt);
+                pendingImageMessage?.remove();
+                appendMessage('ai', generatedImageMessage.content, generatedImageMessage.files, false, generatedImageMessage.model);
+            } catch (error) {
+                pendingImageMessage?.remove();
+                const errorMessage = error instanceof Error && error.message
+                    ? error.message
+                    : 'Image generation failed.';
+                appendMessage('error', errorMessage);
+            }
+
+            scrollToBottom(messagesContainer, true);
+            return;
+        }
 
         // Create a new abort controller for this request
         // Important: ensure any existing controller is aborted and released first

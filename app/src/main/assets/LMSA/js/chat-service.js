@@ -56,12 +56,26 @@ const WEB_SEARCH_RECENT_TOPIC_TURNS = 4;
 const WEB_SEARCH_CONTEXT_KEYWORD_LIMIT = 10;
 const WEB_SEARCH_TOPIC_OVERLAP_MIN_RATIO = 0.34;
 const WEB_SEARCH_REUSE_MAX_WORDS = 12;
+const POLLINATIONS_IMAGE_BASE_URL = 'https://image.pollinations.ai/';
 const CHAT_IMAGE_STORE_KEY = 'chatImageStore';
 const CHAT_IMAGE_STORE_VERSION = 1;
 const ACTIVE_TEMPLATE_CHARACTER_CARD_KEY = 'activeTemplateCharacterCard';
 const PENDING_TEMPLATE_CHARACTER_CARD_KEY = 'pendingTemplateCharacterCard';
 
 const IMAGE_FILE_EXTENSION_PATTERN = /\.(?:apng|avif|bmp|gif|jpe?g|png|svg|webp)$/i;
+const IMAGE_PROMPT_SEXUAL_BLOCK_PATTERNS = [
+    /\b(?:nsfw|porn|porno|pornographic|erotic|xxx)\b/i,
+    /\b(?:nude|nudity|naked|topless|areola|nipples?|genitals?)\b/i,
+    /\b(?:sex|sexual|sexualized|intercourse|fellatio|cunnilingus|blowjob|handjob|masturbat(?:e|ing|ion))\b/i,
+    /\b(?:orgy|bdsm|fetish|dominatrix|bondage|lingerie shoot)\b/i,
+    /\b(?:cameltoe|upskirt|downblouse|see[- ]?through)\b/i,
+    /\b(?:minor|child|kid|underage|teen)\b.{0,24}\b(?:sexy|nude|naked|sexual|explicit|provocative)\b/i,
+    /\b(?:sexy|seductive)\s+(?:child|kid|minor|teen)\b/i
+];
+const IMAGE_PROMPT_ILLEGAL_BLOCK_PATTERNS = [
+    /\b(?:how to|guide to|tutorial for|step[- ]?by[- ]?step|instructions? for)\b.{0,40}\b(?:steal|shoplift|rob|burglar(?:ize|y)?|carjack|kidnap|traffic|smuggle|poison|blackmail|extort)\b/i,
+    /\b(?:drug lab|meth lab|cocaine|heroin|fentanyl|crack cocaine|illegal drugs?|drug dealing|drug trafficking)\b/i
+];
 const WEB_SEARCH_STOP_WORDS = new Set([
     'a', 'an', 'and', 'are', 'as', 'at', 'be', 'because', 'briefly', 'by', 'can', 'could', 'do', 'does',
     'for', 'from', 'give', 'i', 'if', 'in', 'into', 'is', 'it', 'just', 'me', 'my', 'of', 'on', 'or', 'our',
@@ -526,6 +540,10 @@ function isImageAttachment(file) {
         return true;
     }
 
+    if (typeof file.remoteUrl === 'string' && file.remoteUrl.trim() !== '') {
+        return true;
+    }
+
     if (typeof file.imageStorageId === 'string' && file.imageStorageId.trim() !== '') {
         return true;
     }
@@ -562,6 +580,137 @@ function createChatImageStorageId(chatId, messageIndex, fileIndex) {
     return `chat-${chatId}-msg-${messageIndex}-file-${fileIndex}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function buildPollinationsImageUrl(prompt) {
+    return new URL(prompt, POLLINATIONS_IMAGE_BASE_URL).toString();
+}
+
+function createGeneratedImageFilename(prompt) {
+    const normalizedPrompt = typeof prompt === 'string'
+        ? prompt
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .slice(0, 48)
+        : '';
+
+    return `${normalizedPrompt || 'generated-image'}.jpg`;
+}
+
+function createGeneratedImageAttachment(prompt) {
+    const cleanPrompt = typeof prompt === 'string' ? prompt.trim() : '';
+
+    return {
+        name: createGeneratedImageFilename(cleanPrompt),
+        type: 'image/jpeg',
+        isImage: true,
+        generatedImage: true,
+        sourcePrompt: cleanPrompt,
+        remoteUrl: buildPollinationsImageUrl(cleanPrompt)
+    };
+}
+
+function readBlobAsDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+        reader.onerror = () => reject(reader.error || new Error('Failed to read generated image data'));
+        reader.readAsDataURL(blob);
+    });
+}
+
+async function fetchGeneratedImageAttachment(prompt) {
+    const attachment = createGeneratedImageAttachment(prompt);
+    const response = await fetch(attachment.remoteUrl, {
+        headers: {
+            Accept: 'image/*,application/json,text/plain;q=0.9,*/*;q=0.8'
+        },
+        cache: 'no-store'
+    });
+
+    if (!response.ok) {
+        await throwForApiErrorResponse(response);
+    }
+
+    const rawContentType = response.headers.get('content-type') || '';
+    const contentType = rawContentType.split(';')[0].trim().toLowerCase();
+    if (!contentType.startsWith('image/')) {
+        const invalidBody = await response.text().catch(() => '');
+        const providerMessage = invalidBody.trim();
+        throw new Error(providerMessage || 'Image generation failed: API returned a non-image response.');
+    }
+
+    const imageBlob = await response.blob();
+    const blobType = (typeof imageBlob.type === 'string' && imageBlob.type.trim()) || contentType || attachment.type;
+    if (!blobType.startsWith('image/')) {
+        throw new Error('Image generation failed: API returned an invalid image payload.');
+    }
+
+    return {
+        ...attachment,
+        type: blobType,
+        content: await readBlobAsDataUrl(imageBlob)
+    };
+}
+
+function normalizeImagePromptForModeration(prompt) {
+    return typeof prompt === 'string'
+        ? prompt
+            .normalize('NFKC')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[_*`~]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+        : '';
+}
+
+export function getImagePromptModerationResult(prompt) {
+    const normalizedPrompt = normalizeImagePromptForModeration(prompt);
+    if (!normalizedPrompt) {
+        return {
+            blocked: false,
+            reason: null,
+            normalizedPrompt: ''
+        };
+    }
+
+    if (IMAGE_PROMPT_SEXUAL_BLOCK_PATTERNS.some(pattern => pattern.test(normalizedPrompt))) {
+        return {
+            blocked: true,
+            reason: 'sexual',
+            normalizedPrompt
+        };
+    }
+
+    if (IMAGE_PROMPT_ILLEGAL_BLOCK_PATTERNS.some(pattern => pattern.test(normalizedPrompt))) {
+        return {
+            blocked: true,
+            reason: 'illegal',
+            normalizedPrompt
+        };
+    }
+
+    return {
+        blocked: false,
+        reason: null,
+        normalizedPrompt
+    };
+}
+
+export function normalizeChatTitleSourceText(content, fallback = 'New Chat') {
+    const cleanContent = removeThinkTags(typeof content === 'string' ? content : '').trim();
+    if (!cleanContent) {
+        return fallback;
+    }
+
+    const imageMatch = cleanContent.match(/^\/image(?:\s+([\s\S]+))?$/i);
+    if (imageMatch) {
+        const imagePrompt = typeof imageMatch[1] === 'string' ? imageMatch[1].trim() : '';
+        return imagePrompt || fallback;
+    }
+
+    return cleanContent;
+}
+
 function serializeFilesForStorage(files, chatId, messageIndex, nextImageEntries) {
     if (!Array.isArray(files) || files.length === 0) {
         return [];
@@ -585,6 +734,15 @@ function serializeFilesForStorage(files, chatId, messageIndex, nextImageEntries)
         }
         if (typeof file.lastModified !== 'undefined') {
             serializedFile.lastModified = file.lastModified;
+        }
+        if (typeof file.remoteUrl === 'string' && file.remoteUrl.trim() !== '') {
+            serializedFile.remoteUrl = file.remoteUrl.trim();
+        }
+        if (typeof file.sourcePrompt === 'string' && file.sourcePrompt.trim() !== '') {
+            serializedFile.sourcePrompt = file.sourcePrompt.trim();
+        }
+        if (file.generatedImage === true) {
+            serializedFile.generatedImage = true;
         }
 
         if (isImageAttachment(file)) {
@@ -636,10 +794,13 @@ function hydrateFilesFromImageStore(files, imageStore) {
         return {
             ...file,
             isImage: true,
+            generatedImage: file.generatedImage === true,
             imageStorageId: imageStorageId || undefined,
             name: storedImage?.name || file.name || 'image',
+            remoteUrl: typeof file.remoteUrl === 'string' ? file.remoteUrl : '',
+            sourcePrompt: typeof file.sourcePrompt === 'string' ? file.sourcePrompt : '',
             type: storedImage?.type || file.type || '',
-            content: dataUrl
+            content: dataUrl || (typeof file.content === 'string' ? file.content : '')
         };
     });
 }
@@ -3977,6 +4138,57 @@ export async function updateChatHistory(userMessage, aiMessage, fileContents = [
     updateChatHistoryUI();
 }
 
+export async function addGeneratedImageResponseToHistory(prompt) {
+    const cleanPrompt = typeof prompt === 'string' ? prompt.trim() : '';
+    if (!cleanPrompt) {
+        throw new Error('Image prompt is required');
+    }
+
+    const generatedImageAttachment = await fetchGeneratedImageAttachment(cleanPrompt);
+
+    if (!chatHistoryData) {
+        chatHistoryData = {};
+    }
+
+    if (!chatHistoryData[currentChatId]) {
+        chatHistoryData[currentChatId] = {
+            messages: [],
+            title: null,
+        };
+    }
+
+    if (Array.isArray(chatHistoryData[currentChatId])) {
+        const oldMessages = [...chatHistoryData[currentChatId]];
+        const oldTitle = oldMessages.title ? removeThinkTags(oldMessages.title) : null;
+        chatHistoryData[currentChatId] = {
+            messages: oldMessages,
+            title: oldTitle,
+        };
+    }
+
+    if (!Array.isArray(chatHistoryData[currentChatId].messages)) {
+        chatHistoryData[currentChatId].messages = [];
+    }
+
+    const assistantMessage = {
+        role: 'assistant',
+        content: 'Generated image',
+        model: getSelectedModel(),
+        files: [generatedImageAttachment]
+    };
+
+    if (!chatHistoryData[currentChatId].title || chatHistoryData[currentChatId].title === 'null') {
+        chatHistoryData[currentChatId].title = cleanPrompt;
+    }
+
+    chatHistoryData[currentChatId].messages.push(assistantMessage);
+    saveChatHistory();
+    updateChatHistoryUI();
+    setIsFirstMessage(false);
+
+    return assistantMessage;
+}
+
 /**
  * Adds a topic boundary marker to the chat history
  */
@@ -4125,8 +4337,7 @@ export function updateChatHistoryUI() {
                         chatTitle.textContent = 'New Chat';
                         button.title = 'New Chat';
                     } else {
-                        // Fall back to using the first message content, but remove any <think> tags
-                        const cleanContent = removeThinkTags(messages[0].content);
+                        const cleanContent = normalizeChatTitleSourceText(messages[0].content);
 
                         // Log the fallback content for debugging
                         debugLog('Using fallback title from first message:', cleanContent.substring(0, 30));
@@ -4696,7 +4907,9 @@ export function renameChatTitle(id) {
 
     const chatData = chatHistoryData[id];
     const messages = Array.isArray(chatData) ? chatData : chatData.messages;
-    const currentTitle = removeThinkTags((chatData && chatData.title) || (messages && messages[0] && messages[0].content) || 'New Chat');
+    const currentTitle = chatData && chatData.title
+        ? removeThinkTags(chatData.title)
+        : normalizeChatTitleSourceText(messages && messages[0] ? messages[0].content : '', 'New Chat');
 
     openRenameChatModal(id, currentTitle);
 }

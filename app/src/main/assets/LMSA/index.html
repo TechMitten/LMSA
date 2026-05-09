@@ -136,6 +136,25 @@
                     </button>
                 </div>
 
+                <!-- Active Template Indicator -->
+                <div id="template-indicator" class="hidden">
+                    <div class="template-indicator-content">
+                        <div class="template-indicator-label-row">
+                            <span class="template-indicator-dot" aria-hidden="true"></span>
+                            <span class="template-indicator-label">Active template</span>
+                        </div>
+                        <div class="template-indicator-main-row">
+                            <div class="template-indicator-name-wrap">
+                                <i class="fas fa-th-large" aria-hidden="true"></i>
+                                <span id="template-name" class="template-indicator-name"></span>
+                            </div>
+                            <button id="disable-template-btn" class="template-indicator-disable-btn" title="Disable template" aria-label="Disable active template">
+                                <i class="fas fa-times" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- New Chat Section -->
                 <div class="sidebar-section">
                     <button id="new-chat" class="menu-item w-full text-left flex items-center">
@@ -282,29 +301,6 @@
                 </div>
 
 
-
-                    <!-- Active Template Indicator -->
-                    <div id="template-indicator" class="hidden"
-                        style="margin: 0.5rem 0.75rem; padding: 0.75rem; background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 0.5rem;">
-                        <div class="flex items-center justify-between gap-2">
-                            <div class="flex items-center gap-2 flex-1 min-w-0">
-                                <i class="fas fa-th-large"
-                                    style="font-size: 0.875rem; color: #60A5FA; flex-shrink: 0;"></i>
-                                <div class="flex flex-col min-w-0 flex-1">
-                                    <span class="text-xs opacity-75"
-                                        style="font-weight: 500; letter-spacing: 0.5px; color: #94a3b8;">ACTIVE</span>
-                                    <span id="template-name" class="font-semibold truncate"
-                                        style="font-size: 0.875rem; color: #e2e8f0;"></span>
-                                </div>
-                            </div>
-                            <button id="disable-template-btn"
-                                class="flex items-center justify-center p-1.5 rounded-md transition-all shrink-0"
-                                style="background: transparent; border: none; color: #60A5FA; cursor: pointer;"
-                                title="Disable template">
-                                <i class="fas fa-times" style="font-size: 1rem;"></i>
-                            </button>
-                    </div>
-                </div>
 
                 <!-- Characters Section -->
                 <!-- Removed sidebar-section characters-section for mobile side menu as requested -->
@@ -495,9 +491,13 @@
                                 placeholder="Type your message..." aria-label="Type your message" autocomplete="off"
                                 wrap="soft"
                                 style="background-color: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);"></textarea>
-                            <div class="absolute" style="top: 50%; right: 0.75rem; transform: translateY(-50%);">
+                            <div class="absolute chat-input-actions" style="top: 50%; right: 0.75rem; transform: translateY(-50%);">
+                                <button type="button" id="image-prompt-button" class="focus:outline-none p-1"
+                                    style="color: var(--text-muted);" aria-label="Start image prompt" title="Start image prompt">
+                                    <i class="fas fa-image"></i>
+                                </button>
                                 <button type="button" id="paperclip-button" class="focus:outline-none p-1"
-                                    style="color: var(--text-muted);">
+                                    style="color: var(--text-muted);" aria-label="Upload files" title="Upload files">
                                     <i class="fas fa-paperclip"></i>
                                 </button>
                             </div>

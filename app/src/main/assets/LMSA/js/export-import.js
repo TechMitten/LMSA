@@ -1,5 +1,5 @@
 // Export/Import functionality for chat history
-import { getChatHistoryData, updateChatHistoryUI, saveChatHistory, loadChatHistory } from './chat-service.js';
+import { getChatHistoryData, normalizeChatTitleSourceText, updateChatHistoryUI, saveChatHistory, loadChatHistory } from './chat-service.js';
 import {
     exportChatsButton, importChatsButton, importChatsInput, importModal,
     cancelImportButton, confirmImportButton, importStatusContainer, importStatusMessage,
@@ -232,8 +232,7 @@ export function initializeExportImport() {
                             // Try to generate a title from the first user message
                             const firstUserMessage = oldMessages.find(msg => msg.role === 'user');
                             if (firstUserMessage && firstUserMessage.content) {
-                                // Create a short title from the first few words (max 30 chars)
-                                const content = firstUserMessage.content.trim();
+                                const content = normalizeChatTitleSourceText(firstUserMessage.content, `Imported Chat ${key}`);
                                 oldTitle = content.length > 30 ? content.substring(0, 30) + '...' : content;
                                 console.log(`Generated title from first message for chat ${key}: "${oldTitle}"`);
                             } else {
@@ -271,8 +270,7 @@ export function initializeExportImport() {
                             if (Array.isArray(chatData.messages)) {
                                 const firstUserMessage = chatData.messages.find(msg => msg.role === 'user');
                                 if (firstUserMessage && firstUserMessage.content) {
-                                    // Create a short title from the first few words (max 30 chars)
-                                    const content = firstUserMessage.content.trim();
+                                    const content = normalizeChatTitleSourceText(firstUserMessage.content, `Imported Chat ${key}`);
                                     chatData.title = content.length > 30 ? content.substring(0, 30) + '...' : content;
                                     console.log(`Generated title from first message for chat ${key}: "${chatData.title}"`);
                                 } else {
