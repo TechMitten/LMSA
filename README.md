@@ -39,6 +39,10 @@ LMSA is available for download on the Google Play Store:
 
 *(Google Play and the Google Play logo are trademarks of Google LLC.)*
 
+## Demo Video
+
+[![LMSA Demo Video](https://img.youtube.com/vi/DUs2yEvJeWg/0.jpg)](https://www.youtube.com/watch?v=DUs2yEvJeWg)
+
 ## Getting Started
 
 ### Prerequisites
