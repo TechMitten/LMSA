@@ -12,6 +12,11 @@ LMSA is a premium, feature-rich Android interface designed for seamless interact
 - **Multimodal & Vision**: Full support for multimodal models—upload images for analysis or use the built-in OCR (via Tesseract.js) to extract text from documents.
 - **AI Image Generation**: Create images directly in your chats using the `/image` command.
 - **Advanced Reasoning Controls**: Toggle "Thinking" visibility and adjust "Reasoning Level" (Thinking Effort) for supported models.
+- **Persona & Character Templates**:
+  - **Library of Personas**: Start chats with specialized contexts like Math Tutor, Code Assistant, and more.
+  - **Custom Templates**: Create and save your own system prompts with custom names and avatars.
+  - **Character Card V2 Support**: Full support for the industry-standard Character Card V2 spec, enabling complex roleplay with personality, scenario, and dialogue examples.
+  - **AI-Powered Generation**: Automatically generate high-quality system prompts or complete character cards using AI.
 - **Smart Conversational Tools**: 
   - **Smart Reply (Beta)**: Get AI-powered quick reply suggestions.
   - **Auto-Titles**: Let the AI automatically name your chats based on context.
@@ -24,7 +29,8 @@ LMSA is a premium, feature-rich Android interface designed for seamless interact
   - **Native TTS**: High-quality Text-to-Speech playback using Android's native engine.
 - **Power User Tools**:
   - **Connection Presets**: Save and switch between multiple server configurations effortlessly.
-  - **Deep Integration**: Import LM Studio profiles, Character Card V2 specs, and export full chat histories.
+  - **Deep Integration**: Import LM Studio profiles, Character Card V2 specs, and manage custom persona templates.
+  - **Data Portability**: Export full chat histories and character data.
 
 ## Technology Stack
 
@@ -66,6 +72,7 @@ LMSA is available for download on the Google Play Store:
 LMSA makes it easy to migrate your workflows:
 - **LM Studio Profiles**: Import your system prompts and configurations directly.
 - **Character Cards**: Full support for `.json` and image-embedded Character Card V2.
+- **Persona Templates**: Create, edit, and manage your own reusable chat personas with custom avatars.
 - **Chat History**: Export your conversations for backup or analysis.
 
 ## License
