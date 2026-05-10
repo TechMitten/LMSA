@@ -7,6 +7,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
@@ -18,7 +19,6 @@ import android.view.View
 import android.view.WindowManager
 import android.graphics.Rect
 import android.view.HapticFeedbackConstants
-import android.view.Gravity
 import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -143,6 +143,7 @@ class WebViewActivity : AppCompatActivity() {
     private var isAdsInitialized = false
     private var isKeyboardVisible = false
     private var bannerAdView: AdView? = null
+    private var bannerAdWidthPx: Int = 0
     private val PRODUCT_ID = "ad_removal"
     private val BANNER_AD_UNIT_ID = "ca-app-pub-1388425042154340/3920449156"
     private val PREFS_NAME = "LMSA_PREFS"
@@ -687,45 +688,77 @@ class WebViewActivity : AppCompatActivity() {
             MobileAds.initialize(this) {}
             isAdsInitialized = true
 
-            val adContainer: FrameLayout = findViewById(R.id.adContainer)
-            adContainer.post {
-                // Use anchored adaptive banners so creative height scales for phone/tablet widths.
-                val availableWidthPx = (adContainer.width - adContainer.paddingLeft - adContainer.paddingRight)
-                    .coerceAtLeast(1)
-                val adaptiveSize = getAdaptiveBannerAdSize(availableWidthPx)
-                val adView = AdView(this).apply {
-                    setAdUnitId(BANNER_AD_UNIT_ID)
-                    setAdSize(adaptiveSize)
-                    adListener = object : AdListener() {
-                        override fun onAdLoaded() {
-                            Log.d(TAG, "AdMob: Ad loaded successfully")
-                            updateAdVisibility()
-                        }
-
-                        override fun onAdFailedToLoad(adError: LoadAdError) {
-                            Log.e(TAG, "AdMob: Ad failed to load: ${adError.message}")
-                        }
-                    }
-                }
-
-                bannerAdView?.destroy()
-                adContainer.removeAllViews()
-                val adLayoutParams = FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.WRAP_CONTENT,
-                    FrameLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    gravity = Gravity.CENTER_HORIZONTAL
-                }
-                adContainer.addView(adView, adLayoutParams)
-                bannerAdView = adView
-
-                val adRequest = AdRequest.Builder().build()
-                adView.loadAd(adRequest)
-            }
+            loadAdaptiveBannerAd(forceReload = true)
             updateAdVisibility()
         }
     }
 
+    private fun loadAdaptiveBannerAd(forceReload: Boolean = false) {
+        if (!isAdsInitialized) return
+
+        val adContainer: FrameLayout = findViewById(R.id.adContainer)
+        val availableWidthPx = getAvailableBannerWidthPx(adContainer)
+
+        if (availableWidthPx <= 0) {
+            adContainer.post {
+                loadAdaptiveBannerAd(forceReload)
+            }
+            return
+        }
+
+        if (!forceReload && bannerAdView != null && bannerAdWidthPx == availableWidthPx) {
+            return
+        }
+
+        bannerAdWidthPx = availableWidthPx
+        val adaptiveSize = getAdaptiveBannerAdSize(availableWidthPx)
+        val adView = AdView(this).apply {
+            setAdUnitId(BANNER_AD_UNIT_ID)
+            setAdSize(adaptiveSize)
+            adListener = object : AdListener() {
+                override fun onAdLoaded() {
+                    Log.d(TAG, "AdMob: Ad loaded successfully at width ${bannerAdWidthPx}px")
+                    updateAdVisibility()
+                }
+
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    Log.e(TAG, "AdMob: Ad failed to load: ${adError.message}")
+                }
+            }
+        }
+
+        bannerAdView?.destroy()
+        adContainer.removeAllViews()
+        val adLayoutParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT
+        )
+        adContainer.addView(adView, adLayoutParams)
+        bannerAdView = adView
+
+        val adRequest = AdRequest.Builder().build()
+        adView.loadAd(adRequest)
+    }
+
+    private fun getAvailableBannerWidthPx(adContainer: FrameLayout): Int {
+        val horizontalPadding = adContainer.paddingLeft + adContainer.paddingRight
+        val containerWidthPx = adContainer.width - horizontalPadding
+        if (containerWidthPx > 0) {
+            return containerWidthPx
+        }
+
+        val rootContainer = findViewById<View>(R.id.rootContainer)
+        val rootWidthPx = rootContainer.width - horizontalPadding
+        if (rootWidthPx > 0) {
+            return rootWidthPx
+        }
+
+        return (resources.displayMetrics.widthPixels - horizontalPadding).coerceAtLeast(0)
+    }
+
+    @Suppress("DEPRECATION") // getLarge*AnchoredAdaptiveBannerAdSize changes the height range
+    // to 50–150 dp which disrupts the fixed bottom banner layout; suppress until the app
+    // is restructured to use inline adaptive banners inside scrollable content.
     private fun getAdaptiveBannerAdSize(containerWidthPx: Int): AdSize {
         val displayMetrics = resources.displayMetrics
         val adWidthPixels = if (containerWidthPx > 0) {
@@ -734,7 +767,11 @@ class WebViewActivity : AppCompatActivity() {
             displayMetrics.widthPixels.toFloat()
         }
         val adWidthDp = (adWidthPixels / displayMetrics.density).roundToInt()
-        return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidthDp)
+        return if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            AdSize.getLandscapeAnchoredAdaptiveBannerAdSize(this, adWidthDp)
+        } else {
+            AdSize.getPortraitAnchoredAdaptiveBannerAdSize(this, adWidthDp)
+        }
     }
 
     private fun updateAdVisibility() {
@@ -744,6 +781,7 @@ class WebViewActivity : AppCompatActivity() {
             val shouldShowAds = !hasEffectivePremium() && !isKeyboardVisible
             
             if (shouldShowAds) {
+                loadAdaptiveBannerAd()
                 adContainer.visibility = View.VISIBLE
                 adTopMargin.visibility = View.VISIBLE
                 Log.d(TAG, "AdMob: Showing banner for free tier")
@@ -843,8 +881,6 @@ class WebViewActivity : AppCompatActivity() {
         // Small gap between the keyboard and the WebView content so the chat input
         // (and other focused fields) aren't visually flush against the IME.
         val imeBreathingRoomPx = (resources.displayMetrics.density * 8f).toInt().coerceAtLeast(1)
-        // Keep banners away from rounded display edges and gesture areas.
-        val adHorizontalSafePaddingPx = (resources.displayMetrics.density * 12f).roundToInt().coerceAtLeast(1)
         val adBottomSafeGapPx = (resources.displayMetrics.density * 6f).roundToInt().coerceAtLeast(1)
 
         ViewCompat.setOnApplyWindowInsetsListener(rootContainer) { _, insets ->
@@ -858,8 +894,8 @@ class WebViewActivity : AppCompatActivity() {
             val keyboardVisible = imeInsets.bottom > 0
             val navBottomWithGap = navigationInsets.bottom + adBottomSafeGapPx
             val targetHeight = maxOf(navBottomWithGap, imeBottom).coerceAtLeast(1)
-            val targetLeftPadding = maxOf(adHorizontalSafePaddingPx, navigationInsets.left)
-            val targetRightPadding = maxOf(adHorizontalSafePaddingPx, navigationInsets.right)
+            val targetLeftPadding = navigationInsets.left
+            val targetRightPadding = navigationInsets.right
 
             if (isKeyboardVisible != keyboardVisible) {
                 isKeyboardVisible = keyboardVisible
@@ -873,6 +909,10 @@ class WebViewActivity : AppCompatActivity() {
                     targetRightPadding,
                     adContainer.paddingBottom
                 )
+
+                if (!hasEffectivePremium() && !isKeyboardVisible) {
+                    loadAdaptiveBannerAd()
+                }
             }
 
             if (bottomSpacer.layoutParams.height != targetHeight) {
@@ -1040,6 +1080,7 @@ class WebViewActivity : AppCompatActivity() {
         startupBillingTimeoutRunnable = null
         bannerAdView?.destroy()
         bannerAdView = null
+        bannerAdWidthPx = 0
         textToSpeech?.shutdown()
         textToSpeech = null
         isTTSInitialized = false
