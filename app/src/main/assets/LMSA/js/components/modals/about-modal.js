@@ -33,7 +33,7 @@ export const aboutModal = `
                         <span class="text-xs font-bold text-blue-400 tracking-wider">v10.18</span>
                     </div>
                     <div class="bg-white/5 border border-white/10 px-3 py-1 rounded-full">
-                        <span class="text-[10px] font-bold text-gray-500 tracking-widest uppercase">Build 328</span>
+                        <span class="text-[10px] font-bold text-gray-500 tracking-widest uppercase">Build 330</span>
                     </div>
                 </div>
 

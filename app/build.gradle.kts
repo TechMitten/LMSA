@@ -18,7 +18,7 @@ android {
         minSdk = 23
         // Target 36 to stay current with Play Store 2026 requirements
         targetSdk = 36
-        versionCode = 328
+        versionCode = 330
         versionName = "10.18"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
