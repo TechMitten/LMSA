@@ -6,17 +6,25 @@ LMSA is a premium, feature-rich Android interface designed for seamless interact
 
 ## Key Features
 
-- **Multiple Providers**: Built-in support for Local Servers (LM Studio, Ollama), OpenRouter, and any OpenAI-compatible API.
-- **Advanced File Support**: Upload PDFs, DOCX, and code files directly into your chat for instant context and analysis.
-- **Multimodal Vision**: Full support for image prompts and vision-language models.
-- **Web Search Integration**: Enhance your AI's knowledge with integrated web search capabilities.
-- **Character Card V2**: Import and manage complex AI personas using the industry-standard V2 specification.
-- **Native Text-to-Speech**: Listen to your AI's responses with high-quality, native Android TTS integration.
-- **Power Tools**: 
-    - **LaTeX Support**: Beautifully rendered mathematical formulas via KaTeX.
-    - **Code Highlighting**: Professional syntax highlighting for hundreds of languages.
-    - **OCR**: Extract text from images using on-device Tesseract OCR.
-- **Security**: Secure your chats with **Biometric Lock** and maintain privacy by keeping data local.
+- **Multi-Provider Support**: Seamlessly connect to **LM Studio**, **Ollama**, **OpenRouter**, or any **OpenAI-compatible** custom endpoint.
+- **Model Context Protocol (MCP)**: Native support for LM Studio MCP servers and `mcp.json` plugins for extended model capabilities.
+- **Real-Time Web Search**: Augment AI responses with live data using the **Brave Search API** (with SearXNG fallback).
+- **Multimodal & Vision**: Full support for multimodal models—upload images for analysis or use the built-in OCR (via Tesseract.js) to extract text from documents.
+- **AI Image Generation**: Create images directly in your chats using the `/image` command.
+- **Advanced Reasoning Controls**: Toggle "Thinking" visibility and adjust "Reasoning Level" (Thinking Effort) for supported models.
+- **Smart Conversational Tools**: 
+  - **Smart Reply (Beta)**: Get AI-powered quick reply suggestions.
+  - **Auto-Titles**: Let the AI automatically name your chats based on context.
+- **Privacy & Security**:
+  - **Biometric Unlock**: Secure your chats with device-level fingerprint or PIN authentication.
+  - **Offline Access**: Full support for LAN-only mode when using local servers.
+- **Rich UI/UX**:
+  - **LaTeX & Code Highlighting**: Beautifully rendered math (KaTeX) and syntax-highlighted code blocks.
+  - **Customization**: Change chat fonts, sizes, and toggle model name displays.
+  - **Native TTS**: High-quality Text-to-Speech playback using Android's native engine.
+- **Power User Tools**:
+  - **Connection Presets**: Save and switch between multiple server configurations effortlessly.
+  - **Deep Integration**: Import LM Studio profiles, Character Card V2 specs, and export full chat histories.
 
 ## Technology Stack
 
@@ -37,9 +45,6 @@ LMSA is available for download on the Google Play Store:
   <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80">
 </a>
 
-## Demo Video
-
-[![LMSA Demo Video](https://img.youtube.com/vi/DUs2yEvJeWg/0.jpg)](https://www.youtube.com/watch?v=DUs2yEvJeWg)
 
 ## Getting Started
 

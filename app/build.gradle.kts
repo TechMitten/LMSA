@@ -12,6 +12,13 @@ android {
     // Set to 36 to satisfy the androidx.core:core-ktx:1.17.0 requirement
     compileSdk = 36
 
+    val localProperties = java.util.Properties()
+    val localPropertiesFile = project.rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localProperties.load(localPropertiesFile.inputStream())
+    }
+    val braveKey = localProperties.getProperty("BRAVE_API_KEY") ?: ""
+
     defaultConfig {
         applicationId = "com.lmsa.app"
         // Keep this at 23 so your app still runs on older Android versions
@@ -20,6 +27,8 @@ android {
         targetSdk = 36
         versionCode = 330
         versionName = "10.18"
+
+        buildConfigField("String", "BRAVE_API_KEY", "\"$braveKey\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

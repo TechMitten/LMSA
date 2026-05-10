@@ -2867,8 +2867,18 @@ export function loadBraveSearchSettings() {
   if (savedBraveApiKey) {
     braveApiKey = savedBraveApiKey;
   } else {
-    // Initial setup with provided key
-    braveApiKey = 'REPLACED_BRAVE_KEY';
+    // Attempt to pull from the Android Native Bridge (from local.properties)
+    if (window.AndroidNetwork && typeof window.AndroidNetwork.getBraveApiKey === 'function') {
+      const nativeKey = window.AndroidNetwork.getBraveApiKey();
+      if (nativeKey) {
+        braveApiKey = nativeKey;
+        localStorage.setItem('braveApiKey', braveApiKey);
+        return;
+      }
+    }
+
+    // Default empty if not found in bridge or storage
+    braveApiKey = '';
     localStorage.setItem('braveApiKey', braveApiKey);
   }
 }

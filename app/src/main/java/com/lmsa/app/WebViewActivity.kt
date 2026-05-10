@@ -2949,6 +2949,11 @@ class WebViewActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun getBraveApiKey(): String {
+            return BuildConfig.BRAVE_API_KEY
+        }
+
+        @JavascriptInterface
         fun isInternetReachable(): Boolean {
             return isInternetReachableForOfflineGate()
         }
