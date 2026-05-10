@@ -1,7 +1,7 @@
 export const privacyPolicyContent = `# Privacy Policy
 
 **Effective:** Feb 28, 2026  
-**Last Updated:** May 6, 2026
+**Last Updated:** May 9, 2026
 
 ## Privacy-at-a-Glance
 
@@ -281,7 +281,17 @@ We want to emphasize our approach to privacy with LMSA:
 
 - **Network Security Consideration:** Please be aware that communications between your Android device and a local LM Studio or Ollama server are not encrypted over the local network. Your conversations could potentially be intercepted if someone is monitoring your network. We recommend using LMSA only on secure, trusted networks. When using OpenRouter, communications are sent over HTTPS to their servers.
 
-## 11. Contact Us
+## 12. AI Image Generation (Third-Party APIs)
+
+LMSA's AI image generation feature (\`/image\`) utilizes third-party APIs to process your image prompts and generate visual content.
+
+- **Third-Party Processing:** When you use the image generation feature, your specific image prompt is transmitted to third-party API providers for processing.
+
+- **Not Private:** Unlike local chat processing, image prompts are sent over the internet to third-party services and are **not private**. By using this feature, you consent to this data transmission.
+
+- **Data Retention:** We do not control the data retention or privacy practices of the third-party image generation providers. Review their respective policies for more information.
+
+## 13. Contact Us
 
 **Company:** TechMitten LLC  
 Plymouth, Michigan USA

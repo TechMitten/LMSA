@@ -1,7 +1,7 @@
 # Terms of Service
 
 **Effective:** Feb 28, 2026  
-**Last Updated:** May 6, 2026
+**Last Updated:** May 9, 2026
 
 Please read these Terms of Service ("Terms") carefully before using the LMSA: Chat with LM Studio mobile application ("App") provided by TechMitten LLC ("we", "us", or "our").
 

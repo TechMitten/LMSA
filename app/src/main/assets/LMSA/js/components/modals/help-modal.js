@@ -29,7 +29,7 @@ export const helpModal = `
                     <div class="p-4 rounded-lg"
                         style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%); border: 1px solid rgba(59, 130, 246, 0.25); box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);">
                         <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: var(--text-primary);"><i
-                                class="fas fa-list mr-2" style="color: #3b82f6;"></i>Table of Contents</h3>
+                                class="fas fa-list mr-2" style="color: #facc15;"></i>Table of Contents</h3>
                         <p class="text-xs mb-3" style="color: var(--text-muted);">Click categories to expand</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                             <details class="md:col-span-2 p-2 rounded toc-group-setup"
@@ -40,6 +40,7 @@ export const helpModal = `
                                     <span style="pointer-events: none;">Setup</span>
                                 </summary>
                                 <div class="mt-2 pl-2 space-y-1">
+
                                      <a href="#section-app-setup"
                                          class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                          <i class="fas fa-wand-magic-sparkles mr-2 text-sm"></i>
@@ -100,6 +101,11 @@ export const helpModal = `
                                         <i class="fas fa-globe mr-2 text-sm"></i>
                                         <span>Web Search</span>
                                     </a>
+                                    <a href="#section-image-generation"
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
+                                        <i class="fas fa-image mr-2 text-sm"></i>
+                                        <span>Image Generation</span>
+                                    </a>
                                 </div>
                             </details>
                             <details class="md:col-span-2 p-2 rounded toc-group-privacy" style="background: rgba(255, 255, 255, 0.03);">
@@ -157,7 +163,7 @@ export const helpModal = `
 
                     <div class="space-y-4">
                         <section id="section-app-setup" class="mb-8">
-                            <h3 class="text-lg font-semibold mb-3 flex items-center" style="color: #6366f1;">
+                            <h3 class="text-lg font-semibold mb-3 flex items-center" style="color: #facc15;">
                                 <i class="fas fa-wand-magic-sparkles mr-2"></i>New UI & Setup
                             </h3>
                             <div class="p-4 rounded-xl bg-indigo-500/5 shadow-sm">
@@ -177,7 +183,7 @@ export const helpModal = `
 
                         <section id="section-quick-start">
                             <h3 class="text-lg font-semibold mb-2 flex items-center"
-                                style="color: #f59e0b;"><i class="fas fa-rocket mr-2"></i>LM Studio Setup
+                                style="color: #facc15;"><i class="fas fa-rocket mr-2"></i>LM Studio Setup
                             </h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">
                                 Keep LM Studio setup simple: run the LM Studio server on your host machine,
@@ -186,7 +192,7 @@ export const helpModal = `
 
                             <div class="space-y-4">
                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                    <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
                                             class="fas fa-server mr-2"></i>LM Studio</p>
                                     <ul class="list-disc pl-5 mt-2 space-y-1"
                                         style="color: var(--text-primary); font-size: 0.9em;">
@@ -198,7 +204,7 @@ export const helpModal = `
                                 </div>
 
                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                    <p class="font-medium flex items-center" style="color: #fbbf24;"><i
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
                                             class="fas fa-robot mr-2"></i>Model Loading</p>
                                     <ul class="list-disc pl-5 mt-2 space-y-1"
                                         style="color: var(--text-primary); font-size: 0.9em;">
@@ -231,7 +237,7 @@ export const helpModal = `
 
                              <div class="mt-4 p-3 rounded-lg"
                                  style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(251, 191, 36, 0.08) 100%);">
-                                 <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                 <p class="font-medium flex items-center" style="color: #facc15;"><i
                                          class="fas fa-network-wired mr-2"></i>LMSA Connection Address</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">
                                     Use the <strong>host machine IP address</strong> where LM Studio is running, plus
@@ -249,7 +255,7 @@ export const helpModal = `
 
                          <section id="section-lmstudio-mcp">
                              <h3 class="text-lg font-semibold mb-2 flex items-center"
-                                 style="color: #38bdf8;"><i class="fas fa-plug mr-2"></i>LM Studio MCP
+                                 style="color: #facc15;"><i class="fas fa-plug mr-2"></i>LM Studio MCP
                              </h3>
                              <p style="color: var(--text-primary); margin-bottom: 1rem;">
                                  LMSA can use LM Studio's MCP integrations so the model can call supported tools during chat.
@@ -258,7 +264,7 @@ export const helpModal = `
 
                              <div class="space-y-4">
                                  <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                     <p class="font-medium flex items-center" style="color: #38bdf8;"><i
+                                     <p class="font-medium flex items-center" style="color: #facc15;"><i
                                              class="fas fa-sliders-h mr-2"></i>Where to Configure It</p>
                                      <ul class="list-disc pl-5 mt-2 space-y-1"
                                          style="color: var(--text-primary); font-size: 0.9em;">
@@ -270,7 +276,7 @@ export const helpModal = `
                                  </div>
 
                                  <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                     <p class="font-medium flex items-center" style="color: #22c55e;"><i
+                                     <p class="font-medium flex items-center" style="color: #facc15;"><i
                                              class="fas fa-wand-magic-sparkles mr-2"></i>How It Works in Chat</p>
                                      <ul class="list-disc pl-5 mt-2 space-y-1"
                                          style="color: var(--text-primary); font-size: 0.9em;">
@@ -281,7 +287,7 @@ export const helpModal = `
                                  </div>
 
                                  <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                     <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                     <p class="font-medium flex items-center" style="color: #facc15;"><i
                                              class="fas fa-shuffle mr-2"></i>Ephemeral vs Plugin</p>
                                      <ul class="list-disc pl-5 mt-2 space-y-1"
                                          style="color: var(--text-primary); font-size: 0.9em;">
@@ -292,7 +298,7 @@ export const helpModal = `
                                  </div>
 
                                  <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                     <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                     <p class="font-medium flex items-center" style="color: #facc15;"><i
                                              class="fas fa-lightbulb mr-2"></i>Good to Know</p>
                                      <ul class="list-disc pl-5 mt-2 space-y-1"
                                          style="color: var(--text-primary); font-size: 0.9em;">
@@ -306,7 +312,7 @@ export const helpModal = `
 
                          <section id="section-lmstudio-prompts">
                              <h3 class="text-lg font-semibold mb-2 flex items-center"
-                                 style="color: #10b981;"><i class="fas fa-file-import mr-2"></i>Import / Export LM Studio Prompts
+                                 style="color: #facc15;"><i class="fas fa-file-import mr-2"></i>Import / Export LM Studio Prompts
                              </h3>
                              <p style="color: var(--text-primary); margin-bottom: 1rem;">
                                  LMSA can import system prompts from LM Studio profile JSON files, and it can also export your saved LMSA system prompts back out as LM Studio profile JSON files.
@@ -314,7 +320,7 @@ export const helpModal = `
 
                              <div class="space-y-4">
                                  <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                     <p class="font-medium flex items-center" style="color: #60a5fa;"><i
+                                     <p class="font-medium flex items-center" style="color: #facc15;"><i
                                              class="fas fa-folder-open mr-2"></i>Where LM Studio Stores the JSON Files</p>
                                      <ul class="list-disc pl-5 mt-2 space-y-1"
                                          style="color: var(--text-primary); font-size: 0.9em;">
@@ -325,7 +331,7 @@ export const helpModal = `
                                  </div>
 
                                  <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                     <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                     <p class="font-medium flex items-center" style="color: #facc15;"><i
                                              class="fas fa-list-ol mr-2"></i>How to Import It</p>
                                      <ol class="list-decimal pl-5 mt-2 space-y-1"
                                          style="color: var(--text-primary); font-size: 0.9em;">
@@ -338,7 +344,7 @@ export const helpModal = `
                                  </div>
 
                                  <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                     <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                     <p class="font-medium flex items-center" style="color: #facc15;"><i
                                              class="fas fa-save mr-2"></i>Where to Find Imported Prompts</p>
                                      <ul class="list-disc pl-5 mt-2 space-y-1"
                                          style="color: var(--text-primary); font-size: 0.9em;">
@@ -350,7 +356,7 @@ export const helpModal = `
                                  </div>
 
                                  <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                     <p class="font-medium flex items-center" style="color: #34d399;"><i
+                                     <p class="font-medium flex items-center" style="color: #facc15;"><i
                                              class="fas fa-file-export mr-2"></i>How to Export It</p>
                                      <ol class="list-decimal pl-5 mt-2 space-y-1"
                                          style="color: var(--text-primary); font-size: 0.9em;">
@@ -365,7 +371,7 @@ export const helpModal = `
                          </section>
  
                          <section id="section-ollama-setup">
-                             <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #f59e0b;">
+                             <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;">
                                  <i class="fas fa-terminal mr-2"></i>Ollama Setup
                              </h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">
@@ -374,7 +380,7 @@ export const helpModal = `
                             </p>
                             <div class="space-y-4">
                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                    <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
                                             class="fab fa-windows mr-2"></i>Windows</p>
                                     <ul class="list-disc pl-5 mt-2 space-y-1"
                                         style="color: var(--text-primary); font-size: 0.9em;">
@@ -384,7 +390,7 @@ export const helpModal = `
                                 </div>
 
                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                    <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
                                             class="fab fa-apple mr-2"></i><i class="fab fa-linux mr-2"></i>Linux / macOS</p>
                                     <ul class="list-disc pl-5 mt-2 space-y-1"
                                         style="color: var(--text-primary); font-size: 0.9em;">
@@ -417,7 +423,7 @@ export const helpModal = `
 
                             <div class="mt-4 p-3 rounded-lg"
                                 style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(251, 191, 36, 0.1) 100%); border: 1px solid rgba(245, 158, 11, 0.45); box-shadow: 0 2px 10px rgba(245, 158, 11, 0.18);">
-                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-network-wired mr-2"></i>LMSA Connection Address</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">
                                     In LMSA <strong>Settings</strong>, use the <strong>host machine IP address</strong>
@@ -437,7 +443,7 @@ export const helpModal = `
                         </section>
 
                         <section id="section-openrouter">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #f59e0b;"><i
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;"><i
                                     class="fas fa-cloud mr-2"></i>OpenRouter Setup</h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">OpenRouter is a cloud AI
                                 service that lets you access hundreds of hosted models using your own API key. When
@@ -462,7 +468,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-robot mr-2"></i>Selecting a Model:</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">OpenRouter provides
                                     access to hundreds of models from providers like OpenAI, Anthropic, Meta,
@@ -478,7 +484,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-info-circle mr-2"></i>Key Differences from Local Mode:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li><strong>No local server needed</strong> — LM Studio and Ollama are not used
@@ -497,8 +503,8 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg border"
-                                style="background: var(--settings-label-bg); border-color: #ef4444;">
-                                <p class="font-medium flex items-center" style="color: #ef4444;"><i
+                                style="background: var(--settings-label-bg); border-color: #facc15;">
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-shield-alt mr-2"></i>Privacy Notice:</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">When OpenRouter is
                                     enabled, your messages are sent to OpenRouter's servers and then forwarded to
@@ -527,7 +533,7 @@ export const helpModal = `
                         </section>
 
                         <section id="section-max-output-tokens">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa;"><i
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;"><i
                                     class="fas fa-text-width mr-2"></i>Max Output Tokens</h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">
                                 LMSA includes a <strong>Max Output Tokens</strong> setting in <strong>Settings &gt; Options</strong>.
@@ -536,7 +542,7 @@ export const helpModal = `
 
                             <div class="space-y-4">
                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                    <p class="font-medium flex items-center" style="color: #22c55e;"><i
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
                                             class="fas fa-sliders-h mr-2"></i>How to Use It</p>
                                     <ul class="list-disc pl-5 mt-2 space-y-1"
                                         style="color: var(--text-primary); font-size: 0.9em;">
@@ -548,7 +554,7 @@ export const helpModal = `
                                 </div>
 
                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                    <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
                                             class="fas fa-network-wired mr-2"></i>Where It Applies</p>
                                     <ul class="list-disc pl-5 mt-2 space-y-1"
                                         style="color: var(--text-primary); font-size: 0.9em;">
@@ -560,7 +566,7 @@ export const helpModal = `
                                 </div>
 
                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                    <p class="font-medium flex items-center" style="color: #60a5fa;"><i
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
                                             class="fas fa-info-circle mr-2"></i>What "Default" Means</p>
                                     <p style="color: var(--text-primary); margin-top: 0.5rem;">
                                         <strong>Default</strong> does not mean LMSA uses one fixed fallback number.
@@ -573,7 +579,7 @@ export const helpModal = `
                                 </div>
 
                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                    <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
                                             class="fas fa-lightbulb mr-2"></i>When This Setting Is Useful</p>
                                     <ul class="list-disc pl-5 mt-2 space-y-1"
                                         style="color: var(--text-primary); font-size: 0.9em;">
@@ -585,7 +591,7 @@ export const helpModal = `
                                 </div>
 
                                 <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                    <p class="font-medium flex items-center" style="color: #ef4444;"><i
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
                                             class="fas fa-exclamation-circle mr-2"></i>Good to Know</p>
                                     <ul class="list-disc pl-5 mt-2 space-y-1"
                                         style="color: var(--text-primary); font-size: 0.9em;">
@@ -598,20 +604,20 @@ export const helpModal = `
                         </section>
 
                         <section id="section-offline-use">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #10b981;"><i
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;"><i
                                     class="fas fa-server mr-2"></i>Offline Use</h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">Offline mode allows you to chat with AI models running on your own computer without requiring an internet connection. This feature is exclusive to Premium users.</p>
 
                             <div class="mt-4 p-3 rounded-lg"
                                 style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(34, 197, 94, 0.08) 100%);">
-                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-lock mr-2"></i>Premium Feature</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">Offline use is available to <strong>Premium users only</strong>. Free users are limited to cloud-based services and cannot access local servers. <a href="#" id="open-premium-modal-offline"
                                         class="text-blue-400 hover:text-blue-300">Upgrade to Premium</a> to unlock offline mode.</p>
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-server mr-2"></i>What's Available Offline</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.75rem;">When using offline mode with local servers, only the following features are available:</p>
                                 <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
@@ -626,7 +632,7 @@ export const helpModal = `
 
                             <div class="mt-4 p-3 rounded-lg"
                                 style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #ef4444;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-ban mr-2"></i>What's NOT Available Offline</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.75rem;">The following features require an internet connection and are not available when using local servers:</p>
                                 <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
@@ -637,7 +643,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-shield-alt mr-2"></i>Privacy Benefits of Offline Mode</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.75rem;">Offline mode provides maximum privacy for your conversations:</p>
                                 <ul class="list-disc pl-5 space-y-2" style="color: var(--text-primary);">
@@ -649,7 +655,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-cogs mr-2"></i>Enabling Offline Mode</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.75rem;">To use LMSA in offline mode:</p>
                                 <ol class="list-decimal pl-5 space-y-2" style="color: var(--text-primary);">
@@ -661,7 +667,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-info-circle mr-2"></i>Offline vs. Online Mode Comparison</p>
                                 <div class="overflow-x-auto mt-2">
                                     <table class="w-full text-sm" style="color: var(--text-primary);">
@@ -703,7 +709,7 @@ export const helpModal = `
                         </section>
 
                         <section id="section-templates">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #f59e0b;"><i
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;"><i
                                     class="fas fa-th-large mr-2"></i>Using Templates</h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">Templates provide pre-configured
                                 AI personas that specialize in different tasks. Instead of writing custom system
@@ -711,7 +717,7 @@ export const helpModal = `
                             or work with advanced v2 character cards.</p>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-list mr-2"></i>Accessing Templates:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>Open the sidebar and tap <strong>Templates</strong></li>
@@ -723,7 +729,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #60a5fa;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-layer-group mr-2"></i>Basic vs Advanced v2</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li><strong>Basic</strong> templates are ideal when you only need a description and a system prompt</li>
@@ -734,7 +740,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-file-import mr-2"></i>Importing v2 Character Cards</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>Use <strong>Import v2 Card</strong> on the Templates page to import a JSON character card directly into LMSA</li>
@@ -745,7 +751,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-wand-magic-sparkles mr-2"></i>AI Fill for v2 Cards</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>Inside the <strong>Advanced v2 Card</strong> tab, tap <strong>Generate with AI</strong> to fill blank character-card fields</li>
@@ -756,7 +762,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-check-circle mr-2"></i>Selecting a Template:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>Tap on any template card to select it (it will highlight with a blue ring)</li>
@@ -767,7 +773,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-comment-dots mr-2"></i>Using Active Templates:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>When a template is active, the AI will respond according to that template's
@@ -780,7 +786,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #ef4444;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-times-circle mr-2"></i>Disabling Templates:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>Click the <strong>Disable</strong> button in the template indicator banner at
@@ -791,7 +797,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-info-circle mr-2"></i>Model Quality:</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">The effectiveness of
                                     templates varies depending on which AI model you're using in LM Studio. Larger, more
@@ -807,7 +813,7 @@ export const helpModal = `
 
                         </section>
                         <section id="section-font-customization">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #f59e0b;"><i
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;"><i
                                     class="fas fa-font mr-2"></i>Font & Text Size</h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">
                                 You can personalize how text looks in your conversations by changing the chat bubble
@@ -815,7 +821,7 @@ export const helpModal = `
                             </p>
 
                             <div class="mt-2 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #c084fc;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-sliders-h mr-2"></i>How to change the font:</p>
                                 <ol class="list-decimal pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>Open the sidebar and tap <strong>Settings</strong></li>
@@ -827,7 +833,7 @@ export const helpModal = `
 
                             <div class="mt-4 p-3 rounded-lg"
                                 style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #c084fc;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-info-circle mr-2"></i>Important:</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">
                                     Changing <strong>Chat Bubble Font Size</strong> only affects text inside chat
@@ -837,14 +843,14 @@ export const helpModal = `
                             </div>
                         </section>
                         <section id="section-file-attachments">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #f59e0b;"><i
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;"><i
                                     class="fas fa-paperclip mr-2"></i>File Attachments</h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">
                                 When chatting with LMSA, you can attach files to share content with the AI. The app accepts a wide variety of file types for analysis and discussion.
                             </p>
 
                             <div class="mt-3 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-exclamation-circle mr-2"></i>Important:</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">
                                     The types of files your AI model can process <strong>depend on the model you're using</strong>. Different models have different capabilities:
@@ -862,7 +868,7 @@ export const helpModal = `
 
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-file-lines mr-2"></i>Text & Documentation Files:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li><strong>.txt</strong> - Plain text files</li>
@@ -875,7 +881,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-code mr-2"></i>Code Files:</p>
                                 <p style="color: var(--text-primary); margin-bottom: 0.75rem;">
                                     Source code in all popular programming languages:
@@ -890,7 +896,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-database mr-2"></i>Data & Configuration Files:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li><strong>.json</strong> - JSON data and configuration</li>
@@ -903,7 +909,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #ec4899;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-image mr-2"></i>Image Files:</p>
                                 <p style="color: var(--text-primary); margin-bottom: 0.75rem;">
                                     Image attachments are supported only when using a <strong>vision language model</strong> (a model capable of analyzing images):
@@ -914,13 +920,13 @@ export const helpModal = `
                                     <li><strong>.webp</strong> - WebP images</li>
                                 </ul>
                                 <p style="color: var(--text-primary); margin-top: 0.75rem; font-size: 0.9em;">
-                                    <i class="fas fa-info-circle mr-2" style="color: #f59e0b;"></i>
+                                    <i class="fas fa-info-circle mr-2" style="color: #facc15;"></i>
                                     If your model doesn't support images, images will be visible in the file list but cannot be analyzed.
                                 </p>
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #60a5fa;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-lightbulb mr-2"></i>Tips for File Attachments:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>Click the <strong>paperclip icon</strong> in the chat to attach files</li>
@@ -932,14 +938,14 @@ export const helpModal = `
                             </div>
                         </section>
                         <section id="section-web-search">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #10b981;"><i
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;"><i
                                     class="fas fa-globe mr-2"></i>Web Search</h3>
                             <p style="color: var(--text-primary); margin-bottom: 1rem;">
                                 The Web Search feature enables the AI model to search the web in real-time to find up-to-date information, news, and facts before generating a response.
                             </p>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-power-off mr-2"></i>How to Enable:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>Open the <strong>Side Menu</strong> and tap the <strong>Globe icon</strong>.</li>
@@ -950,7 +956,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-robot mr-2"></i>How It Works:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>When you send a prompt, LMSA analyzes if a web search would be beneficial.</li>
@@ -960,7 +966,7 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-user-shield mr-2"></i>Privacy-Respecting Features:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li><strong>Privacy-First Search</strong>: We primarily use <strong>Brave Search</strong>, a leading independent search engine that does not track you or your search history.</li>
@@ -972,15 +978,61 @@ export const helpModal = `
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-shield-alt mr-2"></i>Privacy Note:</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">
                                     While we take extensive measures to protect your privacy, a focused search query derived from your prompt is shared with search providers to fetch results. <strong>Avoid including highly sensitive personal information</strong> (like passwords or private IDs) in your messages while Web Search is enabled.
                                 </p>
                             </div>
                         </section>
+
+                        <section id="section-image-generation">
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;"><i
+                                    class="fas fa-image mr-2"></i>AI Image Generation</h3>
+                            <p style="color: var(--text-primary); margin-bottom: 1rem;">
+                                LMSA includes a powerful AI image generation feature that allows you to create images directly within your chat.
+                            </p>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
+                                        class="fas fa-terminal mr-2"></i>How to Use:</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                    Type <code>/image</code> followed by a detailed description of what you want to create.
+                                </p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem; font-style: italic; font-size: 0.9em;">
+                                    Example: <code>/image a futuristic city at sunset with flying cars</code>
+                                </p>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
+                                        class="fas fa-chart-bar mr-2"></i>Generation Limits:</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li><strong>Free Tier</strong>: Limited to a total of <strong>2 images</strong>.</li>
+                                    <li><strong>Premium Tier</strong>: Includes significantly increased limits for image generation.</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
+                                        class="fas fa-info-circle mr-2"></i>Important Information:</p>
+                                <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
+                                    <li><strong>Third-Party API</strong>: Image generation depends on external APIs and may not always be available.</li>
+                                    <li><strong>Performance</strong>: Generations may slow down or fail during periods of high demand.</li>
+                                    <li><strong>Privacy</strong>: Image prompts are sent to third-party providers and are <strong>not private</strong>. Avoid including sensitive data in image prompts.</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-lg border border-red-500/30" style="background: rgba(239, 68, 68, 0.05);">
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
+                                        class="fas fa-exclamation-triangle mr-2"></i>User Responsibility:</p>
+                                <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                    You are solely responsible for the content you generate. Generating illegal, harmful, or prohibited content is a violation of our terms and will result in <strong>immediate termination</strong> of your access to the app.
+                                </p>
+                            </div>
+                        </section>
                         <section id="section-security-privacy">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa;">
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;">
                                 <i class="fas fa-lock mr-2"></i>Security & Privacy
                             </h3>
                             <div class="p-3 rounded-lg"
@@ -1001,7 +1053,7 @@ export const helpModal = `
 
                                 <div class="mt-3 rounded"
                                     style="background: var(--settings-label-bg); padding: 0.75rem;">
-                                    <p class="font-medium flex items-center" style="color: #ef4444;"><i
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
                                             class="fas fa-shield-alt mr-2"></i>Network Security:</p>
                                     <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.5rem;">
                                         <strong>The connection between your device and the LM Studio server is NOT
@@ -1017,7 +1069,7 @@ export const helpModal = `
                                         </li>
                                     </ul>
                                     <p style="color: var(--text-primary); margin-top: 0.75rem; font-weight: 600;">
-                                        <i class="fas fa-exclamation-circle mr-2" style="color: #ef4444;"></i>
+                                        <i class="fas fa-exclamation-circle mr-2" style="color: #facc15;"></i>
                                         To protect your privacy:
                                     </p>
                                     <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
@@ -1031,7 +1083,7 @@ export const helpModal = `
                                 </div>
 
                                 <div class="mt-3 p-2 rounded" style="background: var(--settings-label-bg);">
-                                    <p class="font-medium flex items-center" style="color: #06b6d4;"><i
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
                                             class="fas fa-file-export mr-2"></i>Chat Export/Import:</p>
                                     <p style="color: var(--text-primary); margin-bottom: 0.5rem;">You can now backup and
                                         restore your conversations using the Export and Import features in the sidebar
@@ -1046,7 +1098,7 @@ export const helpModal = `
                                         <li>Store exported files securely to protect your privacy</li>
                                     </ul>
                                     <div class="p-2 rounded mt-2" style="background: var(--settings-label-bg);">
-                                        <p class="font-medium" style="color: var(--button-danger-bg);"><i
+                                        <p class="font-medium" style="color: #facc15;"><i
                                                 class="fas fa-exclamation-triangle mr-2"></i>Security Warning:</p>
                                         <p style="color: var(--text-primary);">Exported chat files are stored as
                                             unencrypted JSON files. Anyone with access to your device or the exported
@@ -1058,10 +1110,10 @@ export const helpModal = `
                     </div>
                     </section>
                     <section id="section-biometric-unlock">
-                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa;"><i
+                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;"><i
                                 class="fas fa-fingerprint mr-2"></i>Biometric Unlock</h3>
                         <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                            <p class="font-medium flex items-center" style="color: #8b5cf6;"><i
+                            <p class="font-medium flex items-center" style="color: #facc15;"><i
                                     class="fas fa-user-lock mr-2"></i>Protect Your Chats</p>
                             <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
                                 You can secure LMSA by requiring biometric authentication (such as fingerprint or face unlock) to open the app. This ensures your private conversations remain protected even if someone else gets hold of your unlocked device.</p>
@@ -1073,7 +1125,7 @@ export const helpModal = `
                         </div>
                     </section>
                     <section id="section-ads-privacy">
-                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #60a5fa; margin-bottom: 0.5rem;"><i
+                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15; margin-bottom: 0.5rem;"><i
                                 class="fas fa-shield-alt mr-2"></i>Privacy</h3>
                         <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
                             <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
@@ -1095,7 +1147,7 @@ export const helpModal = `
 
                             <div id="section-legacy-access" class="mt-4 p-2 rounded"
                                 style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #22c55e;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-key mr-2"></i>Legacy Users</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.5rem;">
                                     Background: Early releases of LMSA were distributed as a paid-only app (no free
@@ -1127,7 +1179,7 @@ export const helpModal = `
                         </div>
                     </section>
                         <section id="section-limits">
-                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #22c55e;"><i
+                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;"><i
                             class="fas fa-chart-line mr-2"></i>Usage Limits</h3>
                         <p style="color: var(--text-primary); margin-bottom: 1rem;">
                             Chat usage is unlimited on both the Free and Premium tiers. Current limits mainly apply to web search and which advanced features are unlocked.
@@ -1135,7 +1187,7 @@ export const helpModal = `
                         
                         <div class="space-y-4">
                             <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #22c55e;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-user-circle mr-2"></i>Free Users</p>
                                 <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
                                     Free users have unlimited chats with the following limits and feature access:</p>
@@ -1154,7 +1206,7 @@ export const helpModal = `
                             </div>
 
                             <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-crown mr-2"></i>Premium Users</p>
                                 <p style="color: var(--text-primary); margin-top: 0.75rem; margin-bottom: 0.75rem;">
                                     Premium users keep unlimited chats and unlock the following benefits:</p>
@@ -1175,7 +1227,7 @@ export const helpModal = `
                             </div>
 
                             <div class="p-3 rounded-lg mt-4" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-lightbulb mr-2"></i>How to Upgrade</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">To unlock Premium benefits:</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
@@ -1187,14 +1239,14 @@ export const helpModal = `
                         </div>
                     </section>
                     <section id="section-troubleshooting">
-                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #22c55e;"><i
+                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;"><i
                                 class="fas fa-tools mr-2"></i>Troubleshooting</h3>
                         <p style="color: var(--text-primary); margin-bottom: 1rem;">If you're having trouble
                             connecting LMSA to your LM Studio server, follow these steps:</p>
 
                         <div class="space-y-4">
                             <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-cog mr-2"></i>Verify Server Settings</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>In LM Studio, go to server settings and confirm <strong>"Enable
@@ -1206,7 +1258,7 @@ export const helpModal = `
                             </div>
 
                             <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-network-wired mr-2"></i>Verify IP Address</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">The IP address shown in
                                     LM Studio may sometimes be incorrect. Manually check your computer's Wi-Fi
@@ -1227,7 +1279,7 @@ export const helpModal = `
                             </div>
 
                             <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #a78bfa;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-wifi mr-2"></i>Network Configuration</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>Ensure both your computer and Android phone are on the <strong>same
@@ -1241,7 +1293,7 @@ export const helpModal = `
                             </div>
 
                             <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #ef4444;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-shield-alt mr-2"></i>Firewall Settings</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;"><strong>Windows
                                         Users:</strong> Check Windows Firewall to
@@ -1263,7 +1315,7 @@ export const helpModal = `
                             </div>
 
                             <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #06b6d4;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-ethernet mr-2"></i>Port Configuration</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
                                     <li>Try using different ports if the default (1234) doesn't work</li>
@@ -1274,7 +1326,7 @@ export const helpModal = `
                             </div>
 
                             <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-list-ul mr-2"></i>Incomplete Model List</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">If all models or only a
                                     partial list of models are showing as options in the Model Information modal:
@@ -1291,7 +1343,7 @@ export const helpModal = `
                             <!-- Ignorable Log Errors section removed per request -->
 
                             <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #f59e0b;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-stethoscope mr-2"></i>Test Network Connectivity</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.5rem;">
                                     <strong>From Android to Computer:</strong>
@@ -1318,7 +1370,7 @@ export const helpModal = `
                         </div>
                     </section>
                     <section id="section-refund-policy">
-                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #22c55e;"><i
+                        <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;"><i
                                 class="fas fa-receipt mr-2"></i>Refund Policy</h3>
                         <p style="color: var(--text-primary); margin-bottom: 1rem;">
                             LMSA Premium is a one-time lifetime purchase processed through Google Play. Refund eligibility and policies are determined by Google Play, not by LMSA.
@@ -1326,7 +1378,7 @@ export const helpModal = `
 
                         <div class="space-y-4">
                             <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #10b981;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-google mr-2"></i>How to Request a Refund</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">
                                     All refund requests for LMSA Premium must go through Google Play. Visit your Google Play purchase history and submit a refund request for the LMSA Premium purchase. Google Play will determine eligibility based on their policies.
@@ -1334,7 +1386,7 @@ export const helpModal = `
                             </div>
 
                             <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
-                                <p class="font-medium flex items-center" style="color: #3b82f6;"><i
+                                <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-question-circle mr-2"></i>Questions About Your Purchase?</p>
                                 <p style="color: var(--text-primary); margin-top: 0.5rem;">
                                     If you have concerns about your LMSA Premium purchase, you can reach out to:

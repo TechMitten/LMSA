@@ -1,7 +1,7 @@
 export const termsContentString = `# Terms of Service
 
 **Effective:** Feb 28, 2026  
-**Last Updated:** May 6, 2026
+**Last Updated:** May 9, 2026
 
 Please read these Terms of Service ("Terms") carefully before using the LMSA: Chat with LM Studio mobile application ("App") provided by TechMitten LLC ("we", "us", or "our").
 
@@ -193,7 +193,19 @@ The free version of the App is supported by advertisements provided by Google Ad
 
 - **Ad-Free Experience:** Users who purchase an LMSA Premium license will enjoy an ad-free experience.
 
-## 29. Contact Information
+## 30. AI Image Generation
+
+LMSA provides an AI image generation feature that allows users to generate images by typing \`/image\` followed by a description.
+
+- **Generation Limits:** Free tier users are limited to two (2) image generations. Premium users have significantly increased generation limits.
+
+- **Availability:** Image generation depends on third-party APIs and services. We do not guarantee continuous availability, and the service may be subject to slowdowns or failures during periods of high demand.
+
+- **User Responsibility and Content:** You are solely responsible for any content you generate using the image generation feature. You agree not to generate any content that is illegal, harmful, threatening, abusive, harassing, defamatory, vulgar, obscene, or otherwise objectionable.
+
+- **Termination:** TechMitten LLC reserves the right to immediately terminate or suspend your access to the App if you are found to be generating prohibited content, as determined in our sole discretion.
+
+## 31. Contact Information
 
 Reach us at support@lmsa.app for any questions regarding TechMitten LLC.
 `;

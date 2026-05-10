@@ -30,10 +30,10 @@ export const aboutModal = `
                 
                 <div class="version-badge flex items-center gap-3 mb-6 cursor-pointer">
                     <div class="bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full shadow-sm">
-                        <span class="text-xs font-bold text-blue-400 tracking-wider">v10.17</span>
+                        <span class="text-xs font-bold text-blue-400 tracking-wider">v10.18</span>
                     </div>
                     <div class="bg-white/5 border border-white/10 px-3 py-1 rounded-full">
-                        <span class="text-[10px] font-bold text-gray-500 tracking-widest uppercase">Build 327</span>
+                        <span class="text-[10px] font-bold text-gray-500 tracking-widest uppercase">Build 328</span>
                     </div>
                 </div>
 

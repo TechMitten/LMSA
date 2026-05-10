@@ -13,7 +13,7 @@ export const whatsNewModal = `
                     <div class="flex flex-col">
                         <span class="text-blue-400 font-extrabold">What's New</span>
                         <span class="text-xs text-blue-300/80 font-medium">v<span
-                            id="whats-new-version">10.17</span></span>
+                            id="whats-new-version">10.18</span></span>
                     </div>
                 </h2>
                 <button id="close-whats-new"
