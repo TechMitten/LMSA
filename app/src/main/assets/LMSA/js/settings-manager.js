@@ -2863,20 +2863,21 @@ export function loadDefaultModelSetting() {
  * Loads the Brave Search settings from localStorage
  */
 export function loadBraveSearchSettings() {
+  // 1. Try to get from Android Native Bridge first (to pick up changes from local.properties)
+  if (window.AndroidNetwork && typeof window.AndroidNetwork.getBraveApiKey === 'function') {
+    const nativeKey = window.AndroidNetwork.getBraveApiKey();
+    if (nativeKey) {
+      braveApiKey = nativeKey;
+      localStorage.setItem('braveApiKey', braveApiKey);
+      return;
+    }
+  }
+
+  // 2. Fallback to localStorage (e.g. if bridge is unavailable during development)
   const savedBraveApiKey = localStorage.getItem('braveApiKey');
   if (savedBraveApiKey) {
     braveApiKey = savedBraveApiKey;
   } else {
-    // Attempt to pull from the Android Native Bridge (from local.properties)
-    if (window.AndroidNetwork && typeof window.AndroidNetwork.getBraveApiKey === 'function') {
-      const nativeKey = window.AndroidNetwork.getBraveApiKey();
-      if (nativeKey) {
-        braveApiKey = nativeKey;
-        localStorage.setItem('braveApiKey', braveApiKey);
-        return;
-      }
-    }
-
     // Default empty if not found in bridge or storage
     braveApiKey = '';
     localStorage.setItem('braveApiKey', braveApiKey);
