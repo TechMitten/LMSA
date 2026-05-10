@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -12,7 +14,7 @@ android {
     // Set to 36 to satisfy the androidx.core:core-ktx:1.17.0 requirement
     compileSdk = 36
 
-    val localProperties = java.util.Properties()
+    val localProperties = Properties()
     val localPropertiesFile = project.rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
         localProperties.load(localPropertiesFile.inputStream())
@@ -25,7 +27,7 @@ android {
         minSdk = 23
         // Target 36 to stay current with Play Store 2026 requirements
         targetSdk = 36
-        versionCode = 330
+        versionCode = 331
         versionName = "10.18"
 
         buildConfigField("String", "BRAVE_API_KEY", "\"$braveKey\"")

@@ -3,6 +3,11 @@ import { highlightElement as shHighlight } from './syntax-highlighter.js';
 let isDebugEnabled = false; // Debug mode disabled by default
 let reasoningPanelIdCounter = 0;
 
+const REASONING_CHANNEL_OPEN_REGEX = /<\|channel>\s*(?:thought|thinking|reasoning|analysis)?\s*(?:\r?\n)?/gi;
+const REASONING_CHANNEL_CLOSE_REGEX = /<channel\|>/gi;
+const ESCAPED_REASONING_CHANNEL_OPEN_REGEX = /&lt;\|channel&gt;\s*(?:thought|thinking|reasoning|analysis)?\s*(?:\r?\n)?/gi;
+const ESCAPED_REASONING_CHANNEL_CLOSE_REGEX = /&lt;channel\|&gt;/gi;
+
 // Utility functions
 
 export function setDebugEnabled(enabled) {
@@ -46,6 +51,14 @@ export function normalizeReasoningTags(text) {
     if (!text) return '';
 
     let normalized = String(text);
+    normalized = normalized.replace(REASONING_CHANNEL_OPEN_REGEX, '<think>');
+    normalized = normalized.replace(REASONING_CHANNEL_CLOSE_REGEX, '</think>');
+    normalized = normalized.replace(ESCAPED_REASONING_CHANNEL_OPEN_REGEX, '&lt;think&gt;');
+    normalized = normalized.replace(ESCAPED_REASONING_CHANNEL_CLOSE_REGEX, '&lt;/think&gt;');
+    normalized = normalized.replace(/<channel(?:(?:\s+thought)?|)>/gi, '<think>');
+    normalized = normalized.replace(/<\/channel>/gi, '</think>');
+    normalized = normalized.replace(/&lt;channel(?:(?:\s+thought)?|)&gt;/gi, '&lt;think&gt;');
+    normalized = normalized.replace(/&lt;\/channel&gt;/gi, '&lt;/think&gt;');
     normalized = normalized.replace(/<thinking>/gi, '<think>');
     normalized = normalized.replace(/<\/thinking>/gi, '</think>');
     normalized = normalized.replace(/<reason>/gi, '<think>');
@@ -298,26 +311,19 @@ export function removeThinkTags(text) {
     if (!text) return text;
 
     // Make a copy of the text to avoid modifying the original
-    let cleanedText = String(text);
+    let cleanedText = normalizeReasoningTags(text);
 
     // Strategy: Be aggressive about removing thinking content while preserving actual response.
-    // Handles multiple reasoning tag variants used by different models:
-    //   <think>      — DeepSeek-R1, Qwen-QwQ, etc.
-    //   <thinking>   — Claude extended thinking, some OpenAI o-series wrappers
-    //   <reason>     — some fine-tuned models
-    //   <reasoning>  — some fine-tuned models
+    // normalizeReasoningTags() maps supported reasoning aliases into <think>...</think>.
 
     // Step 1: Remove all complete tag pairs (case-insensitive)
     cleanedText = cleanedText.replace(/<think>[\s\S]*?<\/think>/gi, '');
-    cleanedText = cleanedText.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
-    cleanedText = cleanedText.replace(/<reason>[\s\S]*?<\/reason>/gi, '');
-    cleanedText = cleanedText.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
 
     // Step 2: Handle unclosed opening tags — remove the tag and everything after it.
     // This prevents thinking content from leaking into the actual response when the
     // model was truncated mid-thought.
     const lc = cleanedText.toLowerCase();
-    for (const tag of ['<think>', '<thinking>', '<reason>', '<reasoning>']) {
+    for (const tag of ['<think>']) {
         const closeTag = tag.replace('<', '</');
         const openIdx = lc.lastIndexOf(tag);
         const closeIdx = lc.lastIndexOf(closeTag);
@@ -344,10 +350,6 @@ export function removeThinkTags(text) {
 
     // Step 4: Remove any remaining standalone tags (open or close)
     cleanedText = cleanedText.replace(/<\/?think>/gi, '');
-    cleanedText = cleanedText.replace(/<\/?thinking>/gi, '');
-    cleanedText = cleanedText.replace(/<\/?reason>/gi, '');
-    cleanedText = cleanedText.replace(/<\/?reasoning>/gi, '');
-
     // Remove HTML-escaped complete pairs and any remaining standalone escaped tags
     cleanedText = cleanedText.replace(/&lt;think&gt;[\s\S]*?&lt;\/think&gt;/g, '');
     cleanedText = cleanedText.replace(/&lt;\/?think&gt;/g, '');

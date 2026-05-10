@@ -5,6 +5,11 @@ import { showToastNotice } from '../../toast-notice.js';
 let imageViewerInitialized = false;
 let imageViewerCloseTimer = null;
 let imageViewerIsClosing = false;
+let zoomTranslateX = 0;
+let zoomTranslateY = 0;
+let isZoomDragging = false;
+let zoomStartX = 0;
+let zoomStartY = 0;
 
 export const imageViewerModal = `
     <div id="image-viewer-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm items-center justify-center hidden modal-container" style="z-index: 2150;"
@@ -14,11 +19,14 @@ export const imageViewerModal = `
                 <i class="fas fa-times"></i>
             </button>
             <div id="image-viewer-title" style="position: absolute; top: 18px; left: 50%; transform: translateX(-50%); z-index: 4; max-width: calc(100% - 120px); color: #f8fafc; font-size: 15px; font-weight: 700; line-height: 1.35; text-align: center; white-space: normal; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;">AI Generated Image</div>
-            <div style="flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 92px 18px 18px; background: radial-gradient(circle at top, rgba(59, 130, 246, 0.12), transparent 45%), rgba(2, 6, 23, 0.72);">
-                <img id="image-viewer-modal-image" alt="Expanded image preview" style="display: block; max-width: 100%; max-height: calc(90vh - 146px); width: auto; height: auto; border-radius: 18px; background: rgba(15, 23, 42, 0.35); object-fit: contain;" />
+            <div id="image-viewer-image-container" style="flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 92px 18px 18px; background: radial-gradient(circle at top, rgba(59, 130, 246, 0.12), transparent 45%), rgba(2, 6, 23, 0.72); transition: all 0.3s ease; overflow: hidden;">
+                <img id="image-viewer-modal-image" alt="Expanded image preview" style="display: block; max-width: 100%; max-height: calc(90vh - 146px); width: auto; height: auto; border-radius: 18px; background: rgba(15, 23, 42, 0.35); object-fit: contain; transition: all 0.3s ease;" />
             </div>
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px 20px; background: rgba(8, 13, 24, 0.96); border-top: 1px solid rgba(255, 255, 255, 0.08);">
-                <div style="min-width: 0; display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px 20px; background: rgba(8, 13, 24, 0.96); border-top: 1px solid rgba(255, 255, 255, 0.08); z-index: 10;">
+                <div style="min-width: 0; display: flex; flex-direction: row; gap: 12px; align-items: center; flex: 1;">
+                    <button id="zoom-image-viewer-button" aria-label="Zoom image" type="button" style="flex-shrink: 0; border: 0; border-radius: 999px; width: 36px; height: 36px; background: rgba(255, 255, 255, 0.1); color: #e2e8f0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
                     <div id="image-viewer-caption" style="color: rgba(226, 232, 240, 0.8); font-size: 13px; line-height: 1.45; word-break: break-word;"></div>
                 </div>
                 <button id="download-image-viewer-button" type="button" style="flex-shrink: 0; border: 0; border-radius: 999px; padding: 7px 12px; background: linear-gradient(135deg, #0ea5e9, #2563eb); color: #eff6ff; font-size: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 22px rgba(37, 99, 235, 0.22);">
@@ -33,11 +41,13 @@ function getImageViewerElements() {
     return {
         modal: document.getElementById('image-viewer-modal'),
         content: document.querySelector('#image-viewer-modal .modal-content'),
+        imageContainer: document.getElementById('image-viewer-image-container'),
         image: document.getElementById('image-viewer-modal-image'),
         title: document.getElementById('image-viewer-title'),
         caption: document.getElementById('image-viewer-caption'),
         closeButton: document.getElementById('close-image-viewer-modal'),
-        downloadButton: document.getElementById('download-image-viewer-button')
+        downloadButton: document.getElementById('download-image-viewer-button'),
+        zoomButton: document.getElementById('zoom-image-viewer-button')
     };
 }
 
@@ -252,9 +262,32 @@ export function closeImageViewerModal(force = false) {
 }
 
 export function openImageViewerModal(imageSrc, options = {}) {
-    const { modal, content, image, title, caption } = getImageViewerElements();
+    const { modal, content, image, imageContainer, title, caption, zoomButton } = getImageViewerElements();
     if (!modal || !image || !title || !caption || typeof imageSrc !== 'string' || !imageSrc) {
         return;
+    }
+
+    if (imageContainer) {
+        imageContainer.classList.remove('is-zoomed');
+        imageContainer.style.padding = '92px 18px 18px';
+        modal.dataset.zoomState = '0';
+        zoomTranslateX = 0;
+        zoomTranslateY = 0;
+        isZoomDragging = false;
+        
+        // Ensure styles are refreshed
+        const image = document.getElementById('image-viewer-modal-image');
+        const zoomButton = document.getElementById('zoom-image-viewer-button');
+        if (image && zoomButton) {
+            image.style.maxHeight = 'calc(90vh - 146px)';
+            image.style.width = 'auto';
+            image.style.height = 'auto';
+            image.style.borderRadius = '18px';
+            image.style.objectFit = 'contain';
+            image.style.transform = 'none';
+            image.style.cursor = 'default';
+            zoomButton.innerHTML = '<i class="fas fa-search-plus"></i>';
+        }
     }
 
     if (imageViewerCloseTimer) {
@@ -297,7 +330,7 @@ export function initImageViewerModal() {
         return;
     }
 
-    const { modal, content, closeButton, downloadButton } = getImageViewerElements();
+    const { modal, content, closeButton, downloadButton, zoomButton, imageContainer, image } = getImageViewerElements();
     if (!modal) {
         return;
     }
@@ -317,6 +350,98 @@ export function initImageViewerModal() {
             downloadImageFromViewer();
         });
     }
+
+    const updateZoomDisplay = () => {
+        const zoomState = parseInt(modal.dataset.zoomState || '0', 10);
+        
+        // Reset transition for dragging state
+        image.style.transition = zoomState === 2 ? 'none' : 'all 0.3s ease';
+
+        if (zoomState === 0) {
+            zoomButton.innerHTML = '<i class="fas fa-search-plus"></i>';
+            imageContainer.style.padding = '92px 18px 18px';
+            image.style.maxHeight = 'calc(90vh - 146px)';
+            image.style.width = 'auto';
+            image.style.height = 'auto';
+            image.style.borderRadius = '18px';
+            image.style.objectFit = 'contain';
+            image.style.transform = 'none';
+            image.style.cursor = 'default';
+            zoomTranslateX = 0;
+            zoomTranslateY = 0;
+        } else if (zoomState === 1) {
+            zoomButton.innerHTML = '<i class="fas fa-expand"></i>';
+            imageContainer.style.padding = '0';
+            image.style.maxHeight = '100%';
+            image.style.width = '100%';
+            image.style.height = '100%';
+            image.style.borderRadius = '0';
+            image.style.objectFit = 'cover';
+            image.style.transform = 'none';
+            image.style.cursor = 'default';
+            zoomTranslateX = 0;
+            zoomTranslateY = 0;
+        } else if (zoomState === 2) {
+            zoomButton.innerHTML = '<i class="fas fa-search-minus"></i>';
+            image.style.maxHeight = '100%';
+            image.style.width = '100%';
+            image.style.height = '100%';
+            image.style.objectFit = 'cover';
+            image.style.cursor = 'grab';
+            image.style.transform = `translate(${zoomTranslateX}px, ${zoomTranslateY}px) scale(2.5)`;
+        }
+    };
+
+    if (zoomButton) {
+        zoomButton.addEventListener('click', () => {
+            if (!imageContainer || !image) return;
+            let zoomState = parseInt(modal.dataset.zoomState || '0', 10);
+            zoomState = (zoomState + 1) % 3;
+            modal.dataset.zoomState = zoomState.toString();
+            updateZoomDisplay();
+        });
+    }
+
+    const startDrag = (e) => {
+        const zoomState = parseInt(modal.dataset.zoomState || '0', 10);
+        if (zoomState !== 2) return;
+        
+        isZoomDragging = true;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        zoomStartX = clientX - zoomTranslateX;
+        zoomStartY = clientY - zoomTranslateY;
+        image.style.cursor = 'grabbing';
+    };
+
+    const moveDrag = (e) => {
+        if (!isZoomDragging) return;
+        
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        zoomTranslateX = clientX - zoomStartX;
+        zoomTranslateY = clientY - zoomStartY;
+        
+        image.style.transform = `translate(${zoomTranslateX}px, ${zoomTranslateY}px) scale(2.5)`;
+    };
+
+    const stopDrag = () => {
+        isZoomDragging = false;
+        const zoomState = parseInt(modal.dataset.zoomState || '0', 10);
+        if (zoomState === 2) {
+            image.style.cursor = 'grab';
+        }
+    };
+
+    image.addEventListener('mousedown', startDrag);
+    window.addEventListener('mousemove', moveDrag);
+    window.addEventListener('mouseup', stopDrag);
+
+    image.addEventListener('touchstart', startDrag, { passive: false });
+    window.addEventListener('touchmove', moveDrag, { passive: false });
+    window.addEventListener('touchend', stopDrag);
 
     modal.addEventListener('click', (event) => {
         if (event.target === modal) {

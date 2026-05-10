@@ -1516,8 +1516,11 @@ function buildLmStudioMcpDisplayMessage(outputItems = []) {
             return;
         }
 
-        if (item.type === 'reasoning' && item.content) {
-            reasoningSections.push(item.content.trim());
+        if (item.type === 'reasoning') {
+            const content = extractReasoningDeltaText(item) || item.content;
+            if (content) {
+                reasoningSections.push(content.trim());
+            }
             return;
         }
 
@@ -1540,8 +1543,15 @@ function buildLmStudioMcpDisplayMessage(outputItems = []) {
             return;
         }
 
-        if (item.type === 'message' && item.content) {
-            messageSections.push(item.content);
+        if (item.type === 'message') {
+            const reasoningContent = extractReasoningDeltaText(item);
+            if (reasoningContent) {
+                reasoningSections.push(reasoningContent.trim());
+            }
+            
+            if (item.content) {
+                messageSections.push(item.content);
+            }
         }
     });
 
@@ -7077,7 +7087,7 @@ async function generateSmartReplies(userMessage, aiMessage) {
         if (cleanAiMessage.length < originalLength * 0.1) {
             debugLog('Smart reply generation skipped: think tag removal was too aggressive, likely malformed tags');
             // Find the position of the last closing reasoning tag across all supported variants
-            const closingTags = ['</think>', '</thinking>', '</reason>', '</reasoning>'];
+            const closingTags = ['</think>', '</thinking>', '</reason>', '</reasoning>', '<channel|>'];
             let lastTagEnd = -1;
             for (const tag of closingTags) {
                 const idx = aiMessage.toLowerCase().lastIndexOf(tag);

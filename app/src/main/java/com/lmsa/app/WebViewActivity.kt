@@ -2361,7 +2361,9 @@ class WebViewActivity : AppCompatActivity() {
             hasNotifiedTTSStart = false
 
             val cleanText = text
-                .replace(Regex("<think>[\\s\\S]*?</think>"), "")
+                .replace(Regex("(?is)<think>[\\s\\S]*?</think>"), "")
+                .replace(Regex("(?is)<\\|channel>\\s*(?:thought|thinking|reasoning|analysis)?\\s*[\\s\\S]*?<channel\\|>"), "")
+                .replace(Regex("(?is)<\\|channel>\\s*(?:thought|thinking|reasoning|analysis)?\\s*[\\s\\S]*$"), "")
                 .replace(Regex("<[^>]*>"), "")
                 .replace(Regex("\\*\\*([^*]+)\\*\\*"), "$1")
                 .replace(Regex("\\*([^*]+)\\*"), "$1")

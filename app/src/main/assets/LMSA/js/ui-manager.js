@@ -892,7 +892,7 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                 const hasThinkTags = reasoningState.hasThinking;
 
                 // Store the original message content for reprocessing if needed
-                lastMessage.originalContent = message;
+                lastMessage.originalContent = reasoningState.normalizedText;
 
                 const hideThinking = getHideThinking();
 
@@ -921,7 +921,7 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                             }
 
                             // Update the data attribute with current thinking content
-                            const thinkingContent = message.match(/<think>([\s\S]*?)(?:<\/think>|$)/);
+                            const thinkingContent = reasoningState.normalizedText.match(/<think>([\s\S]*?)(?:<\/think>|$)/);
                             if (thinkingContent && thinkingContent[1]) {
                                 thinkingIndicator.setAttribute('data-thinking-content', thinkingContent[1]);
                             }
@@ -962,7 +962,7 @@ export function appendMessage(sender, message, files = null, isStreaming = false
     }
 
     // Store the original message content for reprocessing if needed
-    messageElement.originalContent = message;
+    messageElement.originalContent = normalizeReasoningTags(message);
 
     if (sender === 'ai' || sender === 'user') {
         // Create a container for the message content

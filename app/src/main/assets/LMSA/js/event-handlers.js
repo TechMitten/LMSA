@@ -67,7 +67,7 @@ import { setActionToPerform, getActionToPerform } from './shared-state.js';
 import { closeSidebarExport } from './export-import.js';
 import { showModelModal } from './model-manager.js';
 import { showWhatsNewModal } from './whats-new.js';
-import { debugLog, debugError, formatDate, closeApplication, copyToClipboard, sanitizeInput, initializeCodeMirror, stripReasoningSections, scrollToBottom, scrollToBottomManual, handleScroll, ensureCursorVisible } from './utils.js';
+import { debugLog, debugError, formatDate, closeApplication, copyToClipboard, sanitizeInput, initializeCodeMirror, normalizeReasoningTags, stripReasoningSections, scrollToBottom, scrollToBottomManual, handleScroll, ensureCursorVisible } from './utils.js';
 
 let abortController = null;
 let sidebar = document.getElementById('sidebar');
@@ -3404,7 +3404,7 @@ function handleEditButtonClick(e) {
         if (messageIndex !== -1) {
             // Update the content in the UI
             contentContainer.innerHTML = sanitizeInput(editedMessage);
-            messageElement.originalContent = editedMessage;
+            messageElement.originalContent = normalizeReasoningTags(editedMessage);
 
             // Remove editing mode class
             messageElement.classList.remove('editing-mode');
@@ -3792,7 +3792,7 @@ function handleAIEditButtonClick(e) {
 
         // Update the rendered bubble with the edited Markdown
         contentContainer.innerHTML = sanitizeInput(editedContent);
-        messageElement.originalContent = editedContent;
+        messageElement.originalContent = normalizeReasoningTags(editedContent);
         messageElement.dataset.hasThinking = 'false';
 
         messageElement.classList.remove('editing-mode');
