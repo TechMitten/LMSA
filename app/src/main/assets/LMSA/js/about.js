@@ -253,7 +253,20 @@ if (modalContent) {
         }
 
         const target = e.target;
+        const privacyBtn = document.getElementById('privacy-options-btn');
+        const aboutLogo = document.getElementById('about-logo');
+        const aboutHeader = document.getElementById('about-header');
+
         if (versionBadge && versionBadge.contains(target)) {
+            return;
+        }
+        if (privacyBtn && privacyBtn.contains(target)) {
+            return;
+        }
+        if (aboutLogo && aboutLogo.contains(target)) {
+            return;
+        }
+        if (aboutHeader && aboutHeader.contains(target)) {
             return;
         }
 
@@ -264,3 +277,31 @@ if (modalContent) {
     modalContent.addEventListener('click', disableDebugByModalTap);
     modalContent.addEventListener('touchend', disableDebugByModalTap, { passive: true });
 }
+
+// Privacy Options Button Logic
+const privacyOptionsBtn = document.getElementById('privacy-options-btn');
+if (privacyOptionsBtn) {
+    privacyOptionsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (window.AndroidAds && typeof window.AndroidAds.showPrivacyOptionsForm === 'function') {
+            window.AndroidAds.showPrivacyOptionsForm();
+        } else {
+            console.warn('Privacy options form is not available.');
+        }
+    });
+
+    const updatePrivacyButtonVisibility = () => {
+        const isRequired = window.AndroidAds && typeof window.AndroidAds.isPrivacyOptionsRequired === 'function' 
+                           && window.AndroidAds.isPrivacyOptionsRequired();
+        
+        if (isRequired || window.isDebugMode) {
+            privacyOptionsBtn.classList.remove('hidden');
+        } else {
+            privacyOptionsBtn.classList.add('hidden');
+        }
+    };
+
+    updatePrivacyButtonVisibility();
+    document.addEventListener('ump-consent-updated', updatePrivacyButtonVisibility);
+}
+

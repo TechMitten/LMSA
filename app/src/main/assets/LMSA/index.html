@@ -186,116 +186,137 @@
                         </div>
                     </button>
 
-                    <button id="system-prompt-settings-btn" class="menu-item w-full text-left flex items-center">
+                    <!-- Options -->
+                    <button id="options-btn" class="menu-item w-full text-left flex items-center justify-between">
                         <div class="flex items-center">
-                            <i class="fas fa-comment-dots"
+                            <i class="fas fa-sliders-h"
                                 style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                            <span style="color: #f1f5f9;">System Prompt</span>
-                        </div>
-                    </button>
-
-                    <!-- Model Settings -->
-                    <button id="model-btn" class="menu-item w-full text-left flex items-center">
-                        <div class="flex items-center">
-                            <i class="fas fa-robot"
-                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                            <span style="color: #f1f5f9;">Models</span>
-                        </div>
-                    </button>
-
-                    <!-- Templates Button -->
-                    <button id="templates-btn" class="menu-item w-full text-left flex items-center"
-                        onclick="navigateToTemplates()">
-                        <div class="flex items-center">
-                            <i class="fas fa-th-large"
-                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                            <span style="color: #f1f5f9;">Templates</span>
-                        </div>
-                    </button>
-
-                    <!-- Help -->
-                    <button id="help-btn" class="menu-item w-full text-left flex items-center">
-                        <div class="flex items-center">
-                            <i class="fas fa-question-circle"
-                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                            <span style="color: #f1f5f9;">Help</span>
-                        </div>
-                    </button>
-
-                    <!-- What's New -->
-                    <button id="whats-new-btn" class="menu-item w-full text-left flex items-center">
-                        <div class="flex items-center">
-                            <i class="fas fa-wand-magic-sparkles"
-                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                            <span style="color: #f1f5f9;">What's New</span>
-                        </div>
-                    </button>
-
-                    <!-- Import/Export -->
-                    <button id="import-export-group-btn"
-                        class="menu-item w-full text-left flex items-center justify-between">
-                        <div class="flex items-center">
-                            <i class="fas fa-exchange-alt"
-                                style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                            <span style="color: #f1f5f9;">Import/Export</span>
+                            <span style="color: #f1f5f9;">Options</span>
                         </div>
                         <i class="fas fa-caret-down" style="color: #64748b;"></i>
                     </button>
-                    <div id="import-export-container" class="hidden">
-                        <button id="import-system-prompt-lms-btn" class="menu-item w-full text-left">
-                            <i class="fas fa-file-import"
-                                style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                            <span style="color: #f1f5f9;">Import System Prompt (LMS)</span>
-                        </button>
-                        <button id="export-system-prompt-lms-btn" class="menu-item w-full text-left">
-                            <i class="fas fa-file-export"
-                                style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                            <span style="color: #f1f5f9;">Export Saved Prompt (LMS)</span>
-                        </button>
-                        <button id="import-chats-btn" class="menu-item w-full text-left">
-                            <i class="fas fa-file-import"
-                                style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                            <span style="color: #f1f5f9;">Import Chats</span>
-                        </button>
-                        <button id="export-chats-btn" class="menu-item w-full text-left">
-                            <i class="fas fa-file-export"
-                                style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                            <span style="color: #f1f5f9;">Export Chats</span>
-                        </button>
-                    </div>
 
-                    <!-- Premium -->
-                    <button id="premium-group-btn"
-                        class="menu-item w-full text-left flex items-center justify-between">
-                        <div class="flex items-center">
-                            <i class="fas fa-crown" style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
-                            <span style="color: #f1f5f9;">Premium Settings</span>
+                    <div id="options-container" class="hidden">
+                        <button id="system-prompt-settings-btn" class="menu-item w-full text-left flex items-center">
+                            <div class="flex items-center">
+                                <i class="fas fa-comment-dots"
+                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">System Prompt</span>
+                            </div>
+                        </button>
+
+                        <!-- Model Settings -->
+                        <button id="model-btn" class="menu-item w-full text-left flex items-center">
+                            <div class="flex items-center">
+                                <i class="fas fa-robot"
+                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Models</span>
+                            </div>
+                        </button>
+
+                        <!-- Templates Button -->
+                        <button id="templates-btn" class="menu-item w-full text-left flex items-center"
+                            onclick="navigateToTemplates()">
+                            <div class="flex items-center">
+                                <i class="fas fa-th-large"
+                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Templates</span>
+                            </div>
+                        </button>
+
+                        <!-- Help -->
+                        <button id="help-btn" class="menu-item w-full text-left flex items-center">
+                            <div class="flex items-center">
+                                <i class="fas fa-question-circle"
+                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Help</span>
+                            </div>
+                        </button>
+
+                        <!-- What's New -->
+                        <button id="whats-new-btn" class="menu-item w-full text-left flex items-center">
+                            <div class="flex items-center">
+                                <i class="fas fa-wand-magic-sparkles"
+                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">What's New</span>
+                            </div>
+                        </button>
+                        
+                        <!-- About -->
+                        <button id="about-btn" class="menu-item w-full text-left flex items-center">
+                            <div class="flex items-center">
+                                <i class="fas fa-info-circle"
+                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">About</span>
+                            </div>
+                        </button>
+
+                        <!-- Import/Export -->
+                        <button id="import-export-group-btn"
+                            class="menu-item w-full text-left flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-exchange-alt"
+                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Import/Export</span>
+                            </div>
+                            <i class="fas fa-caret-down" style="color: #64748b;"></i>
+                        </button>
+                        <div id="import-export-container" class="hidden">
+                            <button id="import-system-prompt-lms-btn" class="menu-item w-full text-left">
+                                <i class="fas fa-file-import"
+                                    style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Import System Prompt (LMS)</span>
+                            </button>
+                            <button id="export-system-prompt-lms-btn" class="menu-item w-full text-left">
+                                <i class="fas fa-file-export"
+                                    style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Export Saved Prompt (LMS)</span>
+                            </button>
+                            <button id="import-chats-btn" class="menu-item w-full text-left">
+                                <i class="fas fa-file-import"
+                                    style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Import Chats</span>
+                            </button>
+                            <button id="export-chats-btn" class="menu-item w-full text-left">
+                                <i class="fas fa-file-export"
+                                    style="color: #10b981 !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Export Chats</span>
+                            </button>
                         </div>
-                        <i class="fas fa-caret-down" style="color: #64748b;"></i>
-                    </button>
-                    <div id="premium-container" class="hidden" data-premium-state="pending">
-                        <div class="premium-action-group premium-free-actions">
-                            <button id="remove-ads-button" class="menu-item w-full text-left">
-                                <i class="fas fa-ban"></i>
-                                Unlock Premium
-                            </button>
 
-                            <button id="restore-purchases-button" class="menu-item w-full text-left">
-                                <i class="fas fa-undo"></i>
-                                Restore Purchase
-                            </button>
+                        <!-- Premium -->
+                        <button id="premium-group-btn"
+                            class="menu-item w-full text-left flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-crown" style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Premium Settings</span>
+                            </div>
+                            <i class="fas fa-caret-down" style="color: #64748b;"></i>
+                        </button>
+                        <div id="premium-container" class="hidden" data-premium-state="pending">
+                            <div class="premium-action-group premium-free-actions">
+                                <button id="remove-ads-button" class="menu-item w-full text-left">
+                                    <i class="fas fa-ban"></i>
+                                    Unlock Premium
+                                </button>
 
-                            <button id="legacy-access-btn" class="menu-item w-full text-left">
-                                <i class="fas fa-key"></i>
-                                Legacy Access
-                            </button>
-                        </div>
+                                <button id="restore-purchases-button" class="menu-item w-full text-left">
+                                    <i class="fas fa-undo"></i>
+                                    Restore Purchase
+                                </button>
 
-                        <div class="premium-action-group premium-active-actions">
-                            <button id="premium-activated-button" class="menu-item w-full text-left" title="View Premium Status" aria-label="View Premium Status">
-                                <i class="fas fa-check-circle" style="color: #34d399;"></i>
-                                Premium Activated
-                            </button>
+                                <button id="legacy-access-btn" class="menu-item w-full text-left">
+                                    <i class="fas fa-key"></i>
+                                    Legacy Access
+                                </button>
+                            </div>
+
+                            <div class="premium-action-group premium-active-actions">
+                                <button id="premium-activated-button" class="menu-item w-full text-left" title="View Premium Status" aria-label="View Premium Status">
+                                    <i class="fas fa-check-circle" style="color: #34d399;"></i>
+                                    Premium Activated
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -330,16 +351,7 @@
                     <button type="button" class="sidebar-mode-switcher-btn" data-provider="openrouter" aria-pressed="false">OpenRouter</button>
                     <button type="button" class="sidebar-mode-switcher-btn" data-provider="openai-compatible" aria-pressed="false">Custom Endpoint</button>
                 </div>
-                <div class="flex items-center justify-center gap-4">
-                    <button id="terms-service-btn" class="text-xs"
-                        style="background: none !important; border: none; padding: 0; cursor: pointer; color: var(--text-muted); opacity: 0.7;">Terms</button>
-                    <span style="color: var(--text-muted); opacity: 0.4; font-size: 0.6rem;">•</span>
-                    <button id="privacy-policy-btn" class="text-xs"
-                        style="background: none !important; border: none; padding: 0; cursor: pointer; color: var(--text-muted); opacity: 0.7;">Privacy</button>
-                    <span style="color: var(--text-muted); opacity: 0.4; font-size: 0.6rem;">•</span>
-                    <button id="about-btn" class="text-xs"
-                        style="background: none; border: none; padding: 0; cursor: pointer; color: var(--text-muted); opacity: 0.7;">About</button>
-                </div>
+
             </div>
         </div>
 

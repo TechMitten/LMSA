@@ -64,17 +64,31 @@ const PENDING_TEMPLATE_CHARACTER_CARD_KEY = 'pendingTemplateCharacterCard';
 
 const IMAGE_FILE_EXTENSION_PATTERN = /\.(?:apng|avif|bmp|gif|jpe?g|png|svg|webp)$/i;
 const IMAGE_PROMPT_SEXUAL_BLOCK_PATTERNS = [
-    /\b(?:nsfw|porn|porno|pornographic|erotic|xxx)\b/i,
-    /\b(?:nude|nudity|naked|topless|areola|nipples?|genitals?)\b/i,
-    /\b(?:sex|sexual|sexualized|intercourse|fellatio|cunnilingus|blowjob|handjob|masturbat(?:e|ing|ion))\b/i,
-    /\b(?:orgy|bdsm|fetish|dominatrix|bondage|lingerie shoot)\b/i,
-    /\b(?:cameltoe|upskirt|downblouse|see[- ]?through)\b/i,
-    /\b(?:minor|child|kid|underage|teen)\b.{0,24}\b(?:sexy|nude|naked|sexual|explicit|provocative)\b/i,
-    /\b(?:sexy|seductive)\s+(?:child|kid|minor|teen)\b/i
+    // General NSFW/Sexual terms & activities
+    /\b(?:nsfw|porn|porno|pornographic|erotic|xxx|sex|sexual|sexualized|intercourse|fellatio|cunnilingus|blowjob|handjob|masturbat(?:e|ing|ion)|cum|ejaculat(?:e|ing|ion)|hentai|ecchi|rule\s*34|facial|creampie|gangbang|deepthroat|orgasm|incest)\b/i,
+    // Anatomical terms
+    /\b(?:nude|nudity|naked|topless|areola|nipples?|genitals?|penis|vagina|pussy|cocks?|dick|tits|boobs|ass|buttocks?|clitoris|testicles?|scrotum|anus|vulva|labia|perineum|pubic)\b/i,
+    // Fetish/Explicit scenarios & poses
+    /\b(?:orgy|bdsm|fetish|dominatrix|bondage|lingerie shoot|seductive pose|provocative pose|sexualized)\b/i,
+    // Clothing/Exposure
+    /\b(?:cameltoe|upskirt|downblouse|see[- ]?through|no clothes|without clothes)\b/i,
+    // Child Safety (Comprehensive Protection)
+    /\b(?:minor|child|kid|underage|teen|toddler|infant|schoolgirl|schoolboy)\b.{0,30}\b(?:sexy|nude|naked|sexual|explicit|provocative|seductive|erotic|lingerie|bikini|showering|bath|hot)\b/i,
+    /\b(?:sexy|seductive|erotic|nude|naked|sexualized|provocative)\s+(?:child|kid|minor|teen|toddler|infant|schoolgirl|schoolboy)\b/i,
+    /\b(?:little|young|small)\s+(?:girl|boy)\b.{0,30}\b(?:sexy|nude|naked|sexual|explicit|provocative|seductive|erotic|lingerie|bikini|showering|bath)\b/i,
+    /\b(?:loli|shota|lolicon|shotacon|pedophil|paedophil|jailbreak)\b/i
 ];
 const IMAGE_PROMPT_ILLEGAL_BLOCK_PATTERNS = [
     /\b(?:how to|guide to|tutorial for|step[- ]?by[- ]?step|instructions? for)\b.{0,40}\b(?:steal|shoplift|rob|burglar(?:ize|y)?|carjack|kidnap|traffic|smuggle|poison|blackmail|extort)\b/i,
-    /\b(?:drug lab|meth lab|cocaine|heroin|fentanyl|crack cocaine|illegal drugs?|drug dealing|drug trafficking)\b/i
+    /\b(?:drug lab|meth lab|cocaine|heroin|fentanyl|crack cocaine|illegal drugs?|drug dealing|drug trafficking|crystal meth|mdma|ecstasy|methamphetamine)\b/i,
+    /\b(?:smoking|snorting|injecting|using|shooting up|puffing on|inhaling)\b.{0,24}\b(?:crack|meth|cocaine|heroin|fentanyl|crystal|drugs?|illegal substances?)\b/i,
+    /\b(?:crack pipe|meth pipe|drug paraphernalia|hypodermic needle)\b/i
+];
+const IMAGE_PROMPT_HARMFUL_BLOCK_PATTERNS = [
+    /\b(?:gore|mutilat(?:e|ed|ion)|severed|decapitat(?:e|ed|ion)|corpse|dead body|dismember(?:ed|ment)|torture|behead(?:ing)?|execution)\b/i,
+    /\b(?:suicide|kill myself|end my life|self[- ]?harm|cutting myself|slit(?:ting)? my wrists?)\b/i,
+    /\b(?:nazi|swastika|hitler|kkk|white power|holocaust|gas chamber)\b/i,
+    /\b(?:how to|guide to|tutorial for|step[- ]?by[- ]?step|instructions? for)\b.{0,40}\b(?:bomb|explosive|ied|molotov|poison|cyanide|anthrax|ricin)\b/i
 ];
 const WEB_SEARCH_STOP_WORDS = new Set([
     'a', 'an', 'and', 'are', 'as', 'at', 'be', 'because', 'briefly', 'by', 'can', 'could', 'do', 'does',
@@ -653,14 +667,35 @@ async function fetchGeneratedImageAttachment(prompt) {
 }
 
 function normalizeImagePromptForModeration(prompt) {
-    return typeof prompt === 'string'
-        ? prompt
-            .normalize('NFKC')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[_*`~]+/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim()
-        : '';
+    if (typeof prompt !== 'string') {
+        return '';
+    }
+
+    let normalized = prompt.normalize('NFKC')
+        .replace(/[\u0300-\u036f]/g, ''); // Remove accents
+
+    // Map common leetspeak/symbol bypasses to their alphabetical equivalents
+    const leetMap = {
+        '@': 'a', '4': 'a',
+        '0': 'o',
+        '3': 'e',
+        '1': 'i', '!': 'i', '|': 'i',
+        '5': 's', '$': 's',
+        '8': 'b',
+        '7': 't', '+': 't'
+    };
+
+    // Apply mapping
+    normalized = normalized.split('').map(char => leetMap[char] || char).join('');
+
+    // Remove common punctuation used for bypass (e.g., n.a.k.e.d or n-a-k-e-d)
+    // We keep spaces for word boundary (\b) regex checks
+    normalized = normalized.replace(/[.\-_,]/g, '');
+
+    return normalized
+        .replace(/[_*`~]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
 }
 
 export function getImagePromptModerationResult(prompt) {
@@ -673,10 +708,37 @@ export function getImagePromptModerationResult(prompt) {
         };
     }
 
+    // 1. Primary check with word boundaries (catches normal text and resolved leetspeak)
     if (IMAGE_PROMPT_SEXUAL_BLOCK_PATTERNS.some(pattern => pattern.test(normalizedPrompt))) {
         return {
             blocked: true,
             reason: 'sexual',
+            normalizedPrompt
+        };
+    }
+
+    // 2. Secondary check for "spaced-out" bypasses (e.g., "p o r n" or "n a k e d")
+    // We remove all spaces and check for highly specific explicit terms that are 
+    // unlikely to be part of legitimate words (to avoid false positives like "Essex").
+    const compressedPrompt = normalizedPrompt.replace(/\s+/g, '');
+    const highRiskTerms = [
+        'porn', 'porno', 'pornographic', 'fellatio', 'cunnilingus', 'blowjob', 
+        'handjob', 'masturbat', 'ejaculat', 'vagina', 'penis', 'clitoris', 
+        'testicle', 'scrotum', 'nude', 'naked', 'nudity'
+    ];
+
+    if (highRiskTerms.some(term => compressedPrompt.includes(term))) {
+        return {
+            blocked: true,
+            reason: 'sexual',
+            normalizedPrompt
+        };
+    }
+
+    if (IMAGE_PROMPT_HARMFUL_BLOCK_PATTERNS.some(pattern => pattern.test(normalizedPrompt))) {
+        return {
+            blocked: true,
+            reason: 'harmful',
             normalizedPrompt
         };
     }

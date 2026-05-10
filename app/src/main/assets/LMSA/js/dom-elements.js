@@ -133,6 +133,10 @@ export const webSearchHeaderIcon = document.getElementById('web-search-header-ic
 export const modeIndicator = document.getElementById('mode-indicator');
 export const systemPromptSettingsButton = document.getElementById('system-prompt-settings-btn');
 
+// Options group elements
+export const optionsButton = document.getElementById('options-btn');
+export const optionsContainer = document.getElementById('options-container');
+
 // Import/Export group elements
 export const importExportGroupButton = document.getElementById('import-export-group-btn');
 export const importExportContainer = document.getElementById('import-export-container');

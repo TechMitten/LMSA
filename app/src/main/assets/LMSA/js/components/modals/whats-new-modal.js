@@ -26,6 +26,25 @@ export const whatsNewModal = `
                 <div class="space-y-3">
                     <div class="feature-item">
                         <div class="relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-cyan-500/10 to-sky-700/5 rounded-full blur-xl"></div>
+                            <div class="flex items-start relative z-10">
+                                <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-cyan-500/20 w-10 h-10 shadow-sm">
+                                    <i class="fas fa-image text-cyan-300"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <h3 class="feature-title underline decoration-cyan-500/30 underline-offset-4">AI Image Generation</h3>
+                                    </div>
+                                    <div class="feature-description">
+                                        <p class="mb-3 text-sm">You can now generate images with AI directly in chat.</p>
+                                        <p class="mb-3 text-sm">Type <span class="font-semibold text-cyan-300">/image</span> followed by a description of what you want to create, and LMSA will generate the image for you.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-orange-500/10 to-red-700/5 rounded-full blur-xl"></div>
                             <div class="flex items-start relative z-10">
                                 <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-orange-500/20 w-10 h-10 shadow-sm">

@@ -68,6 +68,9 @@ let lmStudioMcpIntegrations = []; // Optional LM Studio native chat integrations
 let reasoningLevel = 'default'; // Thinking effort level (default, disabled, low, medium, high)
 let braveApiKey = ''; // Brave Search API key
 
+const IMAGE_GENERATION_COUNT_KEY = 'imageGenerationCount';
+export const FREE_IMAGE_GENERATION_LIMIT = 2;
+
 /**
  * Checks if the application has a valid connection configuration
  * @returns {boolean}
@@ -482,6 +485,28 @@ export function saveMaxTokensSetting() {
 
 export function getConfiguredMaxTokens() {
   return maxTokens;
+}
+
+/**
+ * Gets the current image generation count for free tier users.
+ * @returns {number}
+ */
+export function getImageGenerationCount() {
+  const savedCount = localStorage.getItem(IMAGE_GENERATION_COUNT_KEY);
+  if (savedCount === null) {
+    return 0;
+  }
+  const parsedCount = parseInt(savedCount, 10);
+  return isNaN(parsedCount) ? 0 : parsedCount;
+}
+
+/**
+ * Increments the image generation count for free tier users.
+ */
+export function incrementImageGenerationCount() {
+  const currentCount = getImageGenerationCount();
+  localStorage.setItem(IMAGE_GENERATION_COUNT_KEY, String(currentCount + 1));
+  debugLog("Incremented image generation count:", currentCount + 1);
 }
 
 /**

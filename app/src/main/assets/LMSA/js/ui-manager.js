@@ -16,7 +16,17 @@ import { domBatcher, rafThrottle } from './optimized-utils.js';
 let selectedText = '';
 let selectedMessageElement = null;
 let longPressTimer;
-const OFFENSIVE_IMAGE_REPORT_URL = 'mailto:report@lmsa.app?subject=report%20offensive%20photo';
+const OFFENSIVE_IMAGE_REPORT_EMAIL = 'report@lmsa.app';
+
+function buildOffensiveImageReportUrl(prompt = '') {
+    const normalizedPrompt = typeof prompt === 'string' ? prompt.trim() : '';
+    const subject = 'report offensive photo';
+    const body = normalizedPrompt
+        ? `Please review this generated image.\n\nPrompt:\n${normalizedPrompt}`
+        : 'Please review this generated image.\n\nPrompt: unavailable';
+
+    return `mailto:${OFFENSIVE_IMAGE_REPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
 
 function forceSidebarRepaint(element) {
     if (!element) return;
@@ -513,6 +523,13 @@ export function closeSidebar() {
     if (optionsContainer && window.innerWidth <= 1024) {
         optionsContainer.classList.add('hidden');
         optionsContainer.classList.remove('animate-fade-in');
+
+        const optionsButton = document.getElementById('options-btn');
+        const optionsCaret = optionsButton?.querySelector('.fa-caret-up');
+        if (optionsCaret) {
+            optionsCaret.classList.remove('fa-caret-up');
+            optionsCaret.classList.add('fa-caret-down');
+        }
     }
 
     const importExportContainer = document.getElementById('import-export-container');
@@ -1151,12 +1168,14 @@ export function appendMessage(sender, message, files = null, isStreaming = false
                     reportLink.textContent = 'Report';
                     reportLink.setAttribute('aria-label', 'Report offensive photo');
                     reportLink.addEventListener('click', () => {
+                        const reportUrl = buildOffensiveImageReportUrl(generatedImagePrompt);
+
                         if (typeof window.openExternalUrl === 'function') {
-                            window.openExternalUrl(OFFENSIVE_IMAGE_REPORT_URL);
+                            window.openExternalUrl(reportUrl);
                             return;
                         }
 
-                        window.location.href = OFFENSIVE_IMAGE_REPORT_URL;
+                        window.location.href = reportUrl;
                     });
 
                     actionRow.appendChild(downloadButton);

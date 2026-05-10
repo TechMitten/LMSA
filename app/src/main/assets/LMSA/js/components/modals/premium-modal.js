@@ -486,8 +486,8 @@ function getPremiumFeatureNotice(featureName, options = {}) {
         return `You've reached your daily limit for OpenRouter Messages!`;
     }
 
-    if (featureName === 'Chat Messages') {
-        return `Chat Messages are available on the free plan with no daily cap.`;
+    if (featureName === 'Image Generation') {
+        return `Free tier users are limited to 2 image generations. Upgrade to Premium for unlimited image generation!`;
     }
 
     return `<span id="premium-feature-name">${featureName}</span> is a premium feature!`;

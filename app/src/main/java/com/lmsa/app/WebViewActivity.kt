@@ -72,6 +72,7 @@ import com.google.android.gms.ads.LoadAdError
 import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
+import com.google.android.ump.ConsentDebugSettings
 
 import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
@@ -614,9 +615,17 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun setupConsent() {
-        val params = ConsentRequestParameters.Builder()
+        val paramsBuilder = ConsentRequestParameters.Builder()
             .setTagForUnderAgeOfConsent(false)
-            .build()
+
+        if (isDebugMode) {
+            val debugSettings = ConsentDebugSettings.Builder(this)
+                .setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA)
+                .build()
+            paramsBuilder.setConsentDebugSettings(debugSettings)
+        }
+
+        val params = paramsBuilder.build()
 
         consentInformation = UserMessagingPlatform.getConsentInformation(this)
         Log.d(
@@ -1939,6 +1948,9 @@ class WebViewActivity : AppCompatActivity() {
 
             runOnUiThread {
                 Toast.makeText(this@WebViewActivity, "Debug Mode: ${if(enable) "Enabled" else "Disabled"}", Toast.LENGTH_SHORT).show()
+                UserMessagingPlatform.getConsentInformation(this@WebViewActivity).reset()
+                hasStartedLaunchConsentFlow = false
+                startLaunchConsentFlow()
             }
             updatePremiumUiState()
         }

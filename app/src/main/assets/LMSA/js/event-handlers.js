@@ -7,7 +7,7 @@ import {
     helpButton, newChatHeaderButton, webSearchHeaderButton, webSearchHeaderIcon, whatsNewButton, aboutButton, stopButton, contextMenu, copyTextButton,
     regenerateTextButton, exitButton, refreshButton, modelToggleButton, loadedModelDisplay,
     settingsIconButton, newTopicButton, sendButton, sendContextMenu, newTopicMenuButton, scrollToBottomMenuButton,
-    modelButton, importExportGroupButton, importExportContainer, systemPromptSettingsButton,
+    modelButton, optionsButton, optionsContainer, importExportGroupButton, importExportContainer, systemPromptSettingsButton,
     exportChatsButton, importChatsButton, importChatsInput,
     welcomeModelsBtn, welcomeMcpBtn, welcomeSystemPromptBtn, welcomeTtsBtn, welcomeImportExportBtn, welcomeNewChatBtn, welcomeHelpBtn,
     modelsHeaderButton,
@@ -27,7 +27,10 @@ import {
     applyConnectionProviderSelection,
     getUseOpenRouter,
     getUseOpenAICompatible,
-    markCurrentModeActivity
+    markCurrentModeActivity,
+    getImageGenerationCount,
+    incrementImageGenerationCount,
+    FREE_IMAGE_GENERATION_LIMIT
 } from './settings-manager.js';
 import {
     showWelcomeMessage, hideWelcomeMessage, toggleSidebar, closeSidebar, showLoadingIndicator,
@@ -1948,6 +1951,13 @@ export function initializeEventHandlers() {
 
     if (imagePromptButton && userInput) {
         const activateImagePrompt = () => {
+            if (!isPremiumUser()) {
+                const generationCount = getImageGenerationCount();
+                if (generationCount >= FREE_IMAGE_GENERATION_LIMIT) {
+                    openPremiumModal('Image Generation');
+                    return false;
+                }
+            }
             userInput.value = prependImageCommandTag(userInput.value);
             userInput.dispatchEvent(new Event('input', { bubbles: true }));
             hideWelcomeMessage();
@@ -2094,6 +2104,13 @@ export function initializeEventHandlers() {
         }, 500);
     }
 
+    // Options group button
+    if (optionsButton && optionsContainer) {
+        bindPressInFeedback(optionsButton);
+        resetSidebarGroup('options-btn', 'options-container');
+        rebindSidebarGroupButton('options-btn', toggleOptionsContainer);
+    }
+
     // Import/Export group button
     if (importExportGroupButton && importExportContainer) {
         resetSidebarGroup('import-export-group-btn', 'import-export-container');
@@ -2232,9 +2249,21 @@ async function handleChatFormSubmit(e) {
         }
 
         if (imageCommand) {
+            if (!isPremiumUser()) {
+                const generationCount = getImageGenerationCount();
+                if (generationCount >= FREE_IMAGE_GENERATION_LIMIT) {
+                    openPremiumModal('Image Generation');
+                    return;
+                }
+            }
+
             const moderationResult = getImagePromptModerationResult(imageCommand.prompt);
             if (moderationResult.blocked) {
-                appendMessage('error', 'Image generation is blocked for sexual or illegal requests. Try a safer, non-explicit description.');
+                let errorMessage = 'Image generation is blocked for sexual or illegal requests. Try a safer, non-explicit description.';
+                if (moderationResult.reason === 'harmful') {
+                    errorMessage = 'Image generation is blocked for violent, hateful, or harmful content. Please follow safety guidelines.';
+                }
+                appendMessage('error', errorMessage);
                 return;
             }
         }
@@ -2279,6 +2308,12 @@ async function handleChatFormSubmit(e) {
 
             try {
                 const generatedImageMessage = await addGeneratedImageResponseToHistory(imageCommand.prompt);
+                
+                // Increment count for free tier users
+                if (!isPremiumUser()) {
+                    incrementImageGenerationCount();
+                }
+
                 pendingImageMessage?.remove();
                 appendMessage('ai', generatedImageMessage.content, generatedImageMessage.files, false, generatedImageMessage.model);
             } catch (error) {
@@ -3795,6 +3830,10 @@ function handleAIEditButtonClick(e) {
 
         saveChatHistory();
     });
+}
+
+function toggleOptionsContainer() {
+    toggleSidebarGroupContainer('options-btn', 'options-container');
 }
 
 /**
