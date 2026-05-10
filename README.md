@@ -37,8 +37,6 @@ LMSA is available for download on the Google Play Store:
   <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80">
 </a>
 
-*(Google Play and the Google Play logo are trademarks of Google LLC.)*
-
 ## Demo Video
 
 [![LMSA Demo Video](https://img.youtube.com/vi/DUs2yEvJeWg/0.jpg)](https://www.youtube.com/watch?v=DUs2yEvJeWg)
@@ -67,3 +65,8 @@ LMSA makes it easy to migrate your workflows:
 
 ## License
 This project is licensed under the [MIT License](LICENSE).
+
+---
+Built with ❤️ by the LMSA Team.
+
+*(Google Play and the Google Play logo are trademarks of Google LLC.)*
