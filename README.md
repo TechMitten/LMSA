@@ -76,7 +76,11 @@ LMSA makes it easy to migrate your workflows:
 - **Chat History**: Export your conversations for backup or analysis.
 
 ## License
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the **PolyForm Noncommercial License 1.0.0**.
+
+> [!CAUTION]
+> **Commercial Use Prohibited**
+> You are free to clone, modify, and use this software for personal or educational purposes. However, **any commercial use, including selling this software or its derivatives, is strictly prohibited.** See the [LICENSE](LICENSE) file for the full legal text.
 
 ---
 Built with ❤️ by the LMSA Team.
