@@ -10,7 +10,6 @@ import {
     modelButton, optionsButton, optionsContainer, importExportGroupButton, importExportContainer, systemPromptSettingsButton,
     exportChatsButton, importChatsButton, importChatsInput,
     welcomeModelsBtn, welcomeMcpBtn, welcomeSystemPromptBtn, welcomeTtsBtn, welcomeImportExportBtn, welcomeNewChatBtn, welcomeHelpBtn,
-    modelsHeaderButton,
     setupLocalBtn, setupOpenRouterBtn, setupCustomBtn
 } from './dom-elements.js';
 import { privacyPolicyContent } from './components/modals/privacy-policy-modal.js';
@@ -650,13 +649,17 @@ export function initializeEventHandlers() {
             : (isModelTab ? setupModelPanel : setupSavedChatsPanel);
         const previousTab = currentSetupDashboardTab;
 
-        // Lock wrapper height to provider panel size before switching to model tab,
-        // so the card doesn't grow taller when the model panel is shown.
+        // Lock wrapper height to provider panel size before switching away from it,
+        // so the card doesn't grow taller when other panels are shown.
         if (setupPanelsWrapper) {
-            if (isModelTab && !setupPanelsWrapper.classList.contains('panels-height-locked')) {
-                setupPanelsWrapper.style.height = setupPanelsWrapper.offsetHeight + 'px';
-                setupPanelsWrapper.classList.add('panels-height-locked');
-            } else if (!isModelTab) {
+            const isProvider = normalizedTab === 'provider';
+            if (!isProvider && !setupPanelsWrapper.classList.contains('panels-height-locked')) {
+                const currentHeight = setupPanelsWrapper.offsetHeight;
+                if (currentHeight > 0) {
+                    setupPanelsWrapper.style.height = currentHeight + 'px';
+                    setupPanelsWrapper.classList.add('panels-height-locked');
+                }
+            } else if (isProvider) {
                 setupPanelsWrapper.classList.remove('panels-height-locked');
                 setupPanelsWrapper.style.height = '';
                 delete setupPanelsWrapper.dataset.lockedHeight;
@@ -783,7 +786,7 @@ export function initializeEventHandlers() {
                 setupPanelsWrapper.classList.add('panels-height-locked');
                 setupPanelExpandBtn.setAttribute('aria-expanded', 'false');
                 if (btnSpan) {
-                    btnSpan.textContent = 'Collapse';
+                    btnSpan.textContent = 'Expand';
                 }
             } else {
                 // Save the current locked height before removing it
@@ -792,7 +795,7 @@ export function initializeEventHandlers() {
                 setupPanelsWrapper.style.height = '';
                 setupPanelExpandBtn.setAttribute('aria-expanded', 'true');
                 if (btnSpan) {
-                    btnSpan.textContent = 'Expand';
+                    btnSpan.textContent = 'Collapse';
                 }
             }
             setupPanelExpandBtn.blur();
@@ -895,27 +898,7 @@ export function initializeEventHandlers() {
         }, { passive: false });
     }
 
-    if (modelsHeaderButton) {
-        bindPressInFeedback(modelsHeaderButton);
 
-        const openHeaderModelsPanel = () => {
-            openModelsModal();
-            modelsHeaderButton.blur();
-        };
-
-        modelsHeaderButton.addEventListener('click', openHeaderModelsPanel);
-        modelsHeaderButton.addEventListener('touchstart', (e) => {
-            if (e.cancelable) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-        modelsHeaderButton.addEventListener('touchend', (e) => {
-            if (e.cancelable) {
-                e.preventDefault();
-            }
-            openHeaderModelsPanel();
-        }, { passive: false });
-    }
 
     // Welcome Templates button
     const welcomeTemplatesBtn = document.getElementById('welcome-templates-btn');

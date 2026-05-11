@@ -28,6 +28,7 @@ import { initializeTemplateIndicator } from './template-indicator.js';
 import { initializeHapticFeedback } from './haptics.js';
 import { updateConfirmationModalTheme, updateExportImportModalsTheme } from './confirmation-modal-fix.js';
 import { initializeSidebarLayout } from './sidebar-layout-manager.js';
+import { initializeTutorial } from './tutorial-service.js';
 import './about.js';
 
 // Android WebView keyboard overlap fix
@@ -794,6 +795,8 @@ export async function initializeApp() {
     updateConfirmationModalTheme();
     updateExportImportModalsTheme();
 
+    // Initialize interactive tutorial
+    initializeTutorial();
 
     // Initialize scroll button state - ensure it's hidden on startup
     const messagesContainer = document.getElementById('messages');

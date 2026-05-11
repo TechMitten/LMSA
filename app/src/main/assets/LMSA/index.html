@@ -44,6 +44,9 @@
 
     <!-- Custom Index Styles -->
     <link rel="stylesheet" href="css/index-custom.css">
+    
+    <!-- Interactive Tutorial Styles -->
+    <link rel="stylesheet" href="css/tutorial.css">
 </head>
 
 <body class="dark custom-dark-mode" style="min-height: 100vh; min-height: -webkit-fill-available; display: flex; flex-direction: column;">
@@ -82,9 +85,9 @@
                         Debug
                     </span>
                 </div>
-                <button id="models-header-button" class="p-2 rounded-md focus:outline-none header-btn" data-priority="1" aria-label="Open Models" title="Open Models">
+                <button id="new-chat-header-button" class="p-2 rounded-md focus:outline-none header-btn" data-priority="1" aria-label="New Chat" title="New Chat">
                     <span class="icon-wrapper">
-                        <i class="fas fa-robot w-5 h-5 header-icon" aria-hidden="true"></i>
+                        <i class="fas fa-plus w-5 h-5 header-icon" aria-hidden="true"></i>
                     </span>
                 </button>
                 <button id="premium-header-button" class="p-2 rounded-md focus:outline-none header-btn header-premium-btn" data-priority="1" data-premium-state="free" aria-label="Open Premium" title="Open Premium">
@@ -300,6 +303,15 @@
                                 <i class="fas fa-question-circle"
                                     style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
                                 <span style="color: #f1f5f9;">Help</span>
+                            </div>
+                        </button>
+                        
+                        <!-- Interactive Tutorial -->
+                        <button id="replay-tutorial-btn" class="menu-item w-full text-left flex items-center" onclick="if(window.startLMSATutorial) window.startLMSATutorial();">
+                            <div class="flex items-center">
+                                <i class="fas fa-magic"
+                                    style="color: #60a5fa !important; width: 1.5rem; margin-right: 0.75rem;"></i>
+                                <span style="color: #f1f5f9;">Interactive Tutorial</span>
                             </div>
                         </button>
 

@@ -104,7 +104,6 @@ export const settingsModal = domCache.get('settings-modal');
 export const closeSettingsButton = domCache.get('close-settings');
 export const closeSettingsXButton = domCache.get('close-settings-x');
 export const welcomeMessage = domCache.get('welcome-message');
-export const modelsHeaderButton = domCache.get('models-header-button');
 export const sidebarToggle = domCache.get('sidebar-toggle');
 export const closeSidebarButton = domCache.get('close-sidebar');
 export const loadedModelDisplay = domCache.get('loaded-model');

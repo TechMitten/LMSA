@@ -1,0 +1,244 @@
+/* ============================================================
+   Tutorial Tour — Standard product-tour style (driver.js / shepherd.js inspired)
+   ============================================================ */
+
+/* SVG overlay that covers the whole screen — drawn by JS */
+#tutorial-svg-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10000;
+    pointer-events: none;   /* off until active */
+    opacity: 0;
+    transition: opacity 0.35s ease;
+}
+
+#tutorial-svg-overlay.tutorial-svg-active {
+    opacity: 1;
+    pointer-events: all;    /* blocks all clicks on the app while tour is running */
+}
+
+/* Spotlight hole border — pulse animation */
+#tutorial-hole-border {
+    animation: tutorialPulse 2s ease-in-out infinite;
+}
+
+@keyframes tutorialPulse {
+    0%, 100% { stroke-opacity: 1; }
+    50% { stroke-opacity: 0.5; }
+}
+
+/* ── Tooltip Card ─────────────────────────────────────────── */
+#tutorial-tooltip {
+    position: fixed;
+    width: 300px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10001;
+    pointer-events: auto;
+    padding: 0;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    overflow: visible;
+}
+
+#tutorial-tooltip.tutorial-tooltip-visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Coloured header strip */
+.ttr-header {
+    background: linear-gradient(135deg, #0ea5e9, #2563eb);
+    border-radius: 12px 12px 0 0;
+    padding: 16px 18px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ttr-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.ttr-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    letter-spacing: 0.01em;
+    line-height: 1.2;
+}
+
+.ttr-step-label {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.75);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+/* Body */
+.ttr-body {
+    padding: 14px 18px;
+    color: #334155;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+/* Footer */
+.ttr-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    background: #f8fafc;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Progress dots */
+.ttr-progress {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.ttr-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #cbd5e1;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.ttr-dot.active {
+    background: #0ea5e9;
+    transform: scale(1.25);
+}
+
+/* Buttons */
+.ttr-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-ttr-skip {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+}
+
+.btn-ttr-skip:hover {
+    color: #64748b;
+    background: #e2e8f0;
+}
+
+.btn-ttr-next {
+    background: linear-gradient(135deg, #0ea5e9, #2563eb);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    padding: 7px 16px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);
+    transition: all 0.2s ease;
+    letter-spacing: 0.01em;
+}
+
+.btn-ttr-next:hover {
+    box-shadow: 0 4px 14px rgba(14, 165, 233, 0.5);
+    filter: brightness(1.1);
+}
+
+.btn-ttr-next:active {
+    transform: scale(0.97);
+}
+
+/* ── Arrow ───────────────────────────────────────────────── */
+/* Arrows are rendered as pure CSS triangles injected via pseudo-elements
+   on a wrapper div that sits outside #tutorial-tooltip */
+.ttr-arrow-wrap {
+    position: absolute;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: 10002;
+}
+
+/* top arrow (tooltip is below the element) */
+.ttr-arrow-wrap.arrow-top {
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 11px solid #0ea5e9;
+    top: -11px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* bottom arrow (tooltip is above the element) */
+.ttr-arrow-wrap.arrow-bottom {
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 11px solid #f8fafc;
+    bottom: -11px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* right arrow (tooltip is to the left) */
+.ttr-arrow-wrap.arrow-right {
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-left: 11px solid #f8fafc;
+    right: -11px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* left arrow (tooltip is to the right) */
+.ttr-arrow-wrap.arrow-left {
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-right: 11px solid #0ea5e9;
+    left: -11px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* arrow aligned to the right side of tooltip (for bottom-right etc.) */
+.ttr-arrow-wrap.arrow-top-right {
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 11px solid #0ea5e9;
+    top: -11px;
+    right: 20px;
+}
+
+/* ── Mobile ───────────────────────────────────────────────── */
+@media (max-width: 600px) {
+    #tutorial-tooltip {
+        width: calc(100vw - 32px);
+        max-width: 340px;
+    }
+}

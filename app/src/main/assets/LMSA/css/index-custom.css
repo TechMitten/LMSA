@@ -231,6 +231,8 @@ body.light-theme #welcome-message .setup-dashboard-title {
 
 #welcome-message #setup-panels-wrapper {
     overflow: hidden;
+    transition: height 0.35s cubic-bezier(0.2, 0, 0.2, 1);
+    will-change: height;
 }
 
 #welcome-message #setup-panels-wrapper.panels-height-locked {
@@ -240,7 +242,6 @@ body.light-theme #welcome-message .setup-dashboard-title {
 
 #welcome-message #setup-panels-wrapper.panels-height-locked #setup-model-panel {
     max-height: 100%;
-    overflow-y: auto;
 }
 
 #welcome-message .setup-panel-expand-btn {
@@ -606,13 +607,22 @@ body.light-theme #welcome-message .setup-panel-expand-btn:hover {
 #welcome-message .setup-saved-chats-icon {
     width: 42px;
     height: 42px;
-    border-radius: 12px;
+    min-width: 42px;
+    min-height: 42px;
+    flex: 0 0 42px;
+    aspect-ratio: 1 / 1;
+    border-radius: 9999px;
+    overflow: hidden;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.35), rgba(56, 189, 248, 0.22));
     border: 1px solid rgba(148, 163, 184, 0.28);
     color: #dbeafe;
+}
+
+#welcome-message .setup-saved-chats-icon i {
+    line-height: 1;
 }
 
 #welcome-message .setup-saved-chats-copy h3 {
