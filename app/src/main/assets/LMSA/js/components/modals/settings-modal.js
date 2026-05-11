@@ -22,6 +22,7 @@ export const settingsModal = `
                     <div class="w-8 h-2 rounded-full bg-gray-600" id="step-indicator-3"></div>
                     <div class="w-8 h-2 rounded-full bg-gray-600" id="step-indicator-4"></div>
                     <div class="w-8 h-2 rounded-full bg-gray-600" id="step-indicator-5"></div>
+                    <div class="w-8 h-2 rounded-full bg-gray-600" id="step-indicator-6"></div>
                 </div>
             </div>
 
@@ -456,7 +457,32 @@ export const settingsModal = `
                     </div>
                 </div>
 
-                <!-- Step 5: Actions -->
+                <!-- Step 5: Sidebar -->
+                <div id="settings-step-sidebar" class="settings-step hidden" data-step-name="Sidebar">
+                    <p class="settings-toggle-helper" role="note" aria-live="polite">
+                        Choose which sidebar actions stay visible and adjust their order. Settings stays pinned, and chat history always remains visible.
+                    </p>
+
+                    <div class="settings-group group-sidebar">
+                        <div class="settings-group-title">
+                            <i class="fas fa-bars-staggered"></i>
+                            <span>Sidebar Menu</span>
+                        </div>
+                        <p class="sidebar-layout-summary">
+                            Changes apply immediately, so you can preview the sidebar while this page is open.
+                        </p>
+                        <div id="sidebar-layout-editor" class="sidebar-layout-editor" aria-live="polite"></div>
+                        <div class="sidebar-layout-actions-row">
+                            <button id="reset-sidebar-layout-btn"
+                                  class="professional-button flex items-center justify-center gap-3 w-full h-12">
+                                <i class="fas fa-rotate-left text-sm"></i>
+                                <span>Reset to Defaults</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 6: Actions -->
                 <div id="settings-step-actions" class="settings-step hidden" data-step-name="Actions">
                     <div class="flex flex-col space-y-4">
                         <button id="clear-chat"
@@ -530,6 +556,20 @@ export const settingsModal = `
                             <i class="fas fa-arrow-left text-sm"></i>
                             <span class="button-text">Back</span>
                         </button>
+                        <button id="to-sidebar-step-btn"
+                               class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
+                            <i class="fas fa-arrow-right text-sm"></i>
+                            <span class="button-text">Next</span>
+                        </button>
+                    </div>
+
+                    <!-- Sidebar step buttons -->
+                    <div class="justify-between navigation-buttons hidden" id="sidebar-step-buttons">
+                        <button id="back-to-font-btn"
+                               class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
+                            <i class="fas fa-arrow-left text-sm"></i>
+                            <span class="button-text">Back</span>
+                        </button>
                         <button id="to-actions-step-btn"
                                class="professional-button flex items-center justify-center gap-3 w-[48%] h-12">
                             <i class="fas fa-arrow-right text-sm"></i>
@@ -539,7 +579,7 @@ export const settingsModal = `
 
                     <!-- Actions step buttons -->
                     <div class="navigation-buttons hidden" id="actions-step-buttons">
-                        <button id="back-to-font-btn"
+                        <button id="back-to-sidebar-btn"
                                class="professional-button flex items-center justify-center gap-3 w-full h-12">
                             <i class="fas fa-arrow-left text-sm"></i>
                             <span class="button-text">Back</span>

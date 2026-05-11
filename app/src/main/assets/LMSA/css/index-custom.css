@@ -157,7 +157,7 @@ body.light-theme #main-app-container > header {
     width: 100%;
     text-align: center;
     margin: 0 0 22px 0;
-    pointer-events: none;
+    pointer-events: auto;
     animation: setupDashboardTitleFloatIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
 }
 
@@ -175,15 +175,490 @@ body.light-theme #main-app-container > header {
 #welcome-message .setup-dashboard-title {
     margin: 0;
     color: #f8fafc;
-    font-size: 1.18rem;
-    line-height: 1.15;
-    letter-spacing: -0.025em;
-    font-weight: 700;
+    font-family: "Inter", "Poppins", "Segoe UI", system-ui, sans-serif;
+    font-size: 1.02rem;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    font-weight: 650;
+    text-transform: uppercase;
+    opacity: 0.9;
     text-wrap: balance;
 }
 
 body.light-theme #welcome-message .setup-dashboard-title {
     color: #0f172a;
+}
+
+#welcome-message .setup-dashboard-tabs {
+    margin: 12px auto 0;
+    padding: 4px;
+    width: fit-content;
+    display: inline-flex;
+    gap: 4px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    background: rgba(15, 23, 42, 0.35);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+#welcome-message .setup-dashboard-tab {
+    border: 0;
+    border-radius: 999px;
+    padding: 6px 13px;
+    font-family: "Inter", "Poppins", "Segoe UI", system-ui, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba(226, 232, 240, 0.86);
+    background: transparent;
+    transform: translateY(0) scale(1);
+    transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+#welcome-message .setup-dashboard-tab.active,
+#welcome-message .setup-dashboard-tab[aria-selected="true"] {
+    color: #f8fafc;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.35), rgba(37, 99, 235, 0.22));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 4px 10px rgba(15, 23, 42, 0.28);
+    transform: translateY(-1px) scale(1.01);
+}
+
+#welcome-message .setup-dashboard-tab:focus-visible {
+    outline: 2px solid rgba(96, 165, 250, 0.9);
+    outline-offset: 1px;
+}
+
+#welcome-message #setup-panels-wrapper {
+    overflow: hidden;
+}
+
+#welcome-message #setup-panels-wrapper.panels-height-locked {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+#welcome-message #setup-panels-wrapper.panels-height-locked #setup-model-panel {
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+#welcome-message .setup-panel-expand-btn {
+    display: none;
+    width: 100%;
+    margin-top: 4px;
+    padding: 7px 12px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.22);
+    color: rgba(148, 163, 184, 0.9);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+#welcome-message #setup-panels-wrapper.panels-height-locked + .setup-panel-expand-btn {
+    display: flex;
+}
+
+#welcome-message .setup-panel-expand-btn:hover {
+    background: rgba(30, 41, 59, 0.48);
+    color: #e2e8f0;
+    border-color: rgba(148, 163, 184, 0.34);
+}
+
+#welcome-message .setup-panel-expand-btn i {
+    transition: transform 0.25s ease;
+}
+
+#welcome-message .setup-panel-expand-btn[aria-expanded="true"] i {
+    transform: rotate(180deg);
+}
+
+body.light-theme #welcome-message .setup-panel-expand-btn {
+    background: rgba(241, 245, 249, 0.6);
+    border-color: rgba(148, 163, 184, 0.3);
+    color: #475569;
+}
+
+body.light-theme #welcome-message .setup-panel-expand-btn:hover {
+    background: rgba(226, 232, 240, 0.9);
+    color: #1e293b;
+}
+
+#welcome-message .setup-dashboard-panel {
+    transform-origin: center top;
+}
+
+#welcome-message .setup-dashboard-panel.is-switching-in {
+    animation: setupDashboardPanelIn 340ms cubic-bezier(0.2, 0.75, 0.22, 1) both;
+}
+
+#welcome-message .setup-dashboard-panel.is-switching-in-left {
+    animation: setupDashboardPanelInLeft 360ms cubic-bezier(0.2, 0.75, 0.22, 1) both;
+}
+
+#welcome-message .setup-dashboard-panel.is-switching-in-right {
+    animation: setupDashboardPanelInRight 360ms cubic-bezier(0.2, 0.75, 0.22, 1) both;
+}
+
+@keyframes setupDashboardPanelIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.985);
+        filter: saturate(0.88);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: saturate(1);
+    }
+}
+
+@keyframes setupDashboardPanelInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-22px) translateY(4px) scale(0.985);
+        filter: saturate(0.88);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) translateY(0) scale(1);
+        filter: saturate(1);
+    }
+}
+
+@keyframes setupDashboardPanelInRight {
+    from {
+        opacity: 0;
+        transform: translateX(22px) translateY(4px) scale(0.985);
+        filter: saturate(0.88);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) translateY(0) scale(1);
+        filter: saturate(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #welcome-message .setup-dashboard-tab {
+        transition: none;
+    }
+
+    #welcome-message .setup-dashboard-panel.is-switching-in {
+        animation: none;
+    }
+
+    #welcome-message .setup-dashboard-panel.is-switching-in-left,
+    #welcome-message .setup-dashboard-panel.is-switching-in-right {
+        animation: none;
+    }
+}
+
+#welcome-message .setup-model-card {
+    width: 100%;
+    margin: 0 0 1rem;
+    border-radius: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.76), rgba(30, 41, 59, 0.52));
+    padding: 16px;
+    text-align: left;
+    box-shadow: 0 10px 24px rgba(2, 6, 23, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+#welcome-message .setup-model-card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+#welcome-message .setup-model-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #c4b5fd;
+    background: linear-gradient(135deg, rgba(76, 29, 149, 0.42), rgba(91, 33, 182, 0.3));
+    border: 1px solid rgba(167, 139, 250, 0.28);
+}
+
+#welcome-message .setup-model-copy h3 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 0.95rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+}
+
+#welcome-message .setup-model-copy p {
+    margin: 3px 0 0;
+    color: #cbd5e1;
+    font-size: 0.78rem;
+    line-height: 1.38;
+}
+
+#welcome-message .setup-model-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+#welcome-message .setup-model-current {
+    color: #cbd5e1;
+    font-size: 0.73rem;
+    letter-spacing: 0.01em;
+    font-weight: 500;
+    text-align: left;
+}
+
+#welcome-message .setup-model-refresh-btn {
+    border: 1px solid rgba(148, 163, 184, 0.34);
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 0.73rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    background: rgba(15, 23, 42, 0.42);
+}
+
+#welcome-message .setup-model-search-wrap {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+#welcome-message .setup-model-search-wrap i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.72rem;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+#welcome-message .setup-model-search-wrap input {
+    width: 100%;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 10px;
+    height: 36px;
+    padding: 0 10px 0 30px;
+    font-size: 0.79rem;
+    color: #e2e8f0;
+    background: rgba(15, 23, 42, 0.34);
+}
+
+#welcome-message .setup-model-search-wrap input::placeholder {
+    color: #94a3b8;
+}
+
+#welcome-message .setup-model-list {
+    max-height: 270px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding-right: 2px;
+}
+
+#welcome-message .setup-model-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+#welcome-message .setup-model-list::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.38);
+}
+
+#welcome-message .setup-model-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 10px;
+    padding: 9px 10px;
+    background: rgba(15, 23, 42, 0.2);
+}
+
+#welcome-message .setup-model-row.active {
+    border-color: rgba(96, 165, 250, 0.45);
+    background: linear-gradient(135deg, rgba(30, 64, 175, 0.22), rgba(30, 58, 138, 0.18));
+}
+
+#welcome-message .setup-model-row.loading {
+    border-color: rgba(167, 139, 250, 0.4);
+    background: linear-gradient(135deg, rgba(76, 29, 149, 0.18), rgba(91, 33, 182, 0.12));
+    animation: setupModelRowPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes setupModelRowPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+#welcome-message .setup-model-action.is-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-color: rgba(167, 139, 250, 0.5);
+    background: linear-gradient(135deg, rgba(76, 29, 149, 0.3), rgba(91, 33, 182, 0.22));
+    color: #c4b5fd;
+    min-width: 80px;
+}
+
+#welcome-message .setup-model-action i {
+    font-size: 0.65rem;
+}
+
+@keyframes setupModelSpinner {
+    to { transform: rotate(360deg); }
+}
+
+#welcome-message .setup-model-action-spinner {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid rgba(196, 181, 253, 0.35);
+    border-top-color: #c4b5fd;
+    border-radius: 50%;
+    animation: setupModelSpinner 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+#welcome-message .setup-model-name {
+    color: #f8fafc;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: left;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+#welcome-message .setup-model-provider {
+    margin-top: 2px;
+    color: #94a3b8;
+    font-size: 0.66rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    text-align: left;
+}
+
+#welcome-message .setup-model-action {
+    border: 1px solid rgba(96, 165, 250, 0.36);
+    border-radius: 8px;
+    min-width: 66px;
+    height: 30px;
+    padding: 0 9px;
+    color: #e2e8f0;
+    font-size: 0.69rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.24), rgba(56, 189, 248, 0.15));
+}
+
+#welcome-message .setup-model-action[disabled] {
+    opacity: 0.7;
+    cursor: default;
+}
+
+#welcome-message .setup-model-status {
+    min-height: 18px;
+    margin: 9px 2px 0;
+    color: #94a3b8;
+    font-size: 0.7rem;
+    text-align: left;
+}
+
+body.light-theme #welcome-message .setup-dashboard-tabs {
+    background: rgba(248, 250, 252, 0.72);
+    border-color: rgba(148, 163, 184, 0.32);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+body.light-theme #welcome-message .setup-dashboard-tab {
+    color: rgba(30, 41, 59, 0.8);
+}
+
+body.light-theme #welcome-message .setup-dashboard-tab.active,
+body.light-theme #welcome-message .setup-dashboard-tab[aria-selected="true"] {
+    color: #0f172a;
+    background: linear-gradient(135deg, rgba(191, 219, 254, 0.95), rgba(219, 234, 254, 0.85));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 5px 12px rgba(148, 163, 184, 0.28);
+}
+
+body.light-theme #welcome-message .setup-model-card {
+    border-color: rgba(148, 163, 184, 0.28);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(241, 245, 249, 0.9));
+    box-shadow: 0 10px 22px rgba(148, 163, 184, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+body.light-theme #welcome-message .setup-model-copy h3 {
+    color: #0f172a;
+}
+
+body.light-theme #welcome-message .setup-model-copy p {
+    color: #475569;
+}
+
+body.light-theme #welcome-message .setup-model-current {
+    color: #475569;
+}
+
+body.light-theme #welcome-message .setup-model-refresh-btn {
+    color: #334155;
+    border-color: rgba(148, 163, 184, 0.46);
+    background: rgba(255, 255, 255, 0.72);
+}
+
+body.light-theme #welcome-message .setup-model-search-wrap input {
+    color: #1e293b;
+    border-color: rgba(148, 163, 184, 0.38);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+body.light-theme #welcome-message .setup-model-search-wrap input::placeholder {
+    color: #64748b;
+}
+
+body.light-theme #welcome-message .setup-model-row {
+    border-color: rgba(148, 163, 184, 0.28);
+    background: rgba(255, 255, 255, 0.66);
+}
+
+body.light-theme #welcome-message .setup-model-row.active {
+    border-color: rgba(59, 130, 246, 0.5);
+    background: linear-gradient(135deg, rgba(219, 234, 254, 0.9), rgba(239, 246, 255, 0.8));
+}
+
+body.light-theme #welcome-message .setup-model-name {
+    color: #0f172a;
+}
+
+body.light-theme #welcome-message .setup-model-provider,
+body.light-theme #welcome-message .setup-model-status {
+    color: #64748b;
+}
+
+body.light-theme #welcome-message .setup-model-action {
+    color: #1e293b;
+    border-color: rgba(96, 165, 250, 0.45);
+    background: linear-gradient(135deg, rgba(191, 219, 254, 0.86), rgba(219, 234, 254, 0.76));
 }
 
 /* AI Provider Dashboard Styles */

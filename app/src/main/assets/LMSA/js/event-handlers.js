@@ -61,7 +61,7 @@ import {
     getImagePromptModerationResult
 } from './chat-service.js';
 import { resetApp, initializeResetAppButton } from './reset-app.js';
-import { fetchAvailableModels, isServerRunning, getAvailableModels } from './api-service.js';
+import { fetchAvailableModels, isServerRunning, getAvailableModels, loadModel as apiLoadModel } from './api-service.js';
 import { resetUploadedFiles, getUploadedFiles, uploadFilesToLMStudio } from './file-upload.js';
 import { setActionToPerform, getActionToPerform } from './shared-state.js';
 import { closeSidebarExport } from './export-import.js';
@@ -367,6 +367,341 @@ export function initializeEventHandlers() {
     bindSetupProviderCard(setupLocalBtn, 'local');
     bindSetupProviderCard(setupOpenRouterBtn, 'openrouter');
     bindSetupProviderCard(setupCustomBtn, 'openai-compatible');
+
+    const setupDashboardTitle = document.getElementById('setup-dashboard-title');
+    const setupTabProviderButton = document.getElementById('setup-tab-provider');
+    const setupTabModelButton = document.getElementById('setup-tab-model');
+    const setupProviderPanel = document.getElementById('setup-provider-panel');
+    const setupModelPanel = document.getElementById('setup-model-panel');
+    const setupModelCurrent = document.getElementById('setup-model-current');
+    const setupModelRefreshBtn = document.getElementById('setup-model-refresh-btn');
+    const setupModelSearchInput = document.getElementById('setup-model-search');
+    const setupModelList = document.getElementById('setup-model-list');
+    const setupModelStatus = document.getElementById('setup-model-status');
+
+    let setupModelEntries = [];
+    let setupModelLoading = false;
+    let setupModelLoadingId = null;
+    let currentSetupDashboardTab = 'provider';
+
+    const getModelProviderLabel = (modelId) => {
+        if (!modelId || !modelId.includes('/')) {
+            return 'Local';
+        }
+
+        return modelId.split('/')[0];
+    };
+
+    const getModelDisplayName = (modelId) => {
+        if (!modelId) {
+            return '';
+        }
+
+        if (!modelId.includes('/')) {
+            return modelId;
+        }
+
+        return modelId.split('/').slice(1).join('/');
+    };
+
+    const getInlineActiveModelId = () => {
+        if (window.currentLoadedModel) {
+            return window.currentLoadedModel;
+        }
+
+        const loadedModels = getAvailableModels();
+        if (Array.isArray(loadedModels) && loadedModels.length > 0) {
+            return loadedModels[0];
+        }
+
+        return null;
+    };
+
+    const renderInlineModelList = () => {
+        if (!setupModelList) {
+            return;
+        }
+
+        const activeId = getInlineActiveModelId();
+        const searchQuery = (setupModelSearchInput?.value || '').toLowerCase().trim();
+
+        if (setupModelCurrent) {
+            setupModelCurrent.textContent = activeId
+                ? `Current: ${getModelDisplayName(activeId)}`
+                : 'Current: none';
+        }
+
+        const visibleEntries = setupModelEntries.filter((entry) => {
+            if (!searchQuery) {
+                return true;
+            }
+
+            return `${entry.id} ${entry.name} ${entry.provider}`.toLowerCase().includes(searchQuery);
+        });
+
+        if (visibleEntries.length === 0) {
+            const emptyMessage = setupModelEntries.length === 0
+                ? 'No models available yet.'
+                : 'No models match your search.';
+            setupModelList.innerHTML = `<div class="setup-model-status">${emptyMessage}</div>`;
+            return;
+        }
+
+        const rowsHtml = visibleEntries.map((entry) => {
+            const isActive = activeId && entry.id === activeId;
+            const isLoading = setupModelLoadingId === entry.id;
+            const actionDisabled = setupModelLoading || isActive;
+            let actionContent;
+            if (isLoading) {
+                actionContent = '<span class="setup-model-action-spinner" aria-hidden="true"></span><span>Loading</span>';
+            } else if (isActive) {
+                actionContent = '<i class="fas fa-check" aria-hidden="true"></i><span>Active</span>';
+            } else {
+                actionContent = 'Select';
+            }
+
+            return `
+                <div class="setup-model-row${isActive ? ' active' : ''}${isLoading ? ' loading' : ''}" data-model-id="${entry.id}">
+                    <div>
+                        <div class="setup-model-name">${entry.name}</div>
+                        <div class="setup-model-provider">${entry.provider}</div>
+                    </div>
+                    <button class="setup-model-action${isLoading ? ' is-loading' : ''}" type="button" data-model-id="${entry.id}" ${actionDisabled ? 'disabled aria-disabled="true"' : 'aria-disabled="false"'}>${actionContent}</button>
+                </div>
+            `;
+        }).join('');
+
+        setupModelList.innerHTML = rowsHtml;
+
+        setupModelList.querySelectorAll('.setup-model-action').forEach((button) => {
+            if (button.disabled) {
+                return;
+            }
+
+            button.addEventListener('click', async (event) => {
+                event.preventDefault();
+                const { modelId } = button.dataset;
+                if (!modelId || setupModelLoading) {
+                    return;
+                }
+
+                setupModelLoading = true;
+                setupModelLoadingId = modelId;
+                if (setupModelStatus) {
+                    setupModelStatus.textContent = '';
+                }
+                renderInlineModelList();
+
+                try {
+                    const success = await apiLoadModel(modelId);
+                    if (setupModelStatus) {
+                        setupModelStatus.textContent = success
+                            ? `\u2713 ${getModelDisplayName(modelId)} is now active.`
+                            : `Failed to select ${getModelDisplayName(modelId)}.`;
+                    }
+                    await loadInlineModels({ forceRefresh: true, preserveStatus: true });
+                } catch (error) {
+                    debugError('Inline model selection failed:', error);
+                    if (setupModelStatus) {
+                        setupModelStatus.textContent = 'Could not select that model. Check provider settings and try again.';
+                    }
+                } finally {
+                    setupModelLoading = false;
+                    setupModelLoadingId = null;
+                    renderInlineModelList();
+                }
+            });
+        });
+    };
+
+    const loadInlineModels = async ({ forceRefresh = false, preserveStatus = false } = {}) => {
+        if (!setupModelList) {
+            return;
+        }
+
+        setupModelLoading = true;
+        setupModelList.innerHTML = '<div class="setup-model-status">Loading models...</div>';
+
+        if (setupModelRefreshBtn) {
+            setupModelRefreshBtn.disabled = true;
+            setupModelRefreshBtn.setAttribute('aria-disabled', 'true');
+        }
+
+        if (setupModelStatus && !preserveStatus) {
+            setupModelStatus.textContent = '';
+        }
+
+        try {
+            const models = await fetchAvailableModels({ forceRefresh });
+            setupModelEntries = (Array.isArray(models) ? models : [])
+                .filter((model) => model && model.id && model.id !== 'dummy/no-model-selected')
+                .map((model) => ({
+                    id: model.id,
+                    name: getModelDisplayName(model.id),
+                    provider: getModelProviderLabel(model.id)
+                }));
+
+            if (setupModelEntries.length === 0 && setupModelStatus && !preserveStatus) {
+                setupModelStatus.textContent = 'No models found. Configure your provider in Settings and refresh.';
+            }
+
+            renderInlineModelList();
+        } catch (error) {
+            debugError('Failed to load inline models:', error);
+            setupModelEntries = [];
+            setupModelList.innerHTML = '<div class="setup-model-status">Unable to load models right now.</div>';
+            if (setupModelStatus) {
+                setupModelStatus.textContent = 'Could not load models. Check your connection and provider settings.';
+            }
+        } finally {
+            setupModelLoading = false;
+            if (setupModelRefreshBtn) {
+                setupModelRefreshBtn.disabled = false;
+                setupModelRefreshBtn.setAttribute('aria-disabled', 'false');
+            }
+            renderInlineModelList();
+        }
+    };
+
+    const setupPanelsWrapper = document.getElementById('setup-panels-wrapper');
+    const setupPanelExpandBtn = document.getElementById('setup-panel-expand-btn');
+
+    const setSetupDashboardTab = (tab = 'provider') => {
+        const isModelTab = tab === 'model';
+        const activePanel = isModelTab ? setupModelPanel : setupProviderPanel;
+        const previousTab = currentSetupDashboardTab;
+
+        // Lock wrapper height to provider panel size before switching to model tab,
+        // so the card doesn't grow taller when the model panel is shown.
+        if (setupPanelsWrapper) {
+            if (isModelTab && !setupPanelsWrapper.classList.contains('panels-height-locked')) {
+                setupPanelsWrapper.style.height = setupPanelsWrapper.offsetHeight + 'px';
+                setupPanelsWrapper.classList.add('panels-height-locked');
+            } else if (!isModelTab) {
+                setupPanelsWrapper.classList.remove('panels-height-locked');
+                setupPanelsWrapper.style.height = '';
+                delete setupPanelsWrapper.dataset.lockedHeight;
+            }
+        }
+
+        // Reset expand button when switching tabs
+        if (setupPanelExpandBtn && !isModelTab) {
+            setupPanelExpandBtn.setAttribute('aria-expanded', 'false');
+            const btnSpan = setupPanelExpandBtn.querySelector('span');
+            if (btnSpan) {
+                btnSpan.textContent = 'Expand';
+            }
+        }
+
+        if (setupDashboardTitle) {
+            setupDashboardTitle.textContent = isModelTab ? 'SELECT A MODEL' : 'SELECT A PROVIDER';
+        }
+
+        if (setupProviderPanel) {
+            setupProviderPanel.classList.toggle('hidden', isModelTab);
+            setupProviderPanel.setAttribute('aria-hidden', isModelTab ? 'true' : 'false');
+        }
+
+        if (setupModelPanel) {
+            setupModelPanel.classList.toggle('hidden', !isModelTab);
+            setupModelPanel.setAttribute('aria-hidden', isModelTab ? 'false' : 'true');
+        }
+
+        if (activePanel) {
+            activePanel.classList.remove('is-switching-in');
+            activePanel.classList.remove('is-switching-in-left');
+            activePanel.classList.remove('is-switching-in-right');
+            void activePanel.offsetWidth;
+
+            if (previousTab !== tab) {
+                const entersFromRight = previousTab === 'provider' && tab === 'model';
+                activePanel.classList.add(entersFromRight ? 'is-switching-in-right' : 'is-switching-in-left');
+            } else {
+                activePanel.classList.add('is-switching-in');
+            }
+        }
+
+        currentSetupDashboardTab = tab;
+
+        if (setupTabProviderButton) {
+            setupTabProviderButton.classList.toggle('active', !isModelTab);
+            setupTabProviderButton.setAttribute('aria-selected', isModelTab ? 'false' : 'true');
+            setupTabProviderButton.tabIndex = isModelTab ? -1 : 0;
+        }
+
+        if (setupTabModelButton) {
+            setupTabModelButton.classList.toggle('active', isModelTab);
+            setupTabModelButton.setAttribute('aria-selected', isModelTab ? 'true' : 'false');
+            setupTabModelButton.tabIndex = isModelTab ? 0 : -1;
+        }
+
+        if (isModelTab) {
+            loadInlineModels();
+        }
+    };
+
+    // Exposed so UI manager can safely reset the setup area when welcome screen reopens.
+    window.setSetupDashboardTab = setSetupDashboardTab;
+    setSetupDashboardTab('provider');
+
+    if (setupTabProviderButton) {
+        bindPressInFeedback(setupTabProviderButton);
+        setupTabProviderButton.addEventListener('click', () => {
+            setSetupDashboardTab('provider');
+            setupTabProviderButton.blur();
+        });
+    }
+
+    if (setupTabModelButton) {
+        bindPressInFeedback(setupTabModelButton);
+        setupTabModelButton.addEventListener('click', () => {
+            setSetupDashboardTab('model');
+            setupTabModelButton.blur();
+        });
+    }
+
+    if (setupPanelExpandBtn) {
+        setupPanelExpandBtn.addEventListener('click', () => {
+            if (!setupPanelsWrapper) {
+                return;
+            }
+            const isExpanded = setupPanelExpandBtn.getAttribute('aria-expanded') === 'true';
+            const btnSpan = setupPanelExpandBtn.querySelector('span');
+            if (isExpanded) {
+                // Re-lock to original height
+                setupPanelsWrapper.style.height = setupPanelsWrapper.dataset.lockedHeight || '';
+                setupPanelsWrapper.classList.add('panels-height-locked');
+                setupPanelExpandBtn.setAttribute('aria-expanded', 'false');
+                if (btnSpan) {
+                    btnSpan.textContent = 'Collapse';
+                }
+            } else {
+                // Save the current locked height before removing it
+                setupPanelsWrapper.dataset.lockedHeight = setupPanelsWrapper.style.height;
+                setupPanelsWrapper.classList.remove('panels-height-locked');
+                setupPanelsWrapper.style.height = '';
+                setupPanelExpandBtn.setAttribute('aria-expanded', 'true');
+                if (btnSpan) {
+                    btnSpan.textContent = 'Expand';
+                }
+            }
+            setupPanelExpandBtn.blur();
+        });
+    }
+
+    if (setupModelSearchInput) {
+        setupModelSearchInput.addEventListener('input', () => {
+            renderInlineModelList();
+        });
+    }
+
+    if (setupModelRefreshBtn) {
+        bindPressInFeedback(setupModelRefreshBtn);
+        setupModelRefreshBtn.addEventListener('click', async () => {
+            await loadInlineModels({ forceRefresh: true });
+            setupModelRefreshBtn.blur();
+        });
+    }
 
     // Settings button in welcome message
     const getStartedBtn = document.getElementById('get-started-btn');

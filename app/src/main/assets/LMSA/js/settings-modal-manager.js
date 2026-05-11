@@ -20,6 +20,14 @@ import {
     setOpenAICompatibleApiKey,
     setLMStudioApiToken
 } from './settings-manager.js';
+import {
+    getSidebarLayoutSchema,
+    getSidebarLayout,
+    applySidebarLayout,
+    setSidebarItemVisibility,
+    moveSidebarItem,
+    resetSidebarLayout
+} from './sidebar-layout-manager.js';
 import { interceptIpPortChanges } from './ip-port-confirmation-modal.js';
 import { getSavedConnectionPresets, saveConnectionPreset, deleteConnectionPreset } from './saved-connection-presets.js';
 
@@ -819,6 +827,7 @@ export async function showSettingsModal() {
     updateConnectionStatusDisplays();
     setConnectionPresetsSectionExpanded(false);
     renderConnectionPresetList();
+    renderSidebarLayoutEditor();
 
     // Always use mobile/tablet stepped navigation for all device types
     {
@@ -833,9 +842,10 @@ export async function showSettingsModal() {
             const promptStep = document.getElementById('settings-step-prompt');
             const optionsStep = document.getElementById('settings-step-options');
             const fontStep = document.getElementById('settings-step-font');
+            const sidebarStep = document.getElementById('settings-step-sidebar');
             const actionsStep = document.getElementById('settings-step-actions');
 
-            [promptStep, optionsStep, fontStep, actionsStep].forEach(step => {
+            [promptStep, optionsStep, fontStep, sidebarStep, actionsStep].forEach(step => {
                 if (step) {
                     step.classList.add('hidden');
                     step.classList.remove('active', 'slide-in-right', 'slide-in-left');
@@ -847,10 +857,11 @@ export async function showSettingsModal() {
             const promptButtons = document.getElementById('prompt-step-buttons');
             const optionsButtons = document.getElementById('options-step-buttons');
             const fontButtons = document.getElementById('font-step-buttons');
+            const sidebarButtons = document.getElementById('sidebar-step-buttons');
             const actionsButtons = document.getElementById('actions-step-buttons');
 
             // Hide all button containers first
-            [promptButtons, optionsButtons, fontButtons, actionsButtons].forEach(container => {
+            [promptButtons, optionsButtons, fontButtons, sidebarButtons, actionsButtons].forEach(container => {
                 if (container) {
                     container.classList.add('hidden');
                 }
@@ -938,7 +949,8 @@ export function updateStepIndicators(currentStep) {
         options: document.getElementById('step-indicator-2'),
         prompt: document.getElementById('step-indicator-3'),
         font: document.getElementById('step-indicator-4'),
-        actions: document.getElementById('step-indicator-5')
+        sidebar: document.getElementById('step-indicator-5'),
+        actions: document.getElementById('step-indicator-6')
     };
 
     // Reset all indicators to gray
@@ -963,9 +975,172 @@ export function updateStepIndicators(currentStep) {
             options: 'Options',
             prompt: 'System Prompt',
             font: 'Font & Layout',
+            sidebar: 'Sidebar Menu',
             actions: 'Actions'
         };
         subtitleEl.textContent = subtitles[currentStep] || '';
+    }
+}
+
+function renderSidebarLayoutEditor() {
+    const editor = document.getElementById('sidebar-layout-editor');
+    if (!editor) {
+        return;
+    }
+
+    const schema = getSidebarLayoutSchema();
+    const layout = getSidebarLayout();
+    const itemsById = Object.fromEntries(
+        schema.sections.flatMap(section => section.items.map(item => [item.id, item]))
+    );
+
+    editor.innerHTML = schema.sections.map((section) => {
+        const sectionLayout = layout.sections[section.key];
+
+        if (!sectionLayout) {
+            return '';
+        }
+
+        const rows = sectionLayout.order.map((itemId, index) => {
+            const item = itemsById[itemId];
+            if (!item) {
+                return '';
+            }
+
+            const previousItem = index > 0 ? itemsById[sectionLayout.order[index - 1]] : null;
+            const nextItem = index < sectionLayout.order.length - 1 ? itemsById[sectionLayout.order[index + 1]] : null;
+            const isVisible = !!sectionLayout.visibility[itemId];
+            const canMoveUp = !item.pinned && index > 0 && !previousItem?.pinned;
+            const canMoveDown = !item.pinned && index < sectionLayout.order.length - 1 && !nextItem?.pinned;
+
+            return `
+                <div class="sidebar-layout-item${item.pinned ? ' is-pinned' : ''}" data-sidebar-section="${section.key}" data-sidebar-item="${item.id}">
+                    <div class="sidebar-layout-item-copy">
+                        <div class="sidebar-layout-item-header-row">
+                            <label class="sidebar-layout-item-label" for="sidebar-toggle-${item.id}">${item.label}</label>
+                            ${item.pinned ? '<span class="sidebar-layout-badge">Pinned</span>' : ''}
+                        </div>
+                        <p class="sidebar-layout-item-description">${item.description}</p>
+                    </div>
+                    <div class="sidebar-layout-item-controls">
+                        <label class="sidebar-layout-switch" for="sidebar-toggle-${item.id}">
+                            <input
+                                id="sidebar-toggle-${item.id}"
+                                class="sidebar-layout-toggle"
+                                type="checkbox"
+                                data-sidebar-section="${section.key}"
+                                data-sidebar-item="${item.id}"
+                                ${isVisible ? 'checked' : ''}
+                                ${item.pinned ? 'disabled' : ''}
+                            >
+                            <span class="sidebar-layout-switch-label">${isVisible ? 'Shown' : 'Hidden'}</span>
+                        </label>
+                        <div class="sidebar-layout-move-buttons" role="group" aria-label="Reorder ${item.label}">
+                            <button
+                                type="button"
+                                class="sidebar-layout-move-btn"
+                                data-sidebar-move="up"
+                                data-sidebar-section="${section.key}"
+                                data-sidebar-item="${item.id}"
+                                ${canMoveUp ? '' : 'disabled'}
+                                aria-label="Move ${item.label} up"
+                            >
+                                <i class="fas fa-arrow-up" aria-hidden="true"></i>
+                            </button>
+                            <button
+                                type="button"
+                                class="sidebar-layout-move-btn"
+                                data-sidebar-move="down"
+                                data-sidebar-section="${section.key}"
+                                data-sidebar-item="${item.id}"
+                                ${canMoveDown ? '' : 'disabled'}
+                                aria-label="Move ${item.label} down"
+                            >
+                                <i class="fas fa-arrow-down" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <section class="sidebar-layout-section">
+                <div class="sidebar-layout-section-header">
+                    <h3>${section.label}</h3>
+                    <p>${section.description}</p>
+                </div>
+                <div class="sidebar-layout-section-items">${rows}</div>
+            </section>
+        `;
+    }).join('');
+}
+
+function initializeSidebarLayoutControls() {
+    const editor = document.getElementById('sidebar-layout-editor');
+    const resetButton = document.getElementById('reset-sidebar-layout-btn');
+
+    if (editor && editor.dataset.sidebarLayoutBound !== 'true') {
+        editor.addEventListener('change', (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLInputElement) || !target.classList.contains('sidebar-layout-toggle')) {
+                return;
+            }
+
+            const sectionKey = target.dataset.sidebarSection;
+            const itemId = target.dataset.sidebarItem;
+            if (!sectionKey || !itemId) {
+                return;
+            }
+
+            const layout = setSidebarItemVisibility(sectionKey, itemId, target.checked);
+            applySidebarLayout(layout);
+            renderSidebarLayoutEditor();
+        });
+
+        editor.addEventListener('click', (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLElement)) {
+                return;
+            }
+
+            const moveButton = target.closest('[data-sidebar-move]');
+            if (!(moveButton instanceof HTMLButtonElement)) {
+                return;
+            }
+
+            const sectionKey = moveButton.dataset.sidebarSection;
+            const itemId = moveButton.dataset.sidebarItem;
+            const direction = moveButton.dataset.sidebarMove;
+            if (!sectionKey || !itemId || !direction) {
+                return;
+            }
+
+            const layout = moveSidebarItem(sectionKey, itemId, direction);
+            applySidebarLayout(layout);
+            renderSidebarLayoutEditor();
+        });
+
+        editor.dataset.sidebarLayoutBound = 'true';
+    }
+
+    if (resetButton && resetButton.dataset.sidebarLayoutBound !== 'true') {
+        resetButton.addEventListener('click', () => {
+            const layout = resetSidebarLayout();
+            applySidebarLayout(layout);
+            renderSidebarLayoutEditor();
+            showToastNotice('Sidebar menu reset to defaults.');
+        });
+        resetButton.dataset.sidebarLayoutBound = 'true';
+    }
+
+    if (document.body && document.body.dataset.sidebarLayoutSyncBound !== 'true') {
+        document.addEventListener('sidebar-layout-updated', () => {
+            if (document.getElementById('sidebar-layout-editor')) {
+                renderSidebarLayoutEditor();
+            }
+        });
+        document.body.dataset.sidebarLayoutSyncBound = 'true';
     }
 }
 
@@ -979,9 +1154,11 @@ export function initializeSettingsModalNavigation() {
     const toOptionsBtn = document.getElementById('to-options-step-btn');
     const backToPromptBtn = document.getElementById('back-to-prompt-btn');
     const toFontBtn = document.getElementById('to-font-step-btn');
+    const toSidebarBtn = document.getElementById('to-sidebar-step-btn');
     const backToOptionsBtn = document.getElementById('back-to-options-btn');
     const toActionsBtn = document.getElementById('to-actions-step-btn');
     const backToFontBtn = document.getElementById('back-to-font-btn');
+    const backToSidebarBtn = document.getElementById('back-to-sidebar-btn');
 
     // Get all steps
     const steps = {
@@ -989,6 +1166,7 @@ export function initializeSettingsModalNavigation() {
         prompt: document.getElementById('settings-step-prompt'),
         options: document.getElementById('settings-step-options'),
         font: document.getElementById('settings-step-font'),
+        sidebar: document.getElementById('settings-step-sidebar'),
         actions: document.getElementById('settings-step-actions')
     };
 
@@ -1050,7 +1228,8 @@ export function initializeSettingsModalNavigation() {
             options: document.getElementById('step-indicator-2'),
             prompt: document.getElementById('step-indicator-3'),
             font: document.getElementById('step-indicator-4'),
-            actions: document.getElementById('step-indicator-5')
+            sidebar: document.getElementById('step-indicator-5'),
+            actions: document.getElementById('step-indicator-6')
         };
 
         // Reset all indicators to gray
@@ -1075,6 +1254,7 @@ export function initializeSettingsModalNavigation() {
                 options: 'Options',
                 prompt: 'System Prompt',
                 font: 'Font & Layout',
+                sidebar: 'Sidebar Menu',
                 actions: 'Actions'
             };
             subtitleEl.textContent = subtitles[currentStep] || '';
@@ -1088,10 +1268,11 @@ export function initializeSettingsModalNavigation() {
         const promptButtons = document.getElementById('prompt-step-buttons');
         const optionsButtons = document.getElementById('options-step-buttons');
         const fontButtons = document.getElementById('font-step-buttons');
+        const sidebarButtons = document.getElementById('sidebar-step-buttons');
         const actionsButtons = document.getElementById('actions-step-buttons');
 
         // Hide all button containers first
-        [connectionButtons, promptButtons, optionsButtons, fontButtons, actionsButtons].forEach(container => {
+        [connectionButtons, promptButtons, optionsButtons, fontButtons, sidebarButtons, actionsButtons].forEach(container => {
             if (container) {
                 container.classList.add('hidden');
             }
@@ -1110,6 +1291,9 @@ export function initializeSettingsModalNavigation() {
                 break;
             case 'font':
                 if (fontButtons) fontButtons.classList.remove('hidden');
+                break;
+            case 'sidebar':
+                if (sidebarButtons) sidebarButtons.classList.remove('hidden');
                 break;
             case 'actions':
                 if (actionsButtons) actionsButtons.classList.remove('hidden');
@@ -1184,8 +1368,10 @@ export function initializeSettingsModalNavigation() {
     addButtonEventListener(backToOptionsBtn, 'options', 'left');
     addButtonEventListener(toFontBtn, 'font', 'right');
     addButtonEventListener(backToPromptBtn, 'prompt', 'left');
-    addButtonEventListener(toActionsBtn, 'actions', 'right');
+    addButtonEventListener(toSidebarBtn, 'sidebar', 'right');
     addButtonEventListener(backToFontBtn, 'font', 'left');
+    addButtonEventListener(toActionsBtn, 'actions', 'right');
+    addButtonEventListener(backToSidebarBtn, 'sidebar', 'left');
 
     // Initialize with stepped navigation for all screen sizes
     showStep('connection');
@@ -1299,6 +1485,7 @@ function resetModalState() {
         prompt: document.getElementById('settings-step-prompt'),
         options: document.getElementById('settings-step-options'),
         font: document.getElementById('settings-step-font'),
+        sidebar: document.getElementById('settings-step-sidebar'),
         actions: document.getElementById('settings-step-actions')
     };
 
@@ -1307,6 +1494,7 @@ function resetModalState() {
     const promptButtons = document.getElementById('prompt-step-buttons');
     const optionsButtons = document.getElementById('options-step-buttons');
     const fontButtons = document.getElementById('font-step-buttons');
+    const sidebarButtons = document.getElementById('sidebar-step-buttons');
     const actionsButtons = document.getElementById('actions-step-buttons');
 
     // For mobile/tablet view, reset to first step
@@ -1327,7 +1515,7 @@ function resetModalState() {
         });
 
         // Hide all button containers except the first one
-        [promptButtons, optionsButtons, fontButtons, actionsButtons].forEach(container => {
+        [promptButtons, optionsButtons, fontButtons, sidebarButtons, actionsButtons].forEach(container => {
             if (container) {
                 container.classList.add('hidden');
             }
@@ -3899,6 +4087,9 @@ export function initializeSettingsModal() {
 
     // Initialize the system prompt overlay editor
     initializeSystemPromptOverlay();
+
+    initializeSidebarLayoutControls();
+    renderSidebarLayoutEditor();
 
     // Initialize the clear system prompt modal
     initializeClearSystemPromptModal();

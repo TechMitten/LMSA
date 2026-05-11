@@ -367,74 +367,117 @@
                         style="transform: none !important; left: 0; right: 0; color: var(--text-muted);">
                         <div class="welcome-content glass-card p-4 sm:p-8 max-w-3xl mx-auto w-full">
                             <div class="welcome-content-inner">
+                                <div class="setup-dashboard-title-block">
+                                    <h2 class="setup-dashboard-title" id="setup-dashboard-title">SELECT A PROVIDER</h2>
+                                    <div id="setup-dashboard-tabs" class="setup-dashboard-tabs" role="tablist" aria-label="Setup options">
+                                        <button id="setup-tab-provider" class="setup-dashboard-tab active" type="button" role="tab" aria-selected="true" aria-controls="setup-provider-panel" data-tab="provider">Provider</button>
+                                        <button id="setup-tab-model" class="setup-dashboard-tab" type="button" role="tab" aria-selected="false" aria-controls="setup-model-panel" data-tab="model">Model</button>
+                                    </div>
+                                </div>
+
                                 <!-- Configuration Dashboard (State A: First Run / Not Configured) -->
-                                <div id="setup-dashboard" class="provider-grid grid grid-cols-3 gap-2.5 sm:gap-4 mb-4 sm:mb-5">
-                                    <!-- Local Server Card -->
-                                    <div id="setup-local-btn" class="provider-card provider-card--local group relative transition-all duration-300" role="button" tabindex="0" aria-label="Select Local Server provider and open settings" aria-pressed="false">
-                                        <div class="provider-card-accent"></div>
+                                <div id="setup-panels-wrapper">
+                                <div id="setup-provider-panel" class="setup-dashboard-panel" role="tabpanel" aria-labelledby="setup-tab-provider">
+                                    <div id="setup-dashboard" class="provider-grid grid grid-cols-3 gap-2.5 sm:gap-4 mb-4 sm:mb-5">
+                                        <!-- Local Server Card -->
+                                        <div id="setup-local-btn" class="provider-card provider-card--local group relative transition-all duration-300" role="button" tabindex="0" aria-label="Select Local Server provider and open settings" aria-pressed="false">
+                                            <div class="provider-card-accent"></div>
 
-                                        <div class="provider-card-body">
-                                            <div class="provider-icon-wrapper">
-                                                <i class="fas fa-server"></i>
-                                            </div>
-                                            <div class="provider-card-text">
-                                                <h3 class="provider-card-title">Local Server</h3>
-                                                <p class="provider-card-desc">LM Studio, Ollama &amp; more — private &amp; offline</p>
-                                                <div class="provider-card-tags">
-                                                    <span class="provider-tag">Private</span>
-                                                    <span class="provider-tag">Offline</span>
+                                            <div class="provider-card-body">
+                                                <div class="provider-icon-wrapper">
+                                                    <i class="fas fa-server"></i>
                                                 </div>
-                                            </div>
-                                            <div class="provider-card-arrow" aria-hidden="true">
-                                                <i class="fas fa-chevron-right"></i>
+                                                <div class="provider-card-text">
+                                                    <h3 class="provider-card-title">Local Server</h3>
+                                                    <p class="provider-card-desc">LM Studio, Ollama &amp; more — private &amp; offline</p>
+                                                    <div class="provider-card-tags">
+                                                        <span class="provider-tag">Private</span>
+                                                        <span class="provider-tag">Offline</span>
+                                                    </div>
+                                                </div>
+                                                <div class="provider-card-arrow" aria-hidden="true">
+                                                    <i class="fas fa-chevron-right"></i>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <!-- OpenRouter Card -->
-                                    <div id="setup-openrouter-btn" class="provider-card provider-card--openrouter group relative transition-all duration-300" role="button" tabindex="0" aria-label="Select OpenRouter provider and open settings" aria-pressed="false">
-                                        <div class="provider-card-accent"></div>
+                                        <!-- OpenRouter Card -->
+                                        <div id="setup-openrouter-btn" class="provider-card provider-card--openrouter group relative transition-all duration-300" role="button" tabindex="0" aria-label="Select OpenRouter provider and open settings" aria-pressed="false">
+                                            <div class="provider-card-accent"></div>
 
-                                        <div class="provider-card-body">
-                                            <div class="provider-icon-wrapper">
-                                                <i class="fas fa-cloud"></i>
-                                            </div>
-                                            <div class="provider-card-text">
-                                                <h3 class="provider-card-title">OpenRouter</h3>
-                                                <p class="provider-card-desc">Hundreds of cloud models with BYOK access</p>
-                                                <div class="provider-card-tags">
-                                                    <span class="provider-tag">100+ Models</span>
-                                                    <span class="provider-tag">BYOK</span>
+                                            <div class="provider-card-body">
+                                                <div class="provider-icon-wrapper">
+                                                    <i class="fas fa-cloud"></i>
                                                 </div>
-                                            </div>
-                                            <div class="provider-card-arrow" aria-hidden="true">
-                                                <i class="fas fa-chevron-right"></i>
+                                                <div class="provider-card-text">
+                                                    <h3 class="provider-card-title">OpenRouter</h3>
+                                                    <p class="provider-card-desc">Hundreds of cloud models with BYOK access</p>
+                                                    <div class="provider-card-tags">
+                                                        <span class="provider-tag">100+ Models</span>
+                                                        <span class="provider-tag">BYOK</span>
+                                                    </div>
+                                                </div>
+                                                <div class="provider-card-arrow" aria-hidden="true">
+                                                    <i class="fas fa-chevron-right"></i>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Custom Endpoint Card -->
-                                    <div id="setup-custom-btn" class="provider-card provider-card--custom group relative transition-all duration-300" role="button" tabindex="0" aria-label="Select Custom API provider and open settings" aria-pressed="false">
-                                        <div class="provider-card-accent"></div>
+                                        <!-- Custom Endpoint Card -->
+                                        <div id="setup-custom-btn" class="provider-card provider-card--custom group relative transition-all duration-300" role="button" tabindex="0" aria-label="Select Custom API provider and open settings" aria-pressed="false">
+                                            <div class="provider-card-accent"></div>
 
-                                        <div class="provider-card-body">
-                                            <div class="provider-icon-wrapper">
-                                                <i class="fas fa-plug"></i>
-                                            </div>
-                                            <div class="provider-card-text">
-                                                <h3 class="provider-card-title">Custom API</h3>
-                                                <p class="provider-card-desc">Any OpenAI-compatible endpoint — full control</p>
-                                                <div class="provider-card-tags">
-                                                    <span class="provider-tag">Any Provider</span>
-                                                    <span class="provider-tag">Flexible</span>
+                                            <div class="provider-card-body">
+                                                <div class="provider-icon-wrapper">
+                                                    <i class="fas fa-plug"></i>
                                                 </div>
-                                            </div>
-                                            <div class="provider-card-arrow" aria-hidden="true">
-                                                <i class="fas fa-chevron-right"></i>
+                                                <div class="provider-card-text">
+                                                    <h3 class="provider-card-title">Custom API</h3>
+                                                    <p class="provider-card-desc">Any OpenAI-compatible endpoint — full control</p>
+                                                    <div class="provider-card-tags">
+                                                        <span class="provider-tag">Any Provider</span>
+                                                        <span class="provider-tag">Flexible</span>
+                                                    </div>
+                                                </div>
+                                                <div class="provider-card-arrow" aria-hidden="true">
+                                                    <i class="fas fa-chevron-right"></i>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+
+                                <div id="setup-model-panel" class="setup-dashboard-panel hidden" role="tabpanel" aria-labelledby="setup-tab-model" aria-hidden="true">
+                                    <div class="setup-model-card">
+                                        <div class="setup-model-card-head">
+                                            <div class="setup-model-icon" aria-hidden="true">
+                                                <i class="fas fa-microchip"></i>
+                                            </div>
+                                            <div class="setup-model-copy">
+                                                <h3>Model Selection</h3>
+                                                <p>Browse available models and choose what powers your chats, right here.</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="setup-model-toolbar">
+                                            <span id="setup-model-current" class="setup-model-current">Current: none</span>
+                                            <button id="setup-model-refresh-btn" type="button" class="setup-model-refresh-btn">Refresh</button>
+                                        </div>
+
+                                        <div class="setup-model-search-wrap">
+                                            <i class="fas fa-search" aria-hidden="true"></i>
+                                            <input id="setup-model-search" type="text" placeholder="Search models" autocomplete="off" />
+                                        </div>
+
+                                        <div id="setup-model-list" class="setup-model-list" aria-live="polite"></div>
+                                        <p id="setup-model-status" class="setup-model-status" role="status" aria-live="polite"></p>
+                                    </div>
+                                </div>
+                                </div><!-- /#setup-panels-wrapper -->
+                                <button id="setup-panel-expand-btn" type="button" class="setup-panel-expand-btn" aria-expanded="false">
+                                    <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                                    <span>Expand</span>
+                                </button>
 
                                 <!-- Standard Welcome Actions (State B: Configured) -->
                                 <div id="configured-actions" class="welcome-actions hidden">

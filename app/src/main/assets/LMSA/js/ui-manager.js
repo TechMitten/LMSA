@@ -189,8 +189,27 @@ export function showWelcomeMessage() {
                 setupDashboard.classList.add('grid');
                 setupDashboard.classList.remove('flex', 'justify-center', 'gap-4', 'scale-90', 'opacity-80');
             }
+            const setupProviderPanel = document.getElementById('setup-provider-panel');
+            const setupModelPanel = document.getElementById('setup-model-panel');
             if (configuredActions) {
                 configuredActions.classList.add('hidden');
+            }
+            if (typeof window.setSetupDashboardTab === 'function') {
+                window.setSetupDashboardTab('provider');
+            } else {
+                if (setupProviderPanel) {
+                    setupProviderPanel.classList.remove('hidden');
+                    setupProviderPanel.setAttribute('aria-hidden', 'false');
+                }
+                if (setupModelPanel) {
+                    setupModelPanel.classList.add('hidden');
+                    setupModelPanel.setAttribute('aria-hidden', 'true');
+                }
+
+                const setupTitle = document.getElementById('setup-dashboard-title');
+                if (setupTitle) {
+                    setupTitle.textContent = 'SELECT A PROVIDER';
+                }
             }
             if (welcomeTitle) welcomeTitle.textContent = 'Choose Your AI Provider';
             if (welcomeSubtitle) welcomeSubtitle.textContent = 'Select a connection method to start chatting';

@@ -27,6 +27,7 @@ import { initImageViewerModal } from './components/modals/image-viewer-modal.js'
 import { initializeTemplateIndicator } from './template-indicator.js';
 import { initializeHapticFeedback } from './haptics.js';
 import { updateConfirmationModalTheme, updateExportImportModalsTheme } from './confirmation-modal-fix.js';
+import { initializeSidebarLayout } from './sidebar-layout-manager.js';
 import './about.js';
 
 // Android WebView keyboard overlap fix
@@ -644,6 +645,7 @@ export async function initializeApp() {
     // Load provider/settings state first, then hydrate server inputs before the
     // initial silent model check so default model auto-load can run on launch.
     loadSettings();
+    initializeSidebarLayout();
     try {
         loadServerSettings(); // This will also fetch available models
     } catch (error) {
