@@ -51,8 +51,10 @@ import {
     chatHistoryData,
     currentChatId,
     clearAllChats,
+    loadChat,
     deleteChatHistory,
     getChatToDelete,
+    getSavedChatSummaries,
     saveChatHistory,
     loadChatHistory,
     updateChatHistoryUI,
@@ -371,8 +373,12 @@ export function initializeEventHandlers() {
     const setupDashboardTitle = document.getElementById('setup-dashboard-title');
     const setupTabProviderButton = document.getElementById('setup-tab-provider');
     const setupTabModelButton = document.getElementById('setup-tab-model');
+    const setupTabSavedChatsButton = document.getElementById('setup-tab-saved-chats');
     const setupProviderPanel = document.getElementById('setup-provider-panel');
     const setupModelPanel = document.getElementById('setup-model-panel');
+    const setupSavedChatsPanel = document.getElementById('setup-saved-chats-panel');
+    const setupSavedChatsList = document.getElementById('setup-saved-chats-list');
+    const setupSavedChatsEmpty = document.getElementById('setup-saved-chats-empty');
     const setupModelCurrent = document.getElementById('setup-model-current');
     const setupModelRefreshBtn = document.getElementById('setup-model-refresh-btn');
     const setupModelSearchInput = document.getElementById('setup-model-search');
@@ -383,6 +389,74 @@ export function initializeEventHandlers() {
     let setupModelLoading = false;
     let setupModelLoadingId = null;
     let currentSetupDashboardTab = 'provider';
+
+    const setupTabIndexById = {
+        provider: 0,
+        model: 1,
+        'saved-chats': 2
+    };
+
+    const formatSavedChatTimestamp = (timestamp) => {
+        if (!Number.isFinite(timestamp) || timestamp <= 0) {
+            return 'Saved chat';
+        }
+
+        const date = new Date(timestamp);
+        if (Number.isNaN(date.getTime())) {
+            return 'Saved chat';
+        }
+
+        return date.toLocaleString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+    };
+
+    const renderSetupSavedChatsList = () => {
+        if (!setupSavedChatsList || !setupSavedChatsEmpty) {
+            return;
+        }
+
+        const summaries = typeof getSavedChatSummaries === 'function'
+            ? getSavedChatSummaries()
+            : [];
+
+        if (summaries.length === 0) {
+            setupSavedChatsList.innerHTML = '';
+            setupSavedChatsEmpty.classList.remove('hidden');
+            return;
+        }
+
+        setupSavedChatsEmpty.classList.add('hidden');
+
+        const rowsHtml = summaries.map((entry) => {
+            const safeTitle = sanitizeInput(entry.title || 'New Chat');
+            const safeMeta = sanitizeInput(formatSavedChatTimestamp(entry.timestamp));
+            return `
+                <button class="setup-saved-chat-item" type="button" data-chat-id="${entry.id}" title="${safeTitle}">
+                    <span class="setup-saved-chat-title">${safeTitle}</span>
+                    <span class="setup-saved-chat-meta">${safeMeta}</span>
+                </button>
+            `;
+        }).join('');
+
+        setupSavedChatsList.innerHTML = rowsHtml;
+
+        setupSavedChatsList.querySelectorAll('.setup-saved-chat-item').forEach((button) => {
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                const { chatId } = button.dataset;
+                if (!chatId) {
+                    return;
+                }
+
+                loadChat(chatId);
+                button.blur();
+            });
+        });
+    };
 
     const getModelProviderLabel = (modelId) => {
         if (!modelId || !modelId.includes('/')) {
@@ -567,8 +641,13 @@ export function initializeEventHandlers() {
     const setupPanelExpandBtn = document.getElementById('setup-panel-expand-btn');
 
     const setSetupDashboardTab = (tab = 'provider') => {
-        const isModelTab = tab === 'model';
-        const activePanel = isModelTab ? setupModelPanel : setupProviderPanel;
+        const normalizedTab = setupTabIndexById[tab] !== undefined ? tab : 'provider';
+        const isProviderTab = normalizedTab === 'provider';
+        const isModelTab = normalizedTab === 'model';
+        const isSavedChatsTab = normalizedTab === 'saved-chats';
+        const activePanel = isProviderTab
+            ? setupProviderPanel
+            : (isModelTab ? setupModelPanel : setupSavedChatsPanel);
         const previousTab = currentSetupDashboardTab;
 
         // Lock wrapper height to provider panel size before switching to model tab,
@@ -594,17 +673,28 @@ export function initializeEventHandlers() {
         }
 
         if (setupDashboardTitle) {
-            setupDashboardTitle.textContent = isModelTab ? 'SELECT A MODEL' : 'SELECT A PROVIDER';
+            if (isModelTab) {
+                setupDashboardTitle.textContent = 'SELECT A MODEL';
+            } else if (isSavedChatsTab) {
+                setupDashboardTitle.textContent = 'SAVED CHATS';
+            } else {
+                setupDashboardTitle.textContent = 'SELECT A PROVIDER';
+            }
         }
 
         if (setupProviderPanel) {
-            setupProviderPanel.classList.toggle('hidden', isModelTab);
-            setupProviderPanel.setAttribute('aria-hidden', isModelTab ? 'true' : 'false');
+            setupProviderPanel.classList.toggle('hidden', !isProviderTab);
+            setupProviderPanel.setAttribute('aria-hidden', isProviderTab ? 'false' : 'true');
         }
 
         if (setupModelPanel) {
             setupModelPanel.classList.toggle('hidden', !isModelTab);
             setupModelPanel.setAttribute('aria-hidden', isModelTab ? 'false' : 'true');
+        }
+
+        if (setupSavedChatsPanel) {
+            setupSavedChatsPanel.classList.toggle('hidden', !isSavedChatsTab);
+            setupSavedChatsPanel.setAttribute('aria-hidden', isSavedChatsTab ? 'false' : 'true');
         }
 
         if (activePanel) {
@@ -613,20 +703,22 @@ export function initializeEventHandlers() {
             activePanel.classList.remove('is-switching-in-right');
             void activePanel.offsetWidth;
 
-            if (previousTab !== tab) {
-                const entersFromRight = previousTab === 'provider' && tab === 'model';
+            if (previousTab !== normalizedTab) {
+                const previousIndex = setupTabIndexById[previousTab] ?? 0;
+                const currentIndex = setupTabIndexById[normalizedTab] ?? 0;
+                const entersFromRight = currentIndex > previousIndex;
                 activePanel.classList.add(entersFromRight ? 'is-switching-in-right' : 'is-switching-in-left');
             } else {
                 activePanel.classList.add('is-switching-in');
             }
         }
 
-        currentSetupDashboardTab = tab;
+        currentSetupDashboardTab = normalizedTab;
 
         if (setupTabProviderButton) {
-            setupTabProviderButton.classList.toggle('active', !isModelTab);
-            setupTabProviderButton.setAttribute('aria-selected', isModelTab ? 'false' : 'true');
-            setupTabProviderButton.tabIndex = isModelTab ? -1 : 0;
+            setupTabProviderButton.classList.toggle('active', isProviderTab);
+            setupTabProviderButton.setAttribute('aria-selected', isProviderTab ? 'true' : 'false');
+            setupTabProviderButton.tabIndex = isProviderTab ? 0 : -1;
         }
 
         if (setupTabModelButton) {
@@ -635,8 +727,18 @@ export function initializeEventHandlers() {
             setupTabModelButton.tabIndex = isModelTab ? 0 : -1;
         }
 
+        if (setupTabSavedChatsButton) {
+            setupTabSavedChatsButton.classList.toggle('active', isSavedChatsTab);
+            setupTabSavedChatsButton.setAttribute('aria-selected', isSavedChatsTab ? 'true' : 'false');
+            setupTabSavedChatsButton.tabIndex = isSavedChatsTab ? 0 : -1;
+        }
+
         if (isModelTab) {
             loadInlineModels();
+        }
+
+        if (isSavedChatsTab) {
+            renderSetupSavedChatsList();
         }
     };
 
@@ -657,6 +759,14 @@ export function initializeEventHandlers() {
         setupTabModelButton.addEventListener('click', () => {
             setSetupDashboardTab('model');
             setupTabModelButton.blur();
+        });
+    }
+
+    if (setupTabSavedChatsButton) {
+        bindPressInFeedback(setupTabSavedChatsButton);
+        setupTabSavedChatsButton.addEventListener('click', () => {
+            setSetupDashboardTab('saved-chats');
+            setupTabSavedChatsButton.blur();
         });
     }
 

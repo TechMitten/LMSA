@@ -191,6 +191,7 @@ export function showWelcomeMessage() {
             }
             const setupProviderPanel = document.getElementById('setup-provider-panel');
             const setupModelPanel = document.getElementById('setup-model-panel');
+            const setupSavedChatsPanel = document.getElementById('setup-saved-chats-panel');
             if (configuredActions) {
                 configuredActions.classList.add('hidden');
             }
@@ -204,6 +205,10 @@ export function showWelcomeMessage() {
                 if (setupModelPanel) {
                     setupModelPanel.classList.add('hidden');
                     setupModelPanel.setAttribute('aria-hidden', 'true');
+                }
+                if (setupSavedChatsPanel) {
+                    setupSavedChatsPanel.classList.add('hidden');
+                    setupSavedChatsPanel.setAttribute('aria-hidden', 'true');
                 }
 
                 const setupTitle = document.getElementById('setup-dashboard-title');

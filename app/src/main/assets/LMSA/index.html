@@ -372,6 +372,7 @@
                                     <div id="setup-dashboard-tabs" class="setup-dashboard-tabs" role="tablist" aria-label="Setup options">
                                         <button id="setup-tab-provider" class="setup-dashboard-tab active" type="button" role="tab" aria-selected="true" aria-controls="setup-provider-panel" data-tab="provider">Provider</button>
                                         <button id="setup-tab-model" class="setup-dashboard-tab" type="button" role="tab" aria-selected="false" aria-controls="setup-model-panel" data-tab="model">Model</button>
+                                        <button id="setup-tab-saved-chats" class="setup-dashboard-tab" type="button" role="tab" aria-selected="false" aria-controls="setup-saved-chats-panel" data-tab="saved-chats">Saved Chats</button>
                                     </div>
                                 </div>
 
@@ -471,6 +472,23 @@
 
                                         <div id="setup-model-list" class="setup-model-list" aria-live="polite"></div>
                                         <p id="setup-model-status" class="setup-model-status" role="status" aria-live="polite"></p>
+                                    </div>
+                                </div>
+
+                                <div id="setup-saved-chats-panel" class="setup-dashboard-panel hidden" role="tabpanel" aria-labelledby="setup-tab-saved-chats" aria-hidden="true">
+                                    <div class="setup-saved-chats-card">
+                                        <div class="setup-saved-chats-head">
+                                            <div class="setup-saved-chats-icon" aria-hidden="true">
+                                                <i class="fas fa-comments"></i>
+                                            </div>
+                                            <div class="setup-saved-chats-copy">
+                                                <h3>Saved Chats</h3>
+                                                <p>Pick up where you left off by opening one of your previous chats.</p>
+                                            </div>
+                                        </div>
+
+                                        <div id="setup-saved-chats-list" class="setup-saved-chats-list" aria-live="polite"></div>
+                                        <p id="setup-saved-chats-empty" class="setup-saved-chats-empty hidden" role="status">No saved chats yet</p>
                                     </div>
                                 </div>
                                 </div><!-- /#setup-panels-wrapper -->

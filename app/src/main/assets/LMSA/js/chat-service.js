@@ -6045,6 +6045,39 @@ export function getChatHistoryData() {
 }
 
 /**
+ * Gets a sorted summary list of saved chats for lightweight pickers.
+ * @returns {Array<{id: string, title: string, meta: string, timestamp: number}>}
+ */
+export function getSavedChatSummaries() {
+    if (!chatHistoryData || typeof chatHistoryData !== 'object') {
+        return [];
+    }
+
+    return Object.entries(chatHistoryData)
+        .map(([id, chatData]) => {
+            const normalizedId = String(id);
+            const messages = Array.isArray(chatData) ? chatData : chatData?.messages;
+            if (!Array.isArray(messages) || messages.length === 0) {
+                return null;
+            }
+
+            const storedTitle = removeThinkTags(Array.isArray(chatData) ? chatData.title : chatData?.title || '');
+            const fallbackText = normalizeChatTitleSourceText(messages[0]?.content || '', 'New Chat');
+            const title = storedTitle || fallbackText;
+            const timestamp = Number.parseInt(normalizedId, 10);
+
+            return {
+                id: normalizedId,
+                title,
+                meta: fallbackText,
+                timestamp: Number.isFinite(timestamp) ? timestamp : 0
+            };
+        })
+        .filter(Boolean)
+        .sort((a, b) => b.timestamp - a.timestamp);
+}
+
+/**
  * Sets the chat to delete
  * @param {string} id - The ID of the chat to delete
  */

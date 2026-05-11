@@ -585,6 +585,110 @@ body.light-theme #welcome-message .setup-panel-expand-btn:hover {
     text-align: left;
 }
 
+#welcome-message .setup-saved-chats-card {
+    width: 100%;
+    margin: 0 0 1rem;
+    border-radius: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.76), rgba(30, 41, 59, 0.52));
+    padding: 16px;
+    text-align: left;
+    box-shadow: 0 10px 24px rgba(2, 6, 23, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+#welcome-message .setup-saved-chats-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+#welcome-message .setup-saved-chats-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.35), rgba(56, 189, 248, 0.22));
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    color: #dbeafe;
+}
+
+#welcome-message .setup-saved-chats-copy h3 {
+    margin: 0;
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    font-weight: 650;
+}
+
+#welcome-message .setup-saved-chats-copy p {
+    margin: 2px 0 0;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    line-height: 1.45;
+}
+
+#welcome-message .setup-saved-chats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 250px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+#welcome-message .setup-saved-chat-item {
+    border: 1px solid rgba(148, 163, 184, 0.26);
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.46);
+    color: #e2e8f0;
+    text-align: left;
+    padding: 10px 12px;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+#welcome-message .setup-saved-chat-item:hover {
+    border-color: rgba(96, 165, 250, 0.5);
+    background: rgba(30, 41, 59, 0.64);
+    transform: translateY(-1px);
+}
+
+#welcome-message .setup-saved-chat-item:focus-visible {
+    outline: 2px solid rgba(96, 165, 250, 0.9);
+    outline-offset: 1px;
+}
+
+#welcome-message .setup-saved-chat-title {
+    display: block;
+    color: #f8fafc;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#welcome-message .setup-saved-chat-meta {
+    display: block;
+    margin-top: 3px;
+    color: #94a3b8;
+    font-size: 0.69rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#welcome-message .setup-saved-chats-empty {
+    min-height: 18px;
+    margin: 9px 2px 0;
+    color: #94a3b8;
+    font-size: 0.73rem;
+    text-align: left;
+}
+
 body.light-theme #welcome-message .setup-dashboard-tabs {
     background: rgba(248, 250, 252, 0.72);
     border-color: rgba(148, 163, 184, 0.32);
@@ -648,6 +752,46 @@ body.light-theme #welcome-message .setup-model-row.active {
 
 body.light-theme #welcome-message .setup-model-name {
     color: #0f172a;
+}
+
+body.light-theme #welcome-message .setup-saved-chats-card {
+    border-color: rgba(148, 163, 184, 0.28);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(241, 245, 249, 0.9));
+    box-shadow: 0 10px 22px rgba(148, 163, 184, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+body.light-theme #welcome-message .setup-saved-chats-icon {
+    color: #1d4ed8;
+    border-color: rgba(147, 197, 253, 0.8);
+    background: linear-gradient(135deg, rgba(191, 219, 254, 0.9), rgba(219, 234, 254, 0.8));
+}
+
+body.light-theme #welcome-message .setup-saved-chats-copy h3 {
+    color: #0f172a;
+}
+
+body.light-theme #welcome-message .setup-saved-chats-copy p {
+    color: #475569;
+}
+
+body.light-theme #welcome-message .setup-saved-chat-item {
+    border-color: rgba(148, 163, 184, 0.28);
+    background: rgba(255, 255, 255, 0.72);
+    color: #0f172a;
+}
+
+body.light-theme #welcome-message .setup-saved-chat-item:hover {
+    border-color: rgba(59, 130, 246, 0.45);
+    background: rgba(239, 246, 255, 0.9);
+}
+
+body.light-theme #welcome-message .setup-saved-chat-title {
+    color: #0f172a;
+}
+
+body.light-theme #welcome-message .setup-saved-chat-meta,
+body.light-theme #welcome-message .setup-saved-chats-empty {
+    color: #64748b;
 }
 
 body.light-theme #welcome-message .setup-model-provider,
