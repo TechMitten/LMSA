@@ -41,7 +41,31 @@ export function initializeSettingsModalTouchHandler() {
         'to-options-step-btn',
         'back-to-prompt-btn',
         'to-actions-step-btn',
-        'back-to-options-btn'
+        'back-to-options-btn',
+        'to-font-step-btn',
+        'back-to-font-btn',
+        'to-sidebar-step-btn',
+        'back-to-sidebar-btn',
+        'configure-local-server-btn',
+        'configure-lmstudio-token-btn',
+        'configure-lmstudio-mcp-btn',
+        'configure-openrouter-key-btn',
+        'configure-openai-compatible-btn',
+        'edit-system-prompt-btn',
+        'save-system-prompt-btn',
+        'reset-sidebar-layout-btn',
+        'select-local-server',
+        'select-lmstudio-token',
+        'select-lmstudio-mcp',
+        'select-openrouter',
+        'select-openai-compatible',
+        'save-connection-preset-btn',
+        'clear-max-tokens-btn',
+        'add-lmstudio-mcp-integration-btn',
+        'close-lmstudio-mcp-builder-btn',
+        'add-lmstudio-mcp-tool-btn',
+        'cancel-lmstudio-mcp-builder-btn',
+        'save-lmstudio-mcp-builder-btn'
     ];
 
     // Add touch event handlers to each navigation button

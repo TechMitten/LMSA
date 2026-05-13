@@ -4032,6 +4032,32 @@ body.light-theme #clear-system-prompt-modal #close-clear-system-prompt-modal:hov
     border-radius: 0 !important;
 }
 
+/* Tablet-specific keyboard fit overrides to prevent stretching */
+@media (min-width: 768px) {
+    .modal-container.modal-input-keyboard-fit {
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 16px !important;
+    }
+
+    .modal-container.modal-input-keyboard-fit .modal-content,
+    .modal-container.modal-input-keyboard-fit .connection-input-modal-box,
+    .modal-container.modal-input-keyboard-fit .chat-rename-modal-box {
+        width: 420px !important;
+        max-width: 90% !important;
+        height: auto !important;
+        max-height: calc(100% - 32px) !important;
+        margin: auto !important;
+        border-radius: 1.25rem !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55) !important;
+    }
+
+    .modal-container.modal-input-keyboard-fit .connection-input-modal-accent {
+        border-radius: 1.25rem 1.25rem 0 0 !important;
+    }
+}
+
 #chat-rename-modal .chat-rename-modal-box {
     display: flex;
     flex-direction: column;

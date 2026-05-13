@@ -643,6 +643,10 @@ export async function initializeApp() {
     // Ensure the About button is properly initialized
     const aboutButton = document.getElementById('about-btn');
 
+    // Initialize settings modal touch handler before loading settings
+    // This ensures buttons are prepared before listeners are attached to them
+    initializeSettingsModalTouchHandler();
+
     // Load provider/settings state first, then hydrate server inputs before the
     // initial silent model check so default model auto-load can run on launch.
     loadSettings();
@@ -733,7 +737,6 @@ export async function initializeApp() {
     // Initialize components in a simpler order
     initializeTouchHandlers();
     initializeChatHistoryTouchHandler();
-    initializeSettingsModalTouchHandler();
     initializeSidebarTouchHandler();
     // File preview touch handler removed
     // File upload already initialized above
