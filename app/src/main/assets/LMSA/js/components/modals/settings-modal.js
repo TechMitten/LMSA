@@ -156,7 +156,7 @@ export const settingsModal = `
                             </div>
 
                             <div id="settings-connection-presets-empty-state" class="connection-presets-empty-state">
-                                No Saved Presets yet.
+                                No saved presets for this provider yet.
                             </div>
                             <div id="settings-connection-presets-list" class="connection-presets-list hidden"></div>
                         </div>
@@ -657,87 +657,7 @@ export const settingsModal = `
                     placeholder="Preset name" maxlength="50" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-form-type="other" style="width: 100%;">
             </div>
 
-            <div id="edit-connection-preset-local-fields" class="connection-preset-edit-section hidden">
-                <div class="connection-preset-edit-grid mb-4">
-                    <div class="min-w-0">
-                        <label for="edit-connection-preset-local-ip" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Hostname / IP</label>
-                        <input type="text" id="edit-connection-preset-local-ip"
-                            class="connection-modal-input w-full"
-                            placeholder="e.g. 192.168.1.100" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-form-type="other" style="width: 100%;">
-                    </div>
-                    <div class="connection-preset-edit-port-column">
-                        <label for="edit-connection-preset-local-port" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Port</label>
-                        <input type="text" id="edit-connection-preset-local-port"
-                            class="connection-modal-input w-full"
-                            placeholder="1234" pattern="^[0-9]*$" inputmode="numeric" autocomplete="off" data-form-type="other" style="width: 100%;">
-                    </div>
-                </div>
-                <div class="mb-4">
-                    <label for="edit-connection-preset-local-token" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">LM Studio API Token (optional)</label>
-                    <div class="openrouter-key-input-wrapper">
-                        <input type="password" id="edit-connection-preset-local-token"
-                            placeholder="sk-lm-xxxx:yyyy" autocomplete="off" data-form-type="other">
-                        <button type="button" id="edit-connection-preset-local-token-reveal"
-                            class="openrouter-key-reveal-btn"
-                            title="Show/hide token"
-                            data-edit-preset-secret-toggle="edit-connection-preset-local-token">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="mb-1">
-                    <label for="edit-connection-preset-local-mcp" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">MCP Integrations JSON (optional)</label>
-                    <textarea id="edit-connection-preset-local-mcp"
-                        class="connection-modal-input connection-preset-edit-textarea w-full"
-                        placeholder='[{"name":"filesystem"}]' autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-form-type="other" style="width: 100%;"></textarea>
-                    <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);">Leave blank to remove MCP integrations from this preset.</p>
-                </div>
-            </div>
-
-            <div id="edit-connection-preset-openrouter-fields" class="connection-preset-edit-section hidden">
-                <div class="mb-1">
-                    <label for="edit-connection-preset-openrouter-key" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">OpenRouter API Key</label>
-                    <div class="openrouter-key-input-wrapper">
-                        <input type="password" id="edit-connection-preset-openrouter-key"
-                            placeholder="sk-or-v1-..." autocomplete="off" data-form-type="other">
-                        <button type="button" id="edit-connection-preset-openrouter-key-reveal"
-                            class="openrouter-key-reveal-btn"
-                            title="Show/hide API key"
-                            data-edit-preset-secret-toggle="edit-connection-preset-openrouter-key">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);"><i class="fas fa-lock mr-1"></i>Stored only inside this preset until you choose to use it.</p>
-                </div>
-            </div>
-
-            <div id="edit-connection-preset-openai-compatible-fields" class="connection-preset-edit-section hidden">
-                <div class="mb-4">
-                    <label for="edit-connection-preset-openai-endpoint" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Base URL or Chat Completions URL</label>
-                    <input type="text" id="edit-connection-preset-openai-endpoint"
-                        class="connection-modal-input w-full"
-                        placeholder="e.g. https://api.example.com/v1" autocomplete="off" data-form-type="other" style="width: 100%;">
-                </div>
-                <div class="mb-4">
-                    <label for="edit-connection-preset-openai-key" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">API Key (optional)</label>
-                    <div class="openrouter-key-input-wrapper">
-                        <input type="password" id="edit-connection-preset-openai-key"
-                            placeholder="sk-..." autocomplete="off" data-form-type="other">
-                        <button type="button" id="edit-connection-preset-openai-key-reveal"
-                            class="openrouter-key-reveal-btn"
-                            title="Show/hide API key"
-                            data-edit-preset-secret-toggle="edit-connection-preset-openai-key">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="mb-1">
-                    <label for="edit-connection-preset-openai-model" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Manual Model Name (optional)</label>
-                    <input type="text" id="edit-connection-preset-openai-model"
-                        class="connection-modal-input w-full"
-                        placeholder="e.g. gpt-4o-mini" autocomplete="off" data-form-type="other" style="width: 100%;">
-                </div>
-            </div>
+            <div id="edit-connection-preset-provider-fields" class="connection-preset-edit-provider-fields" aria-live="polite"></div>
 
             <div class="flex gap-3 mt-5">
                 <button id="cancel-edit-connection-preset-modal" type="button"

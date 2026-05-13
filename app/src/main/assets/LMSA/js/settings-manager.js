@@ -1774,6 +1774,10 @@ function updateProviderUI() {
     syncAutoGenerateTitlesUI();
   }
 
+  document.dispatchEvent(new CustomEvent('lmsa:connection-provider-changed', {
+    detail: { provider: currentProvider }
+  }));
+
 }
 
 function refreshLocalLmStudioLoadedModelState() {

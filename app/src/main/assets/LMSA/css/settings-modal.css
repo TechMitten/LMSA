@@ -3328,6 +3328,11 @@ body.light-theme .connection-preset-action-btn {
   flex-direction: column;
 }
 
+.connection-preset-edit-provider-fields {
+  display: flex;
+  flex-direction: column;
+}
+
 .connection-preset-edit-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 110px;

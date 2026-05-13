@@ -45,6 +45,191 @@ const CONNECTION_PRESET_TYPE_LABELS = {
     'openai-compatible': 'Custom Endpoint'
 };
 
+const CONNECTION_PRESET_EDIT_PROVIDERS = {
+    local: {
+        helperText: 'Update the saved local server address, token, or MCP integrations without changing the connection currently in use.',
+        accentClass: 'connection-input-modal-accent--blue',
+        renderFields() {
+            return `
+                <div class="connection-preset-edit-section" data-preset-provider-fields="local">
+                    <div class="connection-preset-edit-grid mb-4">
+                        <div class="min-w-0">
+                            <label for="edit-connection-preset-local-ip" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Hostname / IP</label>
+                            <input type="text" id="edit-connection-preset-local-ip"
+                                class="connection-modal-input w-full"
+                                placeholder="e.g. 192.168.1.100" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-form-type="other" style="width: 100%;">
+                        </div>
+                        <div class="connection-preset-edit-port-column">
+                            <label for="edit-connection-preset-local-port" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Port</label>
+                            <input type="text" id="edit-connection-preset-local-port"
+                                class="connection-modal-input w-full"
+                                placeholder="1234" pattern="^[0-9]*$" inputmode="numeric" autocomplete="off" data-form-type="other" style="width: 100%;">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="edit-connection-preset-local-token" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">LM Studio API Token (optional)</label>
+                        <div class="openrouter-key-input-wrapper">
+                            <input type="password" id="edit-connection-preset-local-token"
+                                placeholder="sk-lm-xxxx:yyyy" autocomplete="off" data-form-type="other">
+                            <button type="button" id="edit-connection-preset-local-token-reveal"
+                                class="openrouter-key-reveal-btn"
+                                title="Show/hide token"
+                                data-edit-preset-secret-toggle="edit-connection-preset-local-token">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <label for="edit-connection-preset-local-mcp" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">MCP Integrations JSON (optional)</label>
+                        <textarea id="edit-connection-preset-local-mcp"
+                            class="connection-modal-input connection-preset-edit-textarea w-full"
+                            placeholder='[{"name":"filesystem"}]' autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-form-type="other" style="width: 100%;"></textarea>
+                        <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);">Leave blank to remove MCP integrations from this preset.</p>
+                    </div>
+                </div>
+            `;
+        },
+        populateFields(container, data = {}) {
+            const ipInput = container.querySelector('#edit-connection-preset-local-ip');
+            const portInput = container.querySelector('#edit-connection-preset-local-port');
+            const tokenInput = container.querySelector('#edit-connection-preset-local-token');
+            const mcpInput = container.querySelector('#edit-connection-preset-local-mcp');
+
+            if (ipInput) ipInput.value = data.serverIp || '';
+            if (portInput) portInput.value = data.serverPort || '';
+            if (tokenInput) tokenInput.value = data.lmStudioApiToken || '';
+            if (mcpInput) mcpInput.value = data.lmStudioMcpIntegrations || '';
+        },
+        buildData(container) {
+            const serverIp = container.querySelector('#edit-connection-preset-local-ip')?.value.trim() || '';
+            const serverPort = container.querySelector('#edit-connection-preset-local-port')?.value.trim() || '';
+            const lmStudioApiToken = container.querySelector('#edit-connection-preset-local-token')?.value.trim() || '';
+            const lmStudioMcpIntegrations = container.querySelector('#edit-connection-preset-local-mcp')?.value.trim() || '';
+
+            if (!serverIp || !serverPort) {
+                throw new Error('Hostname/IP and port are required for Local Server presets.');
+            }
+
+            if (!/^\d+$/.test(serverPort)) {
+                throw new Error('Port must contain digits only.');
+            }
+
+            if (lmStudioMcpIntegrations) {
+                try {
+                    JSON.parse(lmStudioMcpIntegrations);
+                } catch (_) {
+                    throw new Error('MCP integrations must contain valid JSON.');
+                }
+            }
+
+            return {
+                serverIp,
+                serverPort,
+                lmStudioApiToken,
+                lmStudioMcpIntegrations
+            };
+        }
+    },
+    openrouter: {
+        helperText: 'Update the saved OpenRouter preset here without touching the active connection until you tap Use.',
+        accentClass: 'connection-input-modal-accent--purple',
+        renderFields() {
+            return `
+                <div class="connection-preset-edit-section" data-preset-provider-fields="openrouter">
+                    <div class="mb-1">
+                        <label for="edit-connection-preset-openrouter-key" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">OpenRouter API Key</label>
+                        <div class="openrouter-key-input-wrapper">
+                            <input type="password" id="edit-connection-preset-openrouter-key"
+                                placeholder="sk-or-v1-..." autocomplete="off" data-form-type="other">
+                            <button type="button" id="edit-connection-preset-openrouter-key-reveal"
+                                class="openrouter-key-reveal-btn"
+                                title="Show/hide API key"
+                                data-edit-preset-secret-toggle="edit-connection-preset-openrouter-key">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs mt-2" style="color: var(--settings-help-text, #6b7280);"><i class="fas fa-lock mr-1"></i>Stored only inside this preset until you choose to use it.</p>
+                    </div>
+                </div>
+            `;
+        },
+        populateFields(container, data = {}) {
+            const keyInput = container.querySelector('#edit-connection-preset-openrouter-key');
+            if (keyInput) keyInput.value = data.openRouterApiKey || '';
+        },
+        buildData(container) {
+            const openRouterApiKey = container.querySelector('#edit-connection-preset-openrouter-key')?.value.trim() || '';
+
+            if (!openRouterApiKey) {
+                throw new Error('OpenRouter API key is required for this preset.');
+            }
+
+            return {
+                openRouterApiKey
+            };
+        }
+    },
+    'openai-compatible': {
+        helperText: 'Update the saved custom endpoint details here without changing the active connection until you tap Use.',
+        accentClass: 'connection-input-modal-accent--blue',
+        renderFields() {
+            return `
+                <div class="connection-preset-edit-section" data-preset-provider-fields="openai-compatible">
+                    <div class="mb-4">
+                        <label for="edit-connection-preset-openai-endpoint" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Base URL or Chat Completions URL</label>
+                        <input type="text" id="edit-connection-preset-openai-endpoint"
+                            class="connection-modal-input w-full"
+                            placeholder="e.g. https://api.example.com/v1" autocomplete="off" data-form-type="other" style="width: 100%;">
+                    </div>
+                    <div class="mb-4">
+                        <label for="edit-connection-preset-openai-key" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">API Key (optional)</label>
+                        <div class="openrouter-key-input-wrapper">
+                            <input type="password" id="edit-connection-preset-openai-key"
+                                placeholder="sk-..." autocomplete="off" data-form-type="other">
+                            <button type="button" id="edit-connection-preset-openai-key-reveal"
+                                class="openrouter-key-reveal-btn"
+                                title="Show/hide API key"
+                                data-edit-preset-secret-toggle="edit-connection-preset-openai-key">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <label for="edit-connection-preset-openai-model" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Manual Model Name (optional)</label>
+                        <input type="text" id="edit-connection-preset-openai-model"
+                            class="connection-modal-input w-full"
+                            placeholder="e.g. gpt-4o-mini" autocomplete="off" data-form-type="other" style="width: 100%;">
+                    </div>
+                </div>
+            `;
+        },
+        populateFields(container, data = {}) {
+            const endpointInput = container.querySelector('#edit-connection-preset-openai-endpoint');
+            const keyInput = container.querySelector('#edit-connection-preset-openai-key');
+            const modelInput = container.querySelector('#edit-connection-preset-openai-model');
+
+            if (endpointInput) endpointInput.value = data.endpoint || '';
+            if (keyInput) keyInput.value = data.apiKey || '';
+            if (modelInput) modelInput.value = data.manualModel || '';
+        },
+        buildData(container) {
+            const endpoint = container.querySelector('#edit-connection-preset-openai-endpoint')?.value.trim() || '';
+            const apiKey = container.querySelector('#edit-connection-preset-openai-key')?.value.trim() || '';
+            const manualModel = container.querySelector('#edit-connection-preset-openai-model')?.value.trim() || '';
+
+            if (!endpoint) {
+                throw new Error('Endpoint URL is required for this preset.');
+            }
+
+            return {
+                endpoint,
+                apiKey,
+                manualModel
+            };
+        }
+    }
+};
+
 function hasPremiumAccess() {
     if (typeof window.hasPremiumAccess === 'function') {
         return !!window.hasPremiumAccess();
@@ -183,6 +368,10 @@ function buildDefaultConnectionPresetName(provider) {
     return `${label} ${new Date().toLocaleDateString()}`;
 }
 
+function getVisibleConnectionPresets(provider = getActiveConnectionProvider()) {
+    return getSavedConnectionPresets().filter(preset => preset.type === provider);
+}
+
 function summarizeConnectionPreset(preset) {
     if (preset.type === 'openrouter') {
         return `API key ${maskSecret(preset.data.openRouterApiKey, 8, 4)}`;
@@ -302,7 +491,7 @@ function syncConnectionPresetComposer() {
     }
 
     if (helper) {
-        helper.textContent = `Save the active ${providerLabel} setup and reuse it later from this shared list.`;
+        helper.textContent = `Save the active ${providerLabel} setup and browse only ${providerLabel} presets while this provider is selected.`;
     }
 
     if (nameInput) {
@@ -325,8 +514,14 @@ function renderConnectionPresetList() {
         return;
     }
 
-    const presets = getSavedConnectionPresets();
+    const activeProvider = getActiveConnectionProvider();
+    const providerLabel = CONNECTION_PRESET_TYPE_LABELS[activeProvider] || 'Connection';
+    const presets = getVisibleConnectionPresets(activeProvider);
     list.replaceChildren();
+
+    if (emptyState) {
+        emptyState.textContent = `No saved ${providerLabel} presets yet.`;
+    }
 
     if (presets.length === 0) {
         emptyState.classList.remove('hidden');
@@ -604,6 +799,13 @@ function initializeConnectionPresetList() {
         document.getElementById('select-openrouter'),
         document.getElementById('select-openai-compatible')
     ].filter(Boolean);
+
+    if (saveButton && saveButton.dataset.providerChangeBound !== 'true') {
+        document.addEventListener('lmsa:connection-provider-changed', () => {
+            renderConnectionPresetList();
+        });
+        saveButton.dataset.providerChangeBound = 'true';
+    }
 
     if (saveButton) {
         saveButton.addEventListener('click', () => {
@@ -2906,32 +3108,14 @@ function initializeConnectionInputModals() {
         const typePill = document.getElementById('edit-connection-preset-type-pill');
         const helperText = document.getElementById('edit-connection-preset-helper');
         const errorBox = document.getElementById('edit-connection-preset-error');
+        const providerFieldsContainer = document.getElementById('edit-connection-preset-provider-fields');
         const closePresetEditBtn = document.getElementById('close-edit-connection-preset-modal');
         const cancelPresetEditBtn = document.getElementById('cancel-edit-connection-preset-modal');
         const savePresetEditBtn = document.getElementById('save-edit-connection-preset-modal');
         const presetNameInput = document.getElementById('edit-connection-preset-name');
+        let secretToggleButtons = [];
 
-        const localFields = document.getElementById('edit-connection-preset-local-fields');
-        const localIpInput = document.getElementById('edit-connection-preset-local-ip');
-        const localPortInput = document.getElementById('edit-connection-preset-local-port');
-        const localTokenInput = document.getElementById('edit-connection-preset-local-token');
-        const localMcpInput = document.getElementById('edit-connection-preset-local-mcp');
-
-        const openRouterFields = document.getElementById('edit-connection-preset-openrouter-fields');
-        const openRouterKeyInput = document.getElementById('edit-connection-preset-openrouter-key');
-
-        const openAIFields = document.getElementById('edit-connection-preset-openai-compatible-fields');
-        const openAIEndpointInput = document.getElementById('edit-connection-preset-openai-endpoint');
-        const openAIKeyInput = document.getElementById('edit-connection-preset-openai-key');
-        const openAIModelInput = document.getElementById('edit-connection-preset-openai-model');
-
-        const providerDescriptions = {
-            local: 'Update the saved local server address, token, or MCP integrations without changing the connection currently in use.',
-            openrouter: 'Update the saved OpenRouter preset here without touching the active connection until you tap Use.',
-            'openai-compatible': 'Update the saved custom endpoint details here without changing the active connection until you tap Use.'
-        };
-
-        const secretToggleButtons = Array.from(presetEditModal.querySelectorAll('[data-edit-preset-secret-toggle]'));
+        const getPresetProviderConfig = (type) => CONNECTION_PRESET_EDIT_PROVIDERS[type] || null;
 
         const clearPresetEditError = () => {
             if (!errorBox) {
@@ -2954,7 +3138,7 @@ function initializeConnectionInputModals() {
         const resetSecretToggleButtons = () => {
             secretToggleButtons.forEach(button => {
                 const targetId = button.dataset.editPresetSecretToggle;
-                const targetInput = targetId ? document.getElementById(targetId) : null;
+                const targetInput = targetId ? presetEditModal.querySelector(`#${targetId}`) : null;
                 if (targetInput) {
                     targetInput.type = 'password';
                 }
@@ -2962,19 +3146,46 @@ function initializeConnectionInputModals() {
             });
         };
 
-        const setVisiblePresetSection = (type) => {
-            [localFields, openRouterFields, openAIFields].forEach(section => {
-                if (section) {
-                    section.classList.add('hidden');
-                }
+        const bindPresetEditFieldBehaviors = () => {
+            secretToggleButtons = Array.from(presetEditModal.querySelectorAll('[data-edit-preset-secret-toggle]'));
+
+            secretToggleButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetId = button.dataset.editPresetSecretToggle;
+                    const targetInput = targetId ? presetEditModal.querySelector(`#${targetId}`) : null;
+                    if (!targetInput) {
+                        return;
+                    }
+
+                    const shouldReveal = targetInput.type === 'password';
+                    targetInput.type = shouldReveal ? 'text' : 'password';
+                    button.innerHTML = shouldReveal
+                        ? '<i class="fas fa-eye-slash"></i>'
+                        : '<i class="fas fa-eye"></i>';
+                });
             });
 
-            if (type === 'local' && localFields) {
-                localFields.classList.remove('hidden');
-            } else if (type === 'openrouter' && openRouterFields) {
-                openRouterFields.classList.remove('hidden');
-            } else if (type === 'openai-compatible' && openAIFields) {
-                openAIFields.classList.remove('hidden');
+            presetEditModal.querySelectorAll('#edit-connection-preset-provider-fields input, #edit-connection-preset-provider-fields textarea').forEach(input => {
+                input.addEventListener('focus', () => {
+                    setTimeout(() => keepModalInputVisible(presetEditModal, input), 50);
+                });
+            });
+        };
+
+        const renderPresetEditFields = (type, data = {}) => {
+            const providerConfig = getPresetProviderConfig(type);
+            if (!providerFieldsContainer || !providerConfig) {
+                throw new Error('Unsupported preset type.');
+            }
+
+            providerFieldsContainer.innerHTML = providerConfig.renderFields();
+            providerConfig.populateFields(providerFieldsContainer, data);
+            bindPresetEditFieldBehaviors();
+            resetSecretToggleButtons();
+
+            const firstInput = findFirstVisibleModalInput(presetEditModal);
+            if (firstInput && document.activeElement === presetNameInput) {
+                keepModalInputVisible(presetEditModal, firstInput);
             }
         };
 
@@ -2983,14 +3194,10 @@ function initializeConnectionInputModals() {
             presetEditModal.dataset.presetType = '';
 
             if (presetNameInput) presetNameInput.value = '';
-            if (localIpInput) localIpInput.value = '';
-            if (localPortInput) localPortInput.value = '';
-            if (localTokenInput) localTokenInput.value = '';
-            if (localMcpInput) localMcpInput.value = '';
-            if (openRouterKeyInput) openRouterKeyInput.value = '';
-            if (openAIEndpointInput) openAIEndpointInput.value = '';
-            if (openAIKeyInput) openAIKeyInput.value = '';
-            if (openAIModelInput) openAIModelInput.value = '';
+            if (providerFieldsContainer) {
+                providerFieldsContainer.replaceChildren();
+            }
+            secretToggleButtons = [];
 
             if (typePill) {
                 typePill.textContent = 'Local Server';
@@ -3005,8 +3212,6 @@ function initializeConnectionInputModals() {
                 accent.classList.add('connection-input-modal-accent--blue');
             }
 
-            setVisiblePresetSection('');
-            resetSecretToggleButtons();
             clearPresetEditError();
         };
 
@@ -3018,6 +3223,11 @@ function initializeConnectionInputModals() {
         const populatePresetEditModal = (preset) => {
             if (!preset || !preset.id || !preset.type) {
                 throw new Error('The selected preset is invalid.');
+            }
+
+            const providerConfig = getPresetProviderConfig(preset.type);
+            if (!providerConfig) {
+                throw new Error('Unsupported preset type.');
             }
 
             presetEditModal.dataset.presetId = preset.id;
@@ -3032,29 +3242,15 @@ function initializeConnectionInputModals() {
             }
 
             if (helperText) {
-                helperText.textContent = providerDescriptions[preset.type] || 'Update this preset without changing your current active connection.';
+                helperText.textContent = providerConfig.helperText || 'Update this preset without changing your current active connection.';
             }
 
             if (accent) {
-                accent.classList.toggle('connection-input-modal-accent--purple', preset.type === 'openrouter');
-                accent.classList.toggle('connection-input-modal-accent--blue', preset.type !== 'openrouter');
+                accent.classList.remove('connection-input-modal-accent--blue', 'connection-input-modal-accent--purple');
+                accent.classList.add(providerConfig.accentClass || 'connection-input-modal-accent--blue');
             }
 
-            if (preset.type === 'local') {
-                if (localIpInput) localIpInput.value = preset.data.serverIp || '';
-                if (localPortInput) localPortInput.value = preset.data.serverPort || '';
-                if (localTokenInput) localTokenInput.value = preset.data.lmStudioApiToken || '';
-                if (localMcpInput) localMcpInput.value = preset.data.lmStudioMcpIntegrations || '';
-            } else if (preset.type === 'openrouter') {
-                if (openRouterKeyInput) openRouterKeyInput.value = preset.data.openRouterApiKey || '';
-            } else if (preset.type === 'openai-compatible') {
-                if (openAIEndpointInput) openAIEndpointInput.value = preset.data.endpoint || '';
-                if (openAIKeyInput) openAIKeyInput.value = preset.data.apiKey || '';
-                if (openAIModelInput) openAIModelInput.value = preset.data.manualModel || '';
-            }
-
-            setVisiblePresetSection(preset.type);
-            resetSecretToggleButtons();
+            renderPresetEditFields(preset.type, preset.data || {});
             clearPresetEditError();
         };
 
@@ -3071,97 +3267,18 @@ function initializeConnectionInputModals() {
                 throw new Error('Preset name is required.');
             }
 
-            if (type === 'local') {
-                const serverIp = localIpInput?.value.trim() || '';
-                const serverPort = localPortInput?.value.trim() || '';
-                const lmStudioApiToken = localTokenInput?.value.trim() || '';
-                const lmStudioMcpIntegrations = localMcpInput?.value.trim() || '';
-
-                if (!serverIp || !serverPort) {
-                    throw new Error('Hostname/IP and port are required for Local Server presets.');
-                }
-
-                if (!/^\d+$/.test(serverPort)) {
-                    throw new Error('Port must contain digits only.');
-                }
-
-                if (lmStudioMcpIntegrations) {
-                    try {
-                        JSON.parse(lmStudioMcpIntegrations);
-                    } catch (_) {
-                        throw new Error('MCP integrations must contain valid JSON.');
-                    }
-                }
-
-                return {
-                    id: presetId,
-                    name,
-                    type,
-                    data: {
-                        serverIp,
-                        serverPort,
-                        lmStudioApiToken,
-                        lmStudioMcpIntegrations
-                    }
-                };
+            const providerConfig = getPresetProviderConfig(type);
+            if (!providerConfig || !providerFieldsContainer) {
+                throw new Error('Unsupported preset type.');
             }
 
-            if (type === 'openrouter') {
-                const openRouterApiKey = openRouterKeyInput?.value.trim() || '';
-
-                if (!openRouterApiKey) {
-                    throw new Error('OpenRouter API key is required for this preset.');
-                }
-
-                return {
-                    id: presetId,
-                    name,
-                    type,
-                    data: {
-                        openRouterApiKey
-                    }
-                };
-            }
-
-            if (type === 'openai-compatible') {
-                const endpoint = openAIEndpointInput?.value.trim() || '';
-                const apiKey = openAIKeyInput?.value.trim() || '';
-                const manualModel = openAIModelInput?.value.trim() || '';
-
-                if (!endpoint) {
-                    throw new Error('Endpoint URL is required for this preset.');
-                }
-
-                return {
-                    id: presetId,
-                    name,
-                    type,
-                    data: {
-                        endpoint,
-                        apiKey,
-                        manualModel
-                    }
-                };
-            }
-
-            throw new Error('Unsupported preset type.');
+            return {
+                id: presetId,
+                name,
+                type,
+                data: providerConfig.buildData(providerFieldsContainer)
+            };
         };
-
-        secretToggleButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const targetId = button.dataset.editPresetSecretToggle;
-                const targetInput = targetId ? document.getElementById(targetId) : null;
-                if (!targetInput) {
-                    return;
-                }
-
-                const shouldReveal = targetInput.type === 'password';
-                targetInput.type = shouldReveal ? 'text' : 'password';
-                button.innerHTML = shouldReveal
-                    ? '<i class="fas fa-eye-slash"></i>'
-                    : '<i class="fas fa-eye"></i>';
-            });
-        });
 
         _showConnectionPresetEditModal = (preset) => {
             try {
@@ -3205,12 +3322,6 @@ function initializeConnectionInputModals() {
             if (event.target === presetEditModal) {
                 hidePresetEditModal();
             }
-        });
-
-        presetEditModal.querySelectorAll('input, textarea').forEach(input => {
-            input.addEventListener('focus', () => {
-                setTimeout(() => keepModalInputVisible(presetEditModal, input), 50);
-            });
         });
     } else {
         _showConnectionPresetEditModal = null;
