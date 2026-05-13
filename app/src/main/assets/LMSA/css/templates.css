@@ -453,11 +453,11 @@ body.page-visible {
 }
 
 /* Gradients */
-.bg-gradient-to-t {
+.bg-linear-to-t, .bg-gradient-to-t {
     background-image: linear-gradient(to top, var(--tw-gradient-stops));
 }
 
-.bg-gradient-to-b {
+.bg-linear-to-b, .bg-gradient-to-b {
     background-image: linear-gradient(to bottom, var(--tw-gradient-stops));
 }
 
@@ -1608,6 +1608,25 @@ body {
     .glass-card {
         padding: 1rem;
     }
+
+    .template-main-container .template-footer {
+        border-bottom-left-radius: 20px;
+        border-bottom-right-radius: 20px;
+        /* Fix visibility on tablets where button is transparent over cards */
+        background: linear-gradient(to top, 
+            rgba(15, 23, 42, 0.99) 0%, 
+            rgba(15, 23, 42, 0.95) 60%, 
+            rgba(15, 23, 42, 0) 100%) !important;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        padding: 1.25rem 1.5rem;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 30;
+        pointer-events: auto;
+    }
 }
 
 /* Tablets (769px-1024px) */
@@ -1646,6 +1665,24 @@ body {
     .template-main-container .template-footer {
         border-bottom-left-radius: 24px;
         border-bottom-right-radius: 24px;
+        /* Fix visibility on tablets (820px, 1024px) where button is transparent over cards */
+        background: linear-gradient(to top, 
+            rgba(15, 23, 42, 0.99) 0%, 
+            rgba(15, 23, 42, 0.95) 60%, 
+            rgba(15, 23, 42, 0) 100%) !important;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        padding: 1.25rem 1.5rem;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 30;
+        pointer-events: auto;
+    }
+
+    #start-chatting-btn.opacity-50 {
+        opacity: 0.75; /* Increase visibility of disabled button on tablets */
     }
 
     #templates-grid {

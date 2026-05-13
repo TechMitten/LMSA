@@ -7092,6 +7092,37 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
         box-sizing: border-box !important;
     }
 
+    /* Fix system prompt buttons on desktop */
+    #settings-step-prompt.active .flex.gap-2 {
+        justify-content: center !important;
+        width: 100% !important;
+        gap: 16px !important;
+    }
+
+    #settings-modal #edit-system-prompt-btn,
+    #settings-modal #save-system-prompt-btn {
+        width: 100% !important;
+        max-width: 220px !important;
+        flex: 0 1 auto !important;
+        min-height: 52px !important;
+    }
+
+    /* Fix sidebar reset button on desktop */
+    #settings-step-sidebar.active .sidebar-layout-actions-row {
+        display: flex !important;
+        justify-content: center !important;
+        width: 100% !important;
+        margin-top: 1.25rem !important;
+    }
+
+    #settings-modal #reset-sidebar-layout-btn {
+        width: 100% !important;
+        max-width: 300px !important;
+        flex: 0 1 auto !important;
+        min-height: 52px !important;
+    }
+
+
     html body #settings-modal #settings-step-actions #clear-chat.professional-button,
     html body #settings-modal #settings-step-actions #reset-app.professional-button {
         width: min(100%, 420px) !important;
@@ -7166,6 +7197,37 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
         margin-left: auto !important;
         margin-right: auto !important;
     }
+
+    /* Fix system prompt buttons on tablets */
+    #settings-step-prompt.active .flex.gap-2 {
+        justify-content: center !important;
+        width: 100% !important;
+        gap: 12px !important;
+    }
+
+    #settings-modal #edit-system-prompt-btn,
+    #settings-modal #save-system-prompt-btn {
+        width: 100% !important;
+        max-width: 220px !important;
+        flex: 0 1 auto !important;
+        min-height: 52px !important;
+    }
+
+    /* Fix sidebar reset button on tablets */
+    #settings-step-sidebar.active .sidebar-layout-actions-row {
+        display: flex !important;
+        justify-content: center !important;
+        width: 100% !important;
+        margin-top: 1rem !important;
+    }
+
+    #settings-modal #reset-sidebar-layout-btn {
+        width: 100% !important;
+        max-width: 300px !important;
+        flex: 0 1 auto !important;
+        min-height: 52px !important;
+    }
+
 
     html body #settings-modal #settings-step-actions #clear-chat.professional-button,
     html body #settings-modal #settings-step-actions #reset-app.professional-button {
