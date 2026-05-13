@@ -4110,7 +4110,8 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     }
 
     #settings-modal button[id^="to-"],
-    #settings-modal button[id^="back-"] {
+    #settings-modal button[id^="back-"],
+    #settings-modal #back-to-sidebar-btn {
         min-height: 54px !important;
         padding: 0.9rem 1.1rem !important;
         font-size: 0.96rem !important;
@@ -5562,14 +5563,7 @@ body.light-theme .conn-modal-action-btn--cancel {
 
 @media (min-width: 800px) {
     #settings-step-options.active {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
-
-    #settings-step-options.active > .mb-4,
-    #settings-step-options.active > #biometric-setting-container,
-    #settings-step-options.active > #web-search-setting,
-    #settings-step-options.active > div:last-child {
-        grid-column: 1 / -1 !important;
+        grid-template-columns: minmax(0, 1fr) !important;
     }
 
     #settings-step-actions .mb-4 {
@@ -7039,22 +7033,36 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
         overflow-wrap: anywhere !important;
     }
 
-    #settings-navigation-buttons .navigation-buttons {
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    #settings-navigation-buttons .navigation-buttons:not(.hidden) {
+        display: flex !important;
+        justify-content: center !important;
+        gap: 16px !important;
         width: 100% !important;
     }
 
-    #settings-navigation-buttons #connection-step-buttons,
-    #settings-navigation-buttons #actions-step-buttons {
-        grid-template-columns: minmax(0, 1fr) !important;
+    #settings-navigation-buttons #connection-step-buttons:not(.hidden),
+    #settings-navigation-buttons #actions-step-buttons:not(.hidden) {
+        display: flex !important;
+        justify-content: center !important;
     }
 
-    #settings-navigation-buttons .navigation-buttons > button,
+    #settings-navigation-buttons .navigation-buttons > button {
+        width: 100% !important;
+        max-width: 300px !important;
+        min-height: 60px !important;
+        height: 60px !important;
+        margin: 0 !important;
+        font-size: 1rem !important;
+        box-sizing: border-box !important;
+    }
+
     #settings-modal #close-settings {
         width: 100% !important;
-        max-width: 100% !important;
-        margin: 0 !important;
+        max-width: 300px !important;
+        min-height: 60px !important;
+        height: 60px !important;
+        margin: 0 auto !important;
+        font-size: 1rem !important;
         box-sizing: border-box !important;
     }
 
@@ -7062,6 +7070,35 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
         transform: none !important;
         transform-origin: center center !important;
         margin-bottom: 0 !important;
+    }
+
+    /* Fix: action step buttons overflow right edge on large desktop (>1100px).
+       The 768-1100px block (later in this file) handles the 1024-1100px range,
+       so these rules only take full effect at viewports wider than 1100px. */
+    #settings-step-actions.active > .flex.flex-col.space-y-4 {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        align-items: center !important;
+        box-sizing: border-box !important;
+    }
+
+    #settings-step-actions.active > .flex.flex-col.space-y-4 > .professional-button {
+        width: min(100%, 420px) !important;
+        max-width: min(100%, 420px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        box-sizing: border-box !important;
+    }
+
+    html body #settings-modal #settings-step-actions #clear-chat.professional-button,
+    html body #settings-modal #settings-step-actions #reset-app.professional-button {
+        width: min(100%, 420px) !important;
+        max-width: min(100%, 420px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        box-sizing: border-box !important;
     }
 }
 
@@ -7142,28 +7179,40 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
         align-items: center !important;
     }
 
-    #settings-navigation-buttons .navigation-buttons {
-        width: min(100%, var(--settings-tablet-button-max-width)) !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
-        gap: 12px !important;
+    #settings-navigation-buttons .navigation-buttons:not(.hidden) {
+        display: flex !important;
+        justify-content: center !important;
+        width: 100% !important;
+        gap: 16px !important;
+    }
+
+    #settings-navigation-buttons #connection-step-buttons:not(.hidden),
+    #settings-navigation-buttons #actions-step-buttons:not(.hidden) {
+        display: flex !important;
+        justify-content: center !important;
     }
 
     #settings-modal button[id^="to-"],
-    #settings-modal button[id^="back-"] {
-        min-height: 62px !important;
-        height: 62px !important;
+    #settings-modal button[id^="back-"],
+    #settings-modal #back-to-sidebar-btn {
+        width: 100% !important;
+        max-width: 300px !important;
+        min-height: 60px !important;
+        height: 60px !important;
+        margin: 0 !important;
         padding: 0 18px !important;
         font-size: 1rem !important;
+        box-sizing: border-box !important;
     }
 
     #settings-modal #close-settings {
-        width: min(100%, var(--settings-tablet-button-max-width)) !important;
-        max-width: min(100%, var(--settings-tablet-button-max-width)) !important;
-        min-height: 64px !important;
-        height: 64px !important;
+        width: 100% !important;
+        max-width: 300px !important;
+        min-height: 60px !important;
+        height: 60px !important;
         margin: 4px auto 0 !important;
         font-size: 1rem !important;
+        box-sizing: border-box !important;
     }
 
     #settings-modal #settings-title {

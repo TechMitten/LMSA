@@ -2363,17 +2363,27 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
     width: auto !important;
   }
 
-  /* Ensure action buttons don't get cut off by reducing their width */
-  #settings-step-actions .professional-button {
-    width: calc(100% - 16px) !important;
-    max-width: calc(100% - 16px) !important;
-    margin: 0.5rem 8px !important;
+  /* Ensure action buttons don't get cut off and aren't too wide on desktop */
+  #settings-step-actions .professional-button,
+  #reset-sidebar-layout-btn {
+    width: calc(100% - 40px) !important;
+    max-width: 450px !important;
+    margin: 0.5rem auto !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
+    display: flex !important;
   }
 
   #settings-step-actions .professional-button:last-child {
     margin-bottom: 0.5rem !important;
+  }
+
+  /* Limit width of the Confirm button on desktop */
+  #settings-modal #close-settings {
+    width: calc(100% - 40px) !important;
+    max-width: 450px !important;
+    margin: 0.75rem auto 0 auto !important;
+    display: flex !important;
   }
 }
 
@@ -4286,12 +4296,14 @@ body.light-theme .openrouter-key-input-wrapper input {
     }
 }
 
-/* Actions step: Back is the only nav button so it must be full width.
-   Placed last to beat all earlier button[id^="back-"] width: auto !important rules. */
-#settings-modal #back-to-sidebar-btn {
-  width: 100% !important;
-  max-width: none !important;
-  min-width: 0 !important;
+/* Actions step: Back is the only nav button so it must be full width on mobile/tablet.
+   On desktop (1024px+), it follows the max-width: 200px rule from earlier. */
+@media (max-width: 1023px) {
+  #settings-modal #back-to-sidebar-btn {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
 }
 
 /* Normalize red action buttons to match non-red action button widths at every breakpoint. */
@@ -4308,5 +4320,15 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
     width: calc(100% - 16px) !important;
     max-width: calc(100% - 16px) !important;
     margin: 0.5rem 8px !important;
+  }
+}
+
+/* Desktop-specific normalization for red action buttons */
+@media (min-width: 1024px) {
+  html body #settings-modal #settings-step-actions #clear-chat.professional-button,
+  html body #settings-modal #settings-step-actions #reset-app.professional-button {
+    width: calc(100% - 40px) !important;
+    max-width: 450px !important;
+    margin: 0.5rem auto !important;
   }
 }
