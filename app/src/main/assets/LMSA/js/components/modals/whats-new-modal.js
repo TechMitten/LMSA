@@ -13,7 +13,7 @@ export const whatsNewModal = `
                     <div class="flex flex-col">
                         <span class="text-blue-400 font-extrabold">What's New</span>
                         <span class="text-xs text-blue-300/80 font-medium">v<span
-                            id="whats-new-version">10.18</span></span>
+                            id="whats-new-version">10.19</span></span>
                     </div>
                 </h2>
                 <button id="close-whats-new"
@@ -24,6 +24,24 @@ export const whatsNewModal = `
 
                     <div class="features-container overflow-y-auto grow px-1 py-2">
                 <div class="space-y-3">
+                    <div class="feature-item">
+                        <div class="relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-teal-500/10 to-emerald-700/5 rounded-full blur-xl"></div>
+                            <div class="flex items-start relative z-10">
+                                <div class="feature-icon-wrapper mr-3 flex items-center justify-center rounded-full bg-teal-500/20 w-10 h-10 shadow-sm">
+                                    <i class="fas fa-list-ul text-teal-300"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <h3 class="feature-title underline decoration-teal-500/30 underline-offset-4">Customizable Side Menu</h3>
+                                    </div>
+                                    <div class="feature-description">
+                                        <p class="mb-3 text-sm">Tailor your workspace to your needs! You can now hide unused menu items and reorder them exactly how you like for a cleaner, faster experience. You can find these new options in the <span class="font-semibold text-teal-300 italic">Settings</span> menu.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="feature-item">
                         <div class="relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 bg-gradient-to-br from-cyan-500/10 to-sky-700/5 rounded-full blur-xl"></div>

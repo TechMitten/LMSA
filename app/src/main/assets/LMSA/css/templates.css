@@ -608,6 +608,7 @@ body.page-visible {
         rgba(147, 51, 234, 0.2) 50%,
         rgba(59, 130, 246, 0.4) 100%);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
@@ -2247,16 +2248,27 @@ textarea {
     .template-main-container {
         padding-left: env(safe-area-inset-left);
         padding-right: env(safe-area-inset-right);
+        /* Ensure the main container itself doesn't start under the notch if it's full-screen */
+        padding-top: env(safe-area-inset-top);
     }
 
     .template-page-header {
-        padding-top: calc(env(safe-area-inset-top) + 0.75rem);
-        padding-bottom: 0.85rem;
+        /* Standard padding plus safe area */
+        padding-top: calc(env(safe-area-inset-top) + 1rem) !important;
+        padding-bottom: 1rem !important;
     }
 
     .template-footer {
         min-height: calc(var(--template-mobile-footer-height) + env(safe-area-inset-bottom));
-        padding-bottom: calc(0.25rem + env(safe-area-inset-bottom));
+        padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)) !important;
+    }
+}
+
+/* Fallback for devices where env() might not be supported or is 0 */
+@media (max-width: 767px) {
+    .template-page-header {
+        /* Ensure a minimum padding that usually avoids punch-holes even if env() is 0 */
+        padding-top: max(1.5rem, calc(env(safe-area-inset-top) + 1rem)) !important;
     }
 }
 

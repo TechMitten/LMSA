@@ -27,8 +27,8 @@ android {
         minSdk = 23
         // Target 36 to stay current with Play Store 2026 requirements
         targetSdk = 36
-        versionCode = 332
-        versionName = "10.18"
+        versionCode = 333
+        versionName = "10.19"
 
         buildConfigField("String", "BRAVE_API_KEY", "\"$braveKey\"")
 

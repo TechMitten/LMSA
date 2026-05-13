@@ -5816,6 +5816,9 @@ body.keyboard-visible #scroll-to-bottom {
     height: 100vh !important;
     margin: 0 !important;
     padding: 0 !important;
+    padding-top: env(safe-area-inset-top) !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
+    box-sizing: border-box !important;
 }
 
 #whats-new-modal.fade-in {
@@ -5928,12 +5931,12 @@ body.light-theme #whats-new-modal.fade-out {
     #whats-new-modal .modal-content {
         width: calc(100% - 2rem);
         max-width: calc(100% - 2rem);
-        margin: 0;
+        margin: 0 auto;
         border-radius: 1.25rem;
         /* Full border radius for mobile */
         height: auto;
         /* Optimal height for mobile viewing */
-        max-height: calc(100vh - 1rem);
+        max-height: calc(100vh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
         min-height: 60vh;
         /* Center positioning */
         margin-bottom: 0;
@@ -5944,7 +5947,7 @@ body.light-theme #whats-new-modal.fade-out {
     }
 
     #whats-new-modal .features-container {
-        max-height: calc(100vh - 13rem);
+        max-height: calc(100vh - 14rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }
