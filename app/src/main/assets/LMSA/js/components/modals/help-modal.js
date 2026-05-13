@@ -973,7 +973,7 @@ export const helpModal = `
                                     <li><strong>Anonymized Queries</strong>: Your original message is not sent to the search engine. Only a short, topical query derived from your prompt is used.</li>
                                     <li><strong>No Tracking</strong>: We do not use tracking cookies or persistent identifiers for search requests.</li>
                                     <li><strong>No Data Retention</strong>: Search results are used only for the duration of the current chat generation and are not stored on any servers.</li>
-                                    <li><strong>Local Fallbacks</strong>: We use private instances of SearXNG as fallbacks to ensure search availability without compromising your privacy.</li>
+
                                 </ul>
                             </div>
 

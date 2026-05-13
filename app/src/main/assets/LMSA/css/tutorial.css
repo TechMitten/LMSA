@@ -33,8 +33,9 @@
 #tutorial-tooltip {
     position: fixed;
     width: 300px;
-    background: #ffffff;
+    background: #fdfefe;
     border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
     z-index: 10001;
     pointer-events: auto;
@@ -74,28 +75,32 @@
 }
 
 .ttr-title {
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: 1.02rem;
+    font-weight: 750;
     color: #fff;
     margin: 0;
     letter-spacing: 0.01em;
     line-height: 1.2;
+    text-shadow: 0 1px 1px rgba(15, 23, 42, 0.18);
 }
 
 .ttr-step-label {
     font-size: 0.7rem;
-    color: rgba(255,255,255,0.75);
-    font-weight: 500;
+    color: rgba(255,255,255,0.88);
+    font-weight: 600;
     margin-top: 2px;
+    letter-spacing: 0.02em;
 }
 
 /* Body */
 .ttr-body {
     padding: 14px 18px;
-    color: #334155;
-    font-size: 0.9rem;
-    line-height: 1.55;
-    border-bottom: 1px solid #e2e8f0;
+    color: #1e293b;
+    font-size: 0.93rem;
+    font-weight: 500;
+    line-height: 1.62;
+    border-bottom: 1px solid #dbe4ef;
+    text-wrap: pretty;
 }
 
 /* Footer */
@@ -103,8 +108,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
     padding: 12px 18px;
-    background: #f8fafc;
+    background: #f4f8fc;
     border-radius: 0 0 12px 12px;
 }
 
@@ -113,6 +119,8 @@
     display: flex;
     gap: 5px;
     align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .ttr-dot {
@@ -133,23 +141,26 @@
     display: flex;
     gap: 8px;
     align-items: center;
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .btn-ttr-skip {
     background: transparent;
     border: none;
-    color: #94a3b8;
+    color: #64748b;
     font-size: 0.85rem;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     padding: 6px 10px;
     border-radius: 6px;
     transition: color 0.2s, background 0.2s;
+    white-space: nowrap;
 }
 
 .btn-ttr-skip:hover {
-    color: #64748b;
-    background: #e2e8f0;
+    color: #475569;
+    background: #dde7f1;
 }
 
 .btn-ttr-next {
@@ -159,11 +170,13 @@
     border-radius: 7px;
     padding: 7px 16px;
     font-size: 0.875rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);
     transition: all 0.2s ease;
     letter-spacing: 0.01em;
+    text-shadow: 0 1px 1px rgba(15, 23, 42, 0.18);
+    white-space: nowrap;
 }
 
 .btn-ttr-next:hover {
@@ -240,5 +253,17 @@
     #tutorial-tooltip {
         width: calc(100vw - 32px);
         max-width: 340px;
+    }
+
+    .ttr-footer {
+        align-items: center;
+    }
+
+    .btn-ttr-skip {
+        padding-inline: 8px;
+    }
+
+    .btn-ttr-next {
+        padding-inline: 14px;
     }
 }

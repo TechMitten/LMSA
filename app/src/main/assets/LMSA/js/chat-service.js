@@ -109,11 +109,7 @@ const WEB_SEARCH_DECISION_MAX_TOKENS = 96;
 const WEB_SEARCH_DECISION_MAX_MESSAGES = 6;
 const WEB_SEARCH_DECISION_MAX_CHARS_PER_MESSAGE = 700;
 const WEB_SEARCH_PROVIDERS = [
-    { name: 'Brave Search API', type: 'brave', url: 'https://api.search.brave.com/res/v1/web/search' },
-    { name: 'SearXNG TechMitten', type: 'searxng', url: 'https://searxng.techmitten.com/search' },
-    { name: 'SearXNG Inetol', type: 'searxng', url: 'https://search.inetol.net/search' },
-    { name: 'SearXNG Tiekoetter', type: 'searxng', url: 'https://searx.tiekoetter.com/search' },
-    { name: 'DuckDuckGo Instant Answer', type: 'duckduckgo', url: 'https://api.duckduckgo.com/' }
+    { name: 'Brave Search API', type: 'brave', url: 'https://api.search.brave.com/res/v1/web/search' }
 ];
 const WEB_SEARCH_SKIP_WORDS = new Set([
     'thanks', 'thank', 'ty', 'thnx', 'thx', 'thankyou', 'thank you',
@@ -2102,7 +2098,7 @@ function buildWebSearchQuery(userMessage, chatMessages = []) {
     }
 
     // Light cleanup: remove conversational filler and presentation directives.
-    // We deliberately avoid aggressive keyword stripping here because SearXNG
+    // We deliberately avoid aggressive keyword stripping here to maintain query precision.
     // handles natural language well, and over-stripping causes 'hit or miss' searches.
     const cleanedPrompt = stripPresentationDirectives(
         stripSearchInstructionPhrases(normalizedPrompt)
@@ -2190,39 +2186,20 @@ async function fetchWebSearchProviderResults(provider, query) {
         }
     };
 
-    if (provider.type === 'brave') {
-        const braveKey = getBraveApiKey();
-        if (!braveKey) {
-            console.warn('Brave Search API key not configured, skipping...');
-            return [];
-        }
-        searchUrl.searchParams.set('q', query);
-        options.headers['X-Subscription-Token'] = braveKey;
-    } else if (provider.type === 'duckduckgo') {
-        searchUrl.searchParams.set('q', query);
-        searchUrl.searchParams.set('format', 'json');
-        searchUrl.searchParams.set('no_html', '1');
-        searchUrl.searchParams.set('skip_disambig', '1');
-    } else {
-        searchUrl.searchParams.set('q', query);
-        searchUrl.searchParams.set('format', 'json');
-        searchUrl.searchParams.set('categories', 'general');
+    const braveKey = getBraveApiKey();
+    if (!braveKey) {
+        console.warn('Brave Search API key not configured, skipping...');
+        return [];
     }
+    searchUrl.searchParams.set('q', query);
+    options.headers['X-Subscription-Token'] = braveKey;
 
     const resultData = await fetchJsonWithNativeFallback(searchUrl.toString(), options);
     if (!resultData) {
         return [];
     }
 
-    if (provider.type === 'brave') {
-        return extractBraveResults(resultData);
-    }
-
-    if (provider.type === 'duckduckgo') {
-        return extractDuckDuckGoResults(resultData);
-    }
-
-    return extractSearxngResults(resultData);
+    return extractBraveResults(resultData);
 }
 
 async function fetchJsonWithNativeFallback(urlString, options = {}) {
@@ -2283,48 +2260,7 @@ async function fetchWithTimeout(url, timeoutMs, options = {}) {
     }
 }
 
-function extractSearxngResults(resultData) {
-    const combinedResults = [];
 
-    // 1. Process Infoboxes (High-priority factual summaries)
-    if (Array.isArray(resultData?.infoboxes)) {
-        resultData.infoboxes.forEach(box => {
-            // Infoboxes use 'infobox' for the title and 'content' for the body
-            const title = normalizeSearchResultText(box?.infobox || "Knowledge Summary");
-            const content = normalizeSearchResultText(box?.content || "");
-            
-            // Extract the first available URL from the 'urls' array or the root 'url'
-            const sourceUrl = box?.urls?.[0]?.url || box?.url || "";
-            const url = normalizeSearchResultText(sourceUrl);
-
-            if (content) {
-                combinedResults.push({
-                    title: `[Knowledge Box] ${title}`,
-                    content: content,
-                    url: url
-                });
-            }
-        });
-    }
-
-    // 2. Process Standard Results
-    if (Array.isArray(resultData?.results)) {
-        resultData.results.forEach(item => {
-            combinedResults.push({
-                title: normalizeSearchResultText(item?.title),
-                content: normalizeSearchResultText(item?.content || item?.url),
-                url: normalizeSearchResultText(item?.url)
-            });
-        });
-    }
-
-    // 3. Filter out duplicates or entries with no useful info
-    return combinedResults.filter((item, index, self) => 
-        item.title && 
-        (item.content || item.url) &&
-        index === self.findIndex((t) => t.url === item.url) // Basic de-duplication by URL
-    );
-}
 
 function extractBraveResults(resultData) {
     const combinedResults = [];
@@ -2364,50 +2300,7 @@ function extractBraveResults(resultData) {
     return combinedResults.filter(item => item.title && (item.content || item.url));
 }
 
-function extractDuckDuckGoResults(resultData) {
-    const results = [];
-    const abstractText = normalizeSearchResultText(resultData?.AbstractText || resultData?.Abstract);
-    const abstractTitle = normalizeSearchResultText(resultData?.Heading || 'DuckDuckGo result');
 
-    if (abstractText) {
-        results.push({
-            title: abstractTitle,
-            content: abstractText,
-            url: normalizeSearchResultText(resultData?.AbstractURL)
-        });
-    }
-
-    appendDuckDuckGoRelatedTopics(results, resultData?.RelatedTopics);
-    return results;
-}
-
-function appendDuckDuckGoRelatedTopics(results, topics) {
-    if (!Array.isArray(topics)) {
-        return;
-    }
-
-    for (const topic of topics) {
-        if (results.length >= 5) {
-            return;
-        }
-
-        if (Array.isArray(topic?.Topics)) {
-            appendDuckDuckGoRelatedTopics(results, topic.Topics);
-            continue;
-        }
-
-        const text = normalizeSearchResultText(topic?.Text);
-        if (!text) {
-            continue;
-        }
-
-        results.push({
-            title: text.split(' - ')[0].slice(0, 120),
-            content: text,
-            url: normalizeSearchResultText(topic?.FirstURL)
-        });
-    }
-}
 
 function normalizeSearchResultText(text) {
     if (text == null) {

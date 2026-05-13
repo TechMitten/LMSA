@@ -8,6 +8,7 @@ const TUTORIAL_COMPLETED_KEY = 'lmsa_tutorial_completed';
 const SPOTLIGHT_PADDING = 8;   // px of breathing room around the target
 const SPOTLIGHT_RADIUS  = 10;  // rounded corners on the cutout
 const GAP               = 16;  // gap between spotlight and tooltip
+const SIDEBAR_STEP_DELAY_MS = 380;
 
 const tutorialSteps = [
     {
@@ -25,25 +26,138 @@ const tutorialSteps = [
         position: 'bottom'
     },
     {
-        target: '#sidebar-toggle',
-        title: 'Sidebar & Navigation',
-        description: 'Tap here to open the sidebar. Inside you\'ll find your chat history, templates, settings, and everything else.',
-        icon: 'fas fa-bars',
-        position: 'bottom-right'
+        target: '#setup-local-btn',
+        title: 'Local Server Provider',
+        description: 'Choose Local Server for LM Studio, Ollama, and other private local connections. Tap this card, configure the server details in Settings, then press Confirm at the bottom to finish the switch.',
+        icon: 'fas fa-server',
+        position: 'bottom'
+    },
+    {
+        target: '#setup-openrouter-btn',
+        title: 'OpenRouter Provider',
+        description: 'Choose OpenRouter when you want cloud models through your own API key. Select this provider, configure the key, then press Confirm to finish. When you switch providers later, confirm the new setup before you continue.',
+        icon: 'fas fa-cloud',
+        position: 'bottom'
+    },
+    {
+        target: '#setup-custom-btn',
+        title: 'Custom Endpoint Provider',
+        description: 'Choose Custom Endpoint for any OpenAI-compatible service. Select this card, configure the endpoint, API key, and optional model, then press Confirm. Every provider change should end with Confirm after configuration.',
+        icon: 'fas fa-plug',
+        position: 'bottom'
     },
     {
         target: '#new-chat-header-button',
         title: 'Start a New Chat',
         description: 'Tap this to clear the conversation and start fresh at any time.',
         icon: 'fas fa-plus',
-        position: 'bottom'
+        position: 'bottom',
+        sidebarState: 'closed'
     },
     {
         target: '#chat-input-area',
         title: 'Chat Input',
-        description: 'Type your messages here. You can also attach images and documents if the model supports them.',
+        description: 'Type your messages here. For image generation, type /image followed by what you want to create, or tap the image button to insert /image for you. You can also attach images and documents if the model supports them.',
         icon: 'fas fa-paper-plane',
-        position: 'top'
+        position: 'top',
+        sidebarState: 'closed'
+    },
+    {
+        target: '#sidebar-toggle',
+        title: 'Sidebar & Navigation',
+        description: 'Tap here to open the sidebar. Inside you\'ll find your chat history, templates, settings, and everything else.',
+        icon: 'fas fa-bars',
+        position: 'bottom-right',
+        sidebarState: 'closed'
+    },
+    {
+        target: '#sidebar',
+        title: 'Side Menu',
+        description: 'This side menu is the main navigation hub. From here the tour moves top to bottom through the controls exactly as they appear on screen.',
+        icon: 'fas fa-columns',
+        position: 'left',
+        mobilePosition: 'top',
+        sidebarState: 'open'
+    },
+    {
+        target: '#options-btn',
+        title: 'Menu Tools',
+        description: 'Use Options to reach extra tools like System Prompt, Import or Export, Premium, Help, the tutorial replay button, and About.',
+        icon: 'fas fa-sliders-h',
+        position: 'left',
+        mobilePosition: 'bottom',
+        sidebarState: 'open'
+    },
+    {
+        target: '#new-chat',
+        title: 'New Chat',
+        description: 'This button clears the current conversation and starts a fresh chat thread from the sidebar.',
+        icon: 'fas fa-plus-circle',
+        position: 'left',
+        mobilePosition: 'top',
+        sidebarState: 'open'
+    },
+    {
+        target: '#templates-btn',
+        title: 'Templates',
+        description: 'Open Templates to reuse saved prompt patterns, writing helpers, and other ready-made starting points.',
+        icon: 'fas fa-th-large',
+        position: 'left',
+        mobilePosition: 'top',
+        sidebarState: 'open'
+    },
+    {
+        target: '#web-search-header-button',
+        title: 'Web Search',
+        description: 'Use this toggle when you want LMSA to pull in live web context for up-to-date answers. Turn it off any time if you want chat responses to rely only on the selected model.',
+        icon: 'fas fa-globe',
+        position: 'left',
+        mobilePosition: 'top',
+        sidebarState: 'open'
+    },
+    {
+        target: '#model-btn',
+        title: 'Models',
+        description: 'Open this to browse, load, or switch models without leaving the current chat. It takes you straight to the model picker.',
+        icon: 'fas fa-robot',
+        position: 'left',
+        mobilePosition: 'top',
+        sidebarState: 'open'
+    },
+    {
+        target: '#settings-btn',
+        title: 'Settings',
+        description: 'Open Settings to configure providers, API keys, appearance, feature toggles, and the rest of the app behavior.',
+        icon: 'fas fa-cog',
+        position: 'left',
+        mobilePosition: 'top',
+        sidebarState: 'open'
+    },
+    {
+        target: '#chat-history-section',
+        title: 'Chat History',
+        description: 'Your previous conversations live here. Open any saved chat to continue where you left off.',
+        icon: 'fas fa-comments',
+        position: 'left',
+        mobilePosition: 'top',
+        sidebarState: 'open'
+    },
+    {
+        target: '#mode-indicator',
+        title: 'Provider Status',
+        description: 'The footer shows which provider is active right now. It is also the place to quick-switch providers when you need to change modes later.',
+        icon: 'fas fa-signal',
+        position: 'left',
+        mobilePosition: 'top',
+        sidebarState: 'open'
+    },
+    {
+        target: null,
+        title: 'You\'re Ready',
+        description: 'That wraps up the tour. Choose your provider, configure it, use the chat tools you need, and come back to the side menu any time for navigation and app controls.',
+        icon: 'fas fa-flag-checkered',
+        position: 'center',
+        sidebarState: 'closed'
     }
 ];
 
@@ -118,6 +232,12 @@ function renderStep(index) {
     // Hide tooltip briefly for repositioning
     tooltipEl.classList.remove('tutorial-tooltip-visible');
 
+    prepareStepEnvironment(step).then(() => {
+        showStepTarget(step);
+    });
+}
+
+function showStepTarget(step) {
     if (step.target) {
         const targetEl = document.querySelector(step.target);
         if (targetEl) {
@@ -142,6 +262,53 @@ function renderStep(index) {
         centerTooltip();
         tooltipEl.classList.add('tutorial-tooltip-visible');
     }
+}
+
+async function prepareStepEnvironment(step) {
+    const desiredSidebarState = step.sidebarState || 'ignore';
+    await ensureSidebarState(desiredSidebarState);
+}
+
+async function ensureSidebarState(desiredState) {
+    if (desiredState === 'ignore') {
+        return;
+    }
+
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) {
+        return;
+    }
+
+    const isOpen = !sidebar.classList.contains('hidden') && sidebar.classList.contains('active');
+
+    if (desiredState === 'open' && !isOpen) {
+        await import('./ui-manager.js')
+            .then(module => {
+                module.toggleSidebar();
+            })
+            .catch(() => {});
+        await waitForUi(SIDEBAR_STEP_DELAY_MS);
+        return;
+    }
+
+    if (desiredState === 'closed' && isOpen) {
+        await import('./ui-manager.js')
+            .then(module => {
+                if (typeof module.closeSidebar === 'function') {
+                    module.closeSidebar();
+                } else {
+                    module.toggleSidebar();
+                }
+            })
+            .catch(() => {});
+        await waitForUi(SIDEBAR_STEP_DELAY_MS);
+    }
+}
+
+function waitForUi(delayMs) {
+    return new Promise(resolve => {
+        window.setTimeout(resolve, delayMs);
+    });
 }
 
 // ── Spotlight (SVG cutout) ────────────────────────────────────────────────
@@ -201,7 +368,9 @@ function positionTooltip(step, spotlight) {
     const { x, y, w, h } = spotlight;
     let top, left, arrowClass;
 
-    const pos = step.position;
+    const pos = window.innerWidth <= 600 && step.mobilePosition
+        ? step.mobilePosition
+        : step.position;
 
     if (pos === 'bottom' || pos === 'bottom-right') {
         // Try below the spotlight first
@@ -353,6 +522,12 @@ function ensureElements() {
         });
 
         tooltipEl.querySelector('.btn-ttr-skip').addEventListener('click', endTutorial);
+
+        ['click', 'mousedown', 'mouseup', 'touchstart', 'touchend', 'pointerdown', 'pointerup'].forEach((eventName) => {
+            tooltipEl.addEventListener(eventName, (event) => {
+                event.stopPropagation();
+            });
+        });
 
         document.body.appendChild(tooltipEl);
     } else {

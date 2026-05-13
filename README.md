@@ -8,7 +8,7 @@ LMSA is a premium, feature-rich Android interface designed for seamless interact
 
 - **Multi-Provider Support**: Seamlessly connect to **LM Studio**, **Ollama**, **OpenRouter**, or any **OpenAI-compatible** custom endpoint.
 - **Model Context Protocol (MCP)**: Native support for LM Studio MCP servers and `mcp.json` plugins for extended model capabilities.
-- **Real-Time Web Search**: Augment AI responses with live data using the **Brave Search API** (with SearXNG fallback).
+- **Real-Time Web Search**: Augment AI responses with live data using the **Brave Search API**.
 - **Multimodal & Vision**: Full support for multimodal models—upload images for analysis or use the built-in OCR (via Tesseract.js) to extract text from documents.
 - **AI Image Generation**: Create images directly in your chats using the `/image` command.
 - **Advanced Reasoning Controls**: Toggle "Thinking" visibility and adjust "Reasoning Level" (Thinking Effort) for supported models.

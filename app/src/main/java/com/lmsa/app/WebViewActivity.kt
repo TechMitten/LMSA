@@ -409,7 +409,7 @@ class WebViewActivity : AppCompatActivity() {
         webSettings.allowContentAccess = true
         @Suppress("DEPRECATION")
         webSettings.allowFileAccessFromFileURLs = true
-        // Required so that file:// pages can make cross-origin fetch() calls (e.g. to SearXNG).
+        // Required so that file:// pages can make cross-origin fetch() calls (e.g. to Brave Search API).
         // Without this, WebView CORS blocks all network requests from file:// origin.
         @Suppress("DEPRECATION")
         webSettings.allowUniversalAccessFromFileURLs = true

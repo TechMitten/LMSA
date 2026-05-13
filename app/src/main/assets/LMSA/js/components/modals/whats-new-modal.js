@@ -74,7 +74,7 @@ export const whatsNewModal = `
                                     </div>
                                     <div class="feature-description">
                                         <p class="mb-3 text-sm">Web Search is now powered by the <span class="font-semibold text-blue-300">Brave Search API</span>! Enjoy faster, more accurate, and privacy-respecting search results as the primary engine for real-time data.</p>
-                                        <p class="mb-3 text-sm">We've maintained <span class="font-semibold text-blue-300">SearXNG</span> as a reliable fallback, ensuring your AI always has access to the information it needs, even if one service is unavailable.</p>
+
                                     </div>
                                 </div>
                             </div>

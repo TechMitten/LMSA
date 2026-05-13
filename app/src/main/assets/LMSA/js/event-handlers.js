@@ -679,7 +679,7 @@ export function initializeEventHandlers() {
             if (isModelTab) {
                 setupDashboardTitle.textContent = 'SELECT A MODEL';
             } else if (isSavedChatsTab) {
-                setupDashboardTitle.textContent = 'SAVED CHATS';
+                    setupDashboardTitle.textContent = 'CHATS';
             } else {
                 setupDashboardTitle.textContent = 'SELECT A PROVIDER';
             }
