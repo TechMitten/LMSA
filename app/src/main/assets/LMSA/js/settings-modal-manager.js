@@ -1700,7 +1700,7 @@ function resetModalState() {
     const actionsButtons = document.getElementById('actions-step-buttons');
 
     // For mobile/tablet view, reset to first step
-    if (window.innerWidth < 1024) {
+    if (window.innerWidth <= 1024) {
         // Hide all steps except the first one
         Object.entries(steps).forEach(([key, step]) => {
             if (step) {

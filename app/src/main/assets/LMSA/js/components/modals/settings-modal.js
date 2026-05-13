@@ -4,19 +4,19 @@ export const settingsModal = `
         aria-labelledby="settings-title" role="dialog" aria-modal="true">
         <div class="modal-content">
             <!-- Settings Header -->
-            <div class="flex flex-col sticky top-0 z-20 pt-6 mb-6 pb-1 border-b border-gray-700/30 bg-inherit">
-                <div class="flex justify-between items-center mb-1">
+            <div class="settings-modal-header flex flex-col sticky top-0 z-20 pt-6 mb-6 pb-1 border-b border-gray-700/30 bg-inherit">
+                <div class="settings-modal-header-row flex justify-between items-center mb-1">
                     <h2 id="settings-title" class="text-xl font-bold flex items-center">
                         <i class="fas fa-cog text-blue-400 mr-2"></i>Settings
                     </h2>
-                    <button id="close-settings-x" aria-label="Close settings">
+                    <button id="close-settings-x" type="button" aria-label="Close settings">
                         <i class="fas fa-times text-lg"></i>
                     </button>
                 </div>
                 <p id="settings-step-subtitle" class="text-sm text-blue-400 font-medium mb-2">Server Connection</p>
 
                 <!-- Step indicators - visible on all screen sizes -->
-                <div class="flex justify-center space-x-3 py-2">
+                <div class="settings-modal-step-indicators flex justify-center space-x-3 py-2">
                     <div class="w-8 h-2 rounded-full bg-blue-500" id="step-indicator-1"></div>
                     <div class="w-8 h-2 rounded-full bg-gray-600" id="step-indicator-2"></div>
                     <div class="w-8 h-2 rounded-full bg-gray-600" id="step-indicator-3"></div>

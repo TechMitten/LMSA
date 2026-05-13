@@ -1718,15 +1718,8 @@ export function initializeEventHandlers() {
         systemPromptSettingsButton.addEventListener('click', handleSystemPromptSettingsButtonClick);
     }
 
-    // Close settings button
-    if (closeSettingsButton) {
-        closeSettingsButton.addEventListener('click', handleCloseSettingsButtonClick);
-    }
-
-    // Add event listener for the X icon in the top right corner of settings modal
-    if (closeSettingsXButton) {
-        closeSettingsXButton.addEventListener('click', handleCloseSettingsButtonClick);
-    }
+    bindSettingsCloseButton(closeSettingsButton);
+    bindSettingsCloseButton(closeSettingsXButton);
 
     // Sidebar toggle
     if (sidebarToggle) {
@@ -2953,6 +2946,51 @@ function handleCloseSettingsButtonClick() {
     if (messagesContainer && messagesContainer.children.length === 0) {
         showWelcomeMessage();
     }
+}
+
+function bindSettingsCloseButton(button) {
+    if (!button || button.dataset.settingsCloseBound === 'true') {
+        return;
+    }
+
+    button.dataset.settingsCloseBound = 'true';
+    let suppressClickUntil = 0;
+
+    button.addEventListener('click', (e) => {
+        if (Date.now() < suppressClickUntil) {
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+            e.stopPropagation();
+            return;
+        }
+
+        handleCloseSettingsButtonClick();
+    });
+
+    button.addEventListener('touchend', (e) => {
+        suppressClickUntil = Date.now() + 400;
+
+        if (e.cancelable) {
+            e.preventDefault();
+        }
+
+        e.stopPropagation();
+        button.blur();
+        handleCloseSettingsButtonClick();
+    }, { passive: false });
+
+    button.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') {
+            return;
+        }
+
+        if (e.cancelable) {
+            e.preventDefault();
+        }
+
+        handleCloseSettingsButtonClick();
+    });
 }
 
 /**

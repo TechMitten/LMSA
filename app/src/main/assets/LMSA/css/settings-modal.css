@@ -105,7 +105,7 @@
   -webkit-overflow-scrolling: touch;
   z-index: 1052;
   /* Responsive sizing that works across all devices */
-  width: min(750px, calc(100vw - 32px));
+  width: min(780px, calc(100vw - 32px));
   max-width: calc(100vw - 32px);
   max-height: calc(100vh - 32px);
   display: flex;
@@ -235,6 +235,24 @@
   font-smooth: always;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+#settings-modal .settings-modal-header {
+  gap: 0;
+}
+
+#settings-modal .settings-modal-header-row {
+  display: flex;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100%;
+  position: relative;
+  gap: 0.75rem;
+}
+
+#settings-modal .settings-modal-step-indicators {
+  width: 100%;
+  flex-wrap: nowrap;
 }
 
 /* Professional underline effect */
@@ -1226,7 +1244,6 @@ body.light-theme #settings-modal #max-tokens-value.max-tokens-current-value {
     0 0 0 4px rgba(59, 130, 246, 0.35),
     0 1px 3px rgba(59, 130, 246, 0.4);
 }
-}
 
 #settings-modal .toggle-container:hover input[type="checkbox"]:checked~.toggle-dot {
   transform: translateX(22px);
@@ -1667,29 +1684,33 @@ body.light-theme #settings-modal button[id^="to-"]:hover {
 #settings-modal #close-settings-x {
   outline: none;
   position: relative;
-  background: none;
-  border: none;
-  box-shadow: none;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.12);
   -webkit-tap-highlight-color: transparent;
-  border-radius: 0;
-  width: 32px;
-  height: 32px;
+  border-radius: 0.95rem;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-primary);
-  opacity: 0.8;
+  opacity: 1;
   cursor: pointer;
   flex-shrink: 0;
   margin-left: auto;
   padding: 0;
+  touch-action: manipulation;
+  z-index: 2;
 }
 
 #settings-modal #close-settings-x:hover {
-  background: none;
+  background: rgba(96, 165, 250, 0.14);
   color: var(--text-primary);
-  border: none;
-  box-shadow: none;
+  border-color: rgba(96, 165, 250, 0.28);
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.18);
   opacity: 1;
 }
 
@@ -1697,28 +1718,20 @@ body.light-theme #settings-modal button[id^="to-"]:hover {
 #settings-modal #close-settings-x:focus-visible,
 #settings-modal #close-settings-x:active {
   outline: none;
-  background: none;
-  border: none;
-  box-shadow: none;
+  background: rgba(96, 165, 250, 0.16);
+  border-color: rgba(96, 165, 250, 0.34);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
   opacity: 1;
 }
 
 #settings-modal #close-settings-x i {
-  font-size: 16px;
-  /* Slightly larger for better visibility without background */
+  font-size: 17px;
   line-height: 1;
-  font-weight: 600;
-  /* Make the icon bolder for better contrast */
+  font-weight: 700;
+  pointer-events: none;
 }
 
 /* Settings header container fixes */
-#settings-modal .flex.justify-between.items-center {
-  justify-content: space-between !important;
-  align-items: center !important;
-  width: 100% !important;
-  position: relative;
-}
-
 #settings-modal #settings-title {
   flex: 1;
   margin-right: 1rem;
@@ -2191,10 +2204,10 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
 
     /* Adjust close button for very small screens */
     #settings-modal #close-settings-x {
-      top: 0.75rem;
-      right: 0.75rem;
       width: 34px;
       height: 34px;
+      min-width: 34px;
+      min-height: 34px;
     }
 
     /* Optimize form elements for iPhone SE */
@@ -2250,6 +2263,10 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
 
   /* Specific fix for tablet view */
   @media (min-width: 768px) and (max-width: 1023px) {
+    #settings-modal {
+      padding: 24px;
+    }
+
     #settings-navigation-buttons {
       margin-top: 1.25rem;
       margin-bottom: 1rem;
@@ -2265,11 +2282,39 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
 
     /* Fix for tablet view to prevent right edge from being cut off */
     #settings-modal .modal-content {
-      width: min(580px, calc(100vw - 60px));
-      max-width: min(580px, calc(100vw - 60px));
-      padding: 1.25rem;
+      width: min(700px, calc(100vw - 72px));
+      max-width: min(700px, calc(100vw - 72px));
+      max-height: min(88vh, calc(100dvh - 56px));
+      padding: 1.5rem;
       box-sizing: border-box;
-      overflow-x: visible;
+      overflow-x: hidden;
+      border-radius: 1.75rem;
+    }
+
+    #settings-modal .settings-modal-header {
+      padding-top: 0;
+      margin-bottom: 1.25rem;
+    }
+
+    #settings-modal .settings-modal-header-row {
+      align-items: flex-start !important;
+      gap: 1rem;
+    }
+
+    #settings-modal #settings-title {
+      margin-right: 0;
+      min-width: 0;
+    }
+
+    #settings-modal #settings-step-subtitle {
+      padding-right: 3.75rem;
+    }
+
+    #settings-modal #close-settings-x {
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      min-height: 48px;
     }
 
     /* Ensure action buttons don't get cut off on tablets */
@@ -2285,8 +2330,8 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
     }
 
     /* Ensure toggle containers have proper spacing and don't get cut off */
-    #settings-modal .flex.justify-between.items-center {
-      padding-right: 12px;
+    #settings-modal .settings-modal-header-row {
+      padding-right: 0;
       margin-right: 0;
       width: 100%;
       box-sizing: border-box;
@@ -4235,8 +4280,33 @@ body.light-theme .openrouter-key-input-wrapper input {
         padding: 1rem;
         border-radius: 1rem;
     }
-    
+
     .settings-item-description {
         padding-right: 0;
     }
+}
+
+/* Actions step: Back is the only nav button so it must be full width.
+   Placed last to beat all earlier button[id^="back-"] width: auto !important rules. */
+#settings-modal #back-to-sidebar-btn {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+
+/* Normalize red action buttons to match non-red action button widths at every breakpoint. */
+html body #settings-modal #settings-step-actions #clear-chat.professional-button,
+html body #settings-modal #settings-step-actions #reset-app.professional-button {
+  width: calc(100% - 4px) !important;
+  max-width: calc(100% - 4px) !important;
+  margin: 0.5rem 2px !important;
+}
+
+@media (min-width: 768px) {
+  html body #settings-modal #settings-step-actions #clear-chat.professional-button,
+  html body #settings-modal #settings-step-actions #reset-app.professional-button {
+    width: calc(100% - 16px) !important;
+    max-width: calc(100% - 16px) !important;
+    margin: 0.5rem 8px !important;
+  }
 }

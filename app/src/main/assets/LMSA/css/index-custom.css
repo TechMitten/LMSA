@@ -4593,18 +4593,21 @@ body.light-theme #settings-modal > .modal-content > .flex.flex-col {
 }
 
 #settings-modal #close-settings-x {
-    width: 38px !important;
-    height: 38px !important;
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
     margin: 0 !important;
-    border-radius: var(--settings-radius) !important;
+    border-radius: 14px !important;
     color: var(--settings-text-muted) !important;
-    background: none !important;
-    border: none !important;
+    background: rgba(148, 163, 184, 0.08) !important;
+    border: 1px solid rgba(148, 163, 184, 0.18) !important;
     outline: none !important;
-    box-shadow: none !important;
+    box-shadow: 0 10px 24px rgba(2, 6, 23, 0.16) !important;
     -webkit-tap-highlight-color: transparent !important;
     opacity: 1 !important;
-    transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.12s ease !important;
+    touch-action: manipulation !important;
+    transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease !important;
 }
 
 #settings-modal #close-settings-x:hover,
@@ -4612,11 +4615,11 @@ body.light-theme #settings-modal > .modal-content > .flex.flex-col {
 #settings-modal #close-settings-x:focus-visible,
 #settings-modal #close-settings-x:active {
     color: var(--settings-text-strong) !important;
-    background: none !important;
-    border: none !important;
+    background: rgba(96, 165, 250, 0.14) !important;
+    border: 1px solid rgba(96, 165, 250, 0.26) !important;
     outline: none !important;
     transform: none !important;
-    box-shadow: none !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14) !important;
 }
 
 #settings-content-wrapper {
@@ -5346,7 +5349,10 @@ body.light-theme #settings-navigation-buttons + .mt-2 {
 }
 
 #settings-navigation-buttons + .mt-2 {
-    padding: 0 20px 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    padding: 12px 20px 16px !important;
 }
 
 #settings-navigation-buttons .navigation-buttons {
@@ -5387,7 +5393,7 @@ body.light-theme #settings-navigation-buttons + .mt-2 {
 
 #settings-modal #close-settings {
     width: 100% !important;
-    margin: 0 !important;
+    margin: 2px 0 0 !important;
     padding: 0 16px !important;
     color: #ffffff !important;
     border: 1px solid rgba(18, 167, 121, 0.62) !important;
@@ -6858,6 +6864,8 @@ body.light-theme #welcome-message .welcome-action-card i {
     font-size: 0.76rem !important;
     font-weight: 600 !important;
     line-height: 1.35 !important;
+    grid-column: 1 / -1 !important;
+    align-self: start !important;
 }
 
 #settings-modal .settings-item-toggle {
@@ -7073,5 +7081,115 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
         margin-right: auto !important;
         left: auto !important;
         right: auto !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1100px) {
+    #settings-modal {
+        --settings-tablet-button-max-width: 420px;
+        padding: 24px !important;
+    }
+
+    #settings-modal .modal-content {
+        width: min(760px, calc(100vw - 64px)) !important;
+        max-width: min(760px, calc(100vw - 64px)) !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: calc(100dvh - 48px) !important;
+        border-radius: 20px !important;
+    }
+
+    #settings-modal > .modal-content > .settings-modal-header,
+    #settings-modal > .modal-content > .flex.flex-col {
+        padding: 18px 22px 14px !important;
+    }
+
+    #settings-content-wrapper,
+    #settings-navigation-buttons,
+    #settings-navigation-buttons + .mt-2 {
+        padding-left: 22px !important;
+        padding-right: 22px !important;
+    }
+
+    #settings-step-actions.active > .flex.flex-col.space-y-4 {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        align-items: center !important;
+    }
+
+    #settings-step-actions.active > .flex.flex-col.space-y-4 > .professional-button {
+        width: min(100%, var(--settings-tablet-button-max-width)) !important;
+        max-width: min(100%, var(--settings-tablet-button-max-width)) !important;
+        min-height: 56px !important;
+        padding: 0 18px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    html body #settings-modal #settings-step-actions #clear-chat.professional-button,
+    html body #settings-modal #settings-step-actions #reset-app.professional-button {
+        width: min(100%, var(--settings-tablet-button-max-width)) !important;
+        max-width: min(100%, var(--settings-tablet-button-max-width)) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    #settings-navigation-buttons + .mt-2 {
+        gap: 12px !important;
+        padding-top: 16px !important;
+        align-items: center !important;
+    }
+
+    #settings-navigation-buttons .navigation-buttons {
+        width: min(100%, var(--settings-tablet-button-max-width)) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        gap: 12px !important;
+    }
+
+    #settings-modal button[id^="to-"],
+    #settings-modal button[id^="back-"] {
+        min-height: 62px !important;
+        height: 62px !important;
+        padding: 0 18px !important;
+        font-size: 1rem !important;
+    }
+
+    #settings-modal #close-settings {
+        width: min(100%, var(--settings-tablet-button-max-width)) !important;
+        max-width: min(100%, var(--settings-tablet-button-max-width)) !important;
+        min-height: 64px !important;
+        height: 64px !important;
+        margin: 4px auto 0 !important;
+        font-size: 1rem !important;
+    }
+
+    #settings-modal #settings-title {
+        font-size: 1.24rem !important;
+    }
+
+    #settings-modal #settings-step-subtitle {
+        padding-right: 4rem !important;
+    }
+
+    #settings-modal #close-settings-x {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+    }
+
+    #settings-step-options.active {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    #settings-modal .settings-group {
+        padding: 1.1rem !important;
+    }
+
+    #settings-modal .settings-item-description {
+        max-width: none !important;
     }
 }
