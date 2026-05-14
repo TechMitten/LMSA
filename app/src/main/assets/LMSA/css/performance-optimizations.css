@@ -1264,7 +1264,7 @@ body.light-theme .edit-title.mb-2 {
 body.light-theme .edit-textarea {
   background-color: #ffffff !important; /* White background */
   color: #1e293b !important; /* Dark text */
-  border-color: #cbd5e1 !important; /* Light border */
+  border-color: #1f2937 !important; /* Dark slate border for visibility */
 }
 
 /* Override bg-darkTertiary class */
@@ -1279,13 +1279,13 @@ body.light-theme .edit-textarea.text-gray-100 {
 
 /* Override border-gray-600 class on textarea */
 body.light-theme .edit-textarea.border-gray-600 {
-  border-color: #cbd5e1 !important;
+  border-color: #1f2937 !important;
 }
 
 /* Edit textarea focus state */
 body.light-theme .edit-textarea:focus {
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+  border-color: #1f2937 !important;
+  box-shadow: 0 0 0 2px rgba(31, 41, 55, 0.2) !important;
 }
 
 /* Cancel button */
