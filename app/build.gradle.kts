@@ -27,7 +27,7 @@ android {
         minSdk = 23
         // Target 36 to stay current with Play Store 2026 requirements
         targetSdk = 36
-        versionCode = 335
+        versionCode = 336
         versionName = "10.19"
 
         buildConfigField("String", "BRAVE_API_KEY", "\"$braveKey\"")
@@ -69,6 +69,8 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.emoji2)
+    implementation(libs.androidx.emoji2.views.helper)
     implementation("androidx.browser:browser:1.8.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     implementation("androidx.core:core-splashscreen:1.2.0")
