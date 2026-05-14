@@ -1000,7 +1000,6 @@ body.light-theme #welcome-message .setup-model-action {
 
 .provider-card:hover .provider-card-arrow,
 .provider-card:focus-visible .provider-card-arrow {
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.08));
     color: rgba(241, 245, 249, 0.96);
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.28);
 }

@@ -7565,6 +7565,16 @@ body.dark-theme #contact-form-modal .modal-content>div:first-child {
     color: var(--text-primary);
 }
 
+/* Keep clear breathing room before each new help section title */
+#help-modal #help-modal-content section+section {
+    margin-top: 1.25rem;
+    padding-top: 0.25rem;
+}
+
+#help-modal #help-modal-content section+section>h3 {
+    margin-top: 0.5rem;
+}
+
 @media (max-width: 768px) {
     #help-modal .modal-content {
         max-height: 85vh;
@@ -9208,6 +9218,18 @@ body.modal-open {
     #help-modal .font-medium:first-child {
         border-top: none;
         margin-top: 0;
+    }
+}
+
+/* Smartphone-only help modal tweaks */
+@media (max-width: 767px) {
+    #help-modal #help-scroll-top {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    #help-modal #help-scroll-top i {
+        font-size: 1.05rem !important;
     }
 }
 

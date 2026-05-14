@@ -6,8 +6,8 @@
 // Constants
 const TERMS_ACCEPTED_KEY = 'lmsa_terms_accepted';
 const TERMS_VERSION_KEY = 'lmsa_terms_version';
-const CURRENT_TERMS_VERSION = '2026-05-06'; // Matches effective date in legal/terms.md
-import { termsContentString } from './components/modals/terms-modal.js';
+import { termsContentString, TERMS_CONTENT_VERSION } from './components/modals/terms-modal.js';
+const CURRENT_TERMS_VERSION = TERMS_CONTENT_VERSION;
 
 /**
  * Renders terms markdown content into the modal

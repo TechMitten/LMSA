@@ -94,6 +94,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const helpModalContent = document.getElementById('help-modal-content');
     const helpScrollTop = document.getElementById('help-scroll-top');
     if (helpModalContent && helpScrollTop) {
+        let suppressClickUntil = 0;
+
+        const scrollHelpToTop = (event) => {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            helpModalContent.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
         helpModalContent.addEventListener('scroll', function () {
             // Only show button if the help modal is currently open
             const isModalOpen = helpModal && !helpModal.classList.contains('hidden');
@@ -108,8 +118,31 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, { passive: true });
 
-        helpScrollTop.addEventListener('click', function () {
-            helpModalContent.scrollTo({ top: 0, behavior: 'smooth' });
+        helpScrollTop.addEventListener('pointerdown', (event) => {
+            if (event.pointerType === 'touch' || event.pointerType === 'pen') {
+                suppressClickUntil = Date.now() + 500;
+                scrollHelpToTop(event);
+            }
+        }, { passive: false });
+
+        helpScrollTop.addEventListener('touchend', (event) => {
+            suppressClickUntil = Date.now() + 500;
+            scrollHelpToTop(event);
+        }, { passive: false });
+
+        helpScrollTop.addEventListener('click', (event) => {
+            if (Date.now() < suppressClickUntil) {
+                event.preventDefault();
+                event.stopPropagation();
+                return;
+            }
+            scrollHelpToTop(event);
+        });
+
+        helpScrollTop.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                scrollHelpToTop(event);
+            }
         });
     }
     // ----------------------------

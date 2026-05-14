@@ -1,13 +1,11 @@
-export const TERMS_CONTENT_VERSION = '2026-05-14';
-
-export const termsContentString = `# Terms of Service
+# Terms of Service
 
 **Effective:** Feb 28, 2026  
 **Last Updated:** May 14, 2026
 
 Please read these Terms of Service ("Terms") carefully before using the LMSA: Chat with LM Studio mobile application ("App") provided by TechMitten LLC ("we", "us", or "our").
 
-By clicking "I Agree" or by downloading, installing, or using the App, you ("User") agree to be bound by these Terms between you and TechMitten LLC. If you do not agree to these Terms, you may not use the App. Your use of LMSA is also governed by our Privacy Policy.
+By clicking "I Agree" or by downloading, installing, or using the App, you ("User") agree to be bound by these Terms between you and TechMitten LLC. If you do not agree to these Terms, you may not use the App. Your use of LMSA is also governed by our [Privacy Policy](/privacy-policy).
 
 ---
 
@@ -65,7 +63,7 @@ You agree not to use the App for any unlawful purpose or in any way that could d
 
 The App integrates with OpenRouter, a cloud-based AI routing service that provides access to a variety of AI models hosted by third parties. When you use OpenRouter through LMSA, your prompts and AI responses are transmitted over the internet to OpenRouter's servers and the model providers they route to — not through TechMitten LLC's servers. By using OpenRouter through LMSA, you agree that:
 
-- Your use of OpenRouter is subject to OpenRouter's Terms of Service and Privacy Policy.
+- Your use of OpenRouter is subject to OpenRouter's [Terms of Service](https://openrouter.ai/terms) and [Privacy Policy](https://openrouter.ai/privacy).
 - TechMitten LLC does not control and is not responsible for OpenRouter's data handling practices, content, or availability.
 - Once you transmit prompts or data to OpenRouter, those third-party terms govern that data.
 
@@ -199,66 +197,6 @@ The free version of the App is supported by advertisements provided by Google Ad
 
 - **Ad-Free Experience:** Users who purchase an LMSA Premium license will enjoy an ad-free experience.
 
-## 30. AI Image Generation
-
-LMSA provides an AI image generation feature that allows users to generate images by typing \`/image\` followed by a description.
-
-- **Generation Limits:** Free tier users are limited to two (2) image generations. Premium users have significantly increased generation limits.
-
-- **Availability:** Image generation depends on third-party APIs and services. We do not guarantee continuous availability, and the service may be subject to slowdowns or failures during periods of high demand.
-
-- **User Responsibility and Content:** You are solely responsible for any content you generate using the image generation feature. You agree not to generate any content that is illegal, harmful, threatening, abusive, harassing, defamatory, vulgar, obscene, or otherwise objectionable.
-
-- **Termination:** TechMitten LLC reserves the right to immediately terminate or suspend your access to the App if you are found to be generating prohibited content, as determined in our sole discretion.
-
-## 31. Contact Information
+## 29. Contact Information
 
 Reach us at support@lmsa.app for any questions regarding TechMitten LLC.
-`;
-
-export const termsModal = `
-    <!-- Terms of Service Acceptance Modal -->
-    <div id="terms-modal" class="hidden">
-        <div class="terms-modal-panel max-w-4xl w-full max-h-[90vh] flex flex-col">
-            <!-- Modal Header -->
-            <div class="terms-modal-header border-b border-gray-700/50">
-                <div class="terms-modal-header-row">
-                    <div class="terms-modal-badge" aria-hidden="true">
-                        <i class="fas fa-scale-balanced"></i>
-                    </div>
-                    <div class="terms-modal-header-copy">
-                        <p class="terms-modal-eyebrow">Legal Agreement</p>
-                        <h2>Terms of Service</h2>
-                        <p class="terms-modal-subtitle">Please accept to continue using LMSA</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Terms Content -->
-            <div id="terms-content" class="terms-modal-body">
-                <div class="flex flex-col items-center justify-center py-12 text-center" id="terms-loading">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-                    <p class="text-gray-400">Loading Terms of Service...</p>
-                </div>
-            </div>
-
-            <!-- Modal Footer - Acceptance Mode -->
-            <div id="terms-acceptance-footer" class="terms-modal-footer border-t border-gray-700/50">
-                <button id="accept-terms-btn" class="terms-primary-action">
-                    <i class="fas fa-check-circle" aria-hidden="true"></i>
-                    <span>I Accept the Terms of Service</span>
-                </button>
-                <p class="terms-footer-caption">By accepting, you agree to be bound by these terms.</p>
-            </div>
-
-            <!-- Modal Footer - Review Mode -->
-            <div id="terms-review-footer" class="terms-modal-footer hidden border-t border-gray-700/50">
-                <button id="close-terms-btn" class="terms-primary-action">
-                    <i class="fas fa-times" aria-hidden="true"></i>
-                    <span>Close</span>
-                </button>
-                <p class="terms-footer-caption">You've already accepted these terms.</p>
-            </div>
-        </div>
-    </div>
-`;

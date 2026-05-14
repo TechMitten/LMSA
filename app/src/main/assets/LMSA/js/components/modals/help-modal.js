@@ -22,7 +22,7 @@ export const helpModal = `
                 </div>
             </div>
             <div class="overflow-y-auto grow p-6 pt-4"
-                style="-webkit-overflow-scrolling: touch; touch-action: auto; overscroll-behavior: contain;"
+                style="-webkit-overflow-scrolling: touch; touch-action: auto; overscroll-behavior: contain; position: relative;"
                 id="help-modal-content">
                 <div class="space-y-6">
                     <!-- Table of Contents -->
@@ -1392,21 +1392,20 @@ export const helpModal = `
                                     If you have concerns about your LMSA Premium purchase, you can reach out to:
                                 </p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
-                                    <li><strong>Google Play support</strong> — for account, payment, and refund matters</li>
                                     <li><strong>support@lmsa.app</strong> — for app-specific questions or issues</li>
                                 </ul>
                             </div>
                         </div>
                     </section>
                 </div>
+                <!-- Scroll to top button (floating over help content) -->
+                <button id="help-scroll-top" 
+                    class="absolute w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                    aria-label="Scroll help to top"
+                    style="bottom: 1rem; right: 1rem; z-index: 35; background: rgba(59, 130, 246, 0.58); border: 1px solid rgba(255, 255, 255, 0.4); color: white; cursor: pointer; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.25s ease, visibility 0.25s ease, transform 0.2s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
+                    <i class="fas fa-arrow-up" style="font-size: 1.25rem; pointer-events: none;"></i>
+                </button>
             </div>
-
         </div>
     </div>
-    <!-- Scroll to top button (fixed, outside modal-content to avoid overflow-hidden clipping) -->
-    <button id="help-scroll-top" 
-        class="fixed w-12 h-12 rounded-full flex items-center justify-center shadow-2xl"
-        style="bottom: 2.5rem; right: 1.5rem; z-index: 9999; background: rgba(59, 130, 246, 0.55); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.25); color: white; cursor: pointer; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.25s ease, visibility 0.25s ease;">
-        <i class="fas fa-chevron-up" style="font-size: 1rem;"></i>
-    </button>
 `;
