@@ -5521,6 +5521,72 @@ body.light-theme #settings-step-actions #clear-lmstudio-token.settings-action-bu
     box-shadow: 0 26px 62px rgba(0, 0, 0, 0.38) !important;
 }
 
+@media (min-width: 641px) {
+    .connection-input-modal-box,
+    .modal-container > div.w-96,
+    .modal-container > div.modal-content,
+    [id$="-modal"] > div.w-96,
+    [id$="-modal"] > div.modal-content,
+    .modal-container.modal-input-keyboard-fit .modal-content,
+    .modal-container.modal-input-keyboard-fit .connection-input-modal-box,
+    .modal-container.modal-input-keyboard-fit .chat-rename-modal-box {
+        width: min(720px, calc(100vw - 48px)) !important;
+        max-width: 720px !important;
+        min-height: 380px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 42px !important;
+        justify-content: flex-start !important;
+    }
+
+    /* Improve internal spacing and scale text for the wider layout */
+    .connection-input-modal-box h2,
+    .connection-input-modal-box h3,
+    [id$="-modal"] h2,
+    [id$="-modal"] h3 {
+        font-size: 1.9rem !important;
+        margin-bottom: 28px !important;
+        line-height: 1.2 !important;
+    }
+
+    .connection-input-modal-box p,
+    [id$="-modal"] p {
+        font-size: 1.2rem !important;
+        line-height: 1.65 !important;
+        margin-bottom: 32px !important;
+    }
+
+    /* Larger inputs on tablets for better touch targets */
+    .connection-modal-input,
+    .connection-input-modal-box input,
+    [id$="-modal"] input[type="text"],
+    [id$="-modal"] input[type="password"] {
+        min-height: 60px !important;
+        font-size: 1.1rem !important;
+        margin-bottom: 20px !important;
+        border-radius: 12px !important;
+    }
+
+    /* Larger buttons on tablets */
+    .conn-modal-action-btn,
+    .connection-input-modal-box button,
+    [id$="-modal"] button {
+        min-height: 56px !important;
+        padding: 0 32px !important;
+        font-size: 1.1rem !important;
+        border-radius: 12px !important;
+    }
+
+    /* Ensure footer buttons have enough space */
+    .connection-input-modal-box .flex.justify-end,
+    [id$="-modal"] .flex.justify-end,
+    [id$="-modal"] .flex.justify-between {
+        margin-top: auto !important;
+        padding-top: 24px !important;
+        gap: 16px !important;
+    }
+}
+
 body.light-theme .connection-input-modal-box {
     background: #ffffff !important;
     color: #263244 !important;
@@ -7162,7 +7228,7 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
         width: min(760px, calc(100vw - 64px)) !important;
         max-width: min(760px, calc(100vw - 64px)) !important;
         height: auto !important;
-        min-height: 0 !important;
+        min-height: 520px !important;
         max-height: calc(100dvh - 48px) !important;
         border-radius: 20px !important;
     }
