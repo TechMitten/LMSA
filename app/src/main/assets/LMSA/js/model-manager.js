@@ -994,8 +994,8 @@ function displayAvailableModels(models, loadedModelId) {
                             <i class="fas fa-star"></i>
                         </button>
                         ${isCurrentModel ?
-                            `<button class="load-model-btn is-active" type="button" data-model-id="${model.id}" disabled aria-disabled="true" style="cursor:default;">Active</button>` :
-                            `<button class="load-model-btn" type="button" data-model-id="${model.id}" ${isModelLoading ? 'disabled aria-disabled="true"' : 'aria-disabled="false"'}>${pendingModelActionId === model.id && isModelLoading ? 'Loading' : getIdleModelActionLabel()}</button>`
+                            `<button class="load-model-btn is-active" type="button" data-model-id="${model.id}" disabled aria-disabled="true" style="cursor:default;"><span class="load-model-btn-label">Active</span></button>` :
+                            `<button class="load-model-btn" type="button" data-model-id="${model.id}" ${isModelLoading ? 'disabled aria-disabled="true"' : 'aria-disabled="false"'}><span class="load-model-btn-label">${pendingModelActionId === model.id && isModelLoading ? 'Loading' : getIdleModelActionLabel()}</span></button>`
                         }
                     </div>
                 </div>
@@ -1134,7 +1134,7 @@ function displayPotentialModels(models) {
                             <i class="fas fa-star"></i>
                         </button>
                         <button class="load-model-btn" type="button" data-model-id="${model.id}" ${isModelLoading ? 'disabled aria-disabled="true"' : 'aria-disabled="false"'}>
-                            ${pendingModelActionId === model.id && isModelLoading ? 'Loading' : getIdleModelActionLabel()}
+                            <span class="load-model-btn-label">${pendingModelActionId === model.id && isModelLoading ? 'Loading' : getIdleModelActionLabel()}</span>
                         </button>
                     </div>
                 </div>
