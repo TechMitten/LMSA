@@ -3761,7 +3761,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 }
 
 /* Dedicated tablet layout for the settings modal. */
-@media (min-width: 641px) and (max-width: 1023px) {
+@media (min-width: 641px) and (max-width: 1024px) {
     #settings-modal {
         padding: 8px !important;
         align-items: center !important;
@@ -3909,8 +3909,14 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
             0 12px 24px rgba(148, 163, 184, 0.12);
     }
 
-    #settings-step-connection.active {
-        grid-template-columns: minmax(0, 1fr);
+    #settings-step-connection.active,
+    #settings-step-font.active {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 1.25rem !important;
+    }
+
+    #settings-step-connection.active > .connection-presets-card {
+        grid-column: 1 / -1 !important;
     }
 
     .connection-type-selector {
@@ -4063,13 +4069,9 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
         border: none !important;
     }
 
-    #settings-step-font.active {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
     #settings-step-actions .mb-4 {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 0.9rem;
         padding-bottom: 1rem !important;
     }
@@ -7074,7 +7076,7 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
 }
 
 /* Desktop fit-and-alignment corrections for settings modal. */
-@media (min-width: 1024px) {
+@media (min-width: 1025px) {
     #settings-modal .modal-content {
         width: min(840px, calc(100vw - 48px)) !important;
         max-width: min(840px, calc(100vw - 48px)) !important;
@@ -7199,7 +7201,7 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
     }
 }
 
-@media (min-width: 641px) and (max-width: 1023px) {
+@media (min-width: 641px) and (max-width: 1024px) {
     #settings-modal {
         display: grid !important;
         place-items: center !important;
@@ -7218,7 +7220,7 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
     }
 }
 
-@media (min-width: 768px) and (max-width: 1100px) {
+@media (min-width: 768px) and (max-width: 1024px) {
     #settings-modal {
         --settings-tablet-button-max-width: 420px;
         padding: 24px !important;
@@ -7231,6 +7233,18 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
         min-height: 520px !important;
         max-height: calc(100dvh - 48px) !important;
         border-radius: 20px !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: auto minmax(0, 1fr) auto auto !important;
+    }
+
+    #settings-modal > .modal-content > .settings-modal-header,
+    #settings-modal > .modal-content > .flex.flex-col,
+    #settings-content-wrapper,
+    #settings-navigation-buttons,
+    #settings-navigation-buttons + .mt-2 {
+        width: 100% !important;
+        max-width: none !important;
+        justify-self: stretch !important;
     }
 
     #settings-modal > .modal-content > .settings-modal-header,
@@ -7362,6 +7376,53 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
 
     #settings-step-options.active {
         grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    #settings-step-connection.active {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 1rem !important;
+    }
+
+    #settings-step-font.active {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 1.25rem !important;
+    }
+
+    #settings-step-connection.active > .connection-type-selector {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 0.65rem !important;
+        padding: 0 !important;
+    }
+
+    #settings-step-connection.active .connection-type-btn {
+        min-height: 82px !important;
+        padding: 0.82rem 0.58rem !important;
+        gap: 0.55rem !important;
+    }
+
+    #settings-step-connection.active .connection-type-icon {
+        width: 38px !important;
+        height: 38px !important;
+        font-size: 0.98rem !important;
+    }
+
+    #settings-step-connection.active .connection-type-name {
+        font-size: 0.84rem !important;
+        line-height: 1.2 !important;
+        min-height: 2.35em !important;
+        padding: 0 2px !important;
+    }
+
+    #settings-step-connection.active .connection-presets-card {
+        grid-column: 1 / -1 !important;
+    }
+
+    #settings-step-actions .mb-4 {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 1.25rem !important;
     }
 
     #settings-modal .settings-group {

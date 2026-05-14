@@ -58,16 +58,17 @@
 /* Animated particle effect overlay */
 #settings-modal::after {
   content: "";
-    .connection-type-selector {
-      gap: 8px;
-      display: flex;
-      box-sizing: border-box;
-      inline-size: 100%;
-      max-inline-size: 100%;
-      min-inline-size: 0;
-    }
   z-index: -1;
   opacity: 0.8;
+}
+
+.connection-type-selector {
+  gap: 8px;
+  display: flex;
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  min-inline-size: 0;
 }
 
 /* Modal content with immersive, premium styling */
@@ -2075,7 +2076,7 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
 }
 
 /* Mobile/tablet navigation buttons */
-@media (max-width: 1023px) {
+@media (max-width: 1024px) {
 
   /* Ensure navigation buttons are visible and properly styled */
   #settings-navigation-buttons {
@@ -2262,7 +2263,7 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
   }
 
   /* Specific fix for tablet view */
-  @media (min-width: 768px) and (max-width: 1023px) {
+  @media (min-width: 768px) and (max-width: 1024px) {
     #settings-modal {
       padding: 24px;
     }
@@ -2347,7 +2348,7 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
 }
 
 /* Larger screens styling - maintain stepped navigation */
-@media (min-width: 1024px) {
+@media (min-width: 1025px) {
   #settings-modal .modal-content {
     width: 600px;
     max-width: min(600px, calc(100vw - 60px));
@@ -4297,8 +4298,8 @@ body.light-theme .openrouter-key-input-wrapper input {
 }
 
 /* Actions step: Back is the only nav button so it must be full width on mobile/tablet.
-   On desktop (1024px+), it follows the max-width: 200px rule from earlier. */
-@media (max-width: 1023px) {
+   On desktop (1025px+), it follows the max-width: 200px rule from earlier. */
+@media (max-width: 1024px) {
   #settings-modal #back-to-sidebar-btn {
     width: 100% !important;
     max-width: none !important;
