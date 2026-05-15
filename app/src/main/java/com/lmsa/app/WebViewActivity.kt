@@ -457,8 +457,10 @@ class WebViewActivity : AppCompatActivity() {
         webView.addJavascriptInterface(BiometricInterface(), "AndroidBiometrics")
         webView.addJavascriptInterface(ExternalLinkInterface(), "AndroidExternalLinks")
         webView.addJavascriptInterface(AdInterface(), "AndroidAds")
+        webView.addJavascriptInterface(LMStudioInterface(), "AndroidLMStudio")
 
         // Register native bridge for network requests (bypasses CORS)
+
         webView.addJavascriptInterface(NetworkInterface(), "AndroidNetwork")
 
         webView.webViewClient = object : WebViewClient() {
@@ -3068,4 +3070,55 @@ class WebViewActivity : AppCompatActivity() {
             }
         }
     }
+
+    inner class LMStudioInterface {
+        @JavascriptInterface
+        fun updateModelContext(serverIp: String, serverPort: String, modelKey: String, contextValue: Int) {
+            Log.d(TAG, "LMStudio: Requesting reload for $modelKey with context $contextValue")
+            
+            Thread {
+                try {
+                    val url = "http://$serverIp:$serverPort/api/v1/models/load"
+                    val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                    connection.requestMethod = "POST"
+                    connection.doOutput = true
+                    connection.connectTimeout = 10000
+                    connection.readTimeout = 10000
+                    connection.setRequestProperty("Content-Type", "application/json")
+                    
+                    val json = """
+                        {
+                            "modelId": "$modelKey",
+                            "config": {
+                                "contextLength": $contextValue,
+                                "gpuOffload": "max"
+                            }
+                        }
+                    """.trimIndent()
+
+                    connection.outputStream.use { it.write(json.toByteArray()) }
+
+                    val responseCode = connection.responseCode
+                    if (responseCode == java.net.HttpURLConnection.HTTP_OK || responseCode == java.net.HttpURLConnection.HTTP_NO_CONTENT) {
+                        Log.d(TAG, "LMStudio: Model reload successful")
+                        runOnUiThread {
+                            webView.evaluateJavascript("if(window.onModelReloadSuccess) window.onModelReloadSuccess($contextValue);", null)
+                        }
+                    } else {
+                        val error = connection.errorStream?.bufferedReader()?.use { it.readText() } ?: "Unknown error"
+                        Log.e(TAG, "LMStudio: Reload failed (HTTP $responseCode): $error")
+                        runOnUiThread {
+                            webView.evaluateJavascript("if(window.onModelReloadFailure) window.onModelReloadFailure('$error');", null)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "LMStudio: Reload exception: ${e.message}")
+                    runOnUiThread {
+                        webView.evaluateJavascript("if(window.onModelReloadFailure) window.onModelReloadFailure('${e.message}');", null)
+                    }
+                }
+            }.start()
+        }
+    }
 }
+
