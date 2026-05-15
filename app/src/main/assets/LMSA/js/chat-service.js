@@ -1,10 +1,11 @@
 // Chat Service for handling chat functionality
 import { messagesContainer, userInput, loadedModelDisplay } from './dom-elements.js';
 import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll, renderSmartReplies, hideSmartReplies, showSmartRepliesLoading, addWebSearchIndicator } from './ui-manager.js';
+import { showToastNotice } from './toast-notice.js';
 import { openHelpModal } from './help.js';
 import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
-import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOpenAICompatible, getUseOllama, getOpenRouterApiKey, getOpenAICompatibleApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations, getWebSearchEnabled, getConfiguredMaxTokens, getReasoningLevel, getBraveApiKey } from './settings-manager.js';
-import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags, normalizeMalformedCodeFences, isAndroidWebView } from './utils.js';
+import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOpenAICompatible, getUseOllama, getOpenRouterApiKey, getOpenAICompatibleApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations, getWebSearchEnabled, getConfiguredMaxTokens, getContextLength, getReasoningLevel, getBraveApiKey } from './settings-manager.js';
+import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags, normalizeMalformedCodeFences, isAndroidWebView, estimateTokens } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
 import { canSendCompletion, recordCompletion, canSendOpenRouterCompletion, recordOpenRouterCompletion, canUseWebSearch, recordWebSearch } from './usage-limiter.js';
 
@@ -56,7 +57,7 @@ const WEB_SEARCH_RECENT_TOPIC_TURNS = 4;
 const WEB_SEARCH_CONTEXT_KEYWORD_LIMIT = 10;
 const WEB_SEARCH_TOPIC_OVERLAP_MIN_RATIO = 0.34;
 const WEB_SEARCH_REUSE_MAX_WORDS = 12;
-const POLLINATIONS_IMAGE_BASE_URL = 'https://image.pollinations.ai/';
+const POLLINATIONS_IMAGE_BASE_URL = 'https://gen.pollinations.ai/image/';
 const CHAT_IMAGE_STORE_KEY = 'chatImageStore';
 const CHAT_IMAGE_STORE_VERSION = 1;
 const ACTIVE_TEMPLATE_CHARACTER_CARD_KEY = 'activeTemplateCharacterCard';
@@ -590,8 +591,28 @@ function createChatImageStorageId(chatId, messageIndex, fileIndex) {
     return `chat-${chatId}-msg-${messageIndex}-file-${fileIndex}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function getPollinationsApiKey() {
+    // Try to get the API key from the Android bridge first
+    if (typeof window.AndroidNetwork !== 'undefined' && typeof window.AndroidNetwork.getPollinationsApiKey === 'function') {
+        try {
+            const key = window.AndroidNetwork.getPollinationsApiKey();
+            if (typeof key === 'string' && key.trim() !== '') {
+                return key.trim();
+            }
+        } catch (error) {
+            debugError('Error retrieving Pollinations API key from Android bridge:', error);
+        }
+    }
+    return '';
+}
+
 function buildPollinationsImageUrl(prompt) {
-    return new URL(prompt, POLLINATIONS_IMAGE_BASE_URL).toString();
+    const url = new URL(prompt, POLLINATIONS_IMAGE_BASE_URL);
+    // Use Flux model for photorealistic images instead of the legacy painterly style
+    url.searchParams.set('model', 'flux');
+    url.searchParams.set('quality', 'high');
+
+    return url.toString();
 }
 
 function createGeneratedImageFilename(prompt) {
@@ -630,10 +651,17 @@ function readBlobAsDataUrl(blob) {
 
 async function fetchGeneratedImageAttachment(prompt) {
     const attachment = createGeneratedImageAttachment(prompt);
+    const requestHeaders = {
+        Accept: 'image/*,application/json,text/plain;q=0.9,*/*;q=0.8'
+    };
+
+    const apiKey = getPollinationsApiKey();
+    if (apiKey) {
+        requestHeaders['Authorization'] = `Bearer ${apiKey}`;
+    }
+
     const response = await fetch(attachment.remoteUrl, {
-        headers: {
-            Accept: 'image/*,application/json,text/plain;q=0.9,*/*;q=0.8'
-        },
+        headers: requestHeaders,
         cache: 'no-store'
     });
 
@@ -1299,8 +1327,8 @@ function appendRequestSystemPrompts(targetMessages, baseSystemPrompt, shouldInli
     }
 }
 
-function shouldUseLmStudioNativeMcpChat() {
-    return !getUseOpenRouter() && !getUseOpenAICompatible() && !getUseOllama() && hasLMStudioMcpIntegrations();
+function shouldUseLmStudioNativeApi() {
+    return isLocalLmStudioProvider() && !getUseOllama() && (hasLMStudioMcpIntegrations() || getContextLength() > 0);
 }
 
 function buildNativeSystemPrompt(shouldInlineChatTitle) {
@@ -1464,7 +1492,7 @@ function buildLmStudioMcpRequest(messages, shouldInlineChatTitle) {
         integrations: sanitizeLmStudioMcpIntegrations(getLMStudioMcpIntegrations()),
         temperature: getTemperature(),
         stream: false,
-        context_length: Math.max(8000, getConfiguredMaxTokens())
+        context_length: getContextLength() > 0 ? getContextLength() : Math.max(8000, getConfiguredMaxTokens())
     };
 
     const systemPrompt = buildNativeSystemPrompt(shouldInlineChatTitle);
@@ -3018,6 +3046,10 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             throw new Error(PROVIDER_CONNECTION_UNAVAILABLE);
         }
 
+        // Before proceeding, check if we need to compact the context (especially for OpenRouter)
+        // This helps avoid context overflow by summarizing older messages when approaching limits.
+        await checkAndCompactContextIfNeeded(currentChatId);
+
         // Get the latest available models
         const availableModels = getAvailableModels();
 
@@ -3252,7 +3284,7 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             }
         }
 
-        if (shouldUseLmStudioNativeMcpChat()) {
+        if (shouldUseLmStudioNativeApi()) {
             const requestBody = buildLmStudioMcpRequest(messages, shouldInlineChatTitle);
             const nativeTimeoutMs = getReasoningTimeout() * 1000;
             const timeoutPromise = new Promise((_, reject) => {
@@ -4002,13 +4034,6 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
     }
 }
 
-/**
- * Updates the chat history with a new AI response
- * The user message should already be in the history via addUserMessageToHistory
- * @param {string} userMessage - The user's message (for validation)
- * @param {string} aiMessage - The AI's response
- * @param {Array} fileContents - Optional array of file contents (for validation)
- */
 export async function updateChatHistory(userMessage, aiMessage, fileContents = [], options = {}) {
     // Ensure chatHistoryData is initialized
     if (!chatHistoryData) {
@@ -4101,6 +4126,149 @@ export async function updateChatHistory(userMessage, aiMessage, fileContents = [
 
     // Update the UI after saving
     updateChatHistoryUI();
+}
+
+/**
+ * Summarizes the current conversation using the AI.
+ * @param {Array} messages - The conversation messages to summarize
+ * @returns {Promise<string|null>} - The summary text or null if failed
+ */
+async function summarizeConversationSilently(messages) {
+    try {
+        debugLog('Requesting silent conversation summary for context compaction...');
+        
+        const apiUrl = getApiUrl();
+        const headers = getChatCompletionHeaders();
+        const model = getSelectedModel();
+        
+        // Prepare a minimal request for summarization
+        // We include the full conversation plus a instruction to summarize
+        const summaryMessages = [
+            ...messages,
+            { 
+                role: 'system', 
+                content: 'IMPORTANT: Summarize the preceding conversation into a concise set of key points, preserving all essential facts, technical details, and project context. Remove conversational noise, greetings, and redundant information. Provide a dense context for future messages. Do not include any introduction or conclusion, just the summarized context.' 
+            }
+        ];
+        
+        const requestBody = {
+            model: model,
+            messages: summaryMessages,
+            temperature: 0.3, // Lower temperature for more factual summary
+            max_tokens: 1000, // Limit summary size
+            stream: false
+        };
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Summarization request failed: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const summary = data.choices?.[0]?.message?.content;
+        
+        if (summary) {
+            debugLog('Successfully generated conversation summary.');
+            return summary.trim();
+        }
+        
+        return null;
+    } catch (error) {
+        debugError('Error in summarizeConversationSilently:', error);
+        return null;
+    }
+}
+
+/**
+ * Compacts the conversation messages by replacing older messages with a summary.
+ * Preserves the system prompt and the most recent N messages.
+ * @param {Array} messages - Original messages array
+ * @param {string} summary - Generated summary of the conversation
+ * @returns {Array} - The compacted messages array
+ */
+function compactMessages(messages, summary) {
+    if (!messages || messages.length <= 5) return messages;
+
+    const compacted = [];
+    
+    // 1. Always preserve the system prompt(s) at the beginning
+    const systemMessages = messages.filter(m => m.role === 'system');
+    compacted.push(...systemMessages);
+    
+    // 2. Add the summary as a special "Context Summary" message
+    compacted.push({
+        role: 'system',
+        content: `[CONVERSATION SUMMARY]: ${summary}`
+    });
+    
+    // 3. Keep the most recent 4 messages for immediate context flow
+    const recentMessages = messages.slice(-4);
+    
+    // Ensure we don't duplicate system messages if they were in the last 4
+    const nonSystemRecent = recentMessages.filter(m => m.role !== 'system');
+    compacted.push(...nonSystemRecent);
+    
+    debugLog('Messages compacted. Original count:', messages.length, 'New count:', compacted.length);
+    return compacted;
+}
+
+/**
+ * Checks if the context is approaching the limit and compacts it if necessary.
+ * @param {string} chatId - The ID of the chat to check
+ * @returns {Promise<boolean>} - True if compaction occurred
+ */
+export async function checkAndCompactContextIfNeeded(chatId) {
+    const contextLimit = getContextLength();
+    if (contextLimit <= 0) return false;
+
+    const chatData = chatHistoryData[chatId];
+    // Start considering compaction after 5 messages (was 10)
+    if (!chatData || !chatData.messages || chatData.messages.length < 5) return false;
+
+    const currentTokens = estimateTokens(chatData.messages);
+    const threshold = contextLimit * 0.8;
+
+    // Log progress if over 50% for testing visibility in debug logs
+    if (currentTokens >= contextLimit * 0.5) {
+        debugLog(`Context status: ${currentTokens}/${contextLimit} tokens (${Math.round(currentTokens / contextLimit * 100)}%)`);
+    }
+
+    if (currentTokens >= threshold) {
+        const provider = getUseOpenRouter() ? 'OpenRouter' : 
+                         getUseOpenAICompatible() ? 'Custom OpenAI' : 
+                         getUseOllama() ? 'Ollama' : 'LM Studio';
+                         
+        debugLog(`Context limit approaching for ${provider} (${currentTokens}/${contextLimit}). Initiating seamless compaction...`);
+        
+        // Show a subtle indicator if possible, or just do it silently as requested
+        const summary = await summarizeConversationSilently(chatData.messages);
+        
+        if (summary) {
+            const compactedMessages = compactMessages(chatData.messages, summary);
+            
+            // Update the history data
+            chatData.messages = compactedMessages;
+            
+            // Persist the changes
+            saveChatHistory();
+            
+            // Notify the user via a toast notice for better visibility (great for testing!)
+            showToastNotice({
+                message: 'Conversation memory compacted (limit reached)',
+                tone: 'success',
+                iconClass: 'fas fa-brain'
+            });
+            
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 export async function addGeneratedImageResponseToHistory(prompt) {
@@ -6195,7 +6363,7 @@ export async function regenerateLastResponse(isRetry = false) {
 
             currentTurnWebSearchSources = cloneWebSearchSources(preparedWebSearch.sources);
 
-            if (shouldUseLmStudioNativeMcpChat()) {
+            if (shouldUseLmStudioNativeApi()) {
                 const nativeRequestBody = buildLmStudioMcpRequest(apiMessages, shouldInlineChatTitle);
                 const nativeTimeoutMs = getReasoningTimeout() * 1000;
                 const timeoutPromise = new Promise((_, reject) => {

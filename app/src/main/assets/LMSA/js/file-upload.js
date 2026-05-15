@@ -407,13 +407,55 @@ async function testVisionCapability(serverIp, serverPort, modelId) {
         };
 
 
-        const response = await fetch(`http://${serverIp}:${serverPort}/v1/chat/completions`, {
+        // Determine API version for vision test
+        let useNative = false;
+        try {
+            const nativeResp = await fetch(`http://${serverIp}:${serverPort}/api/v1/models`, {
+                method: 'GET',
+                signal: AbortSignal.timeout(3000)
+            });
+            if (nativeResp.ok) {
+                const nativeData = await nativeResp.json();
+                if (nativeData && Array.isArray(nativeData.models)) {
+                    useNative = true;
+                }
+            }
+        } catch (_) { /* ignore */ }
+
+        const endpoint = useNative ? `http://${serverIp}:${serverPort}/api/v1/chat` : `http://${serverIp}:${serverPort}/v1/chat/completions`;
+        const savedCtxLen = parseInt(localStorage.getItem('contextLength')) || 0;
+
+        const requestBody = useNative ? {
+            model: modelId,
+            input: [
+                { type: 'text', text: 'test' },
+                { type: 'image_url', image_url: { url: `data:image/png;base64,${testImageBase64}` } }
+            ],
+            max_tokens: 1,
+            stream: false,
+            context_length: savedCtxLen > 0 ? savedCtxLen : undefined
+        } : {
+            model: modelId,
+            messages: [
+                {
+                    role: 'user',
+                    content: [
+                        { type: 'text', text: 'test' },
+                        { type: 'image_url', image_url: { url: `data:image/png;base64,${testImageBase64}` } }
+                    ]
+                }
+            ],
+            max_tokens: 1,
+            stream: false
+        };
+
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 ...getLMStudioAuthHeaders()
             },
-            body: JSON.stringify(testRequest),
+            body: JSON.stringify(requestBody),
             signal: AbortSignal.timeout(5000) // 5 second timeout
         });
 

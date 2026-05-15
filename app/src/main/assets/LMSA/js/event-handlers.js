@@ -3942,13 +3942,6 @@ function handleEditButtonClick(e) {
                     // Save the updated chat history
                     saveChatHistory();
 
-                    // Generate new response with edited message
-                    showLoadingIndicator();
-                    toggleSendStopButton();
-
-                    abortController = new AbortController();
-                    setAbortController(abortController);
-
                     // Check if the user message has any file attachments
                     let fileContents = [];
                     if (!Array.isArray(chatData)) {
@@ -3958,6 +3951,73 @@ function handleEditButtonClick(e) {
                             debugLog(`Preserving ${fileContents.length} file attachments when regenerating edited message`);
                         }
                     }
+
+                    const editedImageCommand = parseImageCommand(editedMessage);
+
+                    if (editedImageCommand) {
+                        if (!editedImageCommand.prompt) {
+                            appendMessage('error', 'Enter a prompt after /image to generate an image.');
+                            return;
+                        }
+
+                        if (!isPremiumUser()) {
+                            const generationCount = getImageGenerationCount();
+                            if (generationCount >= FREE_IMAGE_GENERATION_LIMIT) {
+                                openPremiumModal('Image Generation');
+                                return;
+                            }
+                        }
+
+                        const moderationResult = getImagePromptModerationResult(editedImageCommand.prompt);
+                        if (moderationResult.blocked) {
+                            let errorMessage = 'Image generation is blocked for sexual or illegal requests. Try a safer, non-explicit description.';
+                            if (moderationResult.reason === 'harmful') {
+                                errorMessage = 'Image generation is blocked for violent, hateful, or harmful content. Please follow safety guidelines.';
+                            }
+                            appendMessage('error', errorMessage);
+                            return;
+                        }
+
+                        if (fileContents && fileContents.length > 0) {
+                            appendMessage('error', 'Image generation does not support file attachments yet.');
+                            return;
+                        }
+
+                        const pendingImageMessage = appendMessage(
+                            'ai',
+                            'Generating image...',
+                            [createPendingGeneratedImageAttachment(editedImageCommand.prompt)]
+                        );
+                        scrollToBottom(messagesContainer, true);
+
+                        try {
+                            const generatedImageMessage = await addGeneratedImageResponseToHistory(editedImageCommand.prompt);
+
+                            if (!isPremiumUser()) {
+                                incrementImageGenerationCount();
+                            }
+
+                            pendingImageMessage?.remove();
+                            appendMessage('ai', generatedImageMessage.content, generatedImageMessage.files, false, generatedImageMessage.model);
+                        } catch (error) {
+                            pendingImageMessage?.remove();
+                            const errorMessage = error instanceof Error && error.message
+                                ? error.message
+                                : 'Image generation failed.';
+                            appendMessage('error', errorMessage);
+                        }
+
+                        scrollToBottom(messagesContainer, true);
+                        updateChatHistoryUI();
+                        return;
+                    }
+
+                    // Generate new response with edited message
+                    showLoadingIndicator();
+                    toggleSendStopButton();
+
+                    abortController = new AbortController();
+                    setAbortController(abortController);
 
                     // Generate AI response to the edited message with any file attachments
                     await generateAIResponse(editedMessage, fileContents);

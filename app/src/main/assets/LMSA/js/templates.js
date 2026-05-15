@@ -934,19 +934,32 @@ async function resolveGenerationClientState() {
                     try {
                         const probeController = new AbortController();
                         const probeTimeout = setTimeout(() => probeController.abort(), 3000);
-                        const probeResponse = await fetch(`http://${serverIp}:${serverPort}/v1/chat/completions`, {
+                        
+                        const useNative = triedNative;
+                        const endpoint = useNative ? `http://${serverIp}:${serverPort}/api/v1/chat` : `http://${serverIp}:${serverPort}/v1/chat/completions`;
+                        
+                        const savedCtxLen = parseInt(localStorage.getItem('contextLength')) || 0;
+                        const apiToken = localStorage.getItem('lmStudioApiToken') || '';
+                        const headers = { 'Content-Type': 'application/json' };
+                        if (apiToken) headers['Authorization'] = `Bearer ${apiToken}`;
+
+                        const requestBody = useNative ? {
+                            input: 'Respond with exactly: ok',
+                            stream: false,
+                            context_length: savedCtxLen > 0 ? (savedCtxLen < 256 ? 256 : savedCtxLen) : undefined
+                        } : {
+                            messages: [
+                                { role: 'system', content: 'You are a helpful assistant.' },
+                                { role: 'user', content: 'Respond with exactly: ok' }
+                             ],
+                            max_tokens: 1,
+                            stream: false
+                        };
+
+                        const probeResponse = await fetch(endpoint, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                messages: [
-                                    { role: 'system', content: 'You are a helpful assistant.' },
-                                    { role: 'user', content: 'Respond with exactly: ok' }
-                                ],
-                                max_tokens: 1,
-                                stream: false
-                            }),
+                            headers: headers,
+                            body: JSON.stringify(requestBody),
                             signal: probeController.signal
                         }).catch(() => ({ ok: false }));
                         clearTimeout(probeTimeout);
@@ -955,32 +968,44 @@ async function resolveGenerationClientState() {
                             const probeResult = await probeResponse.json().catch(() => null);
                             const detectedModelId = probeResult?.model;
                             if (detectedModelId) {
-                                loadedModelInfo = modelsList.find(model => model.id === detectedModelId) || {
+                                loadedModelInfo = lmStudioModelsList.find(model => model.id === detectedModelId) || {
                                     id: detectedModelId
                                 };
                             }
                         }
-                    } catch (_) {
-                        // Silently continue
-                    }
+                    } catch (_) {}
                 }
             } else if (!loadedModelInfo && lmStudioModelsList.length > 0) {
+                // This block is for when triedNative was true but no loadedModelInfo was found yet
+                // We already handled it above by checking triedNative, but let's keep it safe
                 try {
                     const probeController = new AbortController();
                     const probeTimeout = setTimeout(() => probeController.abort(), 3000);
-                    const probeResponse = await fetch(`http://${serverIp}:${serverPort}/v1/chat/completions`, {
+                    
+                    const useNative = triedNative;
+                    const endpoint = useNative ? `http://${serverIp}:${serverPort}/api/v1/chat` : `http://${serverIp}:${serverPort}/v1/chat/completions`;
+                    const savedCtxLen = parseInt(localStorage.getItem('contextLength')) || 0;
+                    const apiToken = localStorage.getItem('lmStudioApiToken') || '';
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (apiToken) headers['Authorization'] = `Bearer ${apiToken}`;
+
+                    const requestBody = useNative ? {
+                        input: 'Respond with exactly: ok',
+                        stream: false,
+                        context_length: savedCtxLen > 0 ? (savedCtxLen < 256 ? 256 : savedCtxLen) : undefined
+                    } : {
+                        messages: [
+                            { role: 'system', content: 'You are a helpful assistant.' },
+                            { role: 'user', content: 'Respond with exactly: ok' }
+                        ],
+                        max_tokens: 1,
+                        stream: false
+                    };
+
+                    const probeResponse = await fetch(endpoint, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            messages: [
-                                { role: 'system', content: 'You are a helpful assistant.' },
-                                { role: 'user', content: 'Respond with exactly: ok' }
-                            ],
-                            max_tokens: 1,
-                            stream: false
-                        }),
+                        headers: headers,
+                        body: JSON.stringify(requestBody),
                         signal: probeController.signal
                     }).catch(() => ({ ok: false }));
                     clearTimeout(probeTimeout);
@@ -994,9 +1019,7 @@ async function resolveGenerationClientState() {
                             };
                         }
                     }
-                } catch (_) {
-                    // Silently continue
-                }
+                } catch (_) {}
             }
         }
     } catch (error) {

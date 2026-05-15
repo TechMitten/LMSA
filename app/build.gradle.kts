@@ -1,4 +1,5 @@
 import java.util.Properties
+import java.util.Base64
 
 plugins {
     alias(libs.plugins.android.application)
@@ -19,7 +20,27 @@ android {
     if (localPropertiesFile.exists()) {
         localProperties.load(localPropertiesFile.inputStream())
     }
+
+    fun xorObfuscateToBase64(value: String, salt: String): String {
+        if (value.isEmpty()) return ""
+        val valueBytes = value.toByteArray(Charsets.UTF_8)
+        val saltBytes = salt.toByteArray(Charsets.UTF_8)
+        val mixed = ByteArray(valueBytes.size)
+
+        for (i in valueBytes.indices) {
+            mixed[i] = (valueBytes[i].toInt() xor saltBytes[i % saltBytes.size].toInt()).toByte()
+        }
+
+        return Base64.getEncoder().encodeToString(mixed)
+    }
+
+    val pollinationsObfuscationSalt = "LMSA_POLLI_V1"
     val braveKey = localProperties.getProperty("BRAVE_API_KEY") ?: ""
+    val pollAiKeyPlain = localProperties.getProperty("POLLINATIONS_API_KEY") ?: ""
+    val pollAiKeyObfuscated = localProperties.getProperty("POLLINATIONS_API_KEY_OBFUSCATED")
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?: xorObfuscateToBase64(pollAiKeyPlain, pollinationsObfuscationSalt)
 
     defaultConfig {
         applicationId = "com.lmsa.app"
@@ -31,6 +52,7 @@ android {
         versionName = "10.19"
 
         buildConfigField("String", "BRAVE_API_KEY", "\"$braveKey\"")
+        buildConfigField("String", "POLLINATIONS_API_KEY_OBFUSCATED", "\"$pollAiKeyObfuscated\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

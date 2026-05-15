@@ -2945,6 +2945,25 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     inner class NetworkInterface {
+        private fun decodeObfuscatedPollinationsKey(obfuscatedKey: String): String {
+            if (obfuscatedKey.isBlank()) return ""
+
+            return try {
+                val decodedBytes = Base64.decode(obfuscatedKey, Base64.DEFAULT)
+                val saltBytes = "LMSA_POLLI_V1".toByteArray(Charsets.UTF_8)
+                val plainBytes = ByteArray(decodedBytes.size)
+
+                for (i in decodedBytes.indices) {
+                    plainBytes[i] = (decodedBytes[i].toInt() xor saltBytes[i % saltBytes.size].toInt()).toByte()
+                }
+
+                String(plainBytes, Charsets.UTF_8)
+            } catch (error: Exception) {
+                Log.e(TAG, "Failed to decode Pollinations API key", error)
+                ""
+            }
+        }
+
         @JavascriptInterface
         fun isInternetAvailable(): Boolean {
             return isNetworkAvailable()
@@ -2953,6 +2972,11 @@ class WebViewActivity : AppCompatActivity() {
         @JavascriptInterface
         fun getBraveApiKey(): String {
             return BuildConfig.BRAVE_API_KEY
+        }
+
+        @JavascriptInterface
+        fun getPollinationsApiKey(): String {
+            return decodeObfuscatedPollinationsKey(BuildConfig.POLLINATIONS_API_KEY_OBFUSCATED)
         }
 
         @JavascriptInterface

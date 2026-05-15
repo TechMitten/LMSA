@@ -2165,3 +2165,24 @@ export function hideScrollToBottomButton() {
         scrollButton.style.pointerEvents = 'none';
     }
 }
+/**
+ * Estimates the number of tokens in a string or an array of messages.
+ * Uses a conservative estimation (4 characters per token).
+ * @param {string|Array} input - The text or messages to estimate tokens for
+ * @returns {number} - The estimated token count
+ */
+export function estimateTokens(input) {
+    if (!input) return 0;
+    
+    let text = '';
+    if (Array.isArray(input)) {
+        // For messages, include roles and content
+        text = input.map(msg => `${msg.role}: ${msg.content}`).join('\n');
+    } else {
+        text = String(input);
+    }
+    
+    // Simple heuristic: ~4 characters per token for English
+    // We'll use a slightly more conservative 3.5 for better safety
+    return Math.ceil(text.length / 3.5);
+}

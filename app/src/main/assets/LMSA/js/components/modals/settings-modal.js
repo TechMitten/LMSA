@@ -231,6 +231,27 @@ export const settingsModal = `
                             </div>
                         </div>
 
+                        <!-- Context Length -->
+                        <div class="settings-item context-length-setting">
+                            <div class="settings-item-header">
+                                <label for="context-length-input" class="settings-item-label">
+                                    <i class="fas fa-brain"></i>Context Length
+                                </label>
+                            </div>
+                            <p class="settings-item-description">Sets the total conversation memory size. For OpenRouter and Custom endpoints, this triggers automatic conversation compaction to preserve memory.</p>
+                            <div class="flex items-center max-tokens-input-row">
+                                <input type="text" id="context-length-input" min="1" step="1"
+                                    class="bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500 max-tokens-input-field"
+                                    placeholder="Server default" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" data-form-type="other">
+                                <button id="clear-context-length-btn" type="button"
+                                    class="professional-button flex items-center justify-center gap-2 px-4 h-[42px] shrink-0 max-tokens-default-btn">
+                                    <i class="fas fa-rotate-left text-xs"></i>
+                                    <span>Default</span>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Current: <span id="context-length-value">Server Default</span></p>
+                        </div>
+
                         <!-- Hide Thinking -->
                         <div class="settings-item settings-item-toggle" data-toggle-checkbox="hide-thinking">
                             <div class="settings-item-header">

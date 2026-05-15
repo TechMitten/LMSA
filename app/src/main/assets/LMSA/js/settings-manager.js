@@ -12,6 +12,9 @@ import {
   openAICompatibleApiKeyInput,
   showModelLabelCheckbox,
   modeIndicator,
+  contextLengthInput,
+  contextLengthValue,
+  clearContextLengthButton
 } from "./dom-elements.js";
 
 import { applyThinkingVisibility, refreshAllMessages, applyModelLabelVisibility } from "./ui-manager.js";
@@ -58,6 +61,7 @@ let enterSendsNewline = false; // If true, Enter creates a new line, Shift+Enter
 let reasoningTimeout = 300; // Default 5 minutes for reasoning models (in seconds)
 let defaultModelId = null; // Default model to auto-select when models load
 let selectedTTSVoice = null; // Selected TTS voice name
+let contextLength = 0; // Context length for LM Studio native API
 let useOpenRouter = false; // Use OpenRouter cloud API
 let openRouterApiKey = ''; // OpenRouter API key
 let useOpenAICompatible = false; // Use custom OpenAI-compatible endpoint
@@ -66,7 +70,7 @@ let openAICompatibleApiKey = ''; // Optional API key for custom endpoint
 let lmStudioApiToken = ''; // Optional LM Studio API token for authenticated servers
 let lmStudioMcpIntegrations = []; // Optional LM Studio native chat integrations payload
 let reasoningLevel = 'default'; // Thinking effort level (default, disabled, low, medium, high)
-let braveApiKey = ''; // Brave Search API key
+let otterBurrowMap = ''; // Web search provider key map
 
 const IMAGE_GENERATION_COUNT_KEY = 'imageGenerationCount';
 export const FREE_IMAGE_GENERATION_LIMIT = 2;
@@ -487,6 +491,10 @@ export function getConfiguredMaxTokens() {
   return maxTokens;
 }
 
+export function getContextLength() {
+  return contextLength;
+}
+
 /**
  * Gets the current image generation count for free tier users.
  * @returns {number}
@@ -786,6 +794,82 @@ export function loadHideThinkingSetting() {
   }
 }
 
+export function loadContextLengthSetting() {
+  if (!contextLengthInput) {
+    return;
+  }
+
+  const savedContextLength = localStorage.getItem("contextLength");
+  contextLength = parseStoredMaxTokens(savedContextLength);
+
+  updateContextLengthUI(contextLengthInput, contextLengthValue);
+
+  if (contextLengthInput.dataset.contextLengthListenerAttached !== "true") {
+    contextLengthInput.addEventListener("beforeinput", handleMaxTokensBeforeInput);
+    contextLengthInput.addEventListener("paste", handleMaxTokensPaste);
+    contextLengthInput.addEventListener("input", saveContextLengthSetting);
+    contextLengthInput.addEventListener("change", saveContextLengthSetting);
+    contextLengthInput.dataset.contextLengthListenerAttached = "true";
+  }
+
+  if (clearContextLengthButton && clearContextLengthButton.dataset.contextLengthClearListenerAttached !== "true") {
+    clearContextLengthButton.addEventListener("click", () => {
+      contextLength = 0;
+      localStorage.removeItem("contextLength");
+      updateContextLengthUI(contextLengthInput, contextLengthValue);
+    });
+    clearContextLengthButton.dataset.contextLengthClearListenerAttached = "true";
+  }
+}
+
+export function saveContextLengthSetting() {
+  if (!contextLengthInput) {
+    return;
+  }
+
+  const rawValue = normalizeMaxTokensInputValue(contextLengthInput).trim();
+
+  if (rawValue === "") {
+    contextLength = 0;
+    localStorage.removeItem("contextLength");
+    updateContextLengthUI(contextLengthInput, contextLengthValue);
+    return;
+  }
+
+  let parsedValue = parseStoredMaxTokens(rawValue);
+
+  // Enforce a minimum context length of 256 if the user specifies a very low value (like 1)
+  // which often causes LM Studio to fail initialization.
+  if (parsedValue > 0 && parsedValue < 256) {
+    console.warn(`Context length ${parsedValue} is too low for LM Studio. Enforcing minimum 256.`);
+    parsedValue = 256;
+    if (contextLengthInput) {
+        contextLengthInput.value = "256";
+    }
+  }
+
+  if (parsedValue === 0) {
+    updateContextLengthUI(contextLengthInput, contextLengthValue);
+    return;
+  }
+
+  contextLength = parsedValue;
+  localStorage.setItem("contextLength", String(contextLength));
+  updateContextLengthUI(contextLengthInput, contextLengthValue);
+}
+
+function updateContextLengthUI(input, valueDisplay) {
+  const hasCustomValue = Number.isInteger(contextLength) && contextLength > 0;
+
+  if (input) {
+    input.value = hasCustomValue ? String(contextLength) : "";
+  }
+
+  if (valueDisplay) {
+    valueDisplay.textContent = hasCustomValue ? String(contextLength) : "Server Default";
+  }
+}
+
 /**
  * Saves the hide thinking setting to localStorage
  */
@@ -973,11 +1057,16 @@ export function getWebSearchEnabled() {
 }
 
 /**
- * Gets the current Brave Search API key
+ * Gets the current web search provider key
  * @returns {string}
  */
+export function getOtterBurrowMap() {
+  return otterBurrowMap || localStorage.getItem('otterBurrowMap') || '';
+}
+
+// Backward-compatible alias used by older imports.
 export function getBraveApiKey() {
-  return braveApiKey || localStorage.getItem('braveApiKey') || '';
+  return getOtterBurrowMap();
 }
 
 /**
@@ -2522,6 +2611,7 @@ export function loadSettings() {
   initializeSystemPrompt();
   initializeTemperature();
   loadMaxTokensSetting();
+  loadContextLengthSetting();
   loadHideThinkingSetting();
   loadReasoningLevelSetting();
   loadAutoGenerateTitlesSetting();
@@ -2868,22 +2958,22 @@ export function loadDefaultModelSetting() {
  */
 export function loadBraveSearchSettings() {
   // 1. Try to get from Android Native Bridge first (to pick up changes from local.properties)
-  if (window.AndroidNetwork && typeof window.AndroidNetwork.getBraveApiKey === 'function') {
-    const nativeKey = window.AndroidNetwork.getBraveApiKey();
+  if (window.AndroidNetwork && typeof window.AndroidNetwork.getOtterBurrowMap === 'function') {
+    const nativeKey = window.AndroidNetwork.getOtterBurrowMap();
     if (nativeKey) {
-      braveApiKey = nativeKey;
-      localStorage.setItem('braveApiKey', braveApiKey);
+      otterBurrowMap = nativeKey;
+      localStorage.setItem('otterBurrowMap', otterBurrowMap);
       return;
     }
   }
 
   // 2. Fallback to localStorage (e.g. if bridge is unavailable during development)
-  const savedBraveApiKey = localStorage.getItem('braveApiKey');
-  if (savedBraveApiKey) {
-    braveApiKey = savedBraveApiKey;
+  const savedOtterBurrowMap = localStorage.getItem('otterBurrowMap');
+  if (savedOtterBurrowMap) {
+    otterBurrowMap = savedOtterBurrowMap;
   } else {
     // Default empty if not found in bridge or storage
-    braveApiKey = '';
-    localStorage.setItem('braveApiKey', braveApiKey);
+    otterBurrowMap = '';
+    localStorage.setItem('otterBurrowMap', otterBurrowMap);
   }
 }
