@@ -482,6 +482,17 @@ export function applySidebarLayout(layout = readStoredSidebarLayout()) {
         });
     });
 
+    // Ensure Options dropdown remains at the bottom of the main menu section (above chat history section)
+    const optionsBtn = document.getElementById('options-btn');
+    const optionsContainer = document.getElementById('options-container');
+    if (optionsBtn && optionsBtn.parentElement) {
+        const parent = optionsBtn.parentElement;
+        parent.appendChild(optionsBtn);
+        if (optionsContainer && optionsContainer.parentElement === parent) {
+            parent.appendChild(optionsContainer);
+        }
+    }
+
     setDerivedGroupVisibility(normalizedLayout);
     bumpSidebarPaint();
     dispatchSidebarLayoutUpdated(normalizedLayout);
