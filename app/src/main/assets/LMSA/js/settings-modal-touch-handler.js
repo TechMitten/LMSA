@@ -28,7 +28,7 @@ export function initializeSettingsModalTouchHandler() {
     if (settingsContentWrapper) {
         // Apply touch scrolling styles programmatically as a backup
         settingsContentWrapper.style.overflowY = 'auto';
-        settingsContentWrapper.style.touchAction = 'pan-x pan-y';
+        settingsContentWrapper.style.touchAction = 'pan-y';
         settingsContentWrapper.style.overscrollBehavior = 'contain';
 
         debugLog('Settings content wrapper touch styles applied');
@@ -123,7 +123,7 @@ export function initializeSettingsModalTouchHandler() {
                 const target = mutation.target;
                 if (target.classList.contains('settings-step') && target.classList.contains('active')) {
                     // Apply touch scrolling styles to active steps
-                    target.style.touchAction = 'pan-x pan-y';
+                    target.style.touchAction = 'pan-y';
                     target.style.webkitOverflowScrolling = 'touch';
                     target.style.overscrollBehavior = 'contain';
                 }
@@ -138,7 +138,7 @@ export function initializeSettingsModalTouchHandler() {
 
         // Also apply initial styles to active steps
         if (step.classList.contains('active')) {
-            step.style.touchAction = 'pan-x pan-y';
+            step.style.touchAction = 'pan-y';
             step.style.webkitOverflowScrolling = 'touch';
             step.style.overscrollBehavior = 'contain';
         }
@@ -173,6 +173,7 @@ function initializeHorizontalSwipeNavigation(settingsContentWrapper) {
 
     // Race condition guard for rapid swiping
     let transitionTimeout = null;
+    let pendingCompletionFn = null;
 
     const stepOrder = ['connection', 'options', 'prompt', 'font', 'sidebar', 'actions'];
 
@@ -243,7 +244,9 @@ function initializeHorizontalSwipeNavigation(settingsContentWrapper) {
         if (transitionTimeout) {
             clearTimeout(transitionTimeout);
             transitionTimeout = null;
-            cleanupStyles();
+            if (pendingCompletionFn) {
+                pendingCompletionFn();
+            }
         }
 
         if (e.touches.length > 1) {
@@ -268,6 +271,13 @@ function initializeHorizontalSwipeNavigation(settingsContentWrapper) {
         if (currentStepEl) {
             currentStepName = currentStepEl.getAttribute('data-step-name')?.toLowerCase() || 'connection';
         }
+
+        // Disable gesture navigation if we are currently on the 'actions' page (where reset buttons are)
+        if (currentStepName === 'actions') {
+            isSwipeIgnored = true;
+            return;
+        }
+
         navButtons = document.getElementById('settings-navigation-buttons');
         confirmContainer = document.getElementById('close-settings')?.parentElement;
         adjacentStepEl = null;
@@ -310,6 +320,8 @@ function initializeHorizontalSwipeNavigation(settingsContentWrapper) {
                         return;
                     }
                 }
+
+
 
                 adjacentStepEl = document.getElementById('settings-step-' + adjacentStepName);
                 if (!adjacentStepEl || !currentStepEl) {
@@ -355,23 +367,23 @@ function initializeHorizontalSwipeNavigation(settingsContentWrapper) {
             }
 
             // Drag steps horizontally with absolute pixel accuracy to prevent any crossover gaps
-            currentStepEl.style.position = 'absolute';
-            currentStepEl.style.left = paddingLeft + 'px';
-            currentStepEl.style.top = paddingTop + 'px';
-            currentStepEl.style.width = stepWidth + 'px';
-            currentStepEl.style.transition = 'none';
-            currentStepEl.style.transform = `translate3d(${deltaX}px, 0, 0)`;
+            currentStepEl.style.setProperty('position', 'absolute', 'important');
+            currentStepEl.style.setProperty('left', paddingLeft + 'px', 'important');
+            currentStepEl.style.setProperty('top', paddingTop + 'px', 'important');
+            currentStepEl.style.setProperty('width', stepWidth + 'px', 'important');
+            currentStepEl.style.setProperty('transition', 'none', 'important');
+            currentStepEl.style.setProperty('transform', `translate3d(${deltaX}px, 0, 0)`, 'important');
 
-            adjacentStepEl.style.position = 'absolute';
-            adjacentStepEl.style.left = paddingLeft + 'px';
-            adjacentStepEl.style.top = paddingTop + 'px';
-            adjacentStepEl.style.width = stepWidth + 'px';
-            adjacentStepEl.style.transition = 'none';
+            adjacentStepEl.style.setProperty('position', 'absolute', 'important');
+            adjacentStepEl.style.setProperty('left', paddingLeft + 'px', 'important');
+            adjacentStepEl.style.setProperty('top', paddingTop + 'px', 'important');
+            adjacentStepEl.style.setProperty('width', stepWidth + 'px', 'important');
+            adjacentStepEl.style.setProperty('transition', 'none', 'important');
 
             if (direction === 'next') {
-                adjacentStepEl.style.transform = `translate3d(${stepWidth + deltaX}px, 0, 0)`;
+                adjacentStepEl.style.setProperty('transform', `translate3d(${stepWidth + deltaX}px, 0, 0)`, 'important');
             } else {
-                adjacentStepEl.style.transform = `translate3d(${-stepWidth + deltaX}px, 0, 0)`;
+                adjacentStepEl.style.setProperty('transform', `translate3d(${-stepWidth + deltaX}px, 0, 0)`, 'important');
             }
         }
     }, { passive: false });
@@ -389,44 +401,57 @@ function initializeHorizontalSwipeNavigation(settingsContentWrapper) {
 
         if (shouldComplete) {
             // Animate transition to finish line with exact pixel snap bounds
-            currentStepEl.style.transition = 'transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-            adjacentStepEl.style.transition = 'transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            currentStepEl.style.setProperty('transition', 'transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)', 'important');
+            adjacentStepEl.style.setProperty('transition', 'transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)', 'important');
 
             if (direction === 'next') {
-                currentStepEl.style.transform = `translate3d(${-stepWidth}px, 0, 0)`;
-                adjacentStepEl.style.transform = 'translate3d(0, 0, 0)';
+                currentStepEl.style.setProperty('transform', `translate3d(${-stepWidth}px, 0, 0)`, 'important');
+                adjacentStepEl.style.setProperty('transform', 'translate3d(0, 0, 0)', 'important');
             } else {
-                currentStepEl.style.transform = `translate3d(${stepWidth}px, 0, 0)`;
-                adjacentStepEl.style.transform = 'translate3d(0, 0, 0)';
+                currentStepEl.style.setProperty('transform', `translate3d(${stepWidth}px, 0, 0)`, 'important');
+                adjacentStepEl.style.setProperty('transform', 'translate3d(0, 0, 0)', 'important');
             }
 
             // Perform actual step state change after animation completes
-            transitionTimeout = setTimeout(() => {
-                transitionTimeout = null;
-                // Navigate without direction to prevent conflict CSS animations!
+            const completeTransition = () => {
                 navigateSettingsModalToStep(adjacentStepName, null);
                 cleanupStyles();
+                pendingCompletionFn = null;
+            };
+            pendingCompletionFn = completeTransition;
+            transitionTimeout = setTimeout(() => {
+                transitionTimeout = null;
+                if (pendingCompletionFn) {
+                    pendingCompletionFn();
+                }
             }, 200);
         } else {
             // Animate snap back to original positions
-            currentStepEl.style.transition = 'transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-            adjacentStepEl.style.transition = 'transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            currentStepEl.style.setProperty('transition', 'transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)', 'important');
+            adjacentStepEl.style.setProperty('transition', 'transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)', 'important');
 
-            currentStepEl.style.transform = 'translate3d(0, 0, 0)';
+            currentStepEl.style.setProperty('transform', 'translate3d(0, 0, 0)', 'important');
             if (direction === 'next') {
-                adjacentStepEl.style.transform = `translate3d(${stepWidth}px, 0, 0)`;
+                adjacentStepEl.style.setProperty('transform', `translate3d(${stepWidth}px, 0, 0)`, 'important');
             } else {
-                adjacentStepEl.style.transform = `translate3d(${-stepWidth}px, 0, 0)`;
+                adjacentStepEl.style.setProperty('transform', `translate3d(${-stepWidth}px, 0, 0)`, 'important');
             }
 
             // Restore hidden state and clean up styles after animation completes
-            transitionTimeout = setTimeout(() => {
-                transitionTimeout = null;
+            const rollbackTransition = () => {
                 if (adjacentStepEl) {
                     adjacentStepEl.classList.add('hidden');
                     adjacentStepEl.classList.remove('active');
                 }
                 cleanupStyles();
+                pendingCompletionFn = null;
+            };
+            pendingCompletionFn = rollbackTransition;
+            transitionTimeout = setTimeout(() => {
+                transitionTimeout = null;
+                if (pendingCompletionFn) {
+                    pendingCompletionFn();
+                }
             }, 200);
         }
     }, { passive: true });

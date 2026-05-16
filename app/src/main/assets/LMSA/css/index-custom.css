@@ -4692,6 +4692,10 @@ body.light-theme #settings-modal > .modal-content > .flex.flex-col {
     box-shadow: none !important;
 }
 
+#settings-modal .settings-step.hidden {
+    display: none !important;
+}
+
 #settings-modal .settings-step.active {
     display: grid !important;
     gap: 12px !important;

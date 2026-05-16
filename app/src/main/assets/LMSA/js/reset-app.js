@@ -56,94 +56,37 @@ export function resetApp() {
         }
 
         // 2. Clear all saved settings - comprehensive localStorage clear
-        const itemsToRemove = [
-            'systemPrompt',
-            'isUserCreatedSystemPrompt',
-            'savedSystemPrompts',
-            'temperature',
-            'maxTokens',
-            'hideThinking',
-            'autoGenerateTitles',
-            'serverIp',
-            'serverPort',
-            'lastActiveChatId',
-            'refreshDueToCodeGeneration',
-            'whatsNewDontShow',
-            'whatsNewSeen',
-            'whatsNewSeenVersion',
-            'whatsNewNeverShow',
-            'whatsNewAutoShownVersion',
-            'whatsNewDismissedVersion',
-            'reasoningTimeout',
-            'useOpenRouter',
-            'openRouterApiKey',
-            'openRouterSelectedModel',
-            'useOpenAICompatible',
-            'openAICompatibleEndpoint',
-            'openAICompatibleApiKey',
-            'openAICompatibleManualModel',
-            'openAICompatibleSelectedModel',
-            'savedConnectionPresets'
-        ];
-
         console.log('RESET APP: Clearing localStorage items...');
-        itemsToRemove.forEach(item => {
-            try {
-                if (isUsageLimitKey(item)) {
-                    console.log(`RESET APP: Preserved usage key: ${item}`);
-                    return;
-                }
-                localStorage.removeItem(item);
-                console.log(`RESET APP: Removed ${item}`);
-            } catch (error) {
-                console.error(`RESET APP: Error removing ${item}:`, error);
-            }
-        });
-
-        // 3. Also clear any chat history data
-        try {
-            const chatKeys = Object.keys(localStorage).filter(key => key.startsWith('chat_'));
-            chatKeys.forEach(key => {
-                localStorage.removeItem(key);
-                console.log(`RESET APP: Removed chat data: ${key}`);
-            });
-
-            // Clear native storage
-            if (window.AndroidFileOps && typeof window.AndroidFileOps.deleteData === 'function') {
-                window.AndroidFileOps.deleteData('chatHistory');
-                window.AndroidFileOps.deleteData('savedSystemPrompts');
-                window.AndroidFileOps.deleteData('savedConnectionPresets');
-                console.log('RESET APP: Cleared chat history from Android internal storage');
-            }
-        } catch (error) {
-            console.error('RESET APP: Error clearing chat data:', error);
-        }
-
-        // 4. Clear any other app-specific localStorage keys
         try {
             const allKeys = Object.keys(localStorage);
             console.log('RESET APP: All localStorage keys before cleanup:', allKeys);
             
-            // Remove any keys that might be app-specific
-            const appKeys = allKeys.filter(key => 
-                key.includes('lmsa') || 
-                key.includes('chat') || 
-                key.includes('model') ||
-                key.includes('prompt') ||
-                key.includes('theme') ||
-                key.includes('settings')
-            );
-            
-            appKeys.forEach(key => {
+            allKeys.forEach(key => {
                 if (isUsageLimitKey(key)) {
                     console.log(`RESET APP: Preserved usage key: ${key}`);
                     return;
                 }
-                localStorage.removeItem(key);
-                console.log(`RESET APP: Removed app key: ${key}`);
+                try {
+                    localStorage.removeItem(key);
+                    console.log(`RESET APP: Removed key: ${key}`);
+                } catch (error) {
+                    console.error(`RESET APP: Error removing ${key}:`, error);
+                }
             });
         } catch (error) {
-            console.error('RESET APP: Error clearing additional app keys:', error);
+            console.error('RESET APP: Error clearing localStorage keys:', error);
+        }
+
+        // 3. Clear native storage
+        try {
+            if (window.AndroidFileOps && typeof window.AndroidFileOps.deleteData === 'function') {
+                window.AndroidFileOps.deleteData('chatHistory');
+                window.AndroidFileOps.deleteData('savedSystemPrompts');
+                window.AndroidFileOps.deleteData('savedConnectionPresets');
+                console.log('RESET APP: Cleared app data from Android internal storage');
+            }
+        } catch (error) {
+            console.error('RESET APP: Error clearing native app data:', error);
         }
 
         console.log('RESET APP: LocalStorage clearing complete, initiating page reload...');
