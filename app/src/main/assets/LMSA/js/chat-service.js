@@ -1328,7 +1328,12 @@ function appendRequestSystemPrompts(targetMessages, baseSystemPrompt, shouldInli
 }
 
 function shouldUseLmStudioNativeApi() {
-    return isLocalLmStudioProvider() && !getUseOllama() && (hasLMStudioMcpIntegrations() || getContextLength() > 0);
+    // Force native API for:
+    // 1. MCP integrations
+    // 2. Custom context length settings
+    // 3. Local vision models (for better multi-modal handling)
+    const isLocal = isLocalLmStudioProvider() && !getUseOllama();
+    return isLocal && (hasLMStudioMcpIntegrations() || getContextLength() > 0 || (window.currentModelIsVision === true));
 }
 
 function buildNativeSystemPrompt(shouldInlineChatTitle) {
@@ -1403,16 +1408,22 @@ function buildNativeInputFromContent(content, transcriptPrefix = '') {
         content.forEach(part => {
             if (part?.type === 'text') {
                 const textValue = part.text || '';
-                if (textValue || transcriptPrefix) {
-                    items.push({
-                        type: 'message',
-                        content: hasTextItem || !transcriptPrefix
-                            ? textValue
-                            : `${transcriptPrefix}${textValue ? `\n${textValue}` : ''}`.trim()
-                    });
-                    hasTextItem = true;
+                if (textValue || (!hasTextItem && transcriptPrefix)) {
+                    // Prepend transcript to the first text item
+                    const finalContent = (!hasTextItem && transcriptPrefix)
+                        ? `${transcriptPrefix}${textValue ? `\n${textValue}` : ''}`.trim()
+                        : textValue;
+
+                    if (finalContent) {
+                        items.push({
+                            type: 'message',
+                            content: finalContent
+                        });
+                        hasTextItem = true;
+                    }
                 }
             } else if (part?.type === 'image_url' && part.image_url?.url) {
+                // LM Studio v1 Native API often expects this segment format for images
                 items.push({
                     type: 'image',
                     data_url: part.image_url.url
@@ -1420,6 +1431,7 @@ function buildNativeInputFromContent(content, transcriptPrefix = '') {
             }
         });
 
+        // If no text items were added but we have a transcript prefix, add it as a message
         if (!hasTextItem && transcriptPrefix) {
             items.unshift({
                 type: 'message',
@@ -3156,10 +3168,11 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
             // Check if this is a vision model that can handle images
             let isVisionModel = false;
             try {
-                const { isVisionModel: checkVisionModel } = await import('./file-upload.js');
-                isVisionModel = await checkVisionModel();
-                console.log('Vision model check result:', isVisionModel);
+                isVisionModel = await import('./file-upload.js').then(m => m.isVisionModel());
+                window.currentModelIsVision = isVisionModel;
+                console.log(`Vision model check result: ${isVisionModel}`);
             } catch (error) {
+
                 console.error('Error checking vision model capability:', error);
             }
 
@@ -3179,32 +3192,25 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                 const content = [
                     {
                         type: "text",
-                        text: messages[lastUserMessageIndex].content
+                        text: messages[lastUserMessageIndex].content || ""
                     }
                 ];
 
                 // Add images to the content array
                 for (const imageFile of imageFiles) {
                     if (imageFile.content && imageFile.content.startsWith('data:')) {
-                        // Handle WebP images by converting them to PNG if needed
                         let imageUrl = imageFile.content;
 
-                        // Check if this is a WebP image
                         if (imageFile.content.startsWith('data:image/webp')) {
                             try {
-                                // Import the conversion function
                                 const { convertWebPToPNG } = await import('./file-upload.js');
-                                // Convert WebP to PNG for better compatibility
                                 imageUrl = await convertWebPToPNG(imageFile.content);
-                                console.log(`Converted WebP image ${imageFile.name} to PNG for API compatibility`);
                             } catch (conversionError) {
                                 console.warn(`Failed to convert WebP image ${imageFile.name}, using original:`, conversionError);
-                                // Fall back to original WebP if conversion fails
                                 imageUrl = imageFile.content;
                             }
                         }
 
-                        // Validate and clean the base64 data URL
                         try {
                             const { validateBase64DataURL } = await import('./file-upload.js');
                             imageUrl = validateBase64DataURL(imageUrl);
@@ -3212,19 +3218,14 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                             console.warn(`Failed to validate base64 data URL for ${imageFile.name}:`, validationError);
                         }
 
-                        // Final validation before adding to request
-                        if (!imageUrl || !imageUrl.startsWith('data:')) {
-                            console.error(`Invalid image URL for ${imageFile.name}:`, imageUrl?.substring(0, 100));
-                            continue; // Skip this image
+                        if (imageUrl && imageUrl.startsWith('data:')) {
+                            content.push({
+                                type: "image_url",
+                                image_url: {
+                                    url: imageUrl
+                                }
+                            });
                         }
-
-                        content.push({
-                            type: "image_url",
-                            image_url: {
-                                url: imageUrl
-                            }
-                        });
-                        console.log(`Added image to vision model request: ${imageFile.name} (${imageUrl.startsWith('data:image/png') ? 'PNG' : imageUrl.startsWith('data:image/webp') ? 'WebP' : 'other'} format, ${imageUrl.length} chars)`);
                     }
                 }
 
@@ -3234,18 +3235,23 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                         const { prepareFilesForLLM } = await import('./file-upload.js');
                         const formattedFileContent = await prepareFilesForLLM(nonImageFiles);
 
-                        if (formattedFileContent.trim()) {
-                            content[0].text += `\n\n${formattedFileContent}`;
+                        if (formattedFileContent && formattedFileContent.trim()) {
+                            content[0].text = (content[0].text + `\n\n${formattedFileContent}`).trim();
                         }
                     } catch (importError) {
                         console.warn('Could not import prepareFilesForLLM for non-image files:', importError);
                     }
                 }
 
-                // Replace the content with the new format
-                messages[lastUserMessageIndex].content = content;
-
-                console.log(`Vision model message prepared with ${imageFiles.length} image(s) and ${nonImageFiles.length} text file(s)`);
+                // Fallback: If no images were actually added, just use the plain text
+                // This prevents compatibility issues with models that claim vision but expect strings for pure text
+                if (content.length === 1 && content[0].type === "text") {
+                    messages[lastUserMessageIndex].content = content[0].text;
+                    console.log("No images detected; falling back to plain text format for better compatibility.");
+                } else {
+                    messages[lastUserMessageIndex].content = content;
+                    console.log(`Vision model message prepared with ${content.length - 1} image(s) and ${nonImageFiles.length} text file(s)`);
+                }
             } else {
                 // For non-vision models, embed all file contents as text
                 const lastUserMessageIndex = messages.length - 1;
@@ -3939,9 +3945,27 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
                 } else {
                     debugLog('Suppressing "No models available" error during initial startup');
                 }
+            } else if (error.message && (
+                error.message.toLowerCase().includes('messages field is required') || 
+                error.message.toLowerCase().includes('unrecognized key') ||
+                error.message.toLowerCase().includes('invalid parameter')
+            )) {
+                appendMessage('error', 
+                    '<div class="error-message-content">' +
+                    '<div class="error-title">Model Compatibility Issue</div>' +
+                    '<div class="error-body">' +
+                    'The current model (<strong>' + getSelectedModel() + '</strong>) appears to be incompatible with the attached file(s) or the current request format.<br><br>' +
+                    'Try the following:<br>' +
+                    '• <strong>Remove the files</strong> and try sending just text<br>' +
+                    '• <strong>Switch models</strong> in the sidebar to one that explicitly supports vision or large files<br>' +
+                    '• Check your <strong>Server IP and Port</strong> in Settings to ensure you are connected to the right instance' +
+                    '</div>' +
+                    '</div>'
+                );
             } else {
                 appendMessage('error', `An error occurred: ${error.message}`);
             }
+
 
             // Show send button again in case of error
             hideLoadingIndicator();

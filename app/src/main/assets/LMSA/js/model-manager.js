@@ -18,6 +18,7 @@ import { fetchAvailableModels, getAvailableModels, isServerRunning, loadModel as
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
 import { getDefaultModelId, setDefaultModelId, getUseOpenRouter, getUseOpenAICompatible } from './settings-manager.js';
 
+
 // Flag to track if a model is actually loaded
 let isModelLoaded = false;
 // Flag to track if a model is currently loading
@@ -355,14 +356,16 @@ async function loadModelInformation(silent = false) {
                 }
             }
 
+            let loadedModelInfo = null;
             if (currentlyLoadedModelId) {
                 // Verify API-reported model exists in the latest list
-                const loadedModelInfo = allAvailableModels.find(model => model.id === currentlyLoadedModelId);
+                loadedModelInfo = allAvailableModels.find(model => model.id === currentlyLoadedModelId);
                 if (!loadedModelInfo) {
                     console.log('API-reported model not found in available models list');
                     currentlyLoadedModelId = null;
                 }
             }
+
 
             // Now update the UI with consistent model information
             if (currentlyLoadedModelId) {
@@ -555,6 +558,7 @@ async function updateModelDisplay(modelId) {
                 if (allAvailableModels.length > 0) {
                     displayAvailableModels(allAvailableModels, displayModelId);
                 }
+
 
                 // Update the current banner if it exists
                 const { updateFileUploadCapabilities } = await import('./file-upload.js');

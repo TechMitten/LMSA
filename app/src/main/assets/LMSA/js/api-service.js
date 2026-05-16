@@ -1,9 +1,10 @@
-// API Service for interacting with LM Studio and other AI providers
 import { 
     serverIpInput, 
     serverPortInput, 
     loadedModelDisplay 
 } from './dom-elements.js';
+import { showToastNotice } from './toast-notice.js';
+
 import { 
     getLMStudioApiToken, 
     getUseOllama, 
@@ -632,8 +633,10 @@ function setPersistedLocalSelectedModel(modelId) {
 
 /**
  * Returns the base API URL for the current provider
+ * @param {Object} options - Optional parameters
+ * @param {boolean} options.preferNativeLmStudio - Force LM Studio native endpoint
  */
-export function getApiUrl() {
+export function getApiUrl(options = {}) {
     if (getUseOpenRouter()) {
         return 'https://openrouter.ai/api/v1/chat/completions';
     }
@@ -641,27 +644,57 @@ export function getApiUrl() {
         const url = localStorage.getItem('customOpenAIBaseUrl') || '';
         return url.includes('/chat/completions') ? url : `${url}/chat/completions`.replace(/\/\/chat/, '/chat');
     }
-    const ip = serverIpInput?.value.trim();
-    const port = serverPortInput?.value.trim();
+    const ipInput = serverIpInput || document.getElementById('server-ip');
+    const portInput = serverPortInput || document.getElementById('server-port');
+    const ip = ipInput?.value?.trim();
+    const port = portInput?.value?.trim();
     if (!ip || !port) return '';
+
+    // If context length is customized or native is explicitly requested, use the Native v1 endpoint
+    if (options.preferNativeLmStudio || getContextLength() > 0) {
+        return `http://${ip}:${port}/api/v1/chat`;
+    }
+    
     return `http://${ip}:${port}/v1/chat/completions`;
 }
+
+
 
 /**
  * Validates the IP and Port inputs
  */
 export function validateIpPort(ip, port) {
-    if (!ip || !port) return false;
-    const portNum = parseInt(port, 10);
-    return portNum > 0 && portNum <= 65535;
+    const finalIp = ip || serverIpInput?.value.trim();
+    const finalPort = port || serverPortInput?.value.trim();
+
+    if (!finalIp || !finalPort) {
+        if (!ip && !port) {
+            showToastNotice({ message: 'IP and Port are required.', tone: 'error' });
+        }
+        return false;
+    }
+
+    const portNum = parseInt(finalPort, 10);
+    const isValid = portNum > 0 && portNum <= 65535;
+
+    if (!isValid && !ip && !port) {
+        showToastNotice({ message: 'Invalid Port number (1-65535).', tone: 'error' });
+    }
+
+    return isValid;
 }
+
 
 /**
  * Saves server settings to localStorage
  */
 export function saveServerSettings() {
-    const ip = serverIpInput?.value.trim();
-    const port = serverPortInput?.value.trim();
+    const ipInput = serverIpInput || document.getElementById('server-ip');
+    const portInput = serverPortInput || document.getElementById('server-port');
+    
+    const ip = ipInput?.value?.trim();
+    const port = portInput?.value?.trim();
+    
     if (ip) localStorage.setItem('serverIp', ip);
     if (port) localStorage.setItem('serverPort', port);
 }
@@ -672,11 +705,16 @@ export function saveServerSettings() {
 export function loadServerSettings() {
     const ip = localStorage.getItem('serverIp');
     const port = localStorage.getItem('serverPort');
-    if (ip && serverIpInput) serverIpInput.value = ip;
-    if (port && serverPortInput) serverPortInput.value = port;
+    
+    const ipInput = serverIpInput || document.getElementById('server-ip');
+    const portInput = serverPortInput || document.getElementById('server-port');
+    
+    if (ip && ipInput) ipInput.value = ip;
+    if (port && portInput) portInput.value = port;
     
     // Initial fetch to populate model list
     fetchAvailableModels().catch(() => {});
 }
+
 
 

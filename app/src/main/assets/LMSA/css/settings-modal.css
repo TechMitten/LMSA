@@ -1573,13 +1573,71 @@ body.light-theme #settings-modal button[id^="to-"]:hover {
     padding: 0;
 }
 
-/* Disabled state for temperature slider */
+/* Disabled state for range sliders */
 #settings-modal input[type="range"]:disabled {
   background: #6b7280 !important;
   cursor: not-allowed !important;
   opacity: 0.6 !important;
   pointer-events: none !important;
 }
+
+/* Slider container for context length */
+.settings-slider-container {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0 0.5rem;
+}
+
+.settings-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.settings-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  outline: none;
+  margin: 10px 0;
+}
+
+
+.settings-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+  transition: all 0.2s ease;
+}
+
+.settings-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+}
+
+.settings-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+  transition: all 0.2s ease;
+}
+
 
 #settings-modal input[type="range"]:disabled::-webkit-slider-thumb {
   background: #9ca3af !important;

@@ -1,0 +1,21 @@
+4300:#chat-form .chat-input-actions,
+4301:body.keyboard-visible #chat-form .chat-input-actions,
+4302:.android-webview #chat-form .chat-input-actions,
+4303:.android-webview.keyboard-visible #chat-form .chat-input-actions {
+4314:#chat-form .chat-input-actions #image-prompt-button,
+4315:#chat-form .chat-input-actions #paperclip-button,
+4316:body.keyboard-visible #chat-form .chat-input-actions #image-prompt-button,
+4317:body.keyboard-visible #chat-form .chat-input-actions #paperclip-button,
+4318:.android-webview #chat-form .chat-input-actions #image-prompt-button,
+4319:.android-webview #chat-form .chat-input-actions #paperclip-button,
+4320:.android-webview.keyboard-visible #chat-form .chat-input-actions #image-prompt-button,
+4321:.android-webview.keyboard-visible #chat-form .chat-input-actions #paperclip-button {
+4336:#chat-form .chat-input-actions #image-prompt-button:hover,
+4337:#chat-form .chat-input-actions #paperclip-button:hover,
+4338:#chat-form .chat-input-actions #image-prompt-button.active,
+4339:#chat-form .chat-input-actions #paperclip-button.active {
+4343:body.light-theme #chat-form .chat-input-actions #image-prompt-button:hover,
+4344:body.light-theme #chat-form .chat-input-actions #paperclip-button:hover,
+4345:body.light-theme #chat-form .chat-input-actions #image-prompt-button.active,
+4346:body.light-theme #chat-form .chat-input-actions #paperclip-button.active {
+7449:    #chat-form .chat-input-actions {

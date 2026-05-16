@@ -12,10 +12,13 @@ import {
   openAICompatibleApiKeyInput,
   showModelLabelCheckbox,
   modeIndicator,
+  serverIpInput,
+  serverPortInput,
   contextLengthInput,
   contextLengthValue,
   clearContextLengthButton
 } from "./dom-elements.js";
+
 
 import { applyThinkingVisibility, refreshAllMessages, applyModelLabelVisibility } from "./ui-manager.js";
 import { refreshChatScrollbar } from "./chat-scrollbar.js";
@@ -23,6 +26,9 @@ import { debugLog, refreshAllCodeBlocks } from "./utils.js";
 import { showSmartReplyWarningModal } from "./components/modals/smart-reply-warning-modal.js";
 import { showOpenRouterWarningModal } from "./components/modals/openrouter-warning-modal.js";
 import { showWebSearchWarningModal } from "./components/modals/web-search-warning-modal.js";
+import { showToastNotice } from "./toast-notice.js";
+
+
 
 // Helper to get biometric bridge (supports both AndroidBiometrics and AndroidBiometric names)
 function getBiometricBridge() {
@@ -795,84 +801,148 @@ export function loadHideThinkingSetting() {
 }
 
 export function loadContextLengthSetting() {
-  if (!contextLengthInput) {
+  const input = contextLengthInput || document.getElementById('context-length-input');
+  const valueDisplay = contextLengthValue || document.getElementById('context-length-value');
+  
+  if (!input) {
     return;
   }
+
 
   const savedContextLength = localStorage.getItem("contextLength");
   contextLength = parseStoredMaxTokens(savedContextLength);
 
-  updateContextLengthUI(contextLengthInput, contextLengthValue);
+  updateContextLengthUI(input, valueDisplay);
 
-  if (contextLengthInput.dataset.contextLengthListenerAttached !== "true") {
-    contextLengthInput.addEventListener("beforeinput", handleMaxTokensBeforeInput);
-    contextLengthInput.addEventListener("paste", handleMaxTokensPaste);
-    contextLengthInput.addEventListener("input", saveContextLengthSetting);
-    contextLengthInput.addEventListener("change", saveContextLengthSetting);
-    contextLengthInput.dataset.contextLengthListenerAttached = "true";
+  if (input.dataset.contextLengthListenerAttached !== "true") {
+    input.addEventListener("input", () => {
+        updateContextLengthUI(input, valueDisplay, parseInt(input.value, 10));
+    });
+    input.addEventListener("change", saveContextLengthSetting);
+    input.dataset.contextLengthListenerAttached = "true";
   }
 
-  if (clearContextLengthButton && clearContextLengthButton.dataset.contextLengthClearListenerAttached !== "true") {
-    clearContextLengthButton.addEventListener("click", () => {
+
+  const clearBtn = clearContextLengthButton || document.getElementById('clear-context-length-btn');
+  if (clearBtn && clearBtn.dataset.contextLengthClearListenerAttached !== "true") {
+    clearBtn.addEventListener("click", () => {
       contextLength = 0;
       localStorage.removeItem("contextLength");
-      updateContextLengthUI(contextLengthInput, contextLengthValue);
+      updateContextLengthUI(input, valueDisplay);
     });
-    clearContextLengthButton.dataset.contextLengthClearListenerAttached = "true";
-  }
-}
-
-export function saveContextLengthSetting() {
-  if (!contextLengthInput) {
-    return;
-  }
-
-  const rawValue = normalizeMaxTokensInputValue(contextLengthInput).trim();
-
-  if (rawValue === "") {
-    contextLength = 0;
-    localStorage.removeItem("contextLength");
-    updateContextLengthUI(contextLengthInput, contextLengthValue);
-    return;
-  }
-
-  let parsedValue = parseStoredMaxTokens(rawValue);
-
-  // Enforce a minimum context length of 256 if the user specifies a very low value (like 1)
-  // which often causes LM Studio to fail initialization.
-  if (parsedValue > 0 && parsedValue < 256) {
-    console.warn(`Context length ${parsedValue} is too low for LM Studio. Enforcing minimum 256.`);
-    parsedValue = 256;
-    if (contextLengthInput) {
-        contextLengthInput.value = "256";
-    }
-  }
-
-  if (parsedValue === 0) {
-    updateContextLengthUI(contextLengthInput, contextLengthValue);
-    return;
-  }
-
-  contextLength = parsedValue;
-  localStorage.setItem("contextLength", String(contextLength));
-  updateContextLengthUI(contextLengthInput, contextLengthValue);
-}
-
-function updateContextLengthUI(input, valueDisplay) {
-  const hasCustomValue = Number.isInteger(contextLength) && contextLength > 0;
-
-  if (input) {
-    input.value = hasCustomValue ? String(contextLength) : "";
-  }
-
-  if (valueDisplay) {
-    valueDisplay.textContent = hasCustomValue ? String(contextLength) : "Server Default";
+    clearBtn.dataset.contextLengthClearListenerAttached = "true";
   }
 }
 
 /**
+ * Saves the context length setting to localStorage
+ */
+export function saveContextLengthSetting() {
+  const input = contextLengthInput || document.getElementById('context-length-input');
+  if (!input) {
+    return;
+  }
+  
+  let parsedValue = parseInt(input.value, 10) || 0;
+
+  // Enforce a minimum context length of 256 if the user specifies a very low value (like 1)
+  // which often causes LM Studio to fail initialization.
+  // The slider step is 256, so this is mainly a safety check.
+  if (parsedValue > 0 && parsedValue < 256) {
+    parsedValue = 256;
+    input.value = "256";
+  }
+  
+  contextLength = parsedValue;
+  localStorage.setItem("contextLength", String(contextLength));
+  
+  const valueDisplay = contextLengthValue || document.getElementById('context-length-value');
+  updateContextLengthUI(input, valueDisplay);
+  
+  // Removed automatic reload. Context length will be sent with chat requests instead.
+  // triggerModelReloadIfPossible();
+}
+
+
+function updateContextLengthUI(input, valueDisplay, overrideValue) {
+  // Use overrideValue if provided (e.g. during slider dragging), otherwise use global contextLength
+  const effectiveValue = overrideValue !== undefined ? overrideValue : contextLength;
+  const hasCustomValue = effectiveValue > 0;
+
+  if (input && overrideValue === undefined) {
+    input.value = String(effectiveValue);
+  }
+
+  if (valueDisplay) {
+    valueDisplay.textContent = hasCustomValue ? String(effectiveValue) : "Server Default";
+  }
+}
+
+
+// Global callbacks for Android bridge
+window.onModelReloadSuccess = function(ctx) {
+    console.log(`Model successfully reloaded with ${ctx} context`);
+    const loadingModal = document.getElementById('model-loading-modal');
+    if (loadingModal) {
+        loadingModal.classList.add('hidden');
+        loadingModal.classList.remove('flex');
+    }
+    showToastNotice({ message: `Context length updated to ${ctx} tokens.`, tone: 'success' });
+};
+
+window.onModelReloadFailure = function(error) {
+    console.error(`Model reload failed: ${error}`);
+    const loadingModal = document.getElementById('model-loading-modal');
+    if (loadingModal) {
+        loadingModal.classList.add('hidden');
+        loadingModal.classList.remove('flex');
+    }
+    showToastNotice({ message: `Failed to update context: ${error}`, tone: 'error' });
+};
+
+function triggerModelReloadIfPossible() {
+  const isCloud = typeof getUseOpenRouter === 'function' ? getUseOpenRouter() : false;
+  const isCustom = typeof getUseOpenAICompatible === 'function' ? getUseOpenAICompatible() : false;
+
+  if (isCloud || isCustom) {
+    const provider = isCloud ? 'OpenRouter' : 'Custom Endpoint';
+    console.log(`${provider} context limit set to: ${contextLength}`);
+    showToastNotice({ message: `${provider} context limit set to ${contextLength} tokens.`, tone: 'success' });
+    return;
+  }
+
+  if (window.AndroidLMStudio && window.currentLoadedModel) {
+    const ipInput = serverIpInput || document.getElementById('server-ip');
+    const portInput = serverPortInput || document.getElementById('server-port');
+    const ip = ipInput?.value?.trim();
+    const port = portInput?.value?.trim();
+    if (ip && port) {
+        // Show loading modal
+        const loadingModal = document.getElementById('model-loading-modal');
+        if (loadingModal) {
+            const title = document.getElementById('model-loading-title');
+            const message = document.getElementById('model-loading-message');
+            const name = document.getElementById('model-loading-name');
+            if (title) title.textContent = 'Updating Context';
+            if (message) message.textContent = 'Reconfiguring model with new context length...';
+            if (name) name.textContent = window.currentLoadedModel;
+            loadingModal.classList.remove('hidden');
+            loadingModal.classList.add('flex');
+        }
+
+        console.log(`Triggering model reload for ${window.currentLoadedModel} with context ${contextLength}`);
+        window.AndroidLMStudio.updateModelContext(ip, port, window.currentLoadedModel, contextLength);
+    }
+  }
+}
+
+
+
+
+/**
  * Saves the hide thinking setting to localStorage
  */
+
 export function saveHideThinkingSetting() {
   if (hideThinkingCheckbox) {
     hideThinking = hideThinkingCheckbox.checked;

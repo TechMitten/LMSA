@@ -1230,6 +1230,37 @@ body.light-theme .welcome-action-card span {
     border-radius: 3px;
 }
 
+/* Force placeholder to be on a single line with ellipsis if overflowed */
+#user-input::placeholder {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+#user-input::-webkit-input-placeholder {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+#user-input::-moz-placeholder {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+#user-input:-ms-input-placeholder {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+#user-input::-ms-input-placeholder {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
 /* Loading spinner animation */
 @keyframes spin-loader {
     0% {
@@ -7439,5 +7470,46 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
 
     #settings-modal .settings-item-description {
         max-width: none !important;
+    }
+
+    /* Fix chat input icons gap on tablets */
+    #chat-form #user-input {
+        padding-right: 7.25rem !important;
+    }
+
+    #chat-form .chat-input-actions {
+        gap: 1.25rem !important;
+        right: 1.25rem !important;
+    }
+}
+
+/* Global Tablet Fix for 1024px resolution - Using broader range and extreme specificity */
+@media screen and (max-width: 1025px) {
+    html body #chat-form .chat-input-actions,
+    html body.light-theme #chat-form .chat-input-actions,
+    html body.keyboard-visible #chat-form .chat-input-actions,
+    html body.android-webview #chat-form .chat-input-actions {
+        display: flex !important;
+        gap: 1.25rem !important;
+        right: 2rem !important; /* Moved significantly further left from the send button */
+        width: auto !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+    }
+
+    /* Fallback margin in case gap is not supported */
+    html body #chat-form .chat-input-actions button + button {
+        margin-left: 1.25rem !important;
+    }
+    
+    /* Add separation between input container and send button */
+    html body #chat-form button#send-button,
+    html body #chat-form button#stop-button {
+        margin-left: 1rem !important;
+    }
+    
+    html body #chat-form #user-input,
+    html body.light-theme #chat-form #user-input {
+        padding-right: 8rem !important; /* Increased to accommodate the further-left icons */
     }
 }

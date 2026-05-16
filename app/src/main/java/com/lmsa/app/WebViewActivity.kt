@@ -3082,19 +3082,20 @@ class WebViewActivity : AppCompatActivity() {
                     val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
                     connection.requestMethod = "POST"
                     connection.doOutput = true
-                    connection.connectTimeout = 10000
-                    connection.readTimeout = 10000
+                    // Increase timeouts significantly for large model/context reloads
+                    connection.connectTimeout = 180000 
+                    connection.readTimeout = 180000
                     connection.setRequestProperty("Content-Type", "application/json")
                     
+                    // Use 'model' and top-level keys for v1 API compatibility
                     val json = """
                         {
-                            "modelId": "$modelKey",
-                            "config": {
-                                "contextLength": $contextValue,
-                                "gpuOffload": "max"
-                            }
+                            "model": "$modelKey",
+                            "context_length": $contextValue,
+                            "gpu_offload": "max"
                         }
                     """.trimIndent()
+
 
                     connection.outputStream.use { it.write(json.toByteArray()) }
 
@@ -3108,17 +3109,18 @@ class WebViewActivity : AppCompatActivity() {
                         val error = connection.errorStream?.bufferedReader()?.use { it.readText() } ?: "Unknown error"
                         Log.e(TAG, "LMStudio: Reload failed (HTTP $responseCode): $error")
                         runOnUiThread {
-                            webView.evaluateJavascript("if(window.onModelReloadFailure) window.onModelReloadFailure('$error');", null)
+                            webView.evaluateJavascript("if(window.onModelReloadFailure) window.onModelReloadFailure('${error.replace("'", "\\'")}');", null)
                         }
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "LMStudio: Reload exception: ${e.message}")
                     runOnUiThread {
-                        webView.evaluateJavascript("if(window.onModelReloadFailure) window.onModelReloadFailure('${e.message}');", null)
+                        webView.evaluateJavascript("if(window.onModelReloadFailure) window.onModelReloadFailure('${e.message?.replace("'", "\\'")}');", null)
                     }
                 }
             }.start()
         }
+
     }
 }
 
