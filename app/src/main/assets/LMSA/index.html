@@ -579,14 +579,39 @@
                                 wrap="soft"
                                 style="background-color: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);"></textarea>
                             <div class="absolute chat-input-actions" style="top: 50%; right: 0.75rem; transform: translateY(-50%);">
-                                <button type="button" id="image-prompt-button" class="focus:outline-none p-1"
-                                    style="color: var(--text-muted);" aria-label="Start image prompt" title="Start image prompt">
-                                    <i class="fas fa-image"></i>
+                                <!-- Hidden legacy buttons to preserve JS compatibility -->
+                                <button type="button" id="image-prompt-button" class="hidden" style="display: none !important;" aria-hidden="true"></button>
+                                <button type="button" id="paperclip-button" class="hidden" style="display: none !important;" aria-hidden="true"></button>
+                                
+                                <!-- Modern Attachment Picker Trigger -->
+                                <button type="button" id="attachment-picker-button" class="focus:outline-none flex items-center justify-center"
+                                    style="color: var(--text-muted); width: 1.85rem; height: 1.85rem; border-radius: 999px; transition: all 0.2s ease;" 
+                                    aria-label="Open attachment menu" title="Add attachment or prompt">
+                                    <i class="fas fa-plus" style="transition: transform 0.25s ease;"></i>
                                 </button>
-                                <button type="button" id="paperclip-button" class="focus:outline-none p-1"
-                                    style="color: var(--text-muted);" aria-label="Upload files" title="Upload files">
-                                    <i class="fas fa-paperclip"></i>
-                                </button>
+
+                                <!-- Modern Floating Picker Menu -->
+                                <div id="attachment-picker-menu" class="absolute bottom-12 right-0 p-1.5 rounded-xl flex flex-col gap-1 shadow-2xl"
+                                    style="min-width: 210px; z-index: 2000;">
+                                    <button type="button" class="attachment-menu-item w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-all" data-action="file" style="background: transparent; border: none; cursor: pointer; display: flex; align-items: center; width: 100%;">
+                                        <div class="menu-item-icon-wrapper flex items-center justify-center rounded-lg bg-blue-500/10" style="width: 2.2rem; height: 2.2rem; min-width: 2.2rem; color: #60a5fa; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                                            <i class="fas fa-paperclip text-sm"></i>
+                                        </div>
+                                        <div class="flex flex-col" style="display: flex; flex-direction: column;">
+                                            <span class="text-sm font-semibold attachment-title" style="line-height: 1.2; font-size: 0.875rem; font-weight: 600; color: #f8fafc;">Attach File</span>
+                                            <span class="text-[10px] attachment-desc" style="line-height: 1.2; margin-top: 2px; font-size: 0.65rem; color: #94a3b8;">PDF, text, code, etc.</span>
+                                        </div>
+                                    </button>
+                                    <button type="button" class="attachment-menu-item w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-all" data-action="image" style="background: transparent; border: none; cursor: pointer; display: flex; align-items: center; width: 100%;">
+                                        <div class="menu-item-icon-wrapper flex items-center justify-center rounded-lg bg-purple-500/10" style="width: 2.2rem; height: 2.2rem; min-width: 2.2rem; color: #c084fc; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                                            <i class="fas fa-image text-sm"></i>
+                                        </div>
+                                        <div class="flex flex-col" style="display: flex; flex-direction: column;">
+                                            <span class="text-sm font-semibold attachment-title" style="line-height: 1.2; font-size: 0.875rem; font-weight: 600; color: #f8fafc;">Generate Image</span>
+                                            <span class="text-[10px] attachment-desc" style="line-height: 1.2; margin-top: 2px; font-size: 0.65rem; color: #94a3b8;">Draw with AI /image</span>
+                                        </div>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <button type="submit" id="send-button"
@@ -1275,6 +1300,82 @@
                 window.location.href = 'templates.html';
             }, 400);
         }
+    </script>
+
+    <!-- Modern Attachment Picker Controller -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const pickerBtn = document.getElementById('attachment-picker-button');
+            const pickerMenu = document.getElementById('attachment-picker-menu');
+            const legacyImageBtn = document.getElementById('image-prompt-button');
+            const legacyPaperclipBtn = document.getElementById('paperclip-button');
+
+            if (!pickerBtn || !pickerMenu) return;
+
+            const toggleMenu = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const isOpen = pickerMenu.classList.contains('active');
+                if (isOpen) {
+                    closeMenu();
+                } else {
+                    openMenu();
+                }
+            };
+
+            const openMenu = () => {
+                pickerMenu.classList.add('active');
+                pickerBtn.classList.add('active');
+            };
+
+            const closeMenu = () => {
+                pickerMenu.classList.remove('active');
+                pickerBtn.classList.remove('active');
+            };
+
+            pickerBtn.addEventListener('click', toggleMenu);
+
+            // Touch support for fast visual feedback on tablets/mobiles
+            pickerBtn.addEventListener('touchstart', (e) => {
+                pickerBtn.style.transform = 'scale(0.92)';
+            }, { passive: true });
+
+            pickerBtn.addEventListener('touchend', (e) => {
+                pickerBtn.style.transform = '';
+            }, { passive: true });
+
+            pickerMenu.querySelectorAll('.attachment-menu-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const action = item.getAttribute('data-action');
+                    closeMenu();
+                    
+                    if (action === 'file') {
+                        const fileInput = document.getElementById('file-upload-input');
+                        if (fileInput) {
+                            fileInput.click();
+                        }
+                    } else if (action === 'image' && legacyImageBtn) {
+                        legacyImageBtn.click();
+                    }
+                });
+            });
+
+            // Close menu on clicks outside
+            document.addEventListener('click', (e) => {
+                if (!pickerBtn.contains(e.target) && !pickerMenu.contains(e.target)) {
+                    closeMenu();
+                }
+            });
+
+            // Close menu on Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeMenu();
+                }
+            });
+        });
     </script>
 
 </body>
