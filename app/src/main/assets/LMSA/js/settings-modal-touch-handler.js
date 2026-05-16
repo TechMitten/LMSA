@@ -2,6 +2,7 @@
 import { settingsModal } from './dom-elements.js';
 import { debugLog } from './utils.js';
 import { navigateSettingsModalToStep } from './settings-modal-manager.js';
+import { getSwipeNavigationEnabled } from './settings-manager.js';
 
 /**
  * Initializes touch handling for the settings modal scrollable areas
@@ -76,12 +77,13 @@ export function initializeSettingsModalTouchHandler() {
     navigationButtons.forEach(buttonId => {
         const button = document.getElementById(buttonId);
         if (button) {
-            // Remove any existing event listeners by cloning and replacing
-            const newButton = button.cloneNode(true);
-            button.parentNode.replaceChild(newButton, button);
+            if (button.dataset.touchBound === 'true') {
+                return;
+            }
+            button.dataset.touchBound = 'true';
 
-            // Add click event - this works for both mouse and touch after touchend
-            newButton.addEventListener('click', function (e) {
+            // Add click event - this works for both mouse and touch
+            button.addEventListener('click', function (e) {
                 // If currently swiping, do not trigger click action!
                 if (settingsContentWrapper && settingsContentWrapper.classList.contains('swiping')) {
                     e.preventDefault();
@@ -89,29 +91,7 @@ export function initializeSettingsModalTouchHandler() {
                     return;
                 }
                 debugLog(`Navigation button ${buttonId} clicked`);
-                // Don't stop propagation - let the click bubble normally
             });
-
-            // Add touchend handler with preventDefault to ensure the button action fires
-            // This is necessary because touch devices sometimes have issues with click events
-            newButton.addEventListener('touchend', function (e) {
-                // Ignore touchend if a swipe drag is currently in progress to prevent accidental activations
-                if (settingsContentWrapper && settingsContentWrapper.classList.contains('swiping')) {
-                    debugLog(`Navigation button ${buttonId} touchend ignored due to swipe`);
-                    if (e.cancelable) {
-                        e.preventDefault();
-                    }
-                    return;
-                }
-
-                debugLog(`Navigation button ${buttonId} touchend`);
-                // Prevent the default to avoid any ghost clicks (only when cancelable)
-                if (e.cancelable) {
-                    e.preventDefault();
-                }
-                // Trigger a click event to ensure the button action is performed
-                newButton.click();
-            }, { passive: false });
         }
     });
 
@@ -247,6 +227,11 @@ function initializeHorizontalSwipeNavigation(settingsContentWrapper) {
             if (pendingCompletionFn) {
                 pendingCompletionFn();
             }
+        }
+
+        if (!getSwipeNavigationEnabled()) {
+            isSwipeIgnored = true;
+            return;
         }
 
         if (e.touches.length > 1) {

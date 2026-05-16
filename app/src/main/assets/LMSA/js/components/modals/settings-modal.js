@@ -385,6 +385,18 @@ export const settingsModal = `
                             <p class="settings-item-description">Prompts for fingerprint or PIN when opening the application.</p>
                         </div>
 
+                        <!-- Swipe Navigation -->
+                        <div class="settings-item settings-item-toggle" data-toggle-checkbox="swipe-navigation">
+                            <div class="settings-item-header">
+                                <label for="swipe-navigation" class="settings-item-label">
+                                    <i class="fas fa-arrows-alt-h"></i>Swipe Navigation
+                                </label>
+                                <input type="checkbox" id="swipe-navigation" class="settings-checkbox" aria-label="Toggle Settings Swipe Navigation">
+                                <span class="settings-status-badge" aria-hidden="true"></span>
+                            </div>
+                            <p class="settings-item-description">Enables horizontal swipe gestures to navigate between settings tabs.</p>
+                        </div>
+
                         <!-- TTS Voice -->
                         <div class="settings-item">
                             <div class="settings-item-header">

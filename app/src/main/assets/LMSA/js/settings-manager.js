@@ -11,6 +11,7 @@ import {
   openAICompatibleEndpointInput,
   openAICompatibleApiKeyInput,
   showModelLabelCheckbox,
+  swipeNavigationCheckbox,
   modeIndicator,
   serverIpInput,
   serverPortInput,
@@ -107,6 +108,7 @@ let chatFontFamily = 'system-ui, sans-serif'; // Font family for chat message bu
 let chatFontSize = '16px'; // Font size for chat message bubbles
 let requireBiometric = false; // Require biometric unlock on app start
 let webSearchEnabled = false;
+let swipeNavigationEnabled = false; // Swipe navigation is disabled by default
 const MODE_ACTIVITY_STORAGE_KEY = 'modeActivityByProvider';
 
 const ALLOWED_CHAT_FONT_SIZES = ['12px', '14px', '16px', '20px', '24px'];
@@ -1518,6 +1520,33 @@ export function getShowModelLabel() {
   return showModelLabel;
 }
 
+export function loadSwipeNavigationSetting() {
+  if (swipeNavigationCheckbox) {
+    const saved = localStorage.getItem("swipeNavigation");
+    if (saved === "true") {
+      swipeNavigationCheckbox.checked = true;
+      swipeNavigationEnabled = true;
+    } else {
+      swipeNavigationCheckbox.checked = false;
+      swipeNavigationEnabled = false;
+    }
+
+    // Add event listener for the checkbox
+    swipeNavigationCheckbox.addEventListener("change", saveSwipeNavigationSetting);
+  }
+}
+
+export function saveSwipeNavigationSetting() {
+  if (swipeNavigationCheckbox) {
+    swipeNavigationEnabled = swipeNavigationCheckbox.checked;
+    localStorage.setItem("swipeNavigation", swipeNavigationEnabled);
+  }
+}
+
+export function getSwipeNavigationEnabled() {
+  return swipeNavigationEnabled;
+}
+
 /**
  * Forces the app theme to dark mode.
  */
@@ -2700,6 +2729,7 @@ export function loadSettings() {
   loadLMStudioMcpIntegrationsSetting();
   loadShowModelLabelSetting();
   loadShowChatScrollbarSetting();
+  loadSwipeNavigationSetting();
   loadShowScrollToBottomSetting();
   loadChatFontSettings();
   // TTS voice selection will be initialized separately when settings modal opens

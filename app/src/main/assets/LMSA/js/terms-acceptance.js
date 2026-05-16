@@ -38,6 +38,8 @@ const renderTerms = (marked) => {
                     }
                 });
             }
+            // Check scroll completion once terms are parsed and inserted into the DOM
+            setTimeout(checkScrollCompletion, 200);
         } else {
             throw new Error('Marked parser failed to produce HTML');
         }
@@ -51,12 +53,75 @@ const renderTerms = (marked) => {
 let termsModal;
 let termsContent;
 let acceptButton;
-let scrollIndicator;
+let termsAlertModal;
+let termsAlertCloseBtn;
 let mainAppContainer;
 
 // State
 let hasScrolledToBottom = false;
 let isInitialized = false;
+
+/**
+ * Shows the Terms of Service reading requirement alert modal
+ */
+function showTermsAlertModal() {
+    if (termsAlertModal) {
+        termsAlertModal.classList.remove('hidden');
+        termsAlertModal.classList.add('flex');
+    }
+}
+
+/**
+ * Hides the Terms of Service reading requirement alert modal
+ */
+function hideTermsAlertModal() {
+    if (termsAlertModal) {
+        termsAlertModal.classList.add('hidden');
+        termsAlertModal.classList.remove('flex');
+    }
+}
+
+/**
+ * Checks if the user has scrolled to the bottom of the terms container
+ */
+function checkScrollCompletion() {
+    if (hasScrolledToBottom) return;
+
+    const panel = termsModal ? termsModal.querySelector('.terms-modal-panel') : null;
+    const scrollContainers = [termsContent, panel].filter(Boolean);
+    
+    let isScrollable = false;
+    let reachedBottom = false;
+    let hasValidContainer = false;
+    const threshold = 20; //px threshold from bottom
+
+    for (const container of scrollContainers) {
+        const clientH = container.clientHeight;
+        const scrollH = container.scrollHeight;
+        
+        // Only evaluate containers that are actively rendered with non-zero dimensions
+        if (clientH > 0) {
+            hasValidContainer = true;
+            if (scrollH > clientH) {
+                isScrollable = true;
+                // Check if user has scrolled to bottom of this container
+                const diff = scrollH - container.scrollTop - clientH;
+                if (diff <= threshold) {
+                    reachedBottom = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Only commit scroll completion if we have at least one successfully rendered container
+    if (hasValidContainer) {
+        // If the container is not scrollable (content fits on screen) or they reached the bottom
+        if (!isScrollable || reachedBottom) {
+            hasScrolledToBottom = true;
+        }
+    }
+}
 
 /**
  * Initialize the terms acceptance system
@@ -68,7 +133,8 @@ function initializeTermsAcceptance() {
     termsModal = document.getElementById('terms-modal');
     termsContent = document.getElementById('terms-content');
     acceptButton = document.getElementById('accept-terms-btn');
-    scrollIndicator = document.getElementById('scroll-indicator');
+    termsAlertModal = document.getElementById('terms-alert-modal');
+    termsAlertCloseBtn = document.getElementById('terms-alert-close-btn');
     mainAppContainer = document.getElementById('main-app-container');
 
     if (!termsModal || !termsContent || !acceptButton || !mainAppContainer) {
@@ -106,6 +172,9 @@ function showTermsModal() {
         console.error('Terms modal elements not found');
         return;
     }
+
+    // Reset scroll completion state
+    hasScrolledToBottom = false;
 
     termsModal.classList.remove('hidden');
     termsModal.classList.add('flex');
@@ -176,12 +245,45 @@ function setupEventListeners() {
 
     // Touch move prevention on body
     document.body.addEventListener('touchmove', preventBodyScroll, { passive: false });
+
+    // Scroll listeners to detect when user reaches the bottom
+    if (termsContent) {
+        termsContent.addEventListener('scroll', checkScrollCompletion);
+    }
+    const panel = termsModal ? termsModal.querySelector('.terms-modal-panel') : null;
+    if (panel) {
+        panel.addEventListener('scroll', checkScrollCompletion);
+    }
+
+    // Resize listener for fluid responsive layout adjustments
+    window.addEventListener('resize', checkScrollCompletion);
+
+    // Close ToS alert modal click
+    if (termsAlertCloseBtn) {
+        termsAlertCloseBtn.addEventListener('click', hideTermsAlertModal);
+    }
+
+    // Clicking outside ToS alert modal panel closes it
+    if (termsAlertModal) {
+        termsAlertModal.addEventListener('click', (event) => {
+            if (event.target === termsAlertModal) {
+                hideTermsAlertModal();
+            }
+        });
+    }
 }
 
 /**
  * Handle accept terms button click
  */
 async function handleAcceptTerms() {
+    // Check if the user has scrolled to the bottom (read the TOS) first
+    // If not, show the elegant Alert Modal instead of accepting!
+    if (!hasScrolledToBottom) {
+        showTermsAlertModal();
+        return;
+    }
+
     // Show loading state
     acceptButton.classList.add('loading');
     acceptButton.disabled = true;
@@ -223,8 +325,15 @@ async function handleAcceptTerms() {
  * Handle keyboard events
  */
 function handleKeyDown(event) {
-    // Prevent escape key from closing modal
     if (event.key === 'Escape') {
+        // If ToS Alert Modal is visible, close it
+        if (termsAlertModal && !termsAlertModal.classList.contains('hidden')) {
+            event.preventDefault();
+            event.stopPropagation();
+            hideTermsAlertModal();
+            return;
+        }
+        // Prevent escape key from closing ToS modal itself
         event.preventDefault();
         event.stopPropagation();
     }
@@ -285,6 +394,20 @@ function cleanupEventListeners() {
 
     if (termsModal) {
         termsModal.removeEventListener('click', handleModalClick);
+    }
+
+    if (termsContent) {
+        termsContent.removeEventListener('scroll', checkScrollCompletion);
+    }
+    const panel = termsModal ? termsModal.querySelector('.terms-modal-panel') : null;
+    if (panel) {
+        panel.removeEventListener('scroll', checkScrollCompletion);
+    }
+
+    window.removeEventListener('resize', checkScrollCompletion);
+
+    if (termsAlertCloseBtn) {
+        termsAlertCloseBtn.removeEventListener('click', hideTermsAlertModal);
     }
 }
 

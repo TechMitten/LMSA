@@ -38,7 +38,7 @@
     border: 1px solid rgba(148, 163, 184, 0.24);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
     z-index: 10001;
-    pointer-events: auto;
+    pointer-events: none;   /* off until active/visible to avoid blocking clicks */
     padding: 0;
     opacity: 0;
     transform: scale(0.95);
@@ -49,6 +49,7 @@
 #tutorial-tooltip.tutorial-tooltip-visible {
     opacity: 1;
     transform: scale(1);
+    pointer-events: auto;   /* enable pointer events only when visible */
 }
 
 /* Coloured header strip */

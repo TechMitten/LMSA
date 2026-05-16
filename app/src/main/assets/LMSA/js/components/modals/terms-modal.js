@@ -260,5 +260,19 @@ export const termsModal = `
                 <p class="terms-footer-caption">You've already accepted these terms.</p>
             </div>
         </div>
+
+        <!-- Terms Alert Modal -->
+        <div id="terms-alert-modal" class="terms-alert-backdrop">
+            <div class="terms-alert-panel">
+                <div class="terms-alert-icon" aria-hidden="true">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <h3>Review Required</h3>
+                <p>Please take a moment to read and review the entire Terms of Service before accepting.</p>
+                <button id="terms-alert-close-btn" class="terms-alert-btn">
+                    Got it
+                </button>
+            </div>
+        </div>
     </div>
 `;
