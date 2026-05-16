@@ -1417,6 +1417,18 @@ export function initializeSettingsModalNavigation() {
             // Update step indicators
             updateStepIndicators(stepName);
 
+            // Reset scroll positions to start the user off at the top of the menu page
+            const settingsContentWrapper = document.getElementById('settings-content-wrapper');
+            if (settingsContentWrapper) {
+                settingsContentWrapper.scrollTop = 0;
+            }
+            if (settingsModal) {
+                const modalContent = settingsModal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.scrollTop = 0;
+                }
+            }
+
             // Removed automatic focus on inputs to prevent mobile keyboard from appearing
             // This prevents the keyboard from automatically showing up on mobile devices
         }
@@ -1547,6 +1559,16 @@ export function initializeSettingsModalNavigation() {
             if (newButton.dataset.touched === 'true') {
                 // Reset the touched state
                 newButton.dataset.touched = 'false';
+                
+                // Ignore touch if a swipe drag is currently active
+                const wrapper = document.getElementById('settings-content-wrapper');
+                if (wrapper && wrapper.classList.contains('swiping')) {
+                    if (e.cancelable) {
+                        e.preventDefault();
+                    }
+                    return;
+                }
+                
                 navigateToStep(e);
             }
         }, { passive: false });
@@ -1611,9 +1633,9 @@ export function initializeSettingsModalNavigation() {
     });
 }
 
-export function navigateSettingsModalToStep(stepName = 'connection') {
+export function navigateSettingsModalToStep(stepName = 'connection', direction = null) {
     if (typeof _navigateToStep === 'function') {
-        _navigateToStep(stepName);
+        _navigateToStep(stepName, direction);
         return true;
     }
 
@@ -1726,6 +1748,18 @@ function resetModalState() {
         // Show connection buttons
         if (connectionButtons) {
             connectionButtons.classList.remove('hidden');
+        }
+    }
+
+    // Reset scroll positions to start the user off at the top of the menu page
+    const settingsContentWrapper = document.getElementById('settings-content-wrapper');
+    if (settingsContentWrapper) {
+        settingsContentWrapper.scrollTop = 0;
+    }
+    if (settingsModal) {
+        const modalContent = settingsModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.scrollTop = 0;
         }
     }
 }
