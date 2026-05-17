@@ -6,10 +6,6 @@ function removeAds() {
     }
 }
 
-function watchRewardedPremiumAd() {
-    console.log('Rewarded ads have been removed.');
-}
-
 function openExternalUrl(url) {
     const normalizedUrl = typeof url === 'string' ? url.trim() : '';
     if (!/^(https?:\/\/|mailto:)/i.test(normalizedUrl)) {
@@ -148,20 +144,6 @@ if (document.readyState === 'loading') {
     const isPremium = hasPremiumAccess();
     syncPremiumMenuState(isPremium);
     syncPremiumHeaderState(isPremium);
-}
-
-window.showPostAppOpenPremiumCta = function() { console.log('Post-ad CTA disabled.'); };
-window.hidePostAppOpenPremiumCta = function() { };
-
-
-
-/**
- * Checks if a model is currently loaded
- * @returns {boolean} - True if a model is loaded
- */
-function isModelLoadedForAds() {
-    // Check the global currentLoadedModel variable (set by api-service.js)
-    return window.currentLoadedModel && window.currentLoadedModel !== null;
 }
 
 /**

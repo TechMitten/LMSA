@@ -780,8 +780,8 @@ class WebViewActivity : AppCompatActivity() {
         runOnUiThread {
             val adContainer: FrameLayout = findViewById(R.id.adContainer)
             val adTopMargin: View = findViewById(R.id.adTopMargin)
-            val shouldShowAds = !hasEffectivePremium() && !isKeyboardVisible
-            
+            val shouldShowAds = !hasEffectivePremium() && !isKeyboardVisible && !isSplashOverlayVisible
+
             if (shouldShowAds) {
                 loadAdaptiveBannerAd()
                 adContainer.visibility = View.VISIBLE
@@ -793,6 +793,7 @@ class WebViewActivity : AppCompatActivity() {
                 when {
                     hasEffectivePremium() -> Log.d(TAG, "AdMob: Hiding banner for premium tier")
                     isKeyboardVisible -> Log.d(TAG, "AdMob: Hiding banner while native keyboard is visible")
+                    isSplashOverlayVisible -> Log.d(TAG, "AdMob: Hiding banner while splash is visible")
                     else -> Log.d(TAG, "AdMob: Hiding banner")
                 }
             }
@@ -860,7 +861,10 @@ class WebViewActivity : AppCompatActivity() {
         splashImage.animate()
             .alpha(0f)
             .setDuration(350)
-            .withEndAction { splashImage.visibility = View.GONE }
+            .withEndAction {
+                splashImage.visibility = View.GONE
+                updateAdVisibility()
+            }
             .start()
     }
 
