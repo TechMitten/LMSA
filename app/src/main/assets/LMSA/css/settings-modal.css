@@ -1634,6 +1634,7 @@ body.light-theme #settings-modal button[id^="to-"]:hover {
   z-index: 2;
   cursor: not-allowed;
   display: none;
+  touch-action: pan-y;
 }
 
 .settings-slider-labels {

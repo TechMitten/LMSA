@@ -878,27 +878,105 @@ export function loadContextLengthSetting() {
       lockBtn.addEventListener("animationend", () => lockBtn.classList.remove("lock-nudge"), { once: true });
     };
 
+    const addLockedPulseTapHandlers = (element, {
+      capture = false,
+      pulseOnHorizontalDrag = false
+    } = {}) => {
+      if (!element) {
+        return;
+      }
+
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchMoved = false;
+      let pulseTriggeredDuringTouch = false;
+
+      element.addEventListener("touchstart", (e) => {
+        if (!isLocked || e.touches.length !== 1) {
+          return;
+        }
+
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchMoved = false;
+        pulseTriggeredDuringTouch = false;
+      }, { capture, passive: true });
+
+      element.addEventListener("touchmove", (e) => {
+        if (!isLocked || e.touches.length !== 1) {
+          return;
+        }
+
+        const deltaX = e.touches[0].clientX - touchStartX;
+        const deltaY = e.touches[0].clientY - touchStartY;
+        const absDeltaX = Math.abs(deltaX);
+        const absDeltaY = Math.abs(deltaY);
+
+        if (
+          pulseOnHorizontalDrag
+          && !pulseTriggeredDuringTouch
+          && absDeltaX > 8
+          && absDeltaX > absDeltaY * 1.2
+        ) {
+          pulseLock();
+          pulseTriggeredDuringTouch = true;
+        }
+
+        if (absDeltaX > 8 || absDeltaY > 8) {
+          touchMoved = true;
+        }
+      }, { capture, passive: true });
+
+      element.addEventListener("touchend", () => {
+        if (!isLocked || touchMoved || pulseTriggeredDuringTouch) {
+          return;
+        }
+
+        pulseLock();
+      }, { capture, passive: true });
+
+      element.addEventListener("mousedown", (e) => {
+        if (!isLocked) {
+          return;
+        }
+
+        e.preventDefault();
+        pulseLock();
+      }, { capture, passive: false });
+    };
+
     // Overlay sits on top of the slider when locked; captures taps that pointer-events:none would otherwise swallow
     const sliderContainer = input.closest('.settings-slider-container');
     const overlay = document.createElement('div');
     overlay.className = 'context-length-slider-overlay';
-    ['mousedown', 'touchstart'].forEach((evt) => {
-      overlay.addEventListener(evt, (e) => { e.preventDefault(); pulseLock(); }, { passive: false });
-    });
+    addLockedPulseTapHandlers(overlay, { pulseOnHorizontalDrag: true });
     if (sliderContainer) sliderContainer.appendChild(overlay);
 
-    // Also pulse when the user focuses or taps the text input while locked
+    // Also pulse when the user focuses or taps the text input while locked,
+    // without blocking vertical scroll that starts on the field.
     const textInputEl = document.getElementById('context-length-text-input');
     if (textInputEl) {
-      ["mousedown", "touchstart", "focus"].forEach((eventType) => {
-        textInputEl.addEventListener(eventType, (e) => {
-          if (isLocked) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            pulseLock();
-          }
-        }, { capture: true, passive: false });
-      });
+      addLockedPulseTapHandlers(textInputEl, { capture: true });
+      textInputEl.addEventListener("focus", (e) => {
+        if (isLocked) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          pulseLock();
+        }
+      }, { capture: true, passive: false });
+    }
+
+    const clearBtnEl = clearContextLengthButton || document.getElementById('clear-context-length-btn');
+    if (clearBtnEl) {
+      addLockedPulseTapHandlers(clearBtnEl, { capture: true });
+      clearBtnEl.addEventListener("click", (e) => {
+        if (!isLocked) {
+          return;
+        }
+
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }, { capture: true, passive: false });
     }
 
     const applyLockedState = () => {
@@ -912,7 +990,12 @@ export function loadContextLengthSetting() {
       const tInput = document.getElementById('context-length-text-input');
       const cBtn = clearContextLengthButton || document.getElementById('clear-context-length-btn');
       if (tInput) { tInput.disabled = true; tInput.style.opacity = "0.6"; tInput.style.cursor = "not-allowed"; }
-      if (cBtn) { cBtn.disabled = true; cBtn.style.opacity = "0.6"; cBtn.style.cursor = "not-allowed"; }
+      if (cBtn) {
+        cBtn.disabled = false;
+        cBtn.setAttribute('aria-disabled', 'true');
+        cBtn.style.opacity = "0.6";
+        cBtn.style.cursor = "not-allowed";
+      }
       lockBtn.innerHTML = '<i class="fas fa-lock text-red-400"></i>';
       lockBtn.title = "Context Length is locked (click to unlock)";
     };
@@ -928,7 +1011,12 @@ export function loadContextLengthSetting() {
       const tInput = document.getElementById('context-length-text-input');
       const cBtn = clearContextLengthButton || document.getElementById('clear-context-length-btn');
       if (tInput) { tInput.disabled = false; tInput.style.opacity = ""; tInput.style.cursor = ""; }
-      if (cBtn) { cBtn.disabled = false; cBtn.style.opacity = ""; cBtn.style.cursor = ""; }
+      if (cBtn) {
+        cBtn.disabled = false;
+        cBtn.removeAttribute('aria-disabled');
+        cBtn.style.opacity = "";
+        cBtn.style.cursor = "";
+      }
       lockBtn.innerHTML = '<i class="fas fa-unlock" style="color: #10b981;"></i>';
       lockBtn.title = "Context Length is unlocked (click to lock)";
     };
