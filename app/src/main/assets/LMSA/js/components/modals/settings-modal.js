@@ -267,10 +267,13 @@ export const settingsModal = `
 
                             <!-- LM Studio live context specs (hidden until fetched) -->
                             <div id="lmstudio-context-info" class="lmstudio-ctx-info-card" style="display:none;">
-                                <button id="refresh-ctx-specs-btn" type="button"
-                                    class="lmstudio-ctx-refresh-btn" title="Refresh from LM Studio">
-                                    <i class="fas fa-sync-alt"></i>
-                                </button>
+                                <div class="lmstudio-ctx-header">
+                                    <span class="lmstudio-ctx-title">Context Snapshot</span>
+                                    <button id="refresh-ctx-specs-btn" type="button"
+                                        class="lmstudio-ctx-refresh-btn" title="Refresh context details">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
                                 <div class="lmstudio-ctx-grid">
                                     <div class="lmstudio-ctx-cell">
                                         <span class="lmstudio-ctx-cell-label"><i class="fas fa-server"></i>Provider</span>

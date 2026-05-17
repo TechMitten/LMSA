@@ -46,9 +46,11 @@ let _showConnectionPresetEditModal = null;
 // --- Context specs live polling ---
 let _ctxSpecsInterval = null;
 
-async function _refreshContextSpecs() {
+async function _refreshContextSpecs(isUserTriggered = false) {
     const btn = document.getElementById('refresh-ctx-specs-btn');
     const icon = btn?.querySelector('.fa-sync-alt');
+    const spinStart = Date.now();
+    const minimumSpinDurationMs = isUserTriggered ? 650 : 0;
     if (icon) icon.classList.add('ctx-specs-spinning');
     try {
         const specs = await getLMStudioContextSpecs();
@@ -60,6 +62,12 @@ async function _refreshContextSpecs() {
     } catch (_) {
         setModelContextSpecs(null, null);
     }
+
+    const elapsed = Date.now() - spinStart;
+    if (minimumSpinDurationMs > elapsed) {
+        await new Promise(resolve => setTimeout(resolve, minimumSpinDurationMs - elapsed));
+    }
+
     if (icon) icon.classList.remove('ctx-specs-spinning');
 }
 
@@ -67,7 +75,7 @@ function _startCtxSpecsPolling() {
     _ctxSpecsInterval = setInterval(_refreshContextSpecs, 30000);
     const btn = document.getElementById('refresh-ctx-specs-btn');
     if (btn && !btn.dataset.ctxRefreshAttached) {
-        btn.addEventListener('click', _refreshContextSpecs);
+        btn.addEventListener('click', () => _refreshContextSpecs(true));
         btn.dataset.ctxRefreshAttached = 'true';
     }
 }

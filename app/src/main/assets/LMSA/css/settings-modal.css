@@ -4561,6 +4561,22 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
   color: var(--text-secondary, #9ca3af);
 }
 
+.lmstudio-ctx-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.lmstudio-ctx-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted, #93a4bf);
+}
+
 .lmstudio-ctx-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -4596,30 +4612,53 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
 }
 
 .lmstudio-ctx-refresh-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
+  position: static;
   background: transparent;
   border: none;
-  color: #60a5fa;
+  color: #93c5fd;
   cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 6px;
-  transition: color 0.2s;
+  padding: 2px;
+  border-radius: 0;
+  transition: color 0.2s, transform 0.2s;
   line-height: 1;
 }
 
+.lmstudio-ctx-refresh-btn i {
+  display: inline-block;
+  font-size: 0.85rem;
+  color: inherit;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
 .lmstudio-ctx-refresh-btn:hover {
-  color: #93c5fd;
+  color: #dbeafe;
+  transform: scale(1.04);
+}
+
+.lmstudio-ctx-refresh-btn:focus-visible {
+  outline: 2px solid rgba(147, 197, 253, 0.55);
+  outline-offset: 2px;
 }
 
 @keyframes ctx-spin {
   to { transform: rotate(360deg); }
 }
 
+@keyframes ctx-click-feedback {
+  0% { transform: scale(1) rotate(0deg); }
+  40% { transform: scale(1.18) rotate(-12deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
 .ctx-specs-spinning {
   display: inline-block;
   animation: ctx-spin 0.8s linear infinite;
+}
+
+.ctx-specs-click-feedback {
+  display: inline-block;
+  animation: ctx-click-feedback 0.24s ease-out;
 }
 
 /* Desktop-specific normalization for red action buttons */
