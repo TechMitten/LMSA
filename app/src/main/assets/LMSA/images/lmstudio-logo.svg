@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="lm-g" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#c026d3"/>
+      <stop offset="0.5" stop-color="#7c3aed"/>
+      <stop offset="1" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="url(#lm-g)"/>
+  <!-- Gem / diamond shape -->
+  <polygon points="16,7 24,13 16,27 8,13" fill="none" stroke="white" stroke-width="1.6" stroke-linejoin="round"/>
+  <line x1="8" y1="13" x2="24" y2="13" stroke="white" stroke-width="1.4" opacity="0.7"/>
+  <line x1="12" y1="13" x2="16" y2="27" stroke="white" stroke-width="1" opacity="0.5"/>
+  <line x1="20" y1="13" x2="16" y2="27" stroke="white" stroke-width="1" opacity="0.5"/>
+</svg>

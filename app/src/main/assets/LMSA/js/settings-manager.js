@@ -69,6 +69,7 @@ let reasoningTimeout = 300; // Default 5 minutes for reasoning models (in second
 let defaultModelId = null; // Default model to auto-select when models load
 let selectedTTSVoice = null; // Selected TTS voice name
 let contextLength = 0; // Context length for LM Studio native API
+let pendingResetCallback = null; // Pending callback for reset-to-default confirmation modal
 let useOpenRouter = false; // Use OpenRouter cloud API
 let openRouterApiKey = ''; // OpenRouter API key
 let useOpenAICompatible = false; // Use custom OpenAI-compatible endpoint
@@ -326,33 +327,21 @@ export function initializeTemperature() {
     // Track lock state explicitly to avoid browser confusion
     let isLocked = true; // Start locked
 
-    // Event prevention for when locked
-    const preventSliderInteraction = (e) => {
-      if (isLocked) {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        return false;
-      }
+    const pulseLock = () => {
+      temperatureLock.classList.remove("lock-nudge");
+      temperatureLock.offsetHeight; // reflow to restart animation
+      temperatureLock.classList.add("lock-nudge");
+      temperatureLock.addEventListener("animationend", () => temperatureLock.classList.remove("lock-nudge"), { once: true });
     };
 
-    // Add comprehensive event blocking
-    [
-      "mousedown",
-      "mouseup",
-      "mousemove",
-      "click",
-      "touchstart",
-      "touchend",
-      "touchmove",
-      "input",
-      "change",
-    ].forEach((eventType) => {
-      temperatureInput.addEventListener(eventType, preventSliderInteraction, {
-        capture: true,
-        passive: false,
-      });
+    // Overlay captures taps on the slider area when pointer-events:none blocks direct events
+    const sliderContainer = temperatureInput.closest('.temperature-slider-container');
+    const overlay = document.createElement('div');
+    overlay.className = 'temperature-slider-overlay';
+    ['mousedown', 'touchstart'].forEach((evt) => {
+      overlay.addEventListener(evt, (e) => { e.preventDefault(); pulseLock(); }, { passive: false });
     });
+    if (sliderContainer) sliderContainer.appendChild(overlay);
 
     // Helper function to apply locked state
     const applyLockedState = () => {
@@ -362,6 +351,7 @@ export function initializeTemperature() {
       temperatureInput.style.opacity = "0.6";
       temperatureInput.style.background = "#6b7280";
       temperatureInput.setAttribute("readonly", "true");
+      overlay.style.display = 'block';
       temperatureLock.innerHTML = '<i class="fas fa-lock text-red-400"></i>';
       temperatureLock.title = "Temperature is locked (click to unlock)";
     };
@@ -374,6 +364,7 @@ export function initializeTemperature() {
       temperatureInput.style.opacity = "";
       temperatureInput.style.background = "";
       temperatureInput.removeAttribute("readonly");
+      overlay.style.display = 'none';
       temperatureLock.innerHTML = '<i class="fas fa-unlock" style="color: #10b981;"></i>';
       temperatureLock.title = "Temperature is unlocked (click to lock)";
     };
@@ -457,9 +448,14 @@ export function loadMaxTokensSetting() {
 
   if (clearMaxTokensButton && clearMaxTokensButton.dataset.maxTokensClearListenerAttached !== "true") {
     clearMaxTokensButton.addEventListener("click", () => {
-      maxTokens = 0;
-      localStorage.removeItem("maxTokens");
-      updateMaxTokensUI(maxTokensInput, maxTokensValue);
+      showResetConfirmModal(
+        "Reset Max Output Tokens to the server default? Your current value will be cleared.",
+        () => {
+          maxTokens = 0;
+          localStorage.removeItem("maxTokens");
+          updateMaxTokensUI(maxTokensInput, maxTokensValue);
+        }
+      );
     });
     clearMaxTokensButton.dataset.maxTokensClearListenerAttached = "true";
   }
@@ -502,6 +498,7 @@ export function getConfiguredMaxTokens() {
 export function getContextLength() {
   return contextLength;
 }
+
 
 /**
  * Gets the current image generation count for free tier users.
@@ -828,11 +825,121 @@ export function loadContextLengthSetting() {
   const clearBtn = clearContextLengthButton || document.getElementById('clear-context-length-btn');
   if (clearBtn && clearBtn.dataset.contextLengthClearListenerAttached !== "true") {
     clearBtn.addEventListener("click", () => {
-      contextLength = 0;
-      localStorage.removeItem("contextLength");
-      updateContextLengthUI(input, valueDisplay);
+      showResetConfirmModal(
+        "Reset Context Length to the provider default? Your current value will be cleared.",
+        () => {
+          contextLength = 0;
+          localStorage.removeItem("contextLength");
+          updateContextLengthUI(input, valueDisplay);
+        }
+      );
     });
     clearBtn.dataset.contextLengthClearListenerAttached = "true";
+  }
+
+  const textInput = document.getElementById('context-length-text-input');
+  if (textInput && textInput.dataset.contextLengthTextListenerAttached !== "true") {
+    textInput.addEventListener("input", () => {
+      const val = parseInt(textInput.value, 10) || 0;
+      const clamped = Math.min(Math.max(val, 0), 200000);
+      input.value = String(clamped);
+      updateContextLengthUI(input, valueDisplay, clamped);
+    });
+    textInput.addEventListener("change", () => {
+      saveContextLengthSetting();
+    });
+    textInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        textInput.blur();
+      }
+    });
+    textInput.dataset.contextLengthTextListenerAttached = "true";
+  }
+
+  // Lock system — only initialize once
+  const lockBtn = document.getElementById('context-length-lock');
+  if (lockBtn && lockBtn.dataset.contextLengthLockInitialized !== "true") {
+    let isLocked = true;
+
+    const pulseLock = () => {
+      lockBtn.classList.remove("lock-nudge");
+      lockBtn.offsetHeight; // reflow to restart animation
+      lockBtn.classList.add("lock-nudge");
+      lockBtn.addEventListener("animationend", () => lockBtn.classList.remove("lock-nudge"), { once: true });
+    };
+
+    // Overlay sits on top of the slider when locked; captures taps that pointer-events:none would otherwise swallow
+    const sliderContainer = input.closest('.settings-slider-container');
+    const overlay = document.createElement('div');
+    overlay.className = 'context-length-slider-overlay';
+    ['mousedown', 'touchstart'].forEach((evt) => {
+      overlay.addEventListener(evt, (e) => { e.preventDefault(); pulseLock(); }, { passive: false });
+    });
+    if (sliderContainer) sliderContainer.appendChild(overlay);
+
+    // Also pulse when the user focuses or taps the text input while locked
+    const textInputEl = document.getElementById('context-length-text-input');
+    if (textInputEl) {
+      ["mousedown", "touchstart", "focus"].forEach((eventType) => {
+        textInputEl.addEventListener(eventType, (e) => {
+          if (isLocked) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            pulseLock();
+          }
+        }, { capture: true, passive: false });
+      });
+    }
+
+    const applyLockedState = () => {
+      input.disabled = true;
+      input.style.pointerEvents = "none";
+      input.style.cursor = "not-allowed";
+      input.style.opacity = "0.6";
+      input.style.background = "#6b7280";
+      input.setAttribute("readonly", "true");
+      overlay.style.display = 'block';
+      const tInput = document.getElementById('context-length-text-input');
+      const cBtn = clearContextLengthButton || document.getElementById('clear-context-length-btn');
+      if (tInput) { tInput.disabled = true; tInput.style.opacity = "0.6"; tInput.style.cursor = "not-allowed"; }
+      if (cBtn) { cBtn.disabled = true; cBtn.style.opacity = "0.6"; cBtn.style.cursor = "not-allowed"; }
+      lockBtn.innerHTML = '<i class="fas fa-lock text-red-400"></i>';
+      lockBtn.title = "Context Length is locked (click to unlock)";
+    };
+
+    const applyUnlockedState = () => {
+      input.disabled = false;
+      input.style.pointerEvents = "auto";
+      input.style.cursor = "pointer";
+      input.style.opacity = "";
+      input.style.background = "";
+      input.removeAttribute("readonly");
+      overlay.style.display = 'none';
+      const tInput = document.getElementById('context-length-text-input');
+      const cBtn = clearContextLengthButton || document.getElementById('clear-context-length-btn');
+      if (tInput) { tInput.disabled = false; tInput.style.opacity = ""; tInput.style.cursor = ""; }
+      if (cBtn) { cBtn.disabled = false; cBtn.style.opacity = ""; cBtn.style.cursor = ""; }
+      lockBtn.innerHTML = '<i class="fas fa-unlock" style="color: #10b981;"></i>';
+      lockBtn.title = "Context Length is unlocked (click to lock)";
+    };
+
+    lockBtn.addEventListener("click", () => {
+      if (isLocked) {
+        isLocked = false;
+        applyUnlockedState();
+      } else {
+        isLocked = true;
+        applyLockedState();
+      }
+      input.offsetHeight;
+    });
+
+    setTimeout(() => {
+      applyLockedState();
+      input.offsetHeight;
+    }, 50);
+
+    lockBtn.dataset.contextLengthLockInitialized = "true";
   }
 }
 
@@ -876,10 +983,58 @@ function updateContextLengthUI(input, valueDisplay, overrideValue) {
   }
 
   if (valueDisplay) {
-    valueDisplay.textContent = hasCustomValue ? String(effectiveValue) : "Server Default";
+    valueDisplay.textContent = hasCustomValue ? String(effectiveValue) : "Set by provider";
+  }
+
+  const textInput = document.getElementById('context-length-text-input');
+  if (textInput) {
+    textInput.value = hasCustomValue ? String(effectiveValue) : "";
   }
 }
 
+
+/**
+ * Updates the UI with context specs fetched live from LM Studio:
+ * dynamically adjusts the slider maximum and shows model max / active context values.
+ * @param {number|null} maxLimit - Model's absolute maximum context length
+ * @param {number|null} currentActive - Context length currently active in LM Studio
+ */
+export function setModelContextSpecs(maxLimit, currentActive) {
+  const input = contextLengthInput || document.getElementById('context-length-input');
+  const infoEl = document.getElementById('lmstudio-context-info');
+  const maxEl  = document.getElementById('lmstudio-ctx-max');
+  const activeEl = document.getElementById('lmstudio-ctx-active');
+
+  if (input && maxLimit && maxLimit > 0) {
+    input.max = String(maxLimit);
+    const labelEl = input.closest('.settings-slider-container')
+      ?.querySelector('.settings-slider-labels span:last-child');
+    if (labelEl) {
+      labelEl.textContent = maxLimit >= 1000
+        ? `${Math.round(maxLimit / 1000)}k`
+        : String(maxLimit);
+    }
+  }
+
+  // Mirror the active LM Studio context into the slider and text input, but only
+  // when the user has not manually set a value (contextLength === 0 means "provider default").
+  if (currentActive && currentActive > 0 && contextLength === 0) {
+    if (input) input.value = String(currentActive);
+    const textInput = document.getElementById('context-length-text-input');
+    if (textInput) textInput.value = String(currentActive);
+    const valueDisplay = contextLengthValue || document.getElementById('context-length-value');
+    if (valueDisplay) valueDisplay.textContent = String(currentActive);
+  }
+
+  const hasData = !!(maxLimit || currentActive);
+  if (infoEl) infoEl.style.display = hasData ? 'flex' : 'none';
+  if (maxEl)    maxEl.textContent    = maxLimit     ? _fmtCtx(maxLimit)     : '—';
+  if (activeEl) activeEl.textContent = currentActive ? _fmtCtx(currentActive) : '—';
+}
+
+function _fmtCtx(n) {
+  return n >= 1000 ? `${Math.round(n / 1000)}k` : String(n);
+}
 
 // Global callbacks for Android bridge
 window.onModelReloadSuccess = function(ctx) {
@@ -1746,19 +1901,17 @@ function formatVoiceName(voice) {
  * Loads the Ollama setting from localStorage
  */
 export function loadOllamaSetting() {
-  const savedUseOllama = localStorage.getItem("useOllama");
-  if (savedUseOllama === "true") {
+  // Prefer the new localServerType key; fall back to legacy useOllama for existing users
+  const serverType = localStorage.getItem("localServerType");
+  if (serverType === "ollama") {
     useOllama = true;
-    if (ollamaToggleCheckbox) ollamaToggleCheckbox.checked = true;
-  } else {
+  } else if (serverType === "lmstudio") {
     useOllama = false;
-    if (ollamaToggleCheckbox) ollamaToggleCheckbox.checked = false;
+  } else {
+    // Legacy path: no localServerType key yet
+    useOllama = localStorage.getItem("useOllama") === "true";
   }
-
-  // Add event listener for the checkbox if it exists
-  if (ollamaToggleCheckbox) {
-    ollamaToggleCheckbox.addEventListener("change", saveOllamaSetting);
-  }
+  if (ollamaToggleCheckbox) ollamaToggleCheckbox.checked = useOllama;
 }
 
 /**
@@ -1788,6 +1941,27 @@ export function saveOllamaSetting() {
  */
 export function getUseOllama() {
   return useOllama;
+}
+
+/**
+ * Sets the local server type ('lmstudio' | 'ollama'), persists both keys, and
+ * enforces mutual exclusivity with cloud providers.
+ * @param {string} type
+ */
+export function setLocalServerType(type) {
+  localStorage.setItem('localServerType', type);
+  useOllama = (type === 'ollama');
+  localStorage.setItem('useOllama', String(useOllama));
+  if (useOllama && (useOpenRouter || useOpenAICompatible)) {
+    useOpenRouter = false;
+    useOpenAICompatible = false;
+    localStorage.setItem('useOpenRouter', 'false');
+    localStorage.setItem('useOpenAICompatible', 'false');
+    if (openRouterToggleCheckbox) openRouterToggleCheckbox.checked = false;
+    if (openAICompatibleToggleCheckbox) openAICompatibleToggleCheckbox.checked = false;
+    updateProviderUI();
+    window.currentLoadedModel = localStorage.getItem('localSelectedModel') || null;
+  }
 }
 
 /**
@@ -2705,7 +2879,56 @@ export function getChatFontSize() {
   return chatFontSize;
 }
 
+function showResetConfirmModal(message, onConfirm) {
+  const modal = document.getElementById('reset-to-default-modal');
+  const msgEl = document.getElementById('reset-to-default-message');
+  if (!modal) return;
+  pendingResetCallback = onConfirm;
+  if (msgEl) msgEl.textContent = message;
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  modal.offsetHeight; // force reflow so transition plays from opacity 0
+  modal.classList.add('modal-visible');
+  // Re-trigger box slide-in animation each open
+  const box = modal.querySelector('.connection-input-modal-box');
+  if (box) {
+    box.classList.remove('animate-modal-in');
+    box.offsetHeight;
+    box.classList.add('animate-modal-in');
+  }
+}
+
+function hideResetConfirmModal() {
+  const modal = document.getElementById('reset-to-default-modal');
+  if (!modal) return;
+  pendingResetCallback = null;
+  modal.classList.remove('modal-visible');
+  modal.addEventListener('transitionend', () => {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }, { once: true });
+}
+
+export function initResetToDefaultModal() {
+  const confirmBtn = document.getElementById('confirm-reset-to-default');
+  const cancelBtn = document.getElementById('cancel-reset-to-default');
+  const closeBtn = document.getElementById('close-reset-to-default-modal');
+  const modal = document.getElementById('reset-to-default-modal');
+  if (!modal) return;
+
+  confirmBtn?.addEventListener('click', () => {
+    if (pendingResetCallback) pendingResetCallback();
+    hideResetConfirmModal();
+  });
+  cancelBtn?.addEventListener('click', hideResetConfirmModal);
+  closeBtn?.addEventListener('click', hideResetConfirmModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) hideResetConfirmModal();
+  });
+}
+
 export function loadSettings() {
+  initResetToDefaultModal();
   initializeSettingsToggleCards();
   initializeSystemPrompt();
   initializeTemperature();

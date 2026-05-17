@@ -1566,11 +1566,50 @@ body.light-theme #settings-modal button[id^="to-"]:hover {
   text-align: center;
 }
 
-#settings-modal #temperature-lock {
+#settings-modal #temperature-lock,
+#settings-modal #context-length-lock {
     background: none !important;
     border: none !important;
     box-shadow: none !important;
     padding: 0;
+}
+
+@keyframes lock-nudge {
+  0%   { transform: scale(1);    opacity: 1; }
+  20%  { transform: scale(1.35); opacity: 1; }
+  40%  { transform: scale(0.9);  opacity: 0.8; }
+  60%  { transform: scale(1.2);  opacity: 1; }
+  80%  { transform: scale(0.95); opacity: 0.9; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+#settings-modal #context-length-lock.lock-nudge i,
+#settings-modal #temperature-lock.lock-nudge i {
+  animation: lock-nudge 0.45s ease-out;
+  display: inline-block;
+  color: #f87171 !important;
+}
+
+/* Reset-to-default confirmation modal fade transition */
+#reset-to-default-modal {
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+#reset-to-default-modal.modal-visible {
+  opacity: 1;
+}
+
+.temperature-slider-container {
+  position: relative;
+  display: block;
+}
+
+.temperature-slider-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  cursor: not-allowed;
+  display: none;
 }
 
 /* Disabled state for range sliders */
@@ -1586,6 +1625,15 @@ body.light-theme #settings-modal button[id^="to-"]:hover {
   width: 100%;
   margin-top: 0.75rem;
   padding: 0 0.5rem;
+  position: relative;
+}
+
+.context-length-slider-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  cursor: not-allowed;
+  display: none;
 }
 
 .settings-slider-labels {
@@ -1661,6 +1709,45 @@ body.light-theme #settings-modal button[id^="to-"]:hover {
 #settings-modal input[type="range"]:disabled::-moz-range-thumb:hover {
   transform: none !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Context length text input row */
+#settings-modal .context-length-input-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.65rem;
+  margin-top: 0.55rem;
+}
+
+#settings-modal #context-length-text-input.context-length-text-field {
+  min-height: 42px;
+  padding-inline: 0.9rem;
+  flex: 1;
+  min-width: 120px;
+}
+
+#settings-modal #clear-context-length-btn.context-length-default-btn {
+  min-width: 110px;
+}
+
+@media (max-width: 480px) {
+  #settings-modal .context-length-input-row {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: 0.7rem;
+  }
+
+  #settings-modal #context-length-text-input.context-length-text-field {
+    width: min(100%, 320px);
+    min-width: 0;
+    align-self: flex-start;
+  }
+
+  #settings-modal #clear-context-length-btn.context-length-default-btn {
+    width: min(100%, 320px);
+    min-width: 0;
+    align-self: flex-start;
+  }
 }
 
 /* Settings content wrapper */
@@ -2767,6 +2854,85 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
   color: #1e3a8a;
 }
 
+
+/* Server-type selector (LM Studio / Ollama) inside the IP/Port modal */
+.server-type-selector {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.server-type-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  min-height: 52px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--settings-text, #d1d5db);
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+  text-align: left;
+}
+
+.server-type-btn:active {
+  transform: scale(0.97);
+}
+
+.server-type-btn[aria-pressed="true"] {
+  border-color: rgba(59, 130, 246, 0.8);
+  background: linear-gradient(180deg, rgba(79, 140, 255, 0.18), rgba(79, 140, 255, 0.08));
+  box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.38);
+}
+
+.server-type-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--settings-text-muted, #9ca3af);
+  font-size: 0.9rem;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.server-type-btn[aria-pressed="true"] .server-type-icon {
+  background: var(--settings-accent, #3b82f6);
+  color: #dbeafe;
+}
+
+.server-type-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.server-type-logo.ollama-logo {
+  filter: invert(1);
+  opacity: 0.85;
+}
+
+.server-type-btn[aria-pressed="true"] .server-type-logo.ollama-logo {
+  opacity: 1;
+}
+
+.server-type-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--settings-text, #d1d5db);
+  line-height: 1.2;
+}
+
+.server-type-btn[aria-pressed="true"] .server-type-name {
+  color: var(--settings-text-strong, #f1f5f9);
+}
 
 /* Connection settings panels - animated reveal */
 .connection-settings-panel {
@@ -4380,6 +4546,57 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
     max-width: calc(100% - 16px) !important;
     margin: 0.5rem 8px !important;
   }
+}
+
+/* LM Studio live context specs info row */
+.lmstudio-ctx-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #9ca3af);
+}
+
+.lmstudio-ctx-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.lmstudio-ctx-label strong {
+  color: var(--text-primary, #e5e7eb);
+  font-weight: 600;
+}
+
+.lmstudio-ctx-refresh-btn {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #60a5fa;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: color 0.2s;
+  line-height: 1;
+}
+
+.lmstudio-ctx-refresh-btn:hover {
+  color: #93c5fd;
+}
+
+@keyframes ctx-spin {
+  to { transform: rotate(360deg); }
+}
+
+.ctx-specs-spinning {
+  display: inline-block;
+  animation: ctx-spin 0.8s linear infinite;
 }
 
 /* Desktop-specific normalization for red action buttons */

@@ -188,9 +188,11 @@ export const settingsModal = `
                                 </button>
                             </div>
                             <p class="settings-item-description">Controls randomness. Lower is more focused and deterministic, higher is more creative.</p>
-                            <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.3"
-                                class="w-full bg-darkTertiary text-gray-100 rounded-lg appearance-none cursor-pointer"
-                                disabled>
+                            <div class="temperature-slider-container">
+                                <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.3"
+                                    class="w-full bg-darkTertiary text-gray-100 rounded-lg appearance-none cursor-pointer"
+                                    disabled>
+                            </div>
                         </div>
 
                         <!-- Reasoning Level -->
@@ -237,6 +239,10 @@ export const settingsModal = `
                                 <label for="context-length-input" class="settings-item-label">
                                     <i class="fas fa-brain"></i>Context Length
                                 </label>
+                                <button id="context-length-lock" class="focus:outline-none"
+                                    aria-label="Toggle Context Length Lock" title="Context Length is locked (click to unlock)">
+                                    <i class="fas fa-lock text-red-400"></i>
+                                </button>
                             </div>
                             <p class="settings-item-description">Sets the total conversation memory size. For OpenRouter and Custom endpoints, this triggers automatic conversation compaction to preserve memory.</p>
                             <div class="settings-slider-container">
@@ -248,7 +254,32 @@ export const settingsModal = `
                                 </div>
                             </div>
 
-                            <p class="text-xs text-gray-500 mt-2">Current: <span id="context-length-value">Server Default</span></p>
+                            <div class="flex items-center context-length-input-row">
+                                <input type="text" id="context-length-text-input"
+                                    class="bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500 context-length-text-field"
+                                    placeholder="Set by provider" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" data-form-type="other">
+                                <button id="clear-context-length-btn" type="button"
+                                    class="professional-button flex items-center justify-center gap-2 px-4 h-[42px] shrink-0 context-length-default-btn">
+                                    <i class="fas fa-rotate-left text-xs"></i>
+                                    <span>Default</span>
+                                </button>
+                            </div>
+
+                            <!-- LM Studio live context specs (hidden until fetched) -->
+                            <div id="lmstudio-context-info" class="lmstudio-ctx-info-row" style="display:none;">
+                                <span class="lmstudio-ctx-label">
+                                    <i class="fas fa-microchip"></i>Max:
+                                    <strong id="lmstudio-ctx-max">—</strong>
+                                </span>
+                                <span class="lmstudio-ctx-label">
+                                    <i class="fas fa-sliders-h"></i>Active:
+                                    <strong id="lmstudio-ctx-active">—</strong>
+                                </span>
+                                <button id="refresh-ctx-specs-btn" type="button"
+                                    class="lmstudio-ctx-refresh-btn" title="Refresh from LM Studio">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
 
                         </div>
 
@@ -752,7 +783,17 @@ export const settingsModal = `
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <p class="text-sm mb-4" style="color: var(--settings-help-text, #9ca3af);">Enter the hostname or IP address and port of your local AI server (e.g. LM Studio).</p>
+            <p class="text-sm mb-3" style="color: var(--settings-help-text, #9ca3af);">Select your server type, then enter the hostname or IP address and port.</p>
+            <div id="local-server-type-selector" class="server-type-selector mb-4">
+                <button id="select-lmstudio-type" type="button" class="server-type-btn" aria-pressed="false">
+                    <div class="server-type-icon"><img src="images/lmstudio-logo.svg" alt="LM Studio" class="server-type-logo"></div>
+                    <span class="server-type-name">LM Studio</span>
+                </button>
+                <button id="select-ollama-type" type="button" class="server-type-btn" aria-pressed="false">
+                    <div class="server-type-icon"><img src="images/ollama-logo.svg" alt="Ollama" class="server-type-logo ollama-logo"></div>
+                    <span class="server-type-name">Ollama</span>
+                </button>
+            </div>
             <div class="flex gap-3 mb-5">
                 <div class="flex-1 min-w-0">
                     <label for="server-ip" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Hostname / IP</label>
@@ -1062,6 +1103,37 @@ export const settingsModal = `
                 <button id="save-lmstudio-mcp-input-modal" type="button"
                     class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-12">
                     <i class="fas fa-check mr-2"></i>Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset to Default Confirmation Modal -->
+    <div id="reset-to-default-modal"
+        class="fixed inset-0 items-center justify-center hidden modal-container"
+        style="z-index: 2400; background: rgba(0,0,0,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);"
+        role="dialog" aria-modal="true" aria-labelledby="reset-to-default-title">
+        <div class="connection-input-modal-box" style="max-width: 420px;">
+            <div class="connection-input-modal-accent connection-input-modal-accent--blue"></div>
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="reset-to-default-title" class="text-lg font-bold flex items-center" style="color: var(--settings-title-color, #f1f5f9);">
+                    <i class="fas fa-rotate-left text-blue-400 mr-2"></i>Reset to Default
+                </h3>
+                <button id="close-reset-to-default-modal" type="button" class="conn-modal-close-btn" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <p id="reset-to-default-message" class="text-sm mb-5" style="color: var(--settings-help-text, #9ca3af);">
+                Reset this setting to its default value?
+            </p>
+            <div class="flex gap-3">
+                <button id="cancel-reset-to-default" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--cancel flex-1 h-12">
+                    Cancel
+                </button>
+                <button id="confirm-reset-to-default" type="button"
+                    class="conn-modal-action-btn conn-modal-action-btn--save flex-1 h-12">
+                    <i class="fas fa-check mr-2"></i>Reset
                 </button>
             </div>
         </div>

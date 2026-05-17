@@ -231,8 +231,9 @@ function handleCancel() {
 /**
  * Intercept IP/Port changes and show confirmation modal if needed
  * @param {Function} callback - Function to execute after confirmation
+ * @param {string} [serverType] - The selected server type ('ollama' or 'lmstudio')
  */
-export function interceptIpPortChanges(callback) {
+export function interceptIpPortChanges(callback, serverType) {
     // Check if values have changed
     if (!hasIpPortChanged()) {
         // No changes, execute callback immediately
@@ -241,8 +242,9 @@ export function interceptIpPortChanges(callback) {
         return;
     }
 
-    // Check if Ollama is enabled - skip checklist if so
-    if (ollamaToggleCheckbox && ollamaToggleCheckbox.checked) {
+    // Check if Ollama is selected - skip checklist if so
+    const isOllama = serverType === 'ollama' || (ollamaToggleCheckbox && ollamaToggleCheckbox.checked);
+    if (isOllama) {
         debugLog('Skipping IP/Port checklist (Ollama enabled)');
         // Update stored values since we are accepting the change implicitly
         storeOriginalValues();

@@ -5,12 +5,12 @@ import {
 } from './dom-elements.js';
 import { showToastNotice } from './toast-notice.js';
 
-import { 
-    getLMStudioApiToken, 
-    getUseOllama, 
-    getUseOpenRouter, 
+import {
+    getLMStudioApiToken,
+    getUseOllama,
+    getUseOpenRouter,
     getUseOpenAICompatible,
-    getContextLength 
+    getContextLength
 } from './settings-manager.js';
 
 // Configuration keys
@@ -127,6 +127,82 @@ async function detectApiVersion(ip, port) {
 }
 
 /**
+ * Fetches the absolute max context and currently active context for the loaded LM Studio model.
+ * Uses the user-configured IP/port — never localhost.
+ * Only meaningful when LM Studio is the active provider.
+ * @returns {Promise<{maxLimit: number|null, currentActive: number|null}|null>}
+ */
+export async function getLMStudioContextSpecs() {
+    const ip = serverIpInput?.value.trim();
+    const port = serverPortInput?.value.trim();
+    if (!ip || !port || isCloudProviderActive() || getUseOllama()) return null;
+
+    try {
+        const apiVer = await detectApiVersion(ip, port);
+
+        if (apiVer === 'v1native') {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            let response;
+            try {
+                response = await fetch(`http://${ip}:${port}/api/v1/models`, {
+                    signal: controller.signal,
+                    headers: getLMStudioAuthHeaders()
+                });
+            } finally {
+                clearTimeout(timeoutId);
+            }
+            if (!response.ok) return null;
+            const data = await response.json();
+            const models = data.models || data.data || [];
+            const loaded = models.find(m =>
+                Array.isArray(m.loaded_instances) && m.loaded_instances.length > 0
+            );
+            if (!loaded) return { maxLimit: null, currentActive: null };
+
+            // max_context_length = model's absolute training max (e.g. 131072)
+            // context_length at model level = what was actually loaded (e.g. 4096)
+            const maxLimit = loaded.max_context_length ?? null;
+            const instance = loaded.loaded_instances[0];
+
+            // Try every known field name — LM Studio uses camelCase internally but
+            // REST responses have varied across versions (snake_case vs camelCase).
+            // Final fallback: model-level context_length when it differs from maxLimit.
+            const currentActive =
+                instance?.context_length ??
+                instance?.contextLength ??
+                instance?.config?.context_length ??
+                instance?.config?.contextLength ??
+                (loaded.context_length != null && loaded.context_length !== maxLimit
+                    ? loaded.context_length
+                    : null);
+
+            console.log('[ContextSpecs] loaded instance:', JSON.stringify(instance));
+            console.log('[ContextSpecs] model-level context_length:', loaded.context_length, '| maxLimit:', maxLimit, '| currentActive:', currentActive);
+            return { maxLimit, currentActive };
+        }
+
+        // Legacy API: try well-known model info endpoints
+        for (const path of ['/v1/internal/model/info', '/v1/model/info']) {
+            try {
+                const resp = await fetch(`http://${ip}:${port}${path}`, {
+                    headers: getLMStudioAuthHeaders()
+                });
+                if (resp.ok) {
+                    const info = await resp.json();
+                    const maxLimit = info.max_context_length ?? info.context_length ?? null;
+                    return { maxLimit, currentActive: null };
+                }
+            } catch (_) {}
+        }
+        return null;
+    } catch (e) {
+        console.warn('[ContextSpecs] fetch failed:', e.message);
+        return null;
+    }
+}
+
+/**
  * Detects the currently loaded model in LM Studio using a completion probe.
  * This is used when the models list API doesn't clearly indicate which model is active.
  * @param {string} ip - Server IP
@@ -165,10 +241,11 @@ async function detectLmStudioLoadedModelViaCompletionProbe(ip, port, modelsList 
         const endpoint = useNative ? `http://${ip}:${port}/api/v1/chat` : `http://${ip}:${port}/v1/chat/completions`;
         const ctxLen = getContextLength();
 
+        const probeModel = modelsList[0]?.id ?? window.currentLoadedModel ?? '';
         const requestBody = useNative ? {
+            model: probeModel,
             input: 'Respond with exactly: ok',
-            stream: false,
-            context_length: ctxLen > 0 ? ctxLen : undefined
+            stream: false
         } : {
             messages: [
                 { role: 'system', content: 'You are a helpful assistant.' },
@@ -495,6 +572,7 @@ async function waitForModelLoad(ip, port, modelId, maxAttempts = 15) {
 
             if (resp.ok) {
                 window.currentLoadedModel = modelId;
+                window.currentLoadedContextLength = ctxLen;
                 return true;
             }
         } catch (_) {}
@@ -558,7 +636,8 @@ export async function loadModel(modelId) {
         return true;
     }
 
-    if (window.currentLoadedModel === modelId) return true;
+    const desiredCtx = getContextLength();
+    if (window.currentLoadedModel === modelId && window.currentLoadedContextLength === desiredCtx) return true;
 
     // Unload current model if needed
     if (window.currentLoadedModel) {
@@ -577,7 +656,7 @@ export async function loadModel(modelId) {
     if (apiVer === 'v1native') {
         const loadBody = { model: modelId };
         const ctxLen = getContextLength();
-        if (ctxLen > 0) loadBody.n_ctx = ctxLen;
+        if (ctxLen > 0) loadBody.context_length = ctxLen;
 
         success = await tryEndpoints(ip, port, 'Load', [{ path: '/api/v1/models/load', method: 'POST' }], loadBody, { timeoutMs: 60000 });
         apiVersionCache.timestamp = 0;
@@ -650,11 +729,16 @@ export function getApiUrl(options = {}) {
     const port = portInput?.value?.trim();
     if (!ip || !port) return '';
 
-    // If context length is customized or native is explicitly requested, use the Native v1 endpoint
-    if (options.preferNativeLmStudio || getContextLength() > 0) {
+    // Ollama uses the OpenAI-compatible endpoint
+    if (getUseOllama()) {
+        return `http://${ip}:${port}/v1/chat/completions`;
+    }
+
+    // Only use native endpoint when explicitly requested (e.g. MCP integrations, vision)
+    if (options.preferNativeLmStudio) {
         return `http://${ip}:${port}/api/v1/chat`;
     }
-    
+
     return `http://${ip}:${port}/v1/chat/completions`;
 }
 

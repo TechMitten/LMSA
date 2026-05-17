@@ -3,7 +3,7 @@ import { messagesContainer, userInput, loadedModelDisplay } from './dom-elements
 import { appendMessage, showLoadingIndicator, hideLoadingIndicator, toggleSendStopButton, hideWelcomeMessage, showWelcomeMessage, toggleSidebar, showConfirmationModal, hideConfirmationModal, updateChatHistoryScroll, renderSmartReplies, hideSmartReplies, showSmartRepliesLoading, addWebSearchIndicator } from './ui-manager.js';
 import { showToastNotice } from './toast-notice.js';
 import { openHelpModal } from './help.js';
-import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels } from './api-service.js';
+import { getApiUrl, getAvailableModels, isServerRunning, fetchAvailableModels, loadModel as apiLoadModel } from './api-service.js';
 import { getSystemPrompt, getTemperature, isSystemPromptSet, getAutoGenerateTitles, isUserCreatedPrompt, getHideThinking, getReasoningTimeout, getAutoScrollEnabled, getAutoSmartReply, getUseOpenRouter, getUseOpenAICompatible, getUseOllama, getOpenRouterApiKey, getOpenAICompatibleApiKey, getLMStudioApiToken, getLMStudioMcpIntegrations, hasLMStudioMcpIntegrations, getWebSearchEnabled, getConfiguredMaxTokens, getContextLength, getReasoningLevel, getBraveApiKey } from './settings-manager.js';
 import { sanitizeInput, basicSanitizeInput, initializeCodeMirror, scrollToBottom, handleScroll, debugLog, debugError, filterToEnglishCharacters, processCodeBlocks, decodeHtmlEntities, refreshAllCodeBlocks, containsCodeBlocks, containsCodeBlocksOutsideThinkTags, saveCurrentChatBeforeRefresh, removeThinkTags, hideScrollToBottomButton, getReasoningStreamState, stripReasoningSections, normalizeReasoningTags, normalizeMalformedCodeFences, isAndroidWebView, estimateTokens } from './utils.js';
 import { setActionToPerform } from './shared-state.js';
@@ -1330,10 +1330,11 @@ function appendRequestSystemPrompts(targetMessages, baseSystemPrompt, shouldInli
 function shouldUseLmStudioNativeApi() {
     // Force native API for:
     // 1. MCP integrations
-    // 2. Custom context length settings
-    // 3. Local vision models (for better multi-modal handling)
+    // 2. Local vision models (for better multi-modal handling)
+    // Note: context_length is applied at model load time via n_ctx, not per-request,
+    // so custom context length alone does not require the native API.
     const isLocal = isLocalLmStudioProvider() && !getUseOllama();
-    return isLocal && (hasLMStudioMcpIntegrations() || getContextLength() > 0 || (window.currentModelIsVision === true));
+    return isLocal && (hasLMStudioMcpIntegrations() || (window.currentModelIsVision === true));
 }
 
 function buildNativeSystemPrompt(shouldInlineChatTitle) {
@@ -1503,8 +1504,7 @@ function buildLmStudioMcpRequest(messages, shouldInlineChatTitle) {
         input: buildNativeInputFromContent(lastUserMessage?.content, transcriptPrefix),
         integrations: sanitizeLmStudioMcpIntegrations(getLMStudioMcpIntegrations()),
         temperature: getTemperature(),
-        stream: false,
-        context_length: getContextLength() > 0 ? getContextLength() : Math.max(8000, getConfiguredMaxTokens())
+        stream: false
     };
 
     const systemPrompt = buildNativeSystemPrompt(shouldInlineChatTitle);
@@ -3056,6 +3056,16 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
     try {
         if (!(await isServerRunning())) {
             throw new Error(PROVIDER_CONNECTION_UNAVAILABLE);
+        }
+
+        // If a custom context length is set for LM Studio, reload the model when the context
+        // differs from what was used at last load — this avoids LM Studio spawning a secondary
+        // CPU-only model instance when context_length is sent in the chat request itself.
+        if (isLocalLmStudioProvider() && !getUseOllama() && window.currentLoadedModel) {
+            const desiredCtx = getContextLength();
+            if (desiredCtx > 0 && window.currentLoadedContextLength !== desiredCtx) {
+                await apiLoadModel(window.currentLoadedModel);
+            }
         }
 
         // Before proceeding, check if we need to compact the context (especially for OpenRouter)

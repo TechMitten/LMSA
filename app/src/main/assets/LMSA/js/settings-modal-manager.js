@@ -5,7 +5,7 @@ import { settingsModal, getStartedBtn } from './dom-elements.js';
 import { debugLog, getDebugEnabled, isAndroidWebView } from './utils.js';
 import { showToastNotice } from './toast-notice.js';
 import { checkAndShowWelcomeMessage } from './ui-manager.js';
-import { getApiUrl, getAvailableModels, isServerRunning, validateIpPort, saveServerSettings, fetchAvailableModels } from './api-service.js';
+import { getApiUrl, getAvailableModels, isServerRunning, validateIpPort, saveServerSettings, fetchAvailableModels, getLMStudioContextSpecs } from './api-service.js';
 import { openPremiumModal } from './components/modals/premium-modal.js';
 import {
     getUseOpenRouter,
@@ -18,7 +18,9 @@ import {
     setOpenRouterApiKey,
     setOpenAICompatibleEndpoint,
     setOpenAICompatibleApiKey,
-    setLMStudioApiToken
+    setLMStudioApiToken,
+    setLocalServerType,
+    setModelContextSpecs
 } from './settings-manager.js';
 import {
     getSidebarLayoutSchema,
@@ -38,6 +40,35 @@ let _openModelInfoAfterSettingsClose = false;
 let _openRouterKeyBeforeEditing = '';
 let _pendingConnectionPresetDeletion = null;
 let _showConnectionPresetEditModal = null;
+
+// --- Context specs live polling ---
+let _ctxSpecsInterval = null;
+
+async function _refreshContextSpecs() {
+    const btn = document.getElementById('refresh-ctx-specs-btn');
+    const icon = btn?.querySelector('.fa-sync-alt');
+    if (icon) icon.classList.add('ctx-specs-spinning');
+    try {
+        const specs = await getLMStudioContextSpecs();
+        if (specs) setModelContextSpecs(specs.maxLimit, specs.currentActive);
+    } catch (_) {}
+    if (icon) icon.classList.remove('ctx-specs-spinning');
+}
+
+function _startCtxSpecsPolling() {
+    _refreshContextSpecs();
+    _ctxSpecsInterval = setInterval(_refreshContextSpecs, 30000);
+    const btn = document.getElementById('refresh-ctx-specs-btn');
+    if (btn && !btn.dataset.ctxRefreshAttached) {
+        btn.addEventListener('click', _refreshContextSpecs);
+        btn.dataset.ctxRefreshAttached = 'true';
+    }
+}
+
+function _stopCtxSpecsPolling() {
+    clearInterval(_ctxSpecsInterval);
+    _ctxSpecsInterval = null;
+}
 
 const CONNECTION_PRESET_TYPE_LABELS = {
     local: 'Local Server',
@@ -1074,6 +1105,8 @@ export async function showSettingsModal() {
             connectionButtons.classList.remove('hidden');
         }
     }
+
+    _startCtxSpecsPolling();
 }
 
 /**
@@ -1090,6 +1123,8 @@ export function hideSettingsModal() {
  * Handles the animation and cleanup.
  */
 function proceedWithHideSettingsModal() {
+    _stopCtxSpecsPolling();
+
     // Get the modal content for animation
     const modalContent = settingsModal.querySelector('.modal-content');
 
@@ -1416,18 +1451,6 @@ export function initializeSettingsModalNavigation() {
 
             // Update step indicators
             updateStepIndicators(stepName);
-
-            // Reset scroll positions to start the user off at the top of the menu page
-            const settingsContentWrapper = document.getElementById('settings-content-wrapper');
-            if (settingsContentWrapper) {
-                settingsContentWrapper.scrollTop = 0;
-            }
-            if (settingsModal) {
-                const modalContent = settingsModal.querySelector('.modal-content');
-                if (modalContent) {
-                    modalContent.scrollTop = 0;
-                }
-            }
 
             // Removed automatic focus on inputs to prevent mobile keyboard from appearing
             // This prevents the keyboard from automatically showing up on mobile devices
@@ -2947,9 +2970,51 @@ function initializeConnectionInputModals() {
 
     // ----- IP / Port modal -----
 
+    const lmStudioTypeBtn = document.getElementById('select-lmstudio-type');
+    const ollamaTypeBtn = document.getElementById('select-ollama-type');
+    let _pendingServerType = null;
+
+    function applyServerTypeSelection(type) {
+        _pendingServerType = type;
+        if (lmStudioTypeBtn) {
+            lmStudioTypeBtn.setAttribute('aria-pressed', type === 'lmstudio' ? 'true' : 'false');
+            lmStudioTypeBtn.classList.toggle('active', type === 'lmstudio');
+        }
+        if (ollamaTypeBtn) {
+            ollamaTypeBtn.setAttribute('aria-pressed', type === 'ollama' ? 'true' : 'false');
+            ollamaTypeBtn.classList.toggle('active', type === 'ollama');
+        }
+        const portInput = document.getElementById('server-port');
+        if (portInput) {
+            const current = portInput.value.trim();
+            if (type === 'lmstudio' && (current === '' || current === '11434')) portInput.value = '1234';
+            if (type === 'ollama'   && (current === '' || current === '1234'))  portInput.value = '11434';
+        }
+    }
+
+    function restoreServerTypeSelection() {
+        const saved = localStorage.getItem('localServerType') ||
+            (localStorage.getItem('useOllama') === 'true' ? 'ollama' : null);
+        _pendingServerType = saved;
+        if (lmStudioTypeBtn) {
+            lmStudioTypeBtn.setAttribute('aria-pressed', saved === 'lmstudio' ? 'true' : 'false');
+            lmStudioTypeBtn.classList.toggle('active', saved === 'lmstudio');
+        }
+        if (ollamaTypeBtn) {
+            ollamaTypeBtn.setAttribute('aria-pressed', saved === 'ollama' ? 'true' : 'false');
+            ollamaTypeBtn.classList.toggle('active', saved === 'ollama');
+        }
+    }
+
+    if (lmStudioTypeBtn) lmStudioTypeBtn.addEventListener('click', () => applyServerTypeSelection('lmstudio'));
+    if (ollamaTypeBtn)   ollamaTypeBtn.addEventListener('click',   () => applyServerTypeSelection('ollama'));
+
     const configLocalBtn = document.getElementById('configure-local-server-btn');
     if (configLocalBtn) {
-        configLocalBtn.addEventListener('click', () => showInputModal(ipPortModal));
+        configLocalBtn.addEventListener('click', () => {
+            restoreServerTypeSelection();
+            showInputModal(ipPortModal);
+        });
     }
 
     const closeIpPortBtnX = document.getElementById('close-ip-port-input-modal');
@@ -2962,6 +3027,7 @@ function initializeConnectionInputModals() {
         const portInput = document.getElementById('server-port');
         if (ipInput) ipInput.value = localStorage.getItem('serverIp') || '';
         if (portInput) portInput.value = localStorage.getItem('serverPort') || '';
+        restoreServerTypeSelection();
         hideInputModal(ipPortModal);
     };
 
@@ -2970,12 +3036,23 @@ function initializeConnectionInputModals() {
 
     if (saveIpPortBtn) {
         saveIpPortBtn.addEventListener('click', () => {
+            if (!_pendingServerType) {
+                // Shake the selector to signal a required choice
+                const selector = document.getElementById('local-server-type-selector');
+                if (selector) {
+                    selector.classList.add('shake-animation');
+                    setTimeout(() => selector.classList.remove('shake-animation'), 600);
+                }
+                showToastNotice('Please select LM Studio or Ollama before saving.', 'error');
+                return;
+            }
             if (!validateIpPort()) return; // error modal shown by validateIpPort
             interceptIpPortChanges(() => {
                 saveServerSettings();
+                setLocalServerType(_pendingServerType);
                 updateConnectionStatusDisplays();
                 hideInputModal(ipPortModal);
-            });
+            }, _pendingServerType);
         });
     }
 
