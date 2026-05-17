@@ -21,7 +21,8 @@ import {
     setLMStudioApiToken,
     setLocalServerType,
     setModelContextSpecs,
-    updateContextLengthVisibility
+    updateContextLengthVisibility,
+    resetSettingsModalLocks
 } from './settings-manager.js';
 import {
     getSidebarLayoutSchema,
@@ -956,6 +957,7 @@ export async function showSettingsModal() {
     if (!settingsModal) return;
 
     _currentSettingsStep = 'connection';
+    resetSettingsModalLocks();
 
     debugLog('Opening settings modal');
 
@@ -1133,6 +1135,7 @@ export function hideSettingsModal() {
  */
 function proceedWithHideSettingsModal() {
     _stopCtxSpecsPolling();
+    resetSettingsModalLocks();
 
     // Get the modal content for animation
     const modalContent = settingsModal.querySelector('.modal-content');

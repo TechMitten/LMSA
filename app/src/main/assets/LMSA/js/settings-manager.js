@@ -79,9 +79,21 @@ let lmStudioApiToken = ''; // Optional LM Studio API token for authenticated ser
 let lmStudioMcpIntegrations = []; // Optional LM Studio native chat integrations payload
 let reasoningLevel = 'default'; // Thinking effort level (default, disabled, low, medium, high)
 let otterBurrowMap = ''; // Web search provider key map
+let resetTemperatureLockState = null;
+let resetContextLengthLockState = null;
 
 const IMAGE_GENERATION_COUNT_KEY = 'imageGenerationCount';
 export const FREE_IMAGE_GENERATION_LIMIT = 2;
+
+export function resetSettingsModalLocks() {
+  if (typeof resetTemperatureLockState === 'function') {
+    resetTemperatureLockState();
+  }
+
+  if (typeof resetContextLengthLockState === 'function') {
+    resetContextLengthLockState();
+  }
+}
 
 /**
  * Checks if the application has a valid connection configuration
@@ -416,6 +428,12 @@ export function initializeTemperature() {
       // Force a repaint to ensure styles are applied
       temperatureInput.offsetHeight;
     }, 50); // Longer delay to ensure DOM is fully ready
+
+    resetTemperatureLockState = () => {
+      isLocked = true;
+      applyLockedState();
+      temperatureInput.offsetHeight;
+    };
   }
 }
 
@@ -1036,6 +1054,12 @@ export function loadContextLengthSetting() {
       applyLockedState();
       input.offsetHeight;
     }, 50);
+
+    resetContextLengthLockState = () => {
+      isLocked = true;
+      applyLockedState();
+      input.offsetHeight;
+    };
 
     lockBtn.dataset.contextLengthLockInitialized = "true";
   }
