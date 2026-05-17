@@ -1474,6 +1474,11 @@ export function initializeSettingsModalNavigation() {
 
             if (stepName === 'options') {
                 _refreshContextSpecs();
+                const settingsModalEl = document.getElementById('settings-modal');
+                if (settingsModalEl) {
+                    const modalContent = settingsModalEl.querySelector('.modal-content');
+                    if (modalContent) modalContent.scrollTop = 0;
+                }
             }
 
             // Removed automatic focus on inputs to prevent mobile keyboard from appearing

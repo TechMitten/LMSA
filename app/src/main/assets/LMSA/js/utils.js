@@ -2165,24 +2165,101 @@ export function hideScrollToBottomButton() {
         scrollButton.style.pointerEvents = 'none';
     }
 }
+function normalizeTokenEstimateContent(content) {
+    if (content == null) {
+        return '';
+    }
+
+    if (typeof content === 'string') {
+        return content;
+    }
+
+    if (Array.isArray(content)) {
+        return content.map(part => {
+            if (!part || typeof part !== 'object') {
+                return String(part ?? '');
+            }
+
+            if (part.type === 'text') {
+                return String(part.text ?? '');
+            }
+
+            if (part.type === 'image_url') {
+                return String(part.image_url?.url ?? '[image]');
+            }
+
+            return JSON.stringify(part);
+        }).join('\n');
+    }
+
+    if (typeof content === 'object') {
+        try {
+            return JSON.stringify(content);
+        } catch (_) {
+            return String(content);
+        }
+    }
+
+    return String(content);
+}
+
+function estimateTextTokens(text) {
+    const normalized = String(text || '').replace(/\r\n?/g, '\n');
+    if (!normalized) {
+        return 0;
+    }
+
+    const charEstimate = Math.ceil(normalized.length / 3);
+    const lexicalPieces = normalized.match(/[A-Za-z]+(?:'[A-Za-z]+)?|\d+|[^\sA-Za-z\d]/g) || [];
+    const pieceEstimate = Math.ceil(lexicalPieces.length * 1.08);
+    const newlineEstimate = Math.max(0, normalized.split('\n').length - 1) * 2;
+
+    return Math.max(charEstimate, pieceEstimate) + newlineEstimate;
+}
+
+function estimateStructuredMessageTokens(message) {
+    if (!message || typeof message !== 'object') {
+        return estimateTextTokens(message);
+    }
+
+    let total = 10;
+    total += estimateTextTokens(message.role || '');
+    total += estimateTextTokens(message.name || '');
+    total += estimateTextTokens(message.tool_call_id || '');
+    total += estimateTextTokens(normalizeTokenEstimateContent(message.content));
+
+    if (Array.isArray(message.tool_calls) && message.tool_calls.length > 0) {
+        total += estimateTextTokens(JSON.stringify(message.tool_calls));
+    }
+
+    if (Array.isArray(message.files) && message.files.length > 0) {
+        total += message.files.reduce((sum, file) => {
+            const fileName = estimateTextTokens(file?.name || '');
+            const fileContent = estimateTextTokens(file?.content || '');
+            return sum + 24 + fileName + fileContent;
+        }, 0);
+    }
+
+    return total;
+}
+
 /**
  * Estimates the number of tokens in a string or an array of messages.
- * Uses a conservative estimation (4 characters per token).
+ * Prefers a conservative upper-bound so compaction triggers before local providers truncate.
  * @param {string|Array} input - The text or messages to estimate tokens for
  * @returns {number} - The estimated token count
  */
 export function estimateTokens(input) {
     if (!input) return 0;
-    
-    let text = '';
+
     if (Array.isArray(input)) {
-        // For messages, include roles and content
-        text = input.map(msg => `${msg.role}: ${msg.content}`).join('\n');
-    } else {
-        text = String(input);
+        const looksLikeMessages = input.every(item => item && typeof item === 'object' && ('role' in item || 'content' in item));
+        if (looksLikeMessages) {
+            return input.reduce((sum, message) => sum + estimateStructuredMessageTokens(message), 24);
+        }
+
+        return estimateTextTokens(input.map(item => normalizeTokenEstimateContent(item)).join('\n'));
     }
-    
-    // Simple heuristic: ~4 characters per token for English
-    // We'll use a slightly more conservative 3.5 for better safety
-    return Math.ceil(text.length / 3.5);
+
+    return estimateTextTokens(normalizeTokenEstimateContent(input));
 }

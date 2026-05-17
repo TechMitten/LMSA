@@ -248,7 +248,7 @@ export const settingsModal = `
                                     </label>
                                 </div>
                             </div>
-                            <p class="settings-item-description">Use the slider for popular preset values (like 4096). For exact custom values, type in the field below. Disable override to use the provider default. On OpenRouter and custom endpoints, override also enables automatic conversation compaction.</p>
+                            <p class="settings-item-description">Use the slider for popular preset values (like 4096). For exact custom values, type in the field below. Disable override to use the provider default. On OpenRouter, override also enables automatic conversation compaction.</p>
                             <div class="settings-slider-container">
                                 <input type="range" id="context-length-input" min="0" max="10" step="1"
                                     class="settings-slider" value="0">

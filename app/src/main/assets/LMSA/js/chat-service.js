@@ -4258,6 +4258,8 @@ function compactMessages(messages, summary) {
  * @returns {Promise<boolean>} - True if compaction occurred
  */
 export async function checkAndCompactContextIfNeeded(chatId) {
+    if (!getUseOpenRouter()) return false;
+
     const contextLimit = getContextLength();
     if (contextLimit <= 0) return false;
 
