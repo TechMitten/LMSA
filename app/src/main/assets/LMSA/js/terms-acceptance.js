@@ -277,13 +277,6 @@ function setupEventListeners() {
  * Handle accept terms button click
  */
 async function handleAcceptTerms() {
-    // Check if the user has scrolled to the bottom (read the TOS) first
-    // If not, show the elegant Alert Modal instead of accepting!
-    if (!hasScrolledToBottom) {
-        showTermsAlertModal();
-        return;
-    }
-
     // Show loading state
     acceptButton.classList.add('loading');
     acceptButton.disabled = true;

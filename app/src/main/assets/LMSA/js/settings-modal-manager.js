@@ -1077,7 +1077,7 @@ export async function showSettingsModal() {
 
     // Refresh the connection status displays with current saved values
     updateConnectionStatusDisplays();
-    setConnectionPresetsSectionExpanded(false);
+    setConnectionPresetsSectionExpanded(window.innerWidth >= 1025);
     renderConnectionPresetList();
     renderSidebarLayoutEditor();
 

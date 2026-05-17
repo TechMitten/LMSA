@@ -603,6 +603,10 @@ body.light-theme #welcome-message .setup-panel-expand-btn:hover {
     text-align: left;
 }
 
+#welcome-message .setup-model-status:empty {
+    display: none;
+}
+
 #welcome-message .setup-saved-chats-card {
     width: 100%;
     margin: 0 0 1rem;
@@ -3243,7 +3247,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 }
 
 /* Tablet-only polish layer. Keep phone layouts untouched. */
-@media (min-width: 641px) and (max-width: 1023px) {
+@media (min-width: 641px) and (max-width: 1024px) {
     :root {
         --tablet-shell-width: min(980px, calc(100vw - 40px));
         --tablet-content-width: min(900px, calc(100vw - 64px));
@@ -3582,7 +3586,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     }
 }
 
-@media (min-width: 768px) and (max-width: 1023px) {
+@media (min-width: 768px) and (max-width: 1024px) {
     .welcome-content > .grid.grid-cols-1 {
         grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
         gap: 0.95rem !important;
@@ -3689,14 +3693,19 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     }
 
     #chat-form {
+        width: min(100%, var(--tablet-landscape-composer-width));
         max-width: none;
         justify-content: center !important;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     #chat-form > .chat-input-main,
     #chat-form > .flex-grow {
-        flex: 0 1 var(--tablet-landscape-composer-width) !important;
-        max-width: var(--tablet-landscape-composer-width);
+        flex: 1 1 min(100%, var(--tablet-landscape-composer-width)) !important;
+        width: min(100%, var(--tablet-landscape-composer-width));
+        max-width: min(100%, var(--tablet-landscape-composer-width));
+        min-width: 0 !important;
     }
 
     #messages {
