@@ -496,6 +496,7 @@ export function getConfiguredMaxTokens() {
 }
 
 export function getContextLength() {
+  if (useOpenAICompatible) return 0;
   return contextLength;
 }
 
@@ -504,7 +505,8 @@ export function getContextLength() {
  */
 export function updateContextLengthVisibility() {
   const section = document.querySelector('.context-length-setting');
-  if (section) section.style.display = '';
+  if (!section) return;
+  section.style.display = useOpenAICompatible ? 'none' : '';
 }
 
 
@@ -1013,6 +1015,7 @@ export function setModelContextSpecs(maxLimit, currentActive) {
   const maxEl  = document.getElementById('lmstudio-ctx-max');
   const activeEl = document.getElementById('lmstudio-ctx-active');
   const refreshBtn = document.getElementById('refresh-ctx-specs-btn');
+  const shouldMirrorActiveContextIntoSlider = !useOpenRouter && !useOpenAICompatible;
 
   if (refreshBtn) {
     refreshBtn.title = useOllama ? "Refresh from Ollama" : "Refresh from LM Studio";
@@ -1032,7 +1035,9 @@ export function setModelContextSpecs(maxLimit, currentActive) {
   // Mirror the active LM Studio context into the slider and text input, but only
   // when the user has not manually set a value (contextLength === 0 means "provider default"),
   // AND the loaded model is not currently running with a stale custom context length.
-  if (currentActive && currentActive > 0 && contextLength === 0) {
+  // Cloud providers keep the slider at 0 so "Default" remains visually distinct
+  // from an explicit custom limit equal to the provider maximum.
+  if (shouldMirrorActiveContextIntoSlider && currentActive && currentActive > 0 && contextLength === 0) {
     const isStaleCustomContext = window.currentLoadedContextLength && window.currentLoadedContextLength > 0;
     if (!isStaleCustomContext) {
       if (input) input.value = String(currentActive);
@@ -2403,6 +2408,7 @@ export function saveOpenAICompatibleSettings() {
       if (ollamaToggleCheckbox) ollamaToggleCheckbox.checked = false;
     }
     updateProviderUI();
+    updateContextLengthVisibility();
     window.currentLoadedModel = localStorage.getItem('openAICompatibleSelectedModel') || null;
   } else {
     useOpenAICompatible = false;
@@ -2416,6 +2422,7 @@ export function saveOpenAICompatibleSettings() {
       localStorage.setItem('openAICompatibleApiKey', openAICompatibleApiKey);
     }
     updateProviderUI();
+    updateContextLengthVisibility();
     refreshLocalLmStudioLoadedModelState();
   }
 }
@@ -2451,7 +2458,14 @@ export function applyConnectionProviderSelection(provider) {
   syncWelcomeProviderCardState('setup-openrouter-btn', normalizedProvider === 'openrouter');
   syncWelcomeProviderCardState('setup-custom-btn', normalizedProvider === 'openai-compatible');
 
+  if (contextLength === 0) {
+    const input = contextLengthInput || document.getElementById('context-length-input');
+    const valueDisplay = contextLengthValue || document.getElementById('context-length-value');
+    updateContextLengthUI(input, valueDisplay);
+  }
+
   updateProviderUI();
+  updateContextLengthVisibility();
 
   if (useOpenRouter) {
     window.currentLoadedModel = localStorage.getItem('openRouterSelectedModel') || null;
