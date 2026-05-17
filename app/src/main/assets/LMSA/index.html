@@ -612,20 +612,20 @@
                                         </div>
                                     </button>
                                 </div>
+
+                                <button type="submit" id="send-button"
+                                    class="focus:outline-none"
+                                    aria-label="Send message">
+                                    <div class="flex items-center justify-center">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </div>
+                                </button>
+                                <button type="button" id="stop-button"
+                                    class="focus:outline-none hidden">
+                                    <i class="fas fa-stop"></i>
+                                </button>
                             </div>
                         </div>
-                        <button type="submit" id="send-button"
-                            class="bg-blue-600 hover:bg-blue-500 text-white focus:outline-none"
-                            aria-label="Send message">
-                            <div class="flex items-center">
-                                <i class="fas fa-paper-plane"></i>
-                                <span class="ml-2 hidden md:inline">Send</span>
-                            </div>
-                        </button>
-                        <button type="button" id="stop-button"
-                            class="bg-red-600 text-white hover:bg-red-700 focus:outline-none hidden">
-                            <i class="fas fa-stop mr-1"></i><span>Stop</span>
-                        </button>
                         <input type="file" id="file-upload-input" class="hidden" multiple>
                     </form>
 

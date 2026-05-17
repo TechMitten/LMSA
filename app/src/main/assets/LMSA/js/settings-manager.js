@@ -496,16 +496,15 @@ export function getConfiguredMaxTokens() {
 }
 
 export function getContextLength() {
-  return useOllama ? 0 : contextLength;
+  return contextLength;
 }
 
 /**
  * Shows or hides the context length settings section based on the current provider.
- * Ollama manages its own context window, so the setting is irrelevant when it is active.
  */
 export function updateContextLengthVisibility() {
   const section = document.querySelector('.context-length-setting');
-  if (section) section.style.display = useOllama ? 'none' : '';
+  if (section) section.style.display = '';
 }
 
 
@@ -1013,6 +1012,11 @@ export function setModelContextSpecs(maxLimit, currentActive) {
   const infoEl = document.getElementById('lmstudio-context-info');
   const maxEl  = document.getElementById('lmstudio-ctx-max');
   const activeEl = document.getElementById('lmstudio-ctx-active');
+  const refreshBtn = document.getElementById('refresh-ctx-specs-btn');
+
+  if (refreshBtn) {
+    refreshBtn.title = useOllama ? "Refresh from Ollama" : "Refresh from LM Studio";
+  }
 
   if (input && maxLimit && maxLimit > 0) {
     input.max = String(maxLimit);
@@ -1026,19 +1030,64 @@ export function setModelContextSpecs(maxLimit, currentActive) {
   }
 
   // Mirror the active LM Studio context into the slider and text input, but only
-  // when the user has not manually set a value (contextLength === 0 means "provider default").
+  // when the user has not manually set a value (contextLength === 0 means "provider default"),
+  // AND the loaded model is not currently running with a stale custom context length.
   if (currentActive && currentActive > 0 && contextLength === 0) {
-    if (input) input.value = String(currentActive);
-    const textInput = document.getElementById('context-length-text-input');
-    if (textInput) textInput.value = String(currentActive);
-    const valueDisplay = contextLengthValue || document.getElementById('context-length-value');
-    if (valueDisplay) valueDisplay.textContent = String(currentActive);
+    const isStaleCustomContext = window.currentLoadedContextLength && window.currentLoadedContextLength > 0;
+    if (!isStaleCustomContext) {
+      if (input) input.value = String(currentActive);
+      const textInput = document.getElementById('context-length-text-input');
+      if (textInput) textInput.value = String(currentActive);
+      const valueDisplay = contextLengthValue || document.getElementById('context-length-value');
+      if (valueDisplay) valueDisplay.textContent = String(currentActive);
+    }
   }
 
-  const hasData = !!(maxLimit || currentActive);
-  if (infoEl) infoEl.style.display = hasData ? 'flex' : 'none';
+  const hasData = !!(maxLimit || currentActive || window.currentLoadedModel);
+  if (infoEl) infoEl.style.display = hasData ? 'block' : 'none';
   if (maxEl)    maxEl.textContent    = maxLimit     ? _fmtCtx(maxLimit)     : '—';
   if (activeEl) activeEl.textContent = currentActive ? _fmtCtx(currentActive) : '—';
+
+  const providerEl = document.getElementById('lmstudio-ctx-provider');
+  if (providerEl) {
+    let providerName = 'LM Studio';
+    if (useOpenRouter) {
+      providerName = 'OpenRouter';
+    } else if (useOpenAICompatible) {
+      providerName = 'Custom Endpoint';
+    } else if (useOllama) {
+      providerName = 'Ollama';
+    }
+    providerEl.textContent = providerName;
+  }
+
+  const modelEl = document.getElementById('lmstudio-ctx-model');
+  if (modelEl) {
+    if (window.currentLoadedModel) {
+      modelEl.textContent = _cleanModelName(window.currentLoadedModel);
+      modelEl.title = window.currentLoadedModel;
+    } else {
+      modelEl.textContent = '—';
+      modelEl.title = '';
+    }
+  }
+}
+
+function _cleanModelName(modelId) {
+  if (!modelId || modelId === 'dummy/no-model-selected') {
+    return 'None';
+  }
+  const isCloud = modelId.includes('/');
+  const namePart = isCloud ? modelId.split('/').pop() : modelId;
+  
+  return namePart
+    .split(/[-_]/)
+    .map(word => {
+      if (!word) return '';
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ')
+    .trim();
 }
 
 function _fmtCtx(n) {

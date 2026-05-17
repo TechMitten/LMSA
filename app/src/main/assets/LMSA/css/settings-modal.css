@@ -4548,34 +4548,56 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
   }
 }
 
-/* LM Studio live context specs info row */
-.lmstudio-ctx-info-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-  margin-top: 8px;
-  padding: 6px 10px;
+/* LM Studio live context specs info card */
+.lmstudio-ctx-info-card {
+  position: relative;
+  margin-top: 10px;
+  padding: 10px 12px;
   background: rgba(59, 130, 246, 0.08);
   border: 1px solid rgba(59, 130, 246, 0.2);
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 0.75rem;
   color: var(--text-secondary, #9ca3af);
 }
 
-.lmstudio-ctx-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+.lmstudio-ctx-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
 }
 
-.lmstudio-ctx-label strong {
+.lmstudio-ctx-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  padding: 7px 9px;
+  min-width: 0;
+}
+
+.lmstudio-ctx-cell-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #6b7280);
+}
+
+.lmstudio-ctx-cell-value {
   color: var(--text-primary, #e5e7eb);
   font-weight: 600;
+  font-size: 0.8rem;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .lmstudio-ctx-refresh-btn {
-  margin-left: auto;
+  position: absolute;
+  top: 8px;
+  right: 8px;
   background: transparent;
   border: none;
   color: #60a5fa;

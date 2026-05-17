@@ -20,6 +20,7 @@ const LOCAL_SELECTED_MODEL_KEY = 'localSelectedModel';
 let availableModels = [];
 let lastFetchPromise = null;
 let fetchModelsLock = false;
+let _cloudModelContextLengths = {};
 
 // Cache for API version detection
 let apiVersionCache = {
@@ -137,7 +138,96 @@ export async function getLMStudioContextSpecs() {
     // haven't been hydrated yet (e.g. first settings open before any model view).
     const ip = serverIpInput?.value.trim() || localStorage.getItem('serverIp') || '';
     const port = serverPortInput?.value.trim() || localStorage.getItem('serverPort') || '';
-    if (!ip || !port || isCloudProviderActive() || getUseOllama()) return null;
+
+    if (isCloudProviderActive()) {
+        const modelId = window.currentLoadedModel
+            || localStorage.getItem(getUseOpenRouter() ? 'openRouterSelectedModel' : 'customOpenAISelectedModel')
+            || '';
+        if (!modelId) return null;
+
+        const lsKey = `cloudCtxLen_${modelId}`;
+        let maxLimit = _cloudModelContextLengths[modelId]
+            || parseInt(localStorage.getItem(lsKey) || '0', 10) || null;
+
+        if (!maxLimit && getUseOpenRouter()) {
+            try {
+                const resp = await fetch('https://openrouter.ai/api/v1/models');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    (data.data || []).forEach(m => {
+                        if (m.context_length) {
+                            _cloudModelContextLengths[m.id] = m.context_length;
+                            localStorage.setItem(`cloudCtxLen_${m.id}`, String(m.context_length));
+                        }
+                    });
+                    maxLimit = _cloudModelContextLengths[modelId] || null;
+                }
+            } catch (_) {}
+        }
+
+        const userCtx = getContextLength();
+        const currentActive = userCtx > 0 ? userCtx : maxLimit;
+        return { maxLimit, currentActive };
+    }
+
+    if (!ip || !port) return null;
+
+    if (getUseOllama()) {
+        try {
+            let modelId = window.currentLoadedModel || localStorage.getItem('localSelectedModel');
+            if (!modelId) {
+                const ollamaModels = await fetchOllamaModels(ip, port).catch(() => []);
+                if (ollamaModels && ollamaModels.length > 0) {
+                    modelId = ollamaModels[0].id;
+                }
+            }
+            if (!modelId) return null;
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            try {
+                const response = await fetch(`http://${ip}:${port}/api/show`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: modelId, model: modelId }),
+                    signal: controller.signal
+                });
+                if (response.ok) {
+                    const showData = await response.json();
+                    let maxLimit = null;
+                    if (showData.model_info && typeof showData.model_info === 'object') {
+                        const contextLengthKey = Object.keys(showData.model_info).find(key => key.endsWith('.context_length'));
+                        if (contextLengthKey) {
+                            maxLimit = showData.model_info[contextLengthKey];
+                        }
+                    }
+                    
+                    let currentActive = null;
+                    if (showData.parameters && typeof showData.parameters === 'string') {
+                        const numCtxMatch = showData.parameters.match(/num_ctx\s+(\d+)/);
+                        if (numCtxMatch) {
+                            currentActive = parseInt(numCtxMatch[1], 10);
+                        }
+                    }
+                    
+                    if (maxLimit && !currentActive) {
+                        currentActive = maxLimit;
+                    }
+                    if (!maxLimit && currentActive) {
+                        maxLimit = currentActive;
+                    }
+                    
+                    return { maxLimit, currentActive };
+                }
+            } finally {
+                clearTimeout(timeoutId);
+            }
+            return null;
+        } catch (e) {
+            console.warn('[ContextSpecs] Ollama fetch failed:', e.message);
+            return null;
+        }
+    }
 
     try {
         // Always probe the native endpoint directly — bypassing detectApiVersion avoids
@@ -464,11 +554,18 @@ async function fetchCloudModels() {
         const response = await fetch('https://openrouter.ai/api/v1/models');
         if (!response.ok) throw new Error('Failed to fetch from OpenRouter');
         const data = await response.json();
-        return (data.data || []).map(m => ({
+        const models = (data.data || []).map(m => ({
             id: m.id,
             display_name: m.name || m.id,
             context_length: m.context_length
         }));
+        models.forEach(m => {
+            if (m.context_length) {
+                _cloudModelContextLengths[m.id] = m.context_length;
+                localStorage.setItem(`cloudCtxLen_${m.id}`, String(m.context_length));
+            }
+        });
+        return models;
     } else if (getUseOpenAICompatible()) {
         const baseUrl = localStorage.getItem('customOpenAIBaseUrl') || '';
         const apiKey = localStorage.getItem('customOpenAIApiKey') || '';
@@ -625,6 +722,8 @@ export async function loadModel(modelId) {
         availableModels = [modelId];
         const key = getCloudSelectedModelKey();
         if (key) localStorage.setItem(key, modelId);
+        const ctxLen = _cloudModelContextLengths[modelId];
+        if (ctxLen) localStorage.setItem(`cloudCtxLen_${modelId}`, String(ctxLen));
         updateLoadedModelDisplay(modelId);
         return true;
     }

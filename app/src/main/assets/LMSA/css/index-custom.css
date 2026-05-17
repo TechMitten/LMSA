@@ -3405,25 +3405,10 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
 
     #user-input {
         min-height: 58px !important;
-        padding: 0.95rem 4rem 0.95rem 1rem !important;
-        border-radius: 1rem 0 0 1rem !important;
+        padding: 0.95rem 5.25rem 0.95rem 1rem !important;
+        border-radius: 1rem !important;
         font-size: 1rem !important;
         line-height: 1.5 !important;
-    }
-
-    #chat-form button#send-button,
-    #chat-form button#stop-button,
-    #send-button,
-    #stop-button {
-        min-width: 108px !important;
-        min-height: 58px !important;
-        padding: 0 1.2rem !important;
-        border-radius: 0 1rem 1rem 0 !important;
-    }
-
-    #chat-form button#send-button i,
-    #chat-form button#stop-button i {
-        font-size: 1rem !important;
     }
 
     #ai-disclaimer {
@@ -4323,7 +4308,7 @@ body.keyboard-visible #chat-form > .flex-grow,
     min-width: 0 !important;
     min-height: var(--chat-composer-control-size) !important;
     margin: 0 !important;
-    padding-right: 3.5rem !important;
+    padding-right: 5.25rem !important;
     border-radius: 0.95rem !important;
     border-right: 1px solid var(--input-border) !important;
 }
@@ -4384,13 +4369,66 @@ body.light-theme #chat-form .chat-input-actions #paperclip-button.active {
 #stop-button {
     flex: 0 0 auto !important;
     align-self: center !important;
-    width: var(--chat-composer-control-size) !important;
-    min-width: var(--chat-composer-control-size) !important;
-    height: var(--chat-composer-control-size) !important;
-    min-height: var(--chat-composer-control-size) !important;
+    width: 2rem !important;
+    min-width: 2rem !important;
+    height: 2rem !important;
+    min-height: 2rem !important;
     margin-left: 0 !important;
     padding: 0 !important;
+    border: none !important;
     border-radius: 999px !important;
+    box-shadow: none !important;
+    transition: all 0.15s ease !important;
+}
+
+#chat-form button#send-button {
+    background: transparent !important;
+    color: #ffffff !important;
+}
+
+#chat-form button#send-button:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    transform: scale(1.05) !important;
+}
+
+#chat-form button#send-button:active {
+    transform: scale(0.95) !important;
+}
+
+#chat-form button#stop-button {
+    background: transparent !important;
+    color: #dc2626 !important;
+}
+
+#chat-form button#stop-button:hover {
+    background: rgba(220, 38, 38, 0.1) !important;
+    color: #b91c1c !important;
+    transform: scale(1.05) !important;
+}
+
+#chat-form button#stop-button:active {
+    transform: scale(0.95) !important;
+}
+
+/* Light theme overrides for contrast & readability */
+body.light-theme #chat-form button#send-button {
+    background: transparent !important;
+    color: #2563eb !important;
+}
+
+body.light-theme #chat-form button#send-button:hover {
+    background: rgba(37, 99, 235, 0.08) !important;
+    color: #1d4ed8 !important;
+}
+
+body.light-theme #chat-form button#stop-button {
+    background: transparent !important;
+    color: #dc2626 !important;
+}
+
+body.light-theme #chat-form button#stop-button:hover {
+    background: rgba(220, 38, 38, 0.08) !important;
+    color: #b91c1c !important;
 }
 
 #chat-form button#send-button:not(.hidden),
@@ -7478,7 +7516,7 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
 
     /* Fix chat input icons gap on tablets */
     #chat-form #user-input {
-        padding-right: 3.5rem !important;
+        padding-right: 5.25rem !important;
     }
 
     #chat-form .chat-input-actions {
@@ -7499,15 +7537,9 @@ body.light-theme #settings-modal .settings-item-toggle .settings-checkbox:checke
         align-items: center !important;
     }
     
-    /* Add separation between input container and send button */
-    html body #chat-form button#send-button,
-    html body #chat-form button#stop-button {
-        margin-left: 1rem !important;
-    }
-    
     html body #chat-form #user-input,
     html body.light-theme #chat-form #user-input {
-        padding-right: 3.5rem !important;
+        padding-right: 5.25rem !important;
     }
 }
 

@@ -51,13 +51,18 @@ async function _refreshContextSpecs() {
     if (icon) icon.classList.add('ctx-specs-spinning');
     try {
         const specs = await getLMStudioContextSpecs();
-        if (specs) setModelContextSpecs(specs.maxLimit, specs.currentActive);
-    } catch (_) {}
+        if (specs) {
+            setModelContextSpecs(specs.maxLimit, specs.currentActive);
+        } else {
+            setModelContextSpecs(null, null);
+        }
+    } catch (_) {
+        setModelContextSpecs(null, null);
+    }
     if (icon) icon.classList.remove('ctx-specs-spinning');
 }
 
 function _startCtxSpecsPolling() {
-    _refreshContextSpecs();
     _ctxSpecsInterval = setInterval(_refreshContextSpecs, 30000);
     const btn = document.getElementById('refresh-ctx-specs-btn');
     if (btn && !btn.dataset.ctxRefreshAttached) {
@@ -1455,6 +1460,10 @@ export function initializeSettingsModalNavigation() {
 
             // Update step indicators
             updateStepIndicators(stepName);
+
+            if (stepName === 'options') {
+                _refreshContextSpecs();
+            }
 
             // Removed automatic focus on inputs to prevent mobile keyboard from appearing
             // This prevents the keyboard from automatically showing up on mobile devices

@@ -266,19 +266,29 @@ export const settingsModal = `
                             </div>
 
                             <!-- LM Studio live context specs (hidden until fetched) -->
-                            <div id="lmstudio-context-info" class="lmstudio-ctx-info-row" style="display:none;">
-                                <span class="lmstudio-ctx-label">
-                                    <i class="fas fa-microchip"></i>Max:
-                                    <strong id="lmstudio-ctx-max">—</strong>
-                                </span>
-                                <span class="lmstudio-ctx-label">
-                                    <i class="fas fa-sliders-h"></i>Active:
-                                    <strong id="lmstudio-ctx-active">—</strong>
-                                </span>
+                            <div id="lmstudio-context-info" class="lmstudio-ctx-info-card" style="display:none;">
                                 <button id="refresh-ctx-specs-btn" type="button"
                                     class="lmstudio-ctx-refresh-btn" title="Refresh from LM Studio">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
+                                <div class="lmstudio-ctx-grid">
+                                    <div class="lmstudio-ctx-cell">
+                                        <span class="lmstudio-ctx-cell-label"><i class="fas fa-server"></i>Provider</span>
+                                        <strong id="lmstudio-ctx-provider" class="lmstudio-ctx-cell-value">—</strong>
+                                    </div>
+                                    <div class="lmstudio-ctx-cell">
+                                        <span class="lmstudio-ctx-cell-label"><i class="fas fa-robot"></i>Model</span>
+                                        <strong id="lmstudio-ctx-model" class="lmstudio-ctx-cell-value">—</strong>
+                                    </div>
+                                    <div class="lmstudio-ctx-cell">
+                                        <span class="lmstudio-ctx-cell-label"><i class="fas fa-microchip"></i>Max</span>
+                                        <strong id="lmstudio-ctx-max" class="lmstudio-ctx-cell-value">—</strong>
+                                    </div>
+                                    <div class="lmstudio-ctx-cell">
+                                        <span class="lmstudio-ctx-cell-label"><i class="fas fa-sliders-h"></i>Active</span>
+                                        <strong id="lmstudio-ctx-active" class="lmstudio-ctx-cell-value">—</strong>
+                                    </div>
+                                </div>
                             </div>
 
                         </div>
