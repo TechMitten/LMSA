@@ -489,7 +489,11 @@ export async function fetchAvailableModels(options = {}) {
                     }
                 }
 
-                if (!loadedModelInfo && modelsList.length > 0) {
+                // Keep model discovery side-effect free by default.
+                // The completion probe performs a chat request and can trigger LM Studio model loads.
+                // Only run it when a caller explicitly opts in.
+                const shouldRunCompletionProbe = options.allowSelectionProbe === true && !options.disableSelectionFallback;
+                if (!loadedModelInfo && modelsList.length > 0 && shouldRunCompletionProbe) {
                     loadedModelInfo = await detectLmStudioLoadedModelViaCompletionProbe(ip, port, modelsList);
                 }
 
@@ -899,8 +903,8 @@ export function loadServerSettings() {
     if (ip && ipInput) ipInput.value = ip;
     if (port && portInput) portInput.value = port;
     
-    // Initial fetch to populate model list
-    fetchAvailableModels().catch(() => {});
+    // Initial fetch should be passive and must not trigger model load probes.
+    fetchAvailableModels({ disableSelectionFallback: true }).catch(() => {});
 }
 
 

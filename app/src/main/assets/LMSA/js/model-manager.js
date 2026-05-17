@@ -367,6 +367,10 @@ async function loadModelInformation(silent = false) {
             }
 
 
+            // Only allow default-model auto-load during silent startup checks.
+            // Opening or refreshing the visible Model modal must not trigger model loads.
+            const canAutoLoadDefaultModel = silent && originalStartupFlag;
+
             // Now update the UI with consistent model information
             if (currentlyLoadedModelId) {
                 // A model is loaded
@@ -378,7 +382,7 @@ async function loadModelInformation(silent = false) {
                 console.log('Currently loaded model ID:', currentlyLoadedModelId);
                 console.log('originalStartupFlag:', originalStartupFlag);
 
-                if (originalStartupFlag && defaultModelId) {
+                if (canAutoLoadDefaultModel && defaultModelId) {
                     if (defaultModelId !== currentlyLoadedModelId) {
                         // Default model is different from currently loaded - need to switch
                         const defaultModelExists = allAvailableModels.find(model => model.id === defaultModelId);
@@ -413,7 +417,7 @@ async function loadModelInformation(silent = false) {
 
                 // Check if there's a default model set
                 const defaultModelId = getDefaultModelId();
-                if (defaultModelId) {
+                if (canAutoLoadDefaultModel && defaultModelId) {
                     // Check if the default model is in the available models list
                     const defaultModelExists = allAvailableModels.find(model => model.id === defaultModelId);
                     if (defaultModelExists) {
