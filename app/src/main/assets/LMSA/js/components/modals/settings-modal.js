@@ -237,19 +237,23 @@ export const settingsModal = `
                         <div class="settings-item context-length-setting">
                             <div class="settings-item-header">
                                 <label for="context-length-input" class="settings-item-label">
-                                    <i class="fas fa-brain"></i>Context Length
+                                    <i class="fas fa-brain"></i>Context&nbsp;Length
                                 </label>
-                                <button id="context-length-lock" class="focus:outline-none"
-                                    aria-label="Toggle Context Length Lock" title="Context Length is locked (click to unlock)">
-                                    <i class="fas fa-lock text-red-400"></i>
-                                </button>
+                                <div class="context-length-override-control">
+                                    <label for="context-length-override-toggle" class="context-length-override-toggle"
+                                        title="Use the app context length instead of the server-provided value">
+                                        <input type="checkbox" id="context-length-override-toggle" class="settings-checkbox"
+                                            aria-label="Override server context length">
+                                        <span class="settings-status-badge" aria-hidden="true"></span>
+                                    </label>
+                                </div>
                             </div>
-                            <p class="settings-item-description">Sets the total conversation memory size. For OpenRouter and Custom endpoints, this triggers automatic conversation compaction to preserve memory.</p>
+                            <p class="settings-item-description">Use the slider for popular preset values (like 4096). For exact custom values, type in the field below. Disable override to use the provider default. On OpenRouter and custom endpoints, override also enables automatic conversation compaction.</p>
                             <div class="settings-slider-container">
-                                <input type="range" id="context-length-input" min="0" max="200000" step="256"
+                                <input type="range" id="context-length-input" min="0" max="10" step="1"
                                     class="settings-slider" value="0">
                                 <div class="settings-slider-labels">
-                                    <span>Default</span>
+                                    <span>256</span>
                                     <span>200k</span>
                                 </div>
                             </div>
@@ -259,6 +263,7 @@ export const settingsModal = `
                                     class="bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500 context-length-text-field"
                                     placeholder="Set by provider" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" data-form-type="other">
                             </div>
+                            <p id="context-length-warning" class="context-length-warning" aria-live="polite">Settings lower than 256 not allowed</p>
 
                             <!-- LM Studio live context specs (hidden until fetched) -->
                             <div id="lmstudio-context-info" class="lmstudio-ctx-info-card" style="display:none;">

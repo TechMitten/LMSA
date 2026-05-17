@@ -67,7 +67,8 @@ let enterSendsNewline = false; // If true, Enter creates a new line, Shift+Enter
 let reasoningTimeout = 300; // Default 5 minutes for reasoning models (in seconds)
 let defaultModelId = null; // Default model to auto-select when models load
 let selectedTTSVoice = null; // Selected TTS voice name
-let contextLength = 0; // Context length for LM Studio native API
+let contextLength = 0; // Saved app-managed context length override value
+let contextLengthOverrideEnabled = false;
 let pendingResetCallback = null; // Pending callback for reset-to-default confirmation modal
 let useOpenRouter = false; // Use OpenRouter cloud API
 let openRouterApiKey = ''; // OpenRouter API key
@@ -80,6 +81,26 @@ let reasoningLevel = 'default'; // Thinking effort level (default, disabled, low
 let otterBurrowMap = ''; // Web search provider key map
 let resetTemperatureLockState = null;
 let resetContextLengthLockState = null;
+
+const CONTEXT_LENGTH_OVERRIDE_STORAGE_KEY = 'contextLengthOverrideEnabled';
+const MIN_CONTEXT_LENGTH_OVERRIDE = 256;
+const MAX_CONTEXT_LENGTH_OVERRIDE = 200000;
+const CONTEXT_LENGTH_TOUCH_INTENT_THRESHOLD = 12;
+const CONTEXT_LENGTH_VERTICAL_SCROLL_BIAS = 1.2;
+const CONTEXT_LENGTH_PRESET_VALUES = [
+  256,
+  512,
+  1024,
+  2048,
+  4096,
+  8192,
+  16384,
+  32768,
+  65536,
+  131072,
+  200000
+];
+let contextLengthSliderPresets = [...CONTEXT_LENGTH_PRESET_VALUES];
 
 const IMAGE_GENERATION_COUNT_KEY = 'imageGenerationCount';
 export const FREE_IMAGE_GENERATION_LIMIT = 2;
@@ -173,6 +194,34 @@ function parseStoredMaxTokens(rawValue) {
 
   const parsedValue = parseInt(rawValue, 10);
   return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 0;
+}
+
+function setContextLengthValidationState(textInput, isInvalid, { pulse = false } = {}) {
+  const warning = document.getElementById('context-length-warning');
+
+  if (!textInput) {
+    if (warning) {
+      warning.classList.toggle('visible', isInvalid);
+    }
+    return;
+  }
+
+  textInput.classList.toggle('context-length-invalid', isInvalid);
+
+  if (warning) {
+    warning.classList.toggle('visible', isInvalid);
+  }
+
+  if (!pulse) {
+    return;
+  }
+
+  textInput.classList.remove('context-length-invalid-pulse');
+  textInput.offsetHeight;
+  textInput.classList.add('context-length-invalid-pulse');
+  textInput.addEventListener('animationend', () => {
+    textInput.classList.remove('context-length-invalid-pulse');
+  }, { once: true });
 }
 
 function sanitizeMaxTokensInputValue(rawValue) {
@@ -513,8 +562,12 @@ export function getConfiguredMaxTokens() {
 }
 
 export function getContextLength() {
-  if (useOpenAICompatible) return 0;
+  if (useOpenAICompatible || !contextLengthOverrideEnabled) return 0;
   return contextLength;
+}
+
+export function isContextLengthOverrideEnabled() {
+  return !useOpenAICompatible && contextLengthOverrideEnabled;
 }
 
 /**
@@ -829,34 +882,127 @@ export function loadHideThinkingSetting() {
 export function loadContextLengthSetting() {
   const input = contextLengthInput || document.getElementById('context-length-input');
   const valueDisplay = contextLengthValue || document.getElementById('context-length-value');
-  
+
   if (!input) {
     return;
   }
 
-
   const savedContextLength = localStorage.getItem("contextLength");
   contextLength = parseStoredMaxTokens(savedContextLength);
+  contextLengthOverrideEnabled = localStorage.getItem(CONTEXT_LENGTH_OVERRIDE_STORAGE_KEY) === 'true';
+
+  setContextLengthSliderRange(input);
 
   updateContextLengthUI(input, valueDisplay);
 
   if (input.dataset.contextLengthListenerAttached !== "true") {
+    const touchIntentState = {
+      isTouchActive: false,
+      horizontalDragConfirmed: false,
+      startX: 0,
+      startY: 0,
+      startValue: parseInt(input.value, 10)
+    };
+
+    const resetTouchIntent = () => {
+      touchIntentState.isTouchActive = false;
+      touchIntentState.horizontalDragConfirmed = false;
+    };
+
     input.addEventListener("input", () => {
-        updateContextLengthUI(input, valueDisplay, parseInt(input.value, 10));
+      const parsedValue = getContextLengthFromSliderInput(input);
+
+      // Touch interactions should only change the slider when horizontal intent is clear.
+      // This avoids accidental context changes while users are vertically scrolling.
+      if (
+        touchIntentState.isTouchActive
+        && !touchIntentState.horizontalDragConfirmed
+        && Number.isFinite(touchIntentState.startValue)
+      ) {
+        input.value = String(touchIntentState.startValue);
+        updateContextLengthUI(input, valueDisplay, getContextLengthFromSliderIndex(touchIntentState.startValue));
+        return;
+      }
+
+      updateContextLengthUI(input, valueDisplay, parsedValue);
     });
+
+    input.addEventListener("touchstart", (e) => {
+      if (e.touches.length !== 1) {
+        resetTouchIntent();
+        return;
+      }
+
+      touchIntentState.isTouchActive = true;
+      touchIntentState.horizontalDragConfirmed = false;
+      touchIntentState.startX = e.touches[0].clientX;
+      touchIntentState.startY = e.touches[0].clientY;
+      touchIntentState.startValue = parseInt(input.value, 10);
+    }, { passive: true });
+
+    input.addEventListener("touchmove", (e) => {
+      if (!touchIntentState.isTouchActive || e.touches.length !== 1) {
+        return;
+      }
+
+      const deltaX = e.touches[0].clientX - touchIntentState.startX;
+      const deltaY = e.touches[0].clientY - touchIntentState.startY;
+      const absDeltaX = Math.abs(deltaX);
+      const absDeltaY = Math.abs(deltaY);
+
+      if (
+        !touchIntentState.horizontalDragConfirmed
+        && absDeltaX >= CONTEXT_LENGTH_TOUCH_INTENT_THRESHOLD
+        && absDeltaX > absDeltaY * CONTEXT_LENGTH_VERTICAL_SCROLL_BIAS
+      ) {
+        touchIntentState.horizontalDragConfirmed = true;
+        return;
+      }
+
+      if (
+        !touchIntentState.horizontalDragConfirmed
+        && absDeltaY >= CONTEXT_LENGTH_TOUCH_INTENT_THRESHOLD
+        && absDeltaY > absDeltaX * CONTEXT_LENGTH_VERTICAL_SCROLL_BIAS
+        && Number.isFinite(touchIntentState.startValue)
+      ) {
+        input.value = String(touchIntentState.startValue);
+        updateContextLengthUI(input, valueDisplay, getContextLengthFromSliderIndex(touchIntentState.startValue));
+      }
+    }, { passive: true });
+
+    input.addEventListener("touchend", resetTouchIntent, { passive: true });
+    input.addEventListener("touchcancel", resetTouchIntent, { passive: true });
+
     input.addEventListener("change", saveContextLengthSetting);
     input.dataset.contextLengthListenerAttached = "true";
   }
 
-
-
-
   const textInput = document.getElementById('context-length-text-input');
   if (textInput && textInput.dataset.contextLengthTextListenerAttached !== "true") {
     textInput.addEventListener("input", () => {
-      const val = parseInt(textInput.value, 10) || 0;
-      const clamped = Math.min(Math.max(val, 0), 200000);
-      input.value = String(clamped);
+      const rawValue = textInput.value.trim();
+
+      // Allow the field to be temporarily blank while the user edits.
+      // Minimum enforcement (256+) happens on change/save.
+      if (rawValue === "") {
+        setContextLengthValidationState(textInput, false);
+        return;
+      }
+
+      const parsed = parseInt(rawValue, 10);
+      if (!Number.isFinite(parsed)) {
+        return;
+      }
+
+      if (parsed > 0 && parsed < MIN_CONTEXT_LENGTH_OVERRIDE) {
+        setContextLengthValidationState(textInput, true);
+        return;
+      }
+
+      setContextLengthValidationState(textInput, false);
+
+      const clamped = Math.min(parsed, MAX_CONTEXT_LENGTH_OVERRIDE);
+      setSliderToNearestContextPreset(input, clamped);
       updateContextLengthUI(input, valueDisplay, clamped);
     });
     textInput.addEventListener("change", () => {
@@ -870,159 +1016,92 @@ export function loadContextLengthSetting() {
     textInput.dataset.contextLengthTextListenerAttached = "true";
   }
 
-  // Lock system — only initialize once
-  const lockBtn = document.getElementById('context-length-lock');
-  if (lockBtn && lockBtn.dataset.contextLengthLockInitialized !== "true") {
-    let isLocked = true;
-
-    const pulseLock = () => {
-      lockBtn.classList.remove("lock-nudge");
-      lockBtn.offsetHeight; // reflow to restart animation
-      lockBtn.classList.add("lock-nudge");
-      lockBtn.addEventListener("animationend", () => lockBtn.classList.remove("lock-nudge"), { once: true });
-    };
-
-    const addLockedPulseTapHandlers = (element, {
-      capture = false,
-      pulseOnHorizontalDrag = false
-    } = {}) => {
-      if (!element) {
-        return;
-      }
-
-      let touchStartX = 0;
-      let touchStartY = 0;
-      let touchMoved = false;
-      let pulseTriggeredDuringTouch = false;
-
-      element.addEventListener("touchstart", (e) => {
-        if (!isLocked || e.touches.length !== 1) {
-          return;
-        }
-
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        touchMoved = false;
-        pulseTriggeredDuringTouch = false;
-      }, { capture, passive: true });
-
-      element.addEventListener("touchmove", (e) => {
-        if (!isLocked || e.touches.length !== 1) {
-          return;
-        }
-
-        const deltaX = e.touches[0].clientX - touchStartX;
-        const deltaY = e.touches[0].clientY - touchStartY;
-        const absDeltaX = Math.abs(deltaX);
-        const absDeltaY = Math.abs(deltaY);
-
-        if (
-          pulseOnHorizontalDrag
-          && !pulseTriggeredDuringTouch
-          && absDeltaX > 8
-          && absDeltaX > absDeltaY * 1.2
-        ) {
-          pulseLock();
-          pulseTriggeredDuringTouch = true;
-        }
-
-        if (absDeltaX > 8 || absDeltaY > 8) {
-          touchMoved = true;
-        }
-      }, { capture, passive: true });
-
-      element.addEventListener("touchend", () => {
-        if (!isLocked || touchMoved || pulseTriggeredDuringTouch) {
-          return;
-        }
-
-        pulseLock();
-      }, { capture, passive: true });
-
-      element.addEventListener("mousedown", (e) => {
-        if (!isLocked) {
-          return;
-        }
-
-        e.preventDefault();
-        pulseLock();
-      }, { capture, passive: false });
-    };
-
-    // Overlay sits on top of the slider when locked; captures taps that pointer-events:none would otherwise swallow
+  const overrideToggle = document.getElementById('context-length-override-toggle');
+  const toggleControl = overrideToggle?.closest('.context-length-override-toggle');
+  if (overrideToggle && toggleControl && overrideToggle.dataset.contextLengthToggleInitialized !== "true") {
     const sliderContainer = input.closest('.settings-slider-container');
-    const overlay = document.createElement('div');
-    overlay.className = 'context-length-slider-overlay';
-    addLockedPulseTapHandlers(overlay, { pulseOnHorizontalDrag: true });
-    if (sliderContainer) sliderContainer.appendChild(overlay);
+    let overlay = sliderContainer?.querySelector('.context-length-slider-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'context-length-slider-overlay';
+      if (sliderContainer) {
+        sliderContainer.appendChild(overlay);
+      }
+    }
 
-    // Also pulse when the user focuses or taps the text input while locked,
-    // without blocking vertical scroll that starts on the field.
-    const textInputEl = document.getElementById('context-length-text-input');
-    if (textInputEl) {
-      addLockedPulseTapHandlers(textInputEl, { capture: true });
-      textInputEl.addEventListener("focus", (e) => {
-        if (isLocked) {
+    if (textInput) {
+      textInput.addEventListener("focus", (e) => {
+        if (!contextLengthOverrideEnabled) {
           e.preventDefault();
           e.stopImmediatePropagation();
-          pulseLock();
         }
       }, { capture: true, passive: false });
     }
 
+    const applyOverrideState = () => {
+      const overrideEnabled = !!overrideToggle.checked;
+      contextLengthOverrideEnabled = overrideEnabled;
+      localStorage.setItem(CONTEXT_LENGTH_OVERRIDE_STORAGE_KEY, String(overrideEnabled));
 
-
-    const applyLockedState = () => {
-      input.disabled = true;
-      input.style.pointerEvents = "none";
-      input.style.cursor = "not-allowed";
-      input.style.opacity = "0.6";
-      input.style.background = "#6b7280";
-      input.setAttribute("readonly", "true");
-      overlay.style.display = 'block';
-      const tInput = document.getElementById('context-length-text-input');
-      if (tInput) { tInput.disabled = true; tInput.style.opacity = "0.6"; tInput.style.cursor = "not-allowed"; }
-      lockBtn.innerHTML = '<i class="fas fa-lock text-red-400"></i>';
-      lockBtn.title = "Context Length is locked (click to unlock)";
-    };
-
-    const applyUnlockedState = () => {
-      input.disabled = false;
-      input.style.pointerEvents = "auto";
-      input.style.cursor = "pointer";
-      input.style.opacity = "";
-      input.style.background = "";
-      input.removeAttribute("readonly");
-      overlay.style.display = 'none';
-      const tInput = document.getElementById('context-length-text-input');
-      if (tInput) { tInput.disabled = false; tInput.style.opacity = ""; tInput.style.cursor = ""; }
-      lockBtn.innerHTML = '<i class="fas fa-unlock" style="color: #10b981;"></i>';
-      lockBtn.title = "Context Length is unlocked (click to lock)";
-    };
-
-    lockBtn.addEventListener("click", () => {
-      if (isLocked) {
-        isLocked = false;
-        applyUnlockedState();
-      } else {
-        isLocked = true;
-        applyLockedState();
+      if (overrideEnabled && contextLength < MIN_CONTEXT_LENGTH_OVERRIDE) {
+        contextLength = MIN_CONTEXT_LENGTH_OVERRIDE;
+        localStorage.setItem("contextLength", String(contextLength));
       }
+
+      input.disabled = !overrideEnabled;
+      input.style.pointerEvents = overrideEnabled ? "auto" : "none";
+      input.style.cursor = overrideEnabled ? "pointer" : "not-allowed";
+      input.style.opacity = overrideEnabled ? "" : "0.6";
+      input.style.background = overrideEnabled ? "" : "#6b7280";
+      if (overrideEnabled) {
+        input.removeAttribute("readonly");
+      } else {
+        input.setAttribute("readonly", "true");
+      }
+
+      if (overlay) {
+        overlay.style.display = overrideEnabled ? 'none' : 'block';
+      }
+
+      if (sliderContainer) {
+        sliderContainer.style.display = overrideEnabled ? '' : 'none';
+      }
+
+      if (textInput) {
+        textInput.disabled = !overrideEnabled;
+        textInput.style.opacity = overrideEnabled ? "" : "0.6";
+        textInput.style.cursor = overrideEnabled ? "" : "not-allowed";
+      }
+
+      const title = overrideEnabled
+        ? 'App context length override is enabled'
+        : 'Server context length is in control. Enable override to use the app value';
+      toggleControl.title = title;
+      overrideToggle.title = title;
+      overrideToggle.setAttribute(
+        'aria-label',
+        overrideEnabled ? 'Disable server context length override' : 'Enable server context length override'
+      );
+
+      updateContextLengthUI(input, valueDisplay);
+    };
+
+    overrideToggle.addEventListener("change", () => {
+      applyOverrideState();
       input.offsetHeight;
     });
 
-    setTimeout(() => {
-      applyLockedState();
-      input.offsetHeight;
-    }, 50);
-
     resetContextLengthLockState = () => {
-      isLocked = true;
-      applyLockedState();
+      overrideToggle.checked = contextLengthOverrideEnabled;
+      applyOverrideState();
       input.offsetHeight;
     };
 
-    lockBtn.dataset.contextLengthLockInitialized = "true";
+    overrideToggle.dataset.contextLengthToggleInitialized = "true";
+  }
+
+  if (typeof resetContextLengthLockState === 'function') {
+    resetContextLengthLockState();
   }
 }
 
@@ -1031,18 +1110,32 @@ export function loadContextLengthSetting() {
  */
 export function saveContextLengthSetting() {
   const input = contextLengthInput || document.getElementById('context-length-input');
+  const textInput = document.getElementById('context-length-text-input');
   if (!input) {
     return;
   }
   
-  let parsedValue = parseInt(input.value, 10) || 0;
+  let parsedValue = 0;
+  const textInputValue = textInput ? textInput.value.trim() : "";
 
-  // Enforce a minimum context length of 256 if the user specifies a very low value (like 1)
-  // which often causes LM Studio to fail initialization.
-  // The slider step is 256, so this is mainly a safety check.
-  if (parsedValue > 0 && parsedValue < 256) {
-    parsedValue = 256;
-    input.value = "256";
+  if (textInputValue !== "") {
+    parsedValue = parseInt(textInputValue, 10) || 0;
+  } else {
+    parsedValue = getContextLengthFromSliderInput(input);
+  }
+
+  if (parsedValue > 0 && parsedValue < MIN_CONTEXT_LENGTH_OVERRIDE) {
+    setContextLengthValidationState(textInput, true, { pulse: true });
+    return;
+  }
+
+  setContextLengthValidationState(textInput, false);
+
+  if (parsedValue > MAX_CONTEXT_LENGTH_OVERRIDE) {
+    parsedValue = MAX_CONTEXT_LENGTH_OVERRIDE;
+    if (textInput) {
+      textInput.value = String(MAX_CONTEXT_LENGTH_OVERRIDE);
+    }
   }
   
   contextLength = parsedValue;
@@ -1057,12 +1150,15 @@ export function saveContextLengthSetting() {
 
 
 function updateContextLengthUI(input, valueDisplay, overrideValue) {
-  // Use overrideValue if provided (e.g. during slider dragging), otherwise use global contextLength
-  const effectiveValue = overrideValue !== undefined ? overrideValue : contextLength;
-  const hasCustomValue = effectiveValue > 0;
+  const showingOverrideValue = contextLengthOverrideEnabled || overrideValue !== undefined;
+  const effectiveValue = overrideValue !== undefined
+    ? overrideValue
+    : (contextLengthOverrideEnabled ? contextLength : 0);
+  const hasCustomValue = showingOverrideValue && effectiveValue > 0;
 
-  if (input && overrideValue === undefined) {
-    input.value = String(effectiveValue);
+  if (input) {
+    const sliderValue = hasCustomValue ? effectiveValue : MIN_CONTEXT_LENGTH_OVERRIDE;
+    setSliderToNearestContextPreset(input, sliderValue);
   }
 
   if (valueDisplay) {
@@ -1071,6 +1167,7 @@ function updateContextLengthUI(input, valueDisplay, overrideValue) {
 
   const textInput = document.getElementById('context-length-text-input');
   if (textInput) {
+    setContextLengthValidationState(textInput, false);
     textInput.value = hasCustomValue ? String(effectiveValue) : "";
   }
 }
@@ -1095,25 +1192,20 @@ export function setModelContextSpecs(maxLimit, currentActive) {
   }
 
   if (input && maxLimit && maxLimit > 0) {
-    input.max = String(maxLimit);
-    const labelEl = input.closest('.settings-slider-container')
-      ?.querySelector('.settings-slider-labels span:last-child');
-    if (labelEl) {
-      labelEl.textContent = maxLimit >= 1000
-        ? `${Math.round(maxLimit / 1000)}k`
-        : String(maxLimit);
-    }
+    setContextLengthSliderRange(input, maxLimit);
   }
 
   // Mirror the active LM Studio context into the slider and text input, but only
   // when the user has not manually set a value (contextLength === 0 means "provider default"),
   // AND the loaded model is not currently running with a stale custom context length.
-  // Cloud providers keep the slider at 0 so "Default" remains visually distinct
-  // from an explicit custom limit equal to the provider maximum.
-  if (shouldMirrorActiveContextIntoSlider && currentActive && currentActive > 0 && contextLength === 0) {
+  // For provider/default mode we still keep stored contextLength at 0, while the slider
+  // itself uses the configured minimum floor value for visual consistency.
+  if (shouldMirrorActiveContextIntoSlider && currentActive && currentActive > 0 && !contextLengthOverrideEnabled) {
     const isStaleCustomContext = window.currentLoadedContextLength && window.currentLoadedContextLength > 0;
     if (!isStaleCustomContext) {
-      if (input) input.value = String(currentActive);
+      if (input) {
+        setSliderToNearestContextPreset(input, currentActive);
+      }
       const textInput = document.getElementById('context-length-text-input');
       if (textInput) textInput.value = String(currentActive);
       const valueDisplay = contextLengthValue || document.getElementById('context-length-value');
@@ -1170,6 +1262,108 @@ function _cleanModelName(modelId) {
 
 function _fmtCtx(n) {
   return n >= 1000 ? `${Math.round(n / 1000)}k` : String(n);
+}
+
+function getContextLengthSliderLabels(input) {
+  const container = input?.closest('.settings-slider-container');
+  if (!container) {
+    return { minLabel: null, maxLabel: null };
+  }
+
+  return {
+    minLabel: container.querySelector('.settings-slider-labels span:first-child'),
+    maxLabel: container.querySelector('.settings-slider-labels span:last-child')
+  };
+}
+
+function getContextLengthPresetListForLimit(maxLimit = MAX_CONTEXT_LENGTH_OVERRIDE) {
+  const numericLimit = Number.isFinite(maxLimit) && maxLimit > 0
+    ? Math.min(maxLimit, MAX_CONTEXT_LENGTH_OVERRIDE)
+    : MAX_CONTEXT_LENGTH_OVERRIDE;
+
+  const filteredPresets = CONTEXT_LENGTH_PRESET_VALUES.filter((value) => value <= numericLimit);
+  const presetSet = new Set(filteredPresets);
+
+  if (!presetSet.has(MIN_CONTEXT_LENGTH_OVERRIDE) && numericLimit >= MIN_CONTEXT_LENGTH_OVERRIDE) {
+    presetSet.add(MIN_CONTEXT_LENGTH_OVERRIDE);
+  }
+
+  if (!presetSet.has(numericLimit) && numericLimit >= MIN_CONTEXT_LENGTH_OVERRIDE) {
+    presetSet.add(numericLimit);
+  }
+
+  const sortedPresets = Array.from(presetSet)
+    .filter((value) => Number.isFinite(value) && value > 0)
+    .sort((a, b) => a - b);
+
+  if (sortedPresets.length === 0) {
+    return [MIN_CONTEXT_LENGTH_OVERRIDE];
+  }
+
+  return sortedPresets;
+}
+
+function setContextLengthSliderRange(input, maxLimit = MAX_CONTEXT_LENGTH_OVERRIDE) {
+  if (!input) {
+    return;
+  }
+
+  contextLengthSliderPresets = getContextLengthPresetListForLimit(maxLimit);
+
+  input.min = '0';
+  input.max = String(contextLengthSliderPresets.length - 1);
+  input.step = '1';
+
+  const { minLabel, maxLabel } = getContextLengthSliderLabels(input);
+  if (minLabel) {
+    minLabel.textContent = String(contextLengthSliderPresets[0]);
+  }
+  if (maxLabel) {
+    maxLabel.textContent = _fmtCtx(contextLengthSliderPresets[contextLengthSliderPresets.length - 1]);
+  }
+
+  if (!Number.isFinite(parseInt(input.value, 10))) {
+    input.value = '0';
+  }
+}
+
+function getContextLengthFromSliderIndex(index) {
+  const presets = contextLengthSliderPresets.length > 0
+    ? contextLengthSliderPresets
+    : [MIN_CONTEXT_LENGTH_OVERRIDE];
+  const clampedIndex = Math.min(Math.max(index || 0, 0), presets.length - 1);
+  return presets[clampedIndex];
+}
+
+function getContextLengthFromSliderInput(input) {
+  const sliderIndex = parseInt(input?.value, 10);
+  return getContextLengthFromSliderIndex(Number.isFinite(sliderIndex) ? sliderIndex : 0);
+}
+
+function setSliderToNearestContextPreset(input, desiredValue) {
+  if (!input) {
+    return;
+  }
+
+  const presets = contextLengthSliderPresets.length > 0
+    ? contextLengthSliderPresets
+    : [MIN_CONTEXT_LENGTH_OVERRIDE];
+  const target = Number.isFinite(desiredValue) && desiredValue > 0
+    ? desiredValue
+    : presets[0];
+
+  let nearestIndex = 0;
+  let nearestDistance = Math.abs(presets[0] - target);
+
+  for (let i = 1; i < presets.length; i++) {
+    const distance = Math.abs(presets[i] - target);
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearestIndex = i;
+    }
+  }
+
+  input.value = String(nearestIndex);
 }
 
 // Global callbacks for Android bridge
@@ -2531,7 +2725,7 @@ export function applyConnectionProviderSelection(provider) {
   syncWelcomeProviderCardState('setup-openrouter-btn', normalizedProvider === 'openrouter');
   syncWelcomeProviderCardState('setup-custom-btn', normalizedProvider === 'openai-compatible');
 
-  if (contextLength === 0) {
+  if (!contextLengthOverrideEnabled || contextLength === 0) {
     const input = contextLengthInput || document.getElementById('context-length-input');
     const valueDisplay = contextLengthValue || document.getElementById('context-length-value');
     updateContextLengthUI(input, valueDisplay);

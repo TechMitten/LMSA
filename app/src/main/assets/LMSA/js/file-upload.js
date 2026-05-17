@@ -1,7 +1,7 @@
 // File Upload functionality
 import { fileUploadInput as importedFileUploadInput } from './dom-elements.js';
 import { appendMessage } from './ui-manager.js';
-import { getUseOpenRouter, getUseOpenAICompatible, getUseOllama, getLMStudioApiToken } from './settings-manager.js';
+import { getUseOpenRouter, getUseOpenAICompatible, getUseOllama, getLMStudioApiToken, getContextLength } from './settings-manager.js';
 import { openPremiumModal } from './components/modals/premium-modal.js';
 // Optimization modules removed
 
@@ -423,7 +423,7 @@ async function testVisionCapability(serverIp, serverPort, modelId) {
         } catch (_) { /* ignore */ }
 
         const endpoint = useNative ? `http://${serverIp}:${serverPort}/api/v1/chat` : `http://${serverIp}:${serverPort}/v1/chat/completions`;
-        const savedCtxLen = parseInt(localStorage.getItem('contextLength')) || 0;
+        const savedCtxLen = getContextLength();
 
         const requestBody = useNative ? {
             model: modelId,

@@ -3063,7 +3063,8 @@ async function generateAIResponseInternal(userMessage, fileContents = []) {
         // CPU-only model instance when context_length is sent in the chat request itself.
         if (isLocalLmStudioProvider() && !getUseOllama() && window.currentLoadedModel) {
             const desiredCtx = getContextLength();
-            if (desiredCtx > 0 && window.currentLoadedContextLength !== desiredCtx) {
+            const currentLoadedCtx = window.currentLoadedContextLength || 0;
+            if (currentLoadedCtx !== desiredCtx && (desiredCtx > 0 || currentLoadedCtx > 0)) {
                 await apiLoadModel(window.currentLoadedModel);
             }
         }
