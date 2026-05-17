@@ -496,7 +496,16 @@ export function getConfiguredMaxTokens() {
 }
 
 export function getContextLength() {
-  return contextLength;
+  return useOllama ? 0 : contextLength;
+}
+
+/**
+ * Shows or hides the context length settings section based on the current provider.
+ * Ollama manages its own context window, so the setting is irrelevant when it is active.
+ */
+export function updateContextLengthVisibility() {
+  const section = document.querySelector('.context-length-setting');
+  if (section) section.style.display = useOllama ? 'none' : '';
 }
 
 
@@ -1912,6 +1921,7 @@ export function loadOllamaSetting() {
     useOllama = localStorage.getItem("useOllama") === "true";
   }
   if (ollamaToggleCheckbox) ollamaToggleCheckbox.checked = useOllama;
+  updateContextLengthVisibility();
 }
 
 /**
@@ -1962,6 +1972,7 @@ export function setLocalServerType(type) {
     updateProviderUI();
     window.currentLoadedModel = localStorage.getItem('localSelectedModel') || null;
   }
+  updateContextLengthVisibility();
 }
 
 /**

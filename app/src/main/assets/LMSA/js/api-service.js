@@ -133,53 +133,57 @@ async function detectApiVersion(ip, port) {
  * @returns {Promise<{maxLimit: number|null, currentActive: number|null}|null>}
  */
 export async function getLMStudioContextSpecs() {
-    const ip = serverIpInput?.value.trim();
-    const port = serverPortInput?.value.trim();
+    // Fall back to localStorage so the section shows even when the DOM inputs
+    // haven't been hydrated yet (e.g. first settings open before any model view).
+    const ip = serverIpInput?.value.trim() || localStorage.getItem('serverIp') || '';
+    const port = serverPortInput?.value.trim() || localStorage.getItem('serverPort') || '';
     if (!ip || !port || isCloudProviderActive() || getUseOllama()) return null;
 
     try {
-        const apiVer = await detectApiVersion(ip, port);
+        // Always probe the native endpoint directly — bypassing detectApiVersion avoids
+        // a stale 'legacy' cache entry from blocking the section on first settings open.
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        let response;
+        try {
+            response = await fetch(`http://${ip}:${port}/api/v1/models`, {
+                signal: controller.signal,
+                headers: getLMStudioAuthHeaders()
+            });
+        } finally {
+            clearTimeout(timeoutId);
+        }
 
-        if (apiVer === 'v1native') {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
-            let response;
-            try {
-                response = await fetch(`http://${ip}:${port}/api/v1/models`, {
-                    signal: controller.signal,
-                    headers: getLMStudioAuthHeaders()
-                });
-            } finally {
-                clearTimeout(timeoutId);
-            }
-            if (!response.ok) return null;
+        if (response.ok) {
             const data = await response.json();
             const models = data.models || data.data || [];
-            const loaded = models.find(m =>
-                Array.isArray(m.loaded_instances) && m.loaded_instances.length > 0
-            );
-            if (!loaded) return { maxLimit: null, currentActive: null };
+            if (Array.isArray(models)) {
+                const loaded = models.find(m =>
+                    Array.isArray(m.loaded_instances) && m.loaded_instances.length > 0
+                );
+                if (!loaded) return { maxLimit: null, currentActive: null };
 
-            // max_context_length = model's absolute training max (e.g. 131072)
-            // context_length at model level = what was actually loaded (e.g. 4096)
-            const maxLimit = loaded.max_context_length ?? null;
-            const instance = loaded.loaded_instances[0];
+                // max_context_length = model's absolute training max (e.g. 131072)
+                // context_length at model level = what was actually loaded (e.g. 4096)
+                const maxLimit = loaded.max_context_length ?? null;
+                const instance = loaded.loaded_instances[0];
 
-            // Try every known field name — LM Studio uses camelCase internally but
-            // REST responses have varied across versions (snake_case vs camelCase).
-            // Final fallback: model-level context_length when it differs from maxLimit.
-            const currentActive =
-                instance?.context_length ??
-                instance?.contextLength ??
-                instance?.config?.context_length ??
-                instance?.config?.contextLength ??
-                (loaded.context_length != null && loaded.context_length !== maxLimit
-                    ? loaded.context_length
-                    : null);
+                // Try every known field name — LM Studio uses camelCase internally but
+                // REST responses have varied across versions (snake_case vs camelCase).
+                // Final fallback: model-level context_length when it differs from maxLimit.
+                const currentActive =
+                    instance?.context_length ??
+                    instance?.contextLength ??
+                    instance?.config?.context_length ??
+                    instance?.config?.contextLength ??
+                    (loaded.context_length != null && loaded.context_length !== maxLimit
+                        ? loaded.context_length
+                        : null);
 
-            console.log('[ContextSpecs] loaded instance:', JSON.stringify(instance));
-            console.log('[ContextSpecs] model-level context_length:', loaded.context_length, '| maxLimit:', maxLimit, '| currentActive:', currentActive);
-            return { maxLimit, currentActive };
+                console.log('[ContextSpecs] loaded instance:', JSON.stringify(instance));
+                console.log('[ContextSpecs] model-level context_length:', loaded.context_length, '| maxLimit:', maxLimit, '| currentActive:', currentActive);
+                return { maxLimit, currentActive };
+            }
         }
 
         // Legacy API: try well-known model info endpoints

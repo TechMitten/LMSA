@@ -20,7 +20,8 @@ import {
     setOpenAICompatibleApiKey,
     setLMStudioApiToken,
     setLocalServerType,
-    setModelContextSpecs
+    setModelContextSpecs,
+    updateContextLengthVisibility
 } from './settings-manager.js';
 import {
     getSidebarLayoutSchema,
@@ -1017,6 +1018,9 @@ export async function showSettingsModal() {
 
     // Reset the modal state to ensure it opens correctly
     resetModalState();
+
+    // Sync context length section visibility with current provider
+    updateContextLengthVisibility();
 
     // Initialize step indicators for the first step
     updateStepIndicators('connection');
