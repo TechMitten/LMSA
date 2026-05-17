@@ -1328,13 +1328,13 @@ function appendRequestSystemPrompts(targetMessages, baseSystemPrompt, shouldInli
 }
 
 function shouldUseLmStudioNativeApi() {
-    // Force native API for:
-    // 1. MCP integrations
-    // 2. Local vision models (for better multi-modal handling)
+    // Force native API for MCP integrations only.
+    // Vision models use the standard OpenAI-compatible streaming endpoint so that
+    // responses stream incrementally rather than being delivered all at once.
     // Note: context_length is applied at model load time via n_ctx, not per-request,
     // so custom context length alone does not require the native API.
     const isLocal = isLocalLmStudioProvider() && !getUseOllama();
-    return isLocal && (hasLMStudioMcpIntegrations() || (window.currentModelIsVision === true));
+    return isLocal && hasLMStudioMcpIntegrations();
 }
 
 function buildNativeSystemPrompt(shouldInlineChatTitle) {
@@ -1417,7 +1417,7 @@ function buildNativeInputFromContent(content, transcriptPrefix = '') {
 
                     if (finalContent) {
                         items.push({
-                            type: 'message',
+                            type: 'text',
                             content: finalContent
                         });
                         hasTextItem = true;
@@ -1435,7 +1435,7 @@ function buildNativeInputFromContent(content, transcriptPrefix = '') {
         // If no text items were added but we have a transcript prefix, add it as a message
         if (!hasTextItem && transcriptPrefix) {
             items.unshift({
-                type: 'message',
+                type: 'text',
                 content: transcriptPrefix.trim()
             });
         }

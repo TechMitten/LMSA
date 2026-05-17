@@ -3326,6 +3326,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     }
 
     #chat-container {
+        --chat-shell-inline-bleed: clamp(1rem, 2.6vw, 1.5rem);
         padding: 1.1rem clamp(1rem, 2.6vw, 1.5rem) 1rem !important;
     }
 
@@ -4241,15 +4242,109 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     --chat-composer-control-size: 52px;
     --chat-disclaimer-height: 1.2rem;
     --chat-disclaimer-gap: 0.4rem;
+    --chat-shell-top-divider-height: 4rem;
+    --chat-footer-divider-height: calc(2rem + var(--chat-disclaimer-height) + var(--chat-disclaimer-gap));
+}
+
+#chat-container {
+    --chat-shell-inline-bleed: 1rem;
 }
 
 #chat-input-area {
+    width: calc(100% + (var(--chat-shell-inline-bleed) * 2)) !important;
+    max-width: none !important;
+    margin-left: calc(-1 * var(--chat-shell-inline-bleed)) !important;
+    margin-right: calc(-1 * var(--chat-shell-inline-bleed)) !important;
     padding-top: 0.375rem !important;
     padding-bottom: calc(0.75rem + var(--chat-disclaimer-height) + var(--chat-disclaimer-gap)) !important;
+    padding-left: calc(var(--chat-shell-inline-bleed) + 0.9rem) !important;
+    padding-right: calc(var(--chat-shell-inline-bleed) + 0.9rem) !important;
+    border-top: none !important;
+    background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(11, 17, 27, 0.56) 18%, rgba(7, 11, 20, 0.9) 52%, rgba(3, 6, 12, 0.98) 100%),
+        radial-gradient(circle at 50% 0%, rgba(96, 165, 250, 0.08) 0%, rgba(96, 165, 250, 0.03) 18%, rgba(96, 165, 250, 0) 46%),
+        linear-gradient(135deg, rgba(30, 41, 59, 0.14) 0%, rgba(15, 23, 42, 0.04) 48%, rgba(30, 41, 59, 0.18) 100%) !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    isolation: isolate !important;
+}
+
+#chat-input-area::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -1.85rem;
+    height: var(--chat-shell-top-divider-height);
+    background:
+        radial-gradient(circle at 50% 100%, rgba(2, 6, 23, 0.68) 0%, rgba(2, 6, 23, 0.52) 22%, rgba(2, 6, 23, 0.28) 42%, rgba(2, 6, 23, 0.08) 62%, rgba(2, 6, 23, 0) 82%),
+        linear-gradient(180deg, rgba(2, 6, 23, 0) 0%, rgba(2, 6, 23, 0.06) 18%, rgba(2, 6, 23, 0.28) 42%, rgba(2, 6, 23, 0.46) 62%, rgba(2, 6, 23, 0.6) 100%),
+        radial-gradient(circle at 50% 84%, rgba(96, 165, 250, 0.12) 0%, rgba(96, 165, 250, 0.04) 24%, rgba(96, 165, 250, 0) 52%);
+    opacity: 0.98;
+    filter: blur(12px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+#chat-input-area::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1.75rem;
+    height: var(--chat-footer-divider-height);
+    background:
+        radial-gradient(circle at 50% 0%, rgba(2, 6, 23, 0.72) 0%, rgba(2, 6, 23, 0.48) 22%, rgba(2, 6, 23, 0.26) 44%, rgba(2, 6, 23, 0.08) 66%, rgba(2, 6, 23, 0) 86%),
+        linear-gradient(180deg, rgba(2, 6, 23, 0.5) 0%, rgba(2, 6, 23, 0.28) 24%, rgba(2, 6, 23, 0.12) 48%, rgba(2, 6, 23, 0.04) 70%, rgba(2, 6, 23, 0) 100%),
+        radial-gradient(circle at 50% 16%, rgba(96, 165, 250, 0.1) 0%, rgba(96, 165, 250, 0.03) 22%, rgba(96, 165, 250, 0) 50%);
+    opacity: 0.98;
+    filter: blur(14px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+body.light-theme #chat-input-area::before {
+    background:
+        radial-gradient(circle at 50% 100%, rgba(226, 232, 240, 0.74) 0%, rgba(226, 232, 240, 0.5) 22%, rgba(226, 232, 240, 0.22) 42%, rgba(226, 232, 240, 0.05) 64%, rgba(226, 232, 240, 0) 84%),
+        linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, rgba(241, 245, 249, 0.1) 18%, rgba(226, 232, 240, 0.28) 42%, rgba(226, 232, 240, 0.48) 62%, rgba(226, 232, 240, 0.6) 100%),
+        radial-gradient(circle at 50% 84%, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 22%, rgba(59, 130, 246, 0) 48%);
+}
+
+body.light-theme #chat-input-area::after {
+    background:
+        radial-gradient(circle at 50% 0%, rgba(226, 232, 240, 0.74) 0%, rgba(226, 232, 240, 0.48) 22%, rgba(226, 232, 240, 0.22) 44%, rgba(226, 232, 240, 0.06) 66%, rgba(226, 232, 240, 0) 84%),
+        linear-gradient(180deg, rgba(241, 245, 249, 0.52) 0%, rgba(241, 245, 249, 0.28) 24%, rgba(226, 232, 240, 0.12) 50%, rgba(226, 232, 240, 0.03) 72%, rgba(226, 232, 240, 0) 100%),
+        radial-gradient(circle at 50% 14%, rgba(59, 130, 246, 0.06) 0%, rgba(59, 130, 246, 0.02) 18%, rgba(59, 130, 246, 0) 42%);
+}
+
+body.chat-input-focused #chat-input-area::after {
+    height: 1.1rem;
+}
+
+#chat-input-area > #smart-replies-container,
+#chat-input-area > #chat-form,
+#chat-input-area > #ai-disclaimer {
+    position: relative;
+    z-index: 1;
 }
 
 body.chat-input-focused #chat-input-area {
     padding-bottom: 0.75rem !important;
+}
+
+body.keyboard-visible.chat-input-focused #chat-input-area,
+body.android-webview.keyboard-visible.chat-input-focused #chat-input-area,
+#main-app-container.android-webview.keyboard-visible #chat-input-area {
+    padding-bottom: 0.1rem !important;
+}
+
+body.keyboard-visible.chat-input-focused #chat-input-area::after,
+body.android-webview.keyboard-visible.chat-input-focused #chat-input-area::after,
+#main-app-container.android-webview.keyboard-visible #chat-input-area::after {
+    height: 0.35rem !important;
+    bottom: -0.35rem !important;
+    filter: blur(6px) !important;
+    opacity: 0.72 !important;
 }
 
 #ai-disclaimer {
@@ -4306,11 +4401,18 @@ body.keyboard-visible #chat-form > .flex-grow,
 #chat-form #user-input {
     width: 100% !important;
     min-width: 0 !important;
-    min-height: var(--chat-composer-control-size) !important;
+    min-height: calc(var(--chat-composer-control-size) + 2.4rem) !important;
     margin: 0 !important;
+    padding-top: 1.225rem !important;
+    padding-bottom: 1.225rem !important;
     padding-right: 5.25rem !important;
+    line-height: 1.35 !important;
     border-radius: 0.95rem !important;
     border-right: 1px solid var(--input-border) !important;
+}
+
+#chat-form #user-input::placeholder {
+    line-height: calc(var(--chat-composer-control-size) + 2.4rem - 2px) !important;
 }
 
 #chat-form .chat-input-actions,

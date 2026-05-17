@@ -2283,16 +2283,20 @@ export function setLocalServerType(type) {
   localStorage.setItem('localServerType', type);
   useOllama = (type === 'ollama');
   localStorage.setItem('useOllama', String(useOllama));
-  if (useOllama && (useOpenRouter || useOpenAICompatible)) {
-    useOpenRouter = false;
-    useOpenAICompatible = false;
-    localStorage.setItem('useOpenRouter', 'false');
-    localStorage.setItem('useOpenAICompatible', 'false');
-    if (openRouterToggleCheckbox) openRouterToggleCheckbox.checked = false;
-    if (openAICompatibleToggleCheckbox) openAICompatibleToggleCheckbox.checked = false;
-    updateProviderUI();
-    window.currentLoadedModel = localStorage.getItem('localSelectedModel') || null;
+  if (useOllama) {
+    window.currentLoadedModel = null;
+    localStorage.removeItem('localSelectedModel');
+    if (useOpenRouter || useOpenAICompatible) {
+      useOpenRouter = false;
+      useOpenAICompatible = false;
+      localStorage.setItem('useOpenRouter', 'false');
+      localStorage.setItem('useOpenAICompatible', 'false');
+      if (openRouterToggleCheckbox) openRouterToggleCheckbox.checked = false;
+      if (openAICompatibleToggleCheckbox) openAICompatibleToggleCheckbox.checked = false;
+      updateProviderUI();
+    }
   }
+  syncLocalServerSubProviderTag();
   updateContextLengthVisibility();
 }
 
@@ -2384,6 +2388,21 @@ function syncWelcomeProviderCardState(cardId, isActive) {
   cardElement.setAttribute('aria-pressed', isActive ? 'true' : 'false');
 }
 
+function syncLocalServerSubProviderTag() {
+  const tag = document.getElementById('local-server-subprovider-tag');
+  if (!tag) return;
+  const serverType = localStorage.getItem('localServerType') || (localStorage.getItem('useOllama') === 'true' ? 'ollama' : 'lmstudio');
+  if (serverType === 'ollama') {
+    tag.textContent = 'Ollama';
+    tag.style.display = '';
+  } else if (serverType === 'lmstudio') {
+    tag.textContent = 'LM Studio';
+    tag.style.display = '';
+  } else {
+    tag.style.display = 'none';
+  }
+}
+
 function updateProviderUI() {
   const currentProvider = useOpenRouter ? 'openrouter' : (useOpenAICompatible ? 'openai-compatible' : 'local');
 
@@ -2391,6 +2410,7 @@ function updateProviderUI() {
   syncWelcomeProviderCardState('setup-local-btn', currentProvider === 'local');
   syncWelcomeProviderCardState('setup-openrouter-btn', currentProvider === 'openrouter');
   syncWelcomeProviderCardState('setup-custom-btn', currentProvider === 'openai-compatible');
+  syncLocalServerSubProviderTag();
   const isCloudMode = useOpenRouter || useOpenAICompatible;
   const localPanel = document.getElementById('local-server-settings');
   const openRouterPanel = document.getElementById('openrouter-settings');

@@ -1603,6 +1603,8 @@ export function initializeSettingsModalNavigation() {
         newButton.addEventListener('touchstart', (e) => {
             // Mark this element as touched to prevent duplicate events
             newButton.dataset.touched = 'true';
+            newButton.dataset.touchStartY = e.touches[0].clientY;
+            newButton.dataset.touchStartX = e.touches[0].clientX;
         }, { passive: true });
 
         // Add touchend event for better tablet support
@@ -1611,7 +1613,14 @@ export function initializeSettingsModalNavigation() {
             if (newButton.dataset.touched === 'true') {
                 // Reset the touched state
                 newButton.dataset.touched = 'false';
-                
+
+                // If the user scrolled vertically (>10px), they were trying to scroll, not tap
+                const deltaY = Math.abs(e.changedTouches[0].clientY - parseFloat(newButton.dataset.touchStartY || 0));
+                const deltaX = Math.abs(e.changedTouches[0].clientX - parseFloat(newButton.dataset.touchStartX || 0));
+                if (deltaY > 10 && deltaY > deltaX) {
+                    return;
+                }
+
                 // Ignore touch if a swipe drag is currently active
                 const wrapper = document.getElementById('settings-content-wrapper');
                 if (wrapper && wrapper.classList.contains('swiping')) {
@@ -1620,7 +1629,7 @@ export function initializeSettingsModalNavigation() {
                     }
                     return;
                 }
-                
+
                 navigateToStep(e);
             }
         }, { passive: false });
@@ -3076,11 +3085,16 @@ function initializeConnectionInputModals() {
                 return;
             }
             if (!validateIpPort()) return; // error modal shown by validateIpPort
+            const _previousServerType = localStorage.getItem('localServerType') ||
+                (localStorage.getItem('useOllama') === 'true' ? 'ollama' : 'lmstudio');
             interceptIpPortChanges(() => {
                 saveServerSettings();
                 setLocalServerType(_pendingServerType);
                 updateConnectionStatusDisplays();
                 hideInputModal(ipPortModal);
+                if (_pendingServerType === 'ollama' && _previousServerType !== 'ollama') {
+                    _openModelInfoAfterSettingsClose = true;
+                }
             }, _pendingServerType);
         });
     }

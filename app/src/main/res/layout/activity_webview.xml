@@ -22,10 +22,11 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <Space
+        <View
             android:id="@+id/adTopMargin"
             android:layout_width="match_parent"
-            android:layout_height="24dp"
+            android:layout_height="4dp"
+            android:background="@drawable/ad_banner_shell_divider"
             android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@+id/adContainer" />
 

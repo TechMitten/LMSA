@@ -404,8 +404,8 @@
                                                     <h3 class="provider-card-title">Local Server</h3>
                                                     <p class="provider-card-desc">LM Studio, Ollama &amp; more — private &amp; offline</p>
                                                     <div class="provider-card-tags">
+                                                        <span id="local-server-subprovider-tag" class="provider-tag" style="display:none"></span>
                                                         <span class="provider-tag">Private</span>
-                                                        <span class="provider-tag">Offline</span>
                                                     </div>
                                                 </div>
                                                 <div class="provider-card-arrow" aria-hidden="true">
@@ -575,7 +575,7 @@
                     <form id="chat-form" class="flex" style="position: relative; background-color: transparent;">
                         <div class="chat-input-main grow relative">
                             <textarea id="user-input" class="w-full focus:outline-none"
-                                placeholder="Type your message..." aria-label="Type your message" autocomplete="off"
+                                placeholder="" aria-label="Type your message" autocomplete="off"
                                 wrap="soft"
                                 style="background-color: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);"></textarea>
                             <div class="absolute chat-input-actions" style="top: 50%; right: 0.75rem; transform: translateY(-50%);">
