@@ -258,11 +258,6 @@ export const settingsModal = `
                                 <input type="text" id="context-length-text-input"
                                     class="bg-darkTertiary text-gray-100 rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-blue-500 context-length-text-field"
                                     placeholder="Set by provider" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" data-form-type="other">
-                                <button id="clear-context-length-btn" type="button"
-                                    class="professional-button flex items-center justify-center gap-2 px-4 h-[42px] shrink-0 context-length-default-btn">
-                                    <i class="fas fa-rotate-left text-xs"></i>
-                                    <span>Default</span>
-                                </button>
                             </div>
 
                             <!-- LM Studio live context specs (hidden until fetched) -->
@@ -296,17 +291,6 @@ export const settingsModal = `
 
                         </div>
 
-                        <!-- Hide Thinking -->
-                        <div class="settings-item settings-item-toggle" data-toggle-checkbox="hide-thinking">
-                            <div class="settings-item-header">
-                                <label for="hide-thinking" class="settings-item-label">
-                                    <i class="fas fa-eye-slash"></i>Hide Thinking
-                                </label>
-                                <input type="checkbox" id="hide-thinking" class="settings-checkbox" aria-label="Toggle Hide Thinking Text">
-                                <span class="settings-status-badge" aria-hidden="true"></span>
-                            </div>
-                            <p class="settings-item-description">Hides the internal "thought process" block often seen in reasoning models.</p>
-                        </div>
                     </div>
 
                     <!-- Smart Conversational Tools Group -->
@@ -358,6 +342,18 @@ export const settingsModal = `
                         <div class="settings-group-title">
                             <i class="fas fa-desktop"></i>
                             <span>Chat Interface</span>
+                        </div>
+
+                        <!-- Hide Thinking -->
+                        <div class="settings-item settings-item-toggle" data-toggle-checkbox="hide-thinking">
+                            <div class="settings-item-header">
+                                <label for="hide-thinking" class="settings-item-label">
+                                    <i class="fas fa-eye-slash"></i>Hide Thinking
+                                </label>
+                                <input type="checkbox" id="hide-thinking" class="settings-checkbox" aria-label="Toggle Hide Thinking Text">
+                                <span class="settings-status-badge" aria-hidden="true"></span>
+                            </div>
+                            <p class="settings-item-description">Hides the internal "thought process" block often seen in reasoning models.</p>
                         </div>
 
                         <!-- Auto-Scroll -->

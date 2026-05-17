@@ -1727,9 +1727,7 @@ body.light-theme #settings-modal button[id^="to-"]:hover {
   min-width: 120px;
 }
 
-#settings-modal #clear-context-length-btn.context-length-default-btn {
-  min-width: 110px;
-}
+
 
 @media (max-width: 480px) {
   #settings-modal .context-length-input-row {
@@ -1744,11 +1742,7 @@ body.light-theme #settings-modal button[id^="to-"]:hover {
     align-self: flex-start;
   }
 
-  #settings-modal #clear-context-length-btn.context-length-default-btn {
-    width: min(100%, 320px);
-    min-width: 0;
-    align-self: flex-start;
-  }
+
 }
 
 /* Settings content wrapper */

@@ -122,7 +122,6 @@ export const showModelLabelCheckbox = domCache.get('show-model-label');
 export const swipeNavigationCheckbox = domCache.get('swipe-navigation');
 export const contextLengthInput = domCache.get('context-length-input');
 export const contextLengthValue = domCache.get('context-length-value');
-export const clearContextLengthButton = domCache.get('clear-context-length-btn');
 
 export const refreshButton = document.getElementById('refresh-button');
 export const modelToggleButton = document.getElementById('model-toggle-button');

@@ -16,8 +16,7 @@ import {
   serverIpInput,
   serverPortInput,
   contextLengthInput,
-  contextLengthValue,
-  clearContextLengthButton
+  contextLengthValue
 } from "./dom-elements.js";
 
 
@@ -850,20 +849,7 @@ export function loadContextLengthSetting() {
   }
 
 
-  const clearBtn = clearContextLengthButton || document.getElementById('clear-context-length-btn');
-  if (clearBtn && clearBtn.dataset.contextLengthClearListenerAttached !== "true") {
-    clearBtn.addEventListener("click", () => {
-      showResetConfirmModal(
-        "Reset Context Length to the provider default? Your current value will be cleared.",
-        () => {
-          contextLength = 0;
-          localStorage.removeItem("contextLength");
-          updateContextLengthUI(input, valueDisplay);
-        }
-      );
-    });
-    clearBtn.dataset.contextLengthClearListenerAttached = "true";
-  }
+
 
   const textInput = document.getElementById('context-length-text-input');
   if (textInput && textInput.dataset.contextLengthTextListenerAttached !== "true") {
@@ -984,18 +970,7 @@ export function loadContextLengthSetting() {
       }, { capture: true, passive: false });
     }
 
-    const clearBtnEl = clearContextLengthButton || document.getElementById('clear-context-length-btn');
-    if (clearBtnEl) {
-      addLockedPulseTapHandlers(clearBtnEl, { capture: true });
-      clearBtnEl.addEventListener("click", (e) => {
-        if (!isLocked) {
-          return;
-        }
 
-        e.preventDefault();
-        e.stopImmediatePropagation();
-      }, { capture: true, passive: false });
-    }
 
     const applyLockedState = () => {
       input.disabled = true;
@@ -1006,14 +981,7 @@ export function loadContextLengthSetting() {
       input.setAttribute("readonly", "true");
       overlay.style.display = 'block';
       const tInput = document.getElementById('context-length-text-input');
-      const cBtn = clearContextLengthButton || document.getElementById('clear-context-length-btn');
       if (tInput) { tInput.disabled = true; tInput.style.opacity = "0.6"; tInput.style.cursor = "not-allowed"; }
-      if (cBtn) {
-        cBtn.disabled = false;
-        cBtn.setAttribute('aria-disabled', 'true');
-        cBtn.style.opacity = "0.6";
-        cBtn.style.cursor = "not-allowed";
-      }
       lockBtn.innerHTML = '<i class="fas fa-lock text-red-400"></i>';
       lockBtn.title = "Context Length is locked (click to unlock)";
     };
@@ -1027,14 +995,7 @@ export function loadContextLengthSetting() {
       input.removeAttribute("readonly");
       overlay.style.display = 'none';
       const tInput = document.getElementById('context-length-text-input');
-      const cBtn = clearContextLengthButton || document.getElementById('clear-context-length-btn');
       if (tInput) { tInput.disabled = false; tInput.style.opacity = ""; tInput.style.cursor = ""; }
-      if (cBtn) {
-        cBtn.disabled = false;
-        cBtn.removeAttribute('aria-disabled');
-        cBtn.style.opacity = "";
-        cBtn.style.cursor = "";
-      }
       lockBtn.innerHTML = '<i class="fas fa-unlock" style="color: #10b981;"></i>';
       lockBtn.title = "Context Length is unlocked (click to lock)";
     };
