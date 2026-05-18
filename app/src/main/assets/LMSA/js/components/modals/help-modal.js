@@ -202,7 +202,7 @@ export const helpModal = `
                                     <ul class="list-disc pl-5 mt-2 space-y-1"
                                         style="color: var(--text-primary); font-size: 0.9em;">
                                         <li>Start the <strong>LM Studio server</strong> on the host computer.</li>
-                                        <li>Enable <strong>CORS</strong> and <strong>Serve on local network</strong>.</li>
+                                        <li>Enable <strong>Serve on local network</strong>.</li>
                                         <li>In LMSA <a href="#" id="open-settings-link"
                                                 class="text-blue-400 hover:text-blue-300">Settings</a>, enter the host IP and LM Studio server port.</li>
                                     </ul>
@@ -1320,8 +1320,6 @@ export const helpModal = `
                                 <p class="font-medium flex items-center" style="color: #facc15;"><i
                                         class="fas fa-cog mr-2"></i>Verify Server Settings</p>
                                 <ul class="list-disc pl-5 mt-2 space-y-1" style="color: var(--text-primary);">
-                                    <li>In LM Studio, go to server settings and confirm <strong>"Enable
-                                            CORS"</strong> is checked</li>
                                     <li>Verify that <strong>"Serve on Local Network"</strong> is enabled in LM
                                         Studio settings - this is required for the server to accept connections from
                                         devices on your network</li>

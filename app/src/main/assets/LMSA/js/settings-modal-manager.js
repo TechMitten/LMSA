@@ -3104,7 +3104,7 @@ function initializeConnectionInputModals() {
     function resetLocalNetworkScanUi() {
         _localNetworkScanGeneration += 1;
         setLocalNetworkScanButtonState(false);
-        setLocalNetworkScanStatus('Search this Wi-Fi or Ethernet network for LM Studio and Ollama, then review the discovered address before saving.');
+        setLocalNetworkScanStatus('Search this Wi-Fi network for LM Studio and Ollama.');
         clearLocalNetworkResults();
     }
 

@@ -3162,6 +3162,13 @@ html body #settings-modal #settings-step-actions #reset-app.professional-button 
   white-space: nowrap;
 }
 
+#scan-local-network-btn {
+  inline-size: auto;
+  min-width: 148px;
+  max-width: none;
+  padding-inline: 16px;
+}
+
 .connection-status-row .professional-button:hover {
   border-color: rgba(96, 165, 250, 0.55);
   background:
@@ -3788,6 +3795,13 @@ body.light-theme .connection-preset-action-btn {
     min-height: 38px;
     padding: 0 12px;
     font-size: 0.92rem;
+  }
+
+  #scan-local-network-btn {
+    inline-size: auto;
+    min-width: 128px;
+    max-width: none;
+    padding-inline: 14px;
   }
 }
 

@@ -10,7 +10,6 @@ let pendingCallback = null;
 
 // Modal elements
 let modal = null;
-let corsCheck = null;
 let localNetworkCheck = null;
 let wifiCheck = null;
 let confirmBtn = null;
@@ -24,7 +23,6 @@ let neverShowAgainCheck = null;
 export function initializeIpPortConfirmationModal() {
     // Get modal elements
     modal = document.getElementById('ip-port-confirmation-modal');
-    corsCheck = document.getElementById('cors-check');
     localNetworkCheck = document.getElementById('local-network-check');
     wifiCheck = document.getElementById('wifi-check');
     confirmBtn = document.getElementById('ip-port-confirm-btn');
@@ -33,7 +31,7 @@ export function initializeIpPortConfirmationModal() {
     progressCount = document.getElementById('progress-count');
     neverShowAgainCheck = document.getElementById('ip-port-never-show-again');
 
-    if (!modal || !corsCheck || !localNetworkCheck || !wifiCheck || !confirmBtn || !cancelBtn || !progressCount) {
+    if (!modal || !localNetworkCheck || !wifiCheck || !confirmBtn || !cancelBtn || !progressCount) {
         debugError('IP/Port confirmation modal elements not found');
         return;
     }
@@ -94,7 +92,6 @@ function showModal() {
     if (!modal) return;
 
     // Reset checkboxes
-    corsCheck.checked = false;
     localNetworkCheck.checked = false;
 
     wifiCheck.checked = false;
@@ -139,10 +136,10 @@ function hideModal() {
  * Update progress tracker display
  */
 function updateProgressTracker() {
-    if (!progressCount || !corsCheck || !localNetworkCheck || !wifiCheck) return;
+    if (!progressCount || !localNetworkCheck || !wifiCheck) return;
 
-    const checkedCount = [corsCheck, localNetworkCheck, wifiCheck].filter(checkbox => checkbox.checked).length;
-    progressCount.textContent = `${checkedCount}/3`;
+    const checkedCount = [localNetworkCheck, wifiCheck].filter(checkbox => checkbox.checked).length;
+    progressCount.textContent = `${checkedCount}/2`;
 
     debugLog('Progress tracker updated:', { checkedCount });
 }
@@ -151,9 +148,9 @@ function updateProgressTracker() {
  * Update confirm button state based on checkbox status
  */
 function updateConfirmButtonState() {
-    if (!confirmBtn || !corsCheck || !localNetworkCheck || !wifiCheck) return;
+    if (!confirmBtn || !localNetworkCheck || !wifiCheck) return;
 
-    const allChecked = corsCheck.checked && localNetworkCheck.checked && wifiCheck.checked;
+    const allChecked = localNetworkCheck.checked && wifiCheck.checked;
     confirmBtn.disabled = !allChecked;
 
     // Also update progress tracker
@@ -165,7 +162,7 @@ function updateConfirmButtonState() {
  */
 function setupEventListeners() {
     // Checkbox change listeners
-    [corsCheck, localNetworkCheck, wifiCheck].forEach(checkbox => {
+    [localNetworkCheck, wifiCheck].forEach(checkbox => {
         checkbox.addEventListener('change', updateConfirmButtonState);
     });
 
