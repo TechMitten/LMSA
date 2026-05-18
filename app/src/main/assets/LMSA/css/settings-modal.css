@@ -731,8 +731,11 @@ body.light-theme #settings-modal #max-tokens-value.max-tokens-current-value {
 #settings-modal .max-tokens-input-row {
   display: flex;
   align-items: stretch;
+  justify-content: center;
   gap: 0.65rem;
   margin-top: 0.55rem;
+  padding-inline: 0.5cm;
+  box-sizing: border-box;
 }
 
 #settings-modal #max-tokens-input.max-tokens-input-field {
@@ -765,20 +768,20 @@ body.light-theme #settings-modal #max-tokens-value.max-tokens-current-value {
 @media (max-width: 480px) {
   #settings-modal .max-tokens-input-row {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
     margin-top: 0.7rem;
   }
 
   #settings-modal #max-tokens-input.max-tokens-input-field {
     width: min(100%, 320px);
     min-width: 0;
-    align-self: flex-start;
+    align-self: center;
   }
 
   #settings-modal #clear-max-tokens-btn.max-tokens-default-btn {
     width: min(100%, 320px);
     min-width: 0;
-    align-self: flex-start;
+    align-self: center;
   }
 }
 
@@ -1606,38 +1609,45 @@ body.light-theme #settings-modal button[id^="to-"]:hover {
 }
 
 #settings-modal .context-length-override-toggle .settings-status-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  height: 20px;
-  padding: 0 6px;
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  min-width: 52px;
+  height: 30px;
+  padding: 0;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.34);
-  background: rgba(15, 23, 42, 0.45);
-  color: rgba(203, 213, 225, 0.9);
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  line-height: 1;
-  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.22);
-  transition: all 0.2s ease;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.6);
+  font-size: 0;
+  color: transparent;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  flex-shrink: 0;
 }
 
 #settings-modal .context-length-override-toggle .settings-status-badge::before {
-  content: 'Off';
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35), 0 0 0 0.5px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transform: translateY(-50%);
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease;
 }
 
 #settings-modal .context-length-override-toggle .settings-checkbox:checked + .settings-status-badge {
-  border-color: rgba(45, 212, 191, 0.62);
-  background: linear-gradient(180deg, rgba(20, 184, 166, 0.2), rgba(20, 184, 166, 0.08));
-  color: #99f6e4;
-  box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.22) inset, 0 0 10px rgba(45, 212, 191, 0.18);
+  border-color: rgba(45, 212, 191, 0.6);
+  background: linear-gradient(180deg, rgba(20, 184, 166, 0.95), rgba(13, 148, 136, 1));
+  box-shadow: inset 0 1px 2px rgba(13, 148, 136, 0.4), 0 0 0 1px rgba(45, 212, 191, 0.25);
 }
 
 #settings-modal .context-length-override-toggle .settings-checkbox:checked + .settings-status-badge::before {
-  content: 'On';
+  left: calc(100% - 26px);
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
 }
 
 @keyframes lock-nudge {
@@ -1671,6 +1681,7 @@ body.light-theme #settings-modal button[id^="to-"]:hover {
 .temperature-slider-container {
   position: relative;
   display: block;
+  padding: 10px 12px;
 }
 
 .temperature-slider-overlay {
@@ -1785,8 +1796,11 @@ body.light-theme #settings-modal button[id^="to-"]:hover {
 #settings-modal .context-length-input-row {
   display: flex;
   align-items: stretch;
+  justify-content: center;
   gap: 0.65rem;
   margin-top: 0.55rem;
+  padding-inline: 0.5cm;
+  box-sizing: border-box;
 }
 
 #settings-modal #context-length-text-input.context-length-text-field {
@@ -1838,14 +1852,14 @@ body.light-theme #settings-modal .context-length-warning {
 @media (max-width: 480px) {
   #settings-modal .context-length-input-row {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
     margin-top: 0.7rem;
   }
 
   #settings-modal #context-length-text-input.context-length-text-field {
     width: min(100%, 320px);
     min-width: 0;
-    align-self: flex-start;
+    align-self: center;
   }
 
   #settings-modal .context-length-override-control {
@@ -1856,17 +1870,20 @@ body.light-theme #settings-modal .context-length-warning {
 }
 
 body.light-theme #settings-modal .context-length-override-toggle .settings-status-badge {
-  border-color: rgba(148, 163, 184, 0.52);
-  background: rgba(248, 250, 252, 0.92);
-  color: rgba(71, 85, 105, 0.94);
-  box-shadow: inset 0 0 0 1px rgba(203, 213, 225, 0.55);
+  border-color: rgba(148, 163, 184, 0.5);
+  background: rgba(226, 232, 240, 0.9);
+  box-shadow: inset 0 1px 2px rgba(148, 163, 184, 0.25);
+}
+
+body.light-theme #settings-modal .context-length-override-toggle .settings-status-badge::before {
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2), 0 0 0 0.5px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 body.light-theme #settings-modal .context-length-override-toggle .settings-checkbox:checked + .settings-status-badge {
-  border-color: rgba(13, 148, 136, 0.58);
-  background: linear-gradient(180deg, rgba(204, 251, 241, 0.95), rgba(153, 246, 228, 0.7));
-  color: #0f766e;
-  box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.18) inset, 0 0 8px rgba(20, 184, 166, 0.14);
+  border-color: rgba(13, 148, 136, 0.55);
+  background: linear-gradient(180deg, rgba(20, 184, 166, 0.95), rgba(13, 148, 136, 1));
+  box-shadow: inset 0 1px 2px rgba(13, 148, 136, 0.35), 0 0 0 1px rgba(20, 184, 166, 0.2);
 }
 
 /* Settings content wrapper */
@@ -4146,8 +4163,8 @@ body.light-theme .openrouter-key-input-wrapper input {
     background: rgba(30, 41, 59, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 1.25rem;
-    padding: 1.25rem;
-    margin-bottom: 1.5rem;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -4170,7 +4187,7 @@ body.light-theme .openrouter-key-input-wrapper input {
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    margin-bottom: 1.25rem;
+    margin-bottom: 0.85rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -4535,19 +4552,32 @@ body.light-theme .openrouter-key-input-wrapper input {
 .settings-item {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
-    margin-bottom: 1.25rem;
-    padding: 0.6rem 0.75rem;
+    gap: 0.45rem;
+    margin-bottom: 0.55rem;
+    padding: 0.85rem 1rem;
     border-radius: 0.75rem;
-    transition: background 0.2s ease, transform 0.2s ease;
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
 
 .settings-item:hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.settings-item-toggle:active {
+    transform: scale(0.995);
+}
+
+.light-theme .settings-item {
+    background: rgba(15, 23, 42, 0.04);
+    border-color: rgba(15, 23, 42, 0.06);
 }
 
 .light-theme .settings-item:hover {
-    background: rgba(0, 0, 0, 0.02);
+    background: rgba(15, 23, 42, 0.07);
+    border-color: rgba(15, 23, 42, 0.1);
 }
 
 .settings-item:last-child {
@@ -4588,12 +4618,28 @@ body.light-theme .openrouter-key-input-wrapper input {
 }
 
 .settings-item-description {
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     color: #94a3b8;
     line-height: 1.5;
     padding-left: 1.85rem;
-  padding-right: 4.75rem; /* Leave space for larger segmented toggles */
-    max-width: 95%;
+    padding-right: 0.25rem;
+    max-width: 100%;
+}
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  #settings-modal .settings-item-toggle {
+    padding: 0.7rem 0.9rem;
+  }
+
+  #settings-modal .settings-item-toggle .settings-item-description {
+    padding-left: 1.7rem;
+    padding-right: 0;
+    max-width: 100%;
+  }
+
+  #settings-modal .context-length-override-control {
+    min-height: 34px;
+  }
 }
 
 .light-theme .settings-item-description {
@@ -4631,12 +4677,8 @@ body.light-theme .openrouter-key-input-wrapper input {
 
 @media (max-width: 480px) {
     .settings-group {
-        padding: 1rem;
+        padding: 0.85rem;
         border-radius: 1rem;
-    }
-
-    .settings-item-description {
-        padding-right: 0;
     }
 }
 

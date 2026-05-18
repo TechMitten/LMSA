@@ -48,8 +48,8 @@ android {
         minSdk = 23
         // Target 36 to stay current with Play Store 2026 requirements
         targetSdk = 36
-        versionCode = 336
-        versionName = "10.19"
+        versionCode = 337
+        versionName = "10.20"
 
         buildConfigField("String", "BRAVE_API_KEY", "\"$braveKey\"")
         buildConfigField("String", "POLLINATIONS_API_KEY_OBFUSCATED", "\"$pollAiKeyObfuscated\"")

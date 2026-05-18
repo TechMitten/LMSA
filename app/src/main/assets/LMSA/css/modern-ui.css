@@ -1065,7 +1065,7 @@ body.light-theme #chat-form #stop-button:hover {
 
 #user-input::placeholder {
   color: var(--modern-text-muted);
-  opacity: 0.6;
+  opacity: 0.75;
 }
 
 /* Settings & Modal Enhancements */

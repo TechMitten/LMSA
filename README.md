@@ -1,88 +1,104 @@
 # LMSA: Local Model Smart Assistant
 
-<img src="lmsa_hero_banner.png" alt="LMSA Hero Banner" width="100%">
+## Prerequisites
 
-LMSA is a premium, feature-rich Android interface designed for seamless interaction with Large Language Models (LLMs). If you're running local models via **LM Studio** and **Ollama** or leveraging cloud power through **OpenRouter**, LMSA provides a state-of-the-art chat experience with a focus on privacy, performance, and rich feature sets.
-
-## Key Features
-
-- **Multi-Provider Support**: Seamlessly connect to **LM Studio**, **Ollama**, **OpenRouter**, or any **OpenAI-compatible** custom endpoint.
-- **Model Context Protocol (MCP)**: Native support for LM Studio MCP servers and `mcp.json` plugins for extended model capabilities.
-- **Real-Time Web Search**: Augment AI responses with live data using the **Brave Search API**.
-- **Multimodal & Vision**: Full support for multimodal models—upload images for analysis or use the built-in OCR (via Tesseract.js) to extract text from documents.
-- **AI Image Generation**: Create images directly in your chats using the `/image` command.
-- **Advanced Reasoning Controls**: Toggle "Thinking" visibility and adjust "Reasoning Level" (Thinking Effort) for supported models.
-- **Persona & Character Templates**:
-  - **Library of Personas**: Start chats with specialized contexts like Math Tutor, Code Assistant, and more.
-  - **Custom Templates**: Create and save your own system prompts with custom names and avatars.
-  - **Character Card V2 Support**: Full support for the industry-standard Character Card V2 spec, enabling complex roleplay with personality, scenario, and dialogue examples.
-  - **AI-Powered Generation**: Automatically generate high-quality system prompts or complete character cards using AI.
-- **Smart Conversational Tools**: 
-  - **Smart Reply (Beta)**: Get AI-powered quick reply suggestions.
-  - **Auto-Titles**: Let the AI automatically name your chats based on context.
-- **Privacy & Security**:
-  - **Biometric Unlock**: Secure your chats with device-level fingerprint or PIN authentication.
-  - **Offline Access**: Full support for LAN-only mode when using local servers.
-- **Rich UI/UX**:
-  - **LaTeX & Code Highlighting**: Beautifully rendered math (KaTeX) and syntax-highlighted code blocks.
-  - **Customization**: Change chat fonts, sizes, and toggle model name displays.
-  - **Native TTS**: High-quality Text-to-Speech playback using Android's native engine.
-- **Power User Tools**:
-  - **Connection Presets**: Save and switch between multiple server configurations effortlessly.
-  - **Deep Integration**: Import LM Studio profiles, Character Card V2 specs, and manage custom persona templates.
-  - **Data Portability**: Export full chat histories and character data.
-
-## Technology Stack
-
-- **Android Native**: Built with Kotlin and modern Android Jetpack components.
-- **Hybrid Core**: High-performance WebView implementation for a rich, responsive UI.
-- **Modern Web UI**: Styled with a custom, premium design system inspired by Tailwind CSS.
-- **Open Source Libraries**: 
-    - [KaTeX](https://katex.org/) (Math rendering)
-    - [Highlight.js](https://highlightjs.org/) (Syntax highlighting)
-    - [Tesseract.js](https://tesseract.projectnaptha.com/) (OCR)
-    - [PDF.js](https://mozilla.github.io/pdf.js/) (PDF viewing)
-
-## Download
-
-LMSA is available for download on the Google Play Store:
-
-<a href="https://play.google.com/store/apps/details?id=com.lmsa.app">
-  <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80">
-</a>
-
-
-## Getting Started
-
-### Prerequisites
-- Android Studio Ladybug or later.
-- Android SDK 34+.
-- A local LLM server (optional, for local mode).
-
-### Building from Source
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/TechMitten/LMSA.git
-   ```
-2. Open the project in **Android Studio**.
-3. Sync Project with Gradle Files.
-4. Build and run on your device or emulator.
-
-## Import & Export
-LMSA makes it easy to migrate your workflows:
-- **LM Studio Profiles**: Import your system prompts and configurations directly.
-- **Character Cards**: Full support for `.json` and image-embedded Character Card V2.
-- **Persona Templates**: Create, edit, and manage your own reusable chat personas with custom avatars.
-- **Chat History**: Export your conversations for backup or analysis.
-
-## License
-This project is licensed under the **PolyForm Noncommercial License 1.0.0**.
-
-> [!CAUTION]
-> **Commercial Use Prohibited**
-> You are free to clone, modify, and use this software for personal or educational purposes. However, **any commercial use, including selling this software or its derivatives, is strictly prohibited.** See the [LICENSE](LICENSE) file for the full legal text.
+- **Android Studio** — Ladybug Feature Drop 2024.2.1 or later
+- **JDK** — 17 (set via `jvmToolchain(17)` in the project)
+- **Android SDK** — compileSdk 36 / targetSdk 36 (Android 16)
+- **Kotlin** — 2.1.0 (managed by Gradle)
+- **Gradle** — wrapper is included in the repo
+- A local LLM server such as **LM Studio** or **Ollama** (optional, for local mode)
+- **Brave Search API key** (optional — for web search; see step 6 below)
 
 ---
-Built with ❤️ by the LMSA Team.
 
-*(Google Play and the Google Play logo are trademarks of Google LLC.)*
+## Build Instructions
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/TechMitten/LMSA.git
+cd LMSA
+```
+
+### 2. Open the project
+
+Launch **Android Studio** and select **File → Open**, then point it at the cloned `LMSA` directory.
+
+### 3. Sync Gradle
+
+Android Studio will prompt you to sync — click **Sync Now**.  
+Alternatively, run from the terminal:
+
+```bash
+./gradlew --no-daemon build
+```
+
+> The first sync will download all dependencies (AGP 8.13.2, Jetpack libs, etc.) and may take a few minutes.
+
+### 4. (Optional) Add API keys
+
+Create a `local.properties` file in the project root (if it doesn't already exist) and add any keys you need:
+
+```properties
+# Brave Search — enables the web-search feature
+BRAVE_API_KEY=your_brave_api_key_here
+
+# Pollinations — enables AI image generation
+POLLINATIONS_API_KEY=your_pollinations_key_here
+```
+
+> These keys are read at build time and injected via `BuildConfig`. The app compiles without them; the corresponding features will simply be disabled.
+
+### 5. Build the APK
+
+**From Android Studio:**
+
+1. Select the **app** module and the **debug** (or **release**) build variant in the **Build Variants** panel.
+2. Click **Build → Build Bundle(s) / APK(s) → Build APK(s)**.
+
+**From the terminal:**
+
+```bash
+# Debug APK
+./gradlew assembleDebug
+
+# Release APK (requires signing configuration)
+./gradlew assembleRelease
+```
+
+Output APKs are located at:
+
+```
+app/build/outputs/apk/debug/app-debug.apk
+app/build/outputs/apk/release/app-release.apk
+```
+
+### 6. Install & run
+
+**From Android Studio:**
+
+1. Connect your Android device (USB debugging enabled) or start an emulator.
+2. Select the device from the run dropdown.
+3. Click **Run ▶** (or press `Shift + F10`).
+
+**From the terminal:**
+
+```bash
+adb install app/build/outputs/apk/debug/app-debug.apk
+```
+
+### 7. Connect to an LLM
+
+Once the app is running:
+
+1. Open **Settings** inside LMSA.
+2. Enter the IP address and port of your LM Studio or Ollama server (e.g. `192.168.1.100:1234`).
+3. Save and start chatting.
+
+---
+
+## License
+
+This project is licensed under the **MIT License**.  
+See the [LICENSE](LICENSE) file for the full text.

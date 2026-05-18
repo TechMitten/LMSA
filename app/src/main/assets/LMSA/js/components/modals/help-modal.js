@@ -71,6 +71,11 @@ export const helpModal = `
                                         <i class="fas fa-cloud mr-2 text-sm"></i>
                                         <span>OpenRouter Setup</span>
                                     </a>
+                                    <a href="#section-context-length"
+                                        class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
+                                        <i class="fas fa-brain mr-2 text-sm"></i>
+                                        <span>Context Length</span>
+                                    </a>
                                     <a href="#section-max-output-tokens"
                                         class="toc-link flex items-center p-2 rounded transition-colors font-semibold">
                                         <i class="fas fa-text-width mr-2 text-sm"></i>
@@ -529,6 +534,72 @@ export const helpModal = `
                                     <li><strong>Switching back to local</strong> — simply turn the OpenRouter
                                         toggle off in Settings to return to LM Studio or Ollama mode</li>
                                 </ul>
+                            </div>
+                        </section>
+
+                        <section id="section-context-length">
+                            <h3 class="text-lg font-semibold mb-2 flex items-center" style="color: #facc15;"><i
+                                    class="fas fa-brain mr-2"></i>Context Length</h3>
+                            <p style="color: var(--text-primary); margin-bottom: 1rem;">
+                                <strong>Context Length</strong> (measured in tokens) controls how much conversation history your AI model can "remember" and use when generating responses. A larger context length allows the model to consider more previous messages, while a smaller one limits how far back it can look.
+                            </p>
+
+                            <div class="space-y-4">
+                                <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
+                                            class="fas fa-sliders-h mr-2"></i>How to Use It</p>
+                                    <ul class="list-disc pl-5 mt-2 space-y-1"
+                                        style="color: var(--text-primary); font-size: 0.9em;">
+                                        <li>Open <strong>Settings</strong> and find <strong>Context Length</strong> under the chat options.</li>
+                                        <li>Use the slider to quickly select popular preset values like 256, 512, 2048, 4096, and up to 200k tokens.</li>
+                                        <li>For custom values, type a number directly in the text field below the slider. The minimum allowed is <strong>256 tokens</strong>.</li>
+                                        <li>Enable the <strong>Override</strong> toggle to use your custom value instead of the provider's default.</li>
+                                        <li>Disable the toggle to fall back to whatever context length your provider (LM Studio, OpenRouter, etc.) suggests.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
+                                            class="fas fa-network-wired mr-2"></i>Where It Applies</p>
+                                    <ul class="list-disc pl-5 mt-2 space-y-1"
+                                        style="color: var(--text-primary); font-size: 0.9em;">
+                                        <li><strong>Local Server (LM Studio / Ollama)</strong>: sets the context window for local chat requests.</li>
+                                        <li><strong>OpenRouter</strong>: overrides the model's default context length. When enabled, it also activates automatic conversation compaction to stay within the limit.</li>
+                                        <li><strong>Custom Endpoint</strong>: applies your setting to OpenAI-compatible servers.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
+                                            class="fas fa-info-circle mr-2"></i>Provider Defaults</p>
+                                    <p style="color: var(--text-primary); margin-top: 0.5rem;">
+                                        When <strong>Override</strong> is disabled, LMSA uses the context length your AI provider publishes. LM Studio shows a <strong>Context Snapshot</strong> card displaying your current provider, model, and its native context limits.
+                                    </p>
+                                </div>
+
+                                <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
+                                            class="fas fa-lightbulb mr-2"></i>When to Adjust</p>
+                                    <ul class="list-disc pl-5 mt-2 space-y-1"
+                                        style="color: var(--text-primary); font-size: 0.9em;">
+                                        <li><strong>Increase it</strong> if you want longer conversations with better memory of earlier messages, especially for complex multi-turn topics.</li>
+                                        <li><strong>Decrease it</strong> to reduce processing time and latency, or if you run out of VRAM on a local model.</li>
+                                        <li><strong>Use a smaller value</strong> for lightweight models or slower hardware.</li>
+                                        <li><strong>Use a larger value</strong> for detailed analysis, coding tasks, or when you need the model to remember many prior turns.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="p-3 rounded-lg" style="background: var(--settings-label-bg);">
+                                    <p class="font-medium flex items-center" style="color: #facc15;"><i
+                                            class="fas fa-exclamation-circle mr-2"></i>Good to Know</p>
+                                    <ul class="list-disc pl-5 mt-2 space-y-1"
+                                        style="color: var(--text-primary); font-size: 0.9em;">
+                                        <li>Context length is separate from <strong>Max Output Tokens</strong>—the former controls input history, the latter controls response length.</li>
+                                        <li>Larger context lengths use more memory and may be slower on weaker hardware.</li>
+                                        <li>Not all models support the full context limit you set. Your model may truncate or ignore your override if it exceeds the model's hard maximum.</li>
+                                        <li>Web Search and Image Generation use independent token limits separate from this setting.</li>
+                                    </ul>
+                                </div>
                             </div>
                         </section>
 

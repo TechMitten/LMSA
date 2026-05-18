@@ -78,7 +78,7 @@ let openAICompatibleApiKey = ''; // Optional API key for custom endpoint
 let lmStudioApiToken = ''; // Optional LM Studio API token for authenticated servers
 let lmStudioMcpIntegrations = []; // Optional LM Studio native chat integrations payload
 let reasoningLevel = 'default'; // Thinking effort level (default, disabled, low, medium, high)
-let otterBurrowMap = ''; // Web search provider key map
+let braveApiKey = ''; // Brave Search API key
 let resetTemperatureLockState = null;
 let resetContextLengthLockState = null;
 
@@ -1617,13 +1617,8 @@ export function getWebSearchEnabled() {
  * Gets the current web search provider key
  * @returns {string}
  */
-export function getOtterBurrowMap() {
-  return otterBurrowMap || localStorage.getItem('otterBurrowMap') || '';
-}
-
-// Backward-compatible alias used by older imports.
 export function getBraveApiKey() {
-  return getOtterBurrowMap();
+  return braveApiKey || localStorage.getItem('braveApiKey') || '';
 }
 
 /**
@@ -3641,23 +3636,29 @@ export function loadDefaultModelSetting() {
  * Loads the Brave Search settings from localStorage
  */
 export function loadBraveSearchSettings() {
+  // Migrate old obfuscated localStorage key to the new key name
+  const legacyKey = localStorage.getItem('otterBurrowMap');
+  if (legacyKey && !localStorage.getItem('braveApiKey')) {
+    localStorage.setItem('braveApiKey', legacyKey);
+    localStorage.removeItem('otterBurrowMap');
+  }
+
   // 1. Try to get from Android Native Bridge first (to pick up changes from local.properties)
-  if (window.AndroidNetwork && typeof window.AndroidNetwork.getOtterBurrowMap === 'function') {
-    const nativeKey = window.AndroidNetwork.getOtterBurrowMap();
+  if (window.AndroidNetwork && typeof window.AndroidNetwork.getBraveApiKey === 'function') {
+    const nativeKey = window.AndroidNetwork.getBraveApiKey();
     if (nativeKey) {
-      otterBurrowMap = nativeKey;
-      localStorage.setItem('otterBurrowMap', otterBurrowMap);
+      braveApiKey = nativeKey;
+      localStorage.setItem('braveApiKey', braveApiKey);
       return;
     }
   }
 
   // 2. Fallback to localStorage (e.g. if bridge is unavailable during development)
-  const savedOtterBurrowMap = localStorage.getItem('otterBurrowMap');
-  if (savedOtterBurrowMap) {
-    otterBurrowMap = savedOtterBurrowMap;
+  const savedKey = localStorage.getItem('braveApiKey');
+  if (savedKey) {
+    braveApiKey = savedKey;
   } else {
-    // Default empty if not found in bridge or storage
-    otterBurrowMap = '';
-    localStorage.setItem('otterBurrowMap', otterBurrowMap);
+    braveApiKey = '';
+    localStorage.setItem('braveApiKey', braveApiKey);
   }
 }
