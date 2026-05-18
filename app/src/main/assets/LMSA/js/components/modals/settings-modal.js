@@ -808,6 +808,27 @@ export const settingsModal = `
                     <span class="server-type-name">Ollama</span>
                 </button>
             </div>
+            <div class="mb-4">
+                <div class="connection-status-row" style="padding: 0; align-items: flex-start;">
+                    <div class="connection-status-info" style="align-items: flex-start;">
+                        <i class="fas fa-wifi connection-status-icon" style="margin-top: 0.15rem;"></i>
+                        <div class="min-w-0">
+                            <div class="text-sm font-semibold" style="color: var(--settings-text-strong, #f8fafc); line-height: 1.2;">Scan your local network</div>
+                            <p id="scan-local-network-status" class="text-xs mt-1" style="color: var(--settings-help-text, #9ca3af); line-height: 1.4; margin: 0;">
+                                Search this Wi-Fi or Ethernet network for LM Studio and Ollama, then review the discovered address before saving.
+                            </p>
+                        </div>
+                    </div>
+                    <button id="scan-local-network-btn" type="button"
+                        class="professional-button flex items-center justify-center gap-2 px-4 h-10">
+                        <i class="fas fa-radar-dish text-xs"></i>
+                        <span>Scan Network</span>
+                    </button>
+                </div>
+                <div id="scan-local-network-results" class="hidden mt-3">
+                    <div class="connection-presets-list" id="scan-local-network-results-list"></div>
+                </div>
+            </div>
             <div class="flex gap-3 mb-5">
                 <div class="flex-1 min-w-0">
                     <label for="server-ip" class="block text-xs font-medium mb-1" style="color: var(--settings-label-color, #d1d5db);">Hostname / IP</label>

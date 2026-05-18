@@ -4271,7 +4271,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     border-top: none !important;
     background:
         linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(11, 17, 27, 0.56) 18%, rgba(7, 11, 20, 0.9) 52%, rgba(3, 6, 12, 0.98) 100%),
-        radial-gradient(circle at 50% 0%, rgba(96, 165, 250, 0.08) 0%, rgba(96, 165, 250, 0.03) 18%, rgba(96, 165, 250, 0) 46%),
+        radial-gradient(circle at 50% 0%, rgba(96, 165, 250, 0.18) 0%, rgba(96, 165, 250, 0.09) 20%, rgba(96, 165, 250, 0.02) 42%, rgba(96, 165, 250, 0) 56%),
         linear-gradient(135deg, rgba(30, 41, 59, 0.14) 0%, rgba(15, 23, 42, 0.04) 48%, rgba(30, 41, 59, 0.18) 100%) !important;
     box-shadow: none !important;
     overflow: visible !important;
@@ -4288,7 +4288,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     background:
         radial-gradient(circle at 50% 100%, rgba(2, 6, 23, 0.68) 0%, rgba(2, 6, 23, 0.52) 22%, rgba(2, 6, 23, 0.28) 42%, rgba(2, 6, 23, 0.08) 62%, rgba(2, 6, 23, 0) 82%),
         linear-gradient(180deg, rgba(2, 6, 23, 0) 0%, rgba(2, 6, 23, 0.06) 18%, rgba(2, 6, 23, 0.28) 42%, rgba(2, 6, 23, 0.46) 62%, rgba(2, 6, 23, 0.6) 100%),
-        radial-gradient(circle at 50% 84%, rgba(96, 165, 250, 0.12) 0%, rgba(96, 165, 250, 0.04) 24%, rgba(96, 165, 250, 0) 52%);
+        radial-gradient(circle at 50% 84%, rgba(96, 165, 250, 0.24) 0%, rgba(96, 165, 250, 0.12) 26%, rgba(96, 165, 250, 0.03) 48%, rgba(96, 165, 250, 0) 62%);
     opacity: 0.98;
     filter: blur(12px);
     pointer-events: none;
@@ -4305,7 +4305,7 @@ body.light-theme #welcome-message #welcome-help-btn.menu-press-in {
     background:
         radial-gradient(circle at 50% 0%, rgba(2, 6, 23, 0.72) 0%, rgba(2, 6, 23, 0.48) 22%, rgba(2, 6, 23, 0.26) 44%, rgba(2, 6, 23, 0.08) 66%, rgba(2, 6, 23, 0) 86%),
         linear-gradient(180deg, rgba(2, 6, 23, 0.5) 0%, rgba(2, 6, 23, 0.28) 24%, rgba(2, 6, 23, 0.12) 48%, rgba(2, 6, 23, 0.04) 70%, rgba(2, 6, 23, 0) 100%),
-        radial-gradient(circle at 50% 16%, rgba(96, 165, 250, 0.1) 0%, rgba(96, 165, 250, 0.03) 22%, rgba(96, 165, 250, 0) 50%);
+        radial-gradient(circle at 50% 16%, rgba(96, 165, 250, 0.2) 0%, rgba(96, 165, 250, 0.1) 24%, rgba(96, 165, 250, 0.03) 46%, rgba(96, 165, 250, 0) 58%);
     opacity: 0.98;
     filter: blur(14px);
     pointer-events: none;
@@ -4316,14 +4316,14 @@ body.light-theme #chat-input-area::before {
     background:
         radial-gradient(circle at 50% 100%, rgba(226, 232, 240, 0.74) 0%, rgba(226, 232, 240, 0.5) 22%, rgba(226, 232, 240, 0.22) 42%, rgba(226, 232, 240, 0.05) 64%, rgba(226, 232, 240, 0) 84%),
         linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, rgba(241, 245, 249, 0.1) 18%, rgba(226, 232, 240, 0.28) 42%, rgba(226, 232, 240, 0.48) 62%, rgba(226, 232, 240, 0.6) 100%),
-        radial-gradient(circle at 50% 84%, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 22%, rgba(59, 130, 246, 0) 48%);
+        radial-gradient(circle at 50% 84%, rgba(59, 130, 246, 0.16) 0%, rgba(59, 130, 246, 0.06) 24%, rgba(59, 130, 246, 0.01) 44%, rgba(59, 130, 246, 0) 56%);
 }
 
 body.light-theme #chat-input-area::after {
     background:
         radial-gradient(circle at 50% 0%, rgba(226, 232, 240, 0.74) 0%, rgba(226, 232, 240, 0.48) 22%, rgba(226, 232, 240, 0.22) 44%, rgba(226, 232, 240, 0.06) 66%, rgba(226, 232, 240, 0) 84%),
         linear-gradient(180deg, rgba(241, 245, 249, 0.52) 0%, rgba(241, 245, 249, 0.28) 24%, rgba(226, 232, 240, 0.12) 50%, rgba(226, 232, 240, 0.03) 72%, rgba(226, 232, 240, 0) 100%),
-        radial-gradient(circle at 50% 14%, rgba(59, 130, 246, 0.06) 0%, rgba(59, 130, 246, 0.02) 18%, rgba(59, 130, 246, 0) 42%);
+        radial-gradient(circle at 50% 14%, rgba(59, 130, 246, 0.13) 0%, rgba(59, 130, 246, 0.05) 20%, rgba(59, 130, 246, 0.01) 40%, rgba(59, 130, 246, 0) 52%);
 }
 
 body.chat-input-focused #chat-input-area::after {

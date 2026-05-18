@@ -30,6 +30,7 @@ import android.webkit.RenderProcessGoneDetail
 import android.view.inputmethod.InputMethodManager
 import kotlin.math.roundToInt
 import java.io.IOException
+import java.io.ByteArrayOutputStream
 import android.util.Base64
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
@@ -61,7 +62,13 @@ import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsService
 import java.util.concurrent.Executor
+import java.util.concurrent.Executors
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import java.net.HttpURLConnection
+import java.net.Inet4Address
+import java.net.InetSocketAddress
+import java.net.Socket
 import java.net.URL
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.AdRequest
@@ -79,6 +86,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.google.android.play.core.review.ReviewManagerFactory
+import org.json.JSONArray
 import org.json.JSONObject
 
 import android.widget.FrameLayout
@@ -172,6 +180,73 @@ class WebViewActivity : AppCompatActivity() {
         private const val STORAGE_PERMISSION_CODE = 101
 
     }
+
+    private data class NativeBridgeRequest(
+        val requestId: String,
+        val url: String,
+        val method: String,
+        val headers: Map<String, String>,
+        val body: String?,
+        val timeoutMs: Int,
+        val stream: Boolean,
+        val followRedirects: Boolean
+    )
+
+    private class NativeRequestExecution {
+        @Volatile
+        var connection: HttpURLConnection? = null
+
+        @Volatile
+        var workerThread: Thread? = null
+
+        @Volatile
+        var cancelled: Boolean = false
+
+        private val stateLock = Any()
+        private var terminalDispatched: Boolean = false
+
+        fun cancel(): Boolean {
+            synchronized(stateLock) {
+                if (terminalDispatched || cancelled) {
+                    return false
+                }
+
+                cancelled = true
+                return true
+            }
+        }
+
+        fun markTerminal(): Boolean {
+            synchronized(stateLock) {
+                if (terminalDispatched) {
+                    return false
+                }
+
+                terminalDispatched = true
+                return true
+            }
+        }
+    }
+
+    private data class LocalSubnetConfig(
+        val deviceIp: Int,
+        val networkBase: Int,
+        val broadcastAddress: Int,
+        val prefixLength: Int,
+        val label: String
+    )
+
+    private data class DiscoveredServer(
+        val type: String,
+        val ip: String,
+        val port: Int,
+        val message: String
+    )
+
+    private data class ProbeResponse(
+        val code: Int,
+        val body: String
+    )
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -2951,6 +3026,214 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     inner class NetworkInterface {
+        private val activeNativeRequests = ConcurrentHashMap<String, NativeRequestExecution>()
+
+        private fun parseNativeBridgeRequest(requestJson: String): NativeBridgeRequest {
+            val payload = JSONObject(requestJson)
+            val requestId = payload.optString("requestId").trim()
+            val url = payload.optString("url").trim()
+            val method = payload.optString("method", "GET").trim().uppercase(Locale.US)
+            val headersJson = payload.optJSONObject("headers") ?: JSONObject()
+            val headers = linkedMapOf<String, String>()
+            val iterator = headersJson.keys()
+
+            while (iterator.hasNext()) {
+                val key = iterator.next()
+                if (key.isBlank()) {
+                    continue
+                }
+
+                headers[key] = headersJson.optString(key, "")
+            }
+
+            if (requestId.isBlank()) {
+                throw IllegalArgumentException("Missing native request ID")
+            }
+
+            if (url.isBlank()) {
+                throw IllegalArgumentException("Missing native request URL")
+            }
+
+            return NativeBridgeRequest(
+                requestId = requestId,
+                url = url,
+                method = if (method.isBlank()) "GET" else method,
+                headers = headers,
+                body = if (payload.has("body") && !payload.isNull("body")) payload.optString("body") else null,
+                timeoutMs = payload.optInt("timeoutMs", 30000).coerceIn(1000, 300000),
+                stream = payload.optBoolean("stream", true),
+                followRedirects = payload.optBoolean("followRedirects", true)
+            )
+        }
+
+        private fun dispatchNativeRequestEvent(event: JSONObject) {
+            val payloadLiteral = JSONObject.quote(event.toString())
+            runOnUiThread {
+                webView.evaluateJavascript(
+                    "if (typeof window.onNativeRequestEvent === 'function') { window.onNativeRequestEvent($payloadLiteral); }",
+                    null
+                )
+            }
+        }
+
+        private fun dispatchNativeRequestStarted(request: NativeBridgeRequest, connection: HttpURLConnection) {
+            val headerMap = JSONObject()
+            connection.headerFields.forEach { (key, values) ->
+                if (!key.isNullOrBlank() && !values.isNullOrEmpty()) {
+                    headerMap.put(key, values.joinToString(", "))
+                }
+            }
+
+            dispatchNativeRequestEvent(
+                JSONObject().apply {
+                    put("requestId", request.requestId)
+                    put("type", "responseStarted")
+                    put("url", request.url)
+                    put("status", connection.responseCode)
+                    put("statusText", connection.responseMessage ?: "")
+                    put("headers", headerMap)
+                }
+            )
+        }
+
+        private fun dispatchNativeRequestChunk(requestId: String, chunk: ByteArray, byteCount: Int) {
+            if (byteCount <= 0) {
+                return
+            }
+
+            val payload = Base64.encodeToString(chunk, 0, byteCount, Base64.NO_WRAP)
+            dispatchNativeRequestEvent(
+                JSONObject().apply {
+                    put("requestId", requestId)
+                    put("type", "responseChunk")
+                    put("dataBase64", payload)
+                    put("byteLength", byteCount)
+                }
+            )
+        }
+
+        private fun dispatchNativeRequestComplete(requestId: String) {
+            dispatchNativeRequestEvent(
+                JSONObject().apply {
+                    put("requestId", requestId)
+                    put("type", "responseComplete")
+                }
+            )
+        }
+
+        private fun dispatchNativeRequestError(requestId: String, message: String, code: String = "NETWORK_ERROR") {
+            dispatchNativeRequestEvent(
+                JSONObject().apply {
+                    put("requestId", requestId)
+                    put("type", "responseError")
+                    put("code", code)
+                    put("message", message)
+                }
+            )
+        }
+
+        private fun executeNativeBridgeRequest(request: NativeBridgeRequest, execution: NativeRequestExecution) {
+            try {
+                val connection = (URL(request.url).openConnection() as? HttpURLConnection)
+                    ?: throw IOException("Unsupported connection type")
+
+                execution.connection = connection
+                execution.workerThread = Thread.currentThread()
+
+                connection.requestMethod = request.method
+                connection.connectTimeout = request.timeoutMs
+                connection.readTimeout = if (request.stream) maxOf(request.timeoutMs, 120000) else request.timeoutMs
+                connection.instanceFollowRedirects = request.followRedirects
+                connection.useCaches = false
+                connection.doInput = true
+
+                if (request.headers.keys.none { it.equals("Accept", ignoreCase = true) }) {
+                    connection.setRequestProperty("Accept", "application/json, text/plain, */*")
+                }
+                if (request.headers.keys.none { it.equals("User-Agent", ignoreCase = true) }) {
+                    connection.setRequestProperty("User-Agent", "LMSA/NativeBridge")
+                }
+
+                request.headers.forEach { (key, value) ->
+                    connection.setRequestProperty(key, value)
+                }
+
+                val supportsRequestBody = request.method in setOf("POST", "PUT", "PATCH", "DELETE")
+                val requestBody = request.body?.toByteArray(Charsets.UTF_8)
+                if (supportsRequestBody && requestBody != null) {
+                    connection.doOutput = true
+                    if (request.headers.keys.none { it.equals("Content-Type", ignoreCase = true) }) {
+                        connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    }
+                    connection.setFixedLengthStreamingMode(requestBody.size)
+                    connection.outputStream.use { output ->
+                        output.write(requestBody)
+                        output.flush()
+                    }
+                }
+
+                if (execution.cancelled) {
+                    return
+                }
+
+                dispatchNativeRequestStarted(request, connection)
+
+                val responseStream = if (connection.responseCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
+                    connection.errorStream
+                } else {
+                    connection.inputStream
+                }
+
+                responseStream?.use { input ->
+                    if (request.stream) {
+                        val buffer = ByteArray(8192)
+                        while (!execution.cancelled) {
+                            val readCount = input.read(buffer)
+                            if (readCount < 0) {
+                                break
+                            }
+                            if (readCount == 0) {
+                                continue
+                            }
+
+                            dispatchNativeRequestChunk(request.requestId, buffer, readCount)
+                        }
+                    } else {
+                        val output = ByteArrayOutputStream()
+                        val buffer = ByteArray(8192)
+                        while (!execution.cancelled) {
+                            val readCount = input.read(buffer)
+                            if (readCount < 0) {
+                                break
+                            }
+                            if (readCount == 0) {
+                                continue
+                            }
+
+                            output.write(buffer, 0, readCount)
+                        }
+
+                        dispatchNativeRequestChunk(request.requestId, output.toByteArray(), output.size())
+                    }
+                }
+
+                if (!execution.cancelled && execution.markTerminal()) {
+                    dispatchNativeRequestComplete(request.requestId)
+                }
+            } catch (error: Exception) {
+                if (!execution.cancelled && execution.markTerminal()) {
+                    Log.e(TAG, "Native request failed for ${request.url}", error)
+                    dispatchNativeRequestError(
+                        request.requestId,
+                        error.localizedMessage ?: "Native request failed."
+                    )
+                }
+            } finally {
+                execution.connection?.disconnect()
+                activeNativeRequests.remove(request.requestId, execution)
+            }
+        }
+
         private fun decodeObfuscatedPollinationsKey(obfuscatedKey: String): String {
             if (obfuscatedKey.isBlank()) return ""
 
@@ -2967,6 +3250,299 @@ class WebViewActivity : AppCompatActivity() {
             } catch (error: Exception) {
                 Log.e(TAG, "Failed to decode Pollinations API key", error)
                 ""
+            }
+        }
+
+        private fun parseCandidatePorts(optionsJson: String?): List<Int> {
+            val defaults = linkedSetOf(1234, 11434)
+            if (optionsJson.isNullOrBlank()) {
+                return defaults.toList()
+            }
+
+            return try {
+                val options = JSONObject(optionsJson)
+                val ports = linkedSetOf<Int>()
+                val array = options.optJSONArray("candidatePorts") ?: JSONArray()
+                for (index in 0 until array.length()) {
+                    val rawValue = array.opt(index)?.toString()?.trim().orEmpty()
+                    val port = rawValue.toIntOrNull()
+                    if (port != null && port in 1..65535) {
+                        ports.add(port)
+                    }
+                }
+                ports.addAll(defaults)
+                ports.take(4)
+            } catch (error: Exception) {
+                Log.w(TAG, "Failed to parse local scan options, falling back to defaults", error)
+                defaults.toList()
+            }
+        }
+
+        private fun ipv4ToInt(address: Inet4Address): Int {
+            val bytes = address.address
+            return ((bytes[0].toInt() and 0xFF) shl 24) or
+                ((bytes[1].toInt() and 0xFF) shl 16) or
+                ((bytes[2].toInt() and 0xFF) shl 8) or
+                (bytes[3].toInt() and 0xFF)
+        }
+
+        private fun intToIpv4(value: Int): String {
+            return listOf(
+                (value ushr 24) and 0xFF,
+                (value ushr 16) and 0xFF,
+                (value ushr 8) and 0xFF,
+                value and 0xFF
+            ).joinToString(".")
+        }
+
+        private fun prefixMask(prefixLength: Int): Int {
+            return if (prefixLength <= 0) 0 else (-1 shl (32 - prefixLength))
+        }
+
+        private fun getActiveLocalSubnetConfig(): LocalSubnetConfig? {
+            val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                return null
+            }
+
+            val network = connectivityManager.activeNetwork ?: return null
+            val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return null
+            val hasLanTransport = capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) ||
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+            if (!hasLanTransport) {
+                return null
+            }
+
+            val linkProperties = connectivityManager.getLinkProperties(network) ?: return null
+            val linkAddress = linkProperties.linkAddresses.firstOrNull { linkAddress ->
+                val address = linkAddress.address
+                address is Inet4Address && !address.isLoopbackAddress && address.isSiteLocalAddress
+            } ?: return null
+
+            val address = linkAddress.address as? Inet4Address ?: return null
+            val requestedPrefix = linkAddress.prefixLength
+            if (requestedPrefix !in 1..30) {
+                return null
+            }
+
+            val scanPrefix = requestedPrefix.coerceAtLeast(24)
+            val deviceIp = ipv4ToInt(address)
+            val mask = prefixMask(scanPrefix)
+            val networkBase = deviceIp and mask
+            val broadcastAddress = networkBase or mask.inv()
+            return LocalSubnetConfig(
+                deviceIp = deviceIp,
+                networkBase = networkBase,
+                broadcastAddress = broadcastAddress,
+                prefixLength = scanPrefix,
+                label = "${intToIpv4(networkBase)}/$scanPrefix"
+            )
+        }
+
+        private fun buildHostList(subnetConfig: LocalSubnetConfig): List<String> {
+            val firstHost = subnetConfig.networkBase + 1
+            val lastHost = subnetConfig.broadcastAddress - 1
+            if (lastHost < firstHost) {
+                return emptyList()
+            }
+
+            return (firstHost..lastHost)
+                .asSequence()
+                .filter { it != subnetConfig.deviceIp }
+                .map { intToIpv4(it) }
+                .toList()
+        }
+
+        private fun probeOpenPort(ip: String, port: Int, timeoutMs: Int = 160): Boolean {
+            return try {
+                Socket().use { socket ->
+                    socket.tcpNoDelay = true
+                    socket.connect(InetSocketAddress(ip, port), timeoutMs)
+                    true
+                }
+            } catch (_: Exception) {
+                false
+            }
+        }
+
+        private fun httpProbe(url: String, connectTimeoutMs: Int = 420, readTimeoutMs: Int = 650): ProbeResponse {
+            val connection = (URL(url).openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = connectTimeoutMs
+                readTimeout = readTimeoutMs
+                instanceFollowRedirects = true
+                setRequestProperty("Accept", "application/json, text/plain, */*")
+                setRequestProperty("User-Agent", "LMSA/NetworkDiscovery")
+            }
+
+            return try {
+                val responseCode = connection.responseCode
+                val stream = if (responseCode in 200..299) connection.inputStream else connection.errorStream
+                val body = stream?.bufferedReader()?.use { reader ->
+                    buildString {
+                        val maxChars = 2048
+                        val buffer = CharArray(256)
+                        var remaining = maxChars
+                        while (remaining > 0) {
+                            val read = reader.read(buffer, 0, minOf(buffer.size, remaining))
+                            if (read <= 0) break
+                            append(buffer, 0, read)
+                            remaining -= read
+                        }
+                    }
+                }.orEmpty()
+
+                ProbeResponse(responseCode, body)
+            } finally {
+                connection.disconnect()
+            }
+        }
+
+        private fun classifyLocalModelServer(ip: String, port: Int): DiscoveredServer? {
+            val checks = when (port) {
+                11434 -> listOf("ollama", "lmstudio-native", "lmstudio-legacy")
+                1234 -> listOf("lmstudio-native", "lmstudio-legacy", "ollama")
+                else -> listOf("lmstudio-native", "lmstudio-legacy", "ollama")
+            }
+
+            for (check in checks) {
+                try {
+                    when (check) {
+                        "ollama" -> {
+                            val response = httpProbe("http://$ip:$port/api/tags")
+                            if (response.code == HttpURLConnection.HTTP_OK && response.body.contains("\"models\"")) {
+                                return DiscoveredServer("ollama", ip, port, "Ollama responded on /api/tags.")
+                            }
+                        }
+                        "lmstudio-native" -> {
+                            val response = httpProbe("http://$ip:$port/api/v1/models")
+                            if (
+                                (response.code == HttpURLConnection.HTTP_OK &&
+                                    (response.body.contains("\"models\"") || response.body.contains("\"data\""))) ||
+                                response.code == HttpURLConnection.HTTP_UNAUTHORIZED ||
+                                response.code == HttpURLConnection.HTTP_FORBIDDEN
+                            ) {
+                                return DiscoveredServer("lmstudio", ip, port, "LM Studio responded on /api/v1/models.")
+                            }
+                        }
+                        "lmstudio-legacy" -> {
+                            val response = httpProbe("http://$ip:$port/v1/models")
+                            if (
+                                (response.code == HttpURLConnection.HTTP_OK && response.body.contains("\"data\"")) ||
+                                response.code == HttpURLConnection.HTTP_UNAUTHORIZED ||
+                                response.code == HttpURLConnection.HTTP_FORBIDDEN
+                            ) {
+                                return DiscoveredServer("lmstudio", ip, port, "LM Studio responded on /v1/models.")
+                            }
+                        }
+                    }
+                } catch (_: Exception) {
+                    // Ignore individual host probe failures and continue scanning the subnet.
+                }
+            }
+
+            return null
+        }
+
+        private fun scanLocalModelServersInternal(optionsJson: String?): JSONObject {
+            if (!isNetworkAvailable()) {
+                return JSONObject().apply {
+                    put("ok", false)
+                    put("discoveries", JSONArray())
+                    put("message", "Connect to Wi-Fi or Ethernet before scanning your local network.")
+                }
+            }
+
+            val subnetConfig = getActiveLocalSubnetConfig()
+                ?: return JSONObject().apply {
+                    put("ok", false)
+                    put("discoveries", JSONArray())
+                    put("message", "Local scanning needs an active Wi-Fi or Ethernet IPv4 network.")
+                }
+
+            val hosts = buildHostList(subnetConfig)
+            val candidatePorts = parseCandidatePorts(optionsJson)
+            if (hosts.isEmpty()) {
+                return JSONObject().apply {
+                    put("ok", false)
+                    put("discoveries", JSONArray())
+                    put("message", "This network does not expose a usable IPv4 host range for scanning.")
+                }
+            }
+
+            val discoveries = mutableListOf<DiscoveredServer>()
+            val seenKeys = mutableSetOf<String>()
+            val executor = Executors.newFixedThreadPool(24)
+
+            try {
+                val futures = hosts.map { ip ->
+                    executor.submit {
+                        for (port in candidatePorts) {
+                            if (!probeOpenPort(ip, port)) {
+                                continue
+                            }
+
+                            val discovery = classifyLocalModelServer(ip, port) ?: continue
+                            val key = "${discovery.type}|${discovery.ip}|${discovery.port}"
+                            synchronized(discoveries) {
+                                if (seenKeys.add(key)) {
+                                    discoveries.add(discovery)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                futures.forEach { future ->
+                    try {
+                        future.get()
+                    } catch (error: Exception) {
+                        Log.w(TAG, "Local model server probe task failed", error)
+                    }
+                }
+            } finally {
+                executor.shutdown()
+                executor.awaitTermination(2, TimeUnit.SECONDS)
+            }
+
+            val sortedDiscoveries = discoveries.sortedWith(
+                compareBy<DiscoveredServer>({ it.type }, { it.ip }, { it.port })
+            )
+
+            val discoveryArray = JSONArray()
+            sortedDiscoveries.forEach { discovery ->
+                discoveryArray.put(
+                    JSONObject().apply {
+                        put("type", discovery.type)
+                        put("ip", discovery.ip)
+                        put("port", discovery.port.toString())
+                        put("message", discovery.message)
+                    }
+                )
+            }
+
+            return JSONObject().apply {
+                put("ok", true)
+                put("discoveries", discoveryArray)
+                put(
+                    "message",
+                    if (sortedDiscoveries.isEmpty()) {
+                        "No LM Studio or Ollama servers responded on ${subnetConfig.label}."
+                    } else {
+                        "Found ${sortedDiscoveries.size} local server${if (sortedDiscoveries.size == 1) "" else "s"} on ${subnetConfig.label}."
+                    }
+                )
+                put("network", subnetConfig.label)
+            }
+        }
+
+        private fun dispatchLocalModelServerScanResult(result: JSONObject) {
+            runOnUiThread {
+                webView.evaluateJavascript(
+                    "if (typeof window.onNativeLocalServerScanResult === 'function') { window.onNativeLocalServerScanResult($result); }",
+                    null
+                )
             }
         }
 
@@ -2999,9 +3575,65 @@ class WebViewActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun scanLocalModelServers(optionsJson: String?) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val result = try {
+                    scanLocalModelServersInternal(optionsJson)
+                } catch (error: Exception) {
+                    Log.e(TAG, "Local model server scan failed", error)
+                    JSONObject().apply {
+                        put("ok", false)
+                        put("discoveries", JSONArray())
+                        put("message", "Local network scan failed. Please try again.")
+                    }
+                }
+
+                dispatchLocalModelServerScanResult(result)
+            }
+        }
+
+        @JavascriptInterface
         fun dismissStartupSplash() {
             runOnUiThread {
                 hideSplash()
+            }
+        }
+
+        @JavascriptInterface
+        fun startRequest(requestJson: String) {
+            val request = try {
+                parseNativeBridgeRequest(requestJson)
+            } catch (error: Exception) {
+                Log.e(TAG, "Failed to parse native request payload", error)
+                return
+            }
+
+            val execution = NativeRequestExecution()
+            val previous = activeNativeRequests.putIfAbsent(request.requestId, execution)
+            if (previous != null) {
+                dispatchNativeRequestError(request.requestId, "A request with this ID is already active.", "DUPLICATE_REQUEST")
+                return
+            }
+
+            CoroutineScope(Dispatchers.IO).launch {
+                executeNativeBridgeRequest(request, execution)
+            }
+        }
+
+        @JavascriptInterface
+        fun cancelRequest(requestId: String?) {
+            val normalizedId = requestId?.trim().orEmpty()
+            if (normalizedId.isBlank()) {
+                return
+            }
+
+            val execution = activeNativeRequests.remove(normalizedId) ?: return
+            val shouldDispatchAbort = execution.cancel()
+            execution.connection?.disconnect()
+            execution.workerThread?.interrupt()
+
+            if (shouldDispatchAbort && execution.markTerminal()) {
+                dispatchNativeRequestError(normalizedId, "The request was cancelled.", "ABORTED")
             }
         }
 

@@ -85,6 +85,14 @@ function _stopCtxSpecsPolling() {
     _ctxSpecsInterval = null;
 }
 
+function fetchWithPreferredNetworkTransport(url, options = {}) {
+    if (typeof window.fetchWithNativeBridge === 'function') {
+        return window.fetchWithNativeBridge(url, options);
+    }
+
+    return fetch(url, options);
+}
+
 const CONNECTION_PRESET_TYPE_LABELS = {
     local: 'Local Server',
     openrouter: 'OpenRouter',
@@ -2404,7 +2412,7 @@ function initializeSystemPromptOverlay() {
                     if (apiKey) requestHeaders['Authorization'] = `Bearer ${apiKey}`;
                 }
 
-                const response = await fetch(apiUrl, {
+                const response = await fetchWithPreferredNetworkTransport(apiUrl, {
                     method: 'POST',
                     headers: requestHeaders,
                     body: JSON.stringify({
@@ -2421,7 +2429,8 @@ function initializeSystemPromptOverlay() {
                         ],
                         temperature: 0.7,
                         stream: false
-                    })
+                    }),
+                    timeoutMs: 60000
                 });
 
                 if (response.ok) {
@@ -3012,7 +3021,7 @@ function initializeConnectionInputModals() {
     const ollamaTypeBtn = document.getElementById('select-ollama-type');
     let _pendingServerType = null;
 
-    function applyServerTypeSelection(type) {
+    function applyServerTypeSelection(type, options = {}) {
         _pendingServerType = type;
         if (lmStudioTypeBtn) {
             lmStudioTypeBtn.setAttribute('aria-pressed', type === 'lmstudio' ? 'true' : 'false');
@@ -3023,7 +3032,7 @@ function initializeConnectionInputModals() {
             ollamaTypeBtn.classList.toggle('active', type === 'ollama');
         }
         const portInput = document.getElementById('server-port');
-        if (portInput) {
+        if (portInput && !options.preservePort) {
             const current = portInput.value.trim();
             if (type === 'lmstudio' && (current === '' || current === '11434')) portInput.value = '1234';
             if (type === 'ollama'   && (current === '' || current === '1234'))  portInput.value = '11434';
@@ -3047,10 +3056,211 @@ function initializeConnectionInputModals() {
     if (lmStudioTypeBtn) lmStudioTypeBtn.addEventListener('click', () => applyServerTypeSelection('lmstudio'));
     if (ollamaTypeBtn)   ollamaTypeBtn.addEventListener('click',   () => applyServerTypeSelection('ollama'));
 
+    const scanLocalNetworkBtn = document.getElementById('scan-local-network-btn');
+    const scanLocalNetworkStatus = document.getElementById('scan-local-network-status');
+    const scanLocalNetworkResults = document.getElementById('scan-local-network-results');
+    const scanLocalNetworkResultsList = document.getElementById('scan-local-network-results-list');
+    let _localNetworkScanInFlight = false;
+    let _localNetworkScanGeneration = 0;
+
+    function setLocalNetworkScanButtonState(isScanning) {
+        _localNetworkScanInFlight = isScanning;
+        if (!scanLocalNetworkBtn) {
+            return;
+        }
+
+        scanLocalNetworkBtn.disabled = isScanning;
+        scanLocalNetworkBtn.setAttribute('aria-busy', isScanning ? 'true' : 'false');
+        scanLocalNetworkBtn.innerHTML = isScanning
+            ? '<i class="fas fa-spinner fa-spin text-xs"></i><span>Scanning...</span>'
+            : '<i class="fas fa-radar-dish text-xs"></i><span>Scan Network</span>';
+    }
+
+    function setLocalNetworkScanStatus(message, tone = 'muted') {
+        if (!scanLocalNetworkStatus) {
+            return;
+        }
+
+        const toneColors = {
+            muted: 'var(--settings-help-text, #9ca3af)',
+            success: '#86efac',
+            warning: '#fbbf24',
+            error: '#fca5a5'
+        };
+
+        scanLocalNetworkStatus.textContent = message;
+        scanLocalNetworkStatus.style.color = toneColors[tone] || toneColors.muted;
+    }
+
+    function clearLocalNetworkResults() {
+        if (scanLocalNetworkResultsList) {
+            scanLocalNetworkResultsList.innerHTML = '';
+        }
+        if (scanLocalNetworkResults) {
+            scanLocalNetworkResults.classList.add('hidden');
+        }
+    }
+
+    function resetLocalNetworkScanUi() {
+        _localNetworkScanGeneration += 1;
+        setLocalNetworkScanButtonState(false);
+        setLocalNetworkScanStatus('Search this Wi-Fi or Ethernet network for LM Studio and Ollama, then review the discovered address before saving.');
+        clearLocalNetworkResults();
+    }
+
+    function getLocalNetworkScanCandidatePorts() {
+        const portCandidates = [
+            document.getElementById('server-port')?.value.trim(),
+            localStorage.getItem('serverPort') || '',
+            '1234',
+            '11434'
+        ];
+
+        return Array.from(new Set(portCandidates.filter(value => /^\d{1,5}$/.test(value))));
+    }
+
+    function applyDiscoveredLocalServer(discovery) {
+        const ipInput = document.getElementById('server-ip');
+        const portInput = document.getElementById('server-port');
+        if (ipInput) {
+            ipInput.value = discovery.ip || '';
+        }
+        if (portInput) {
+            portInput.value = discovery.port || '';
+        }
+        applyServerTypeSelection(discovery.type, { preservePort: true });
+        clearLocalNetworkResults();
+        setLocalNetworkScanStatus(
+            `Selected ${discovery.type === 'ollama' ? 'Ollama' : 'LM Studio'} at ${discovery.ip}:${discovery.port}. Review the values, then tap Save if they look right.`,
+            'success'
+        );
+    }
+
+    function renderLocalNetworkScanResults(discoveries) {
+        if (!scanLocalNetworkResults || !scanLocalNetworkResultsList) {
+            return;
+        }
+
+        scanLocalNetworkResultsList.innerHTML = '';
+        scanLocalNetworkResults.classList.remove('hidden');
+
+        discoveries.forEach(discovery => {
+            const item = document.createElement('div');
+            item.className = 'connection-preset-item';
+
+            const header = document.createElement('div');
+            header.className = 'connection-preset-item-header';
+
+            const details = document.createElement('div');
+
+            const title = document.createElement('p');
+            title.className = 'connection-preset-item-title';
+            title.textContent = `${discovery.type === 'ollama' ? 'Ollama' : 'LM Studio'} at ${discovery.ip}:${discovery.port}`;
+
+            const meta = document.createElement('div');
+            meta.className = 'connection-preset-item-meta';
+
+            const typeTag = document.createElement('span');
+            typeTag.className = 'connection-preset-item-tag';
+            typeTag.textContent = discovery.type === 'ollama' ? 'Ollama' : 'LM Studio';
+
+            const portTag = document.createElement('span');
+            portTag.className = 'connection-preset-item-tag';
+            portTag.textContent = `Port ${discovery.port}`;
+
+            meta.appendChild(typeTag);
+            meta.appendChild(portTag);
+            details.appendChild(title);
+            details.appendChild(meta);
+
+            const summary = document.createElement('p');
+            summary.className = 'connection-preset-summary';
+            summary.textContent = discovery.message || 'Tap Use to fill the address fields with this result.';
+            details.appendChild(summary);
+
+            const actions = document.createElement('div');
+            actions.className = 'connection-preset-actions connection-preset-actions--inline';
+
+            const useButton = document.createElement('button');
+            useButton.type = 'button';
+            useButton.className = 'connection-preset-action-btn connection-preset-action-btn--compact';
+            useButton.textContent = 'Use';
+            useButton.addEventListener('click', () => applyDiscoveredLocalServer(discovery));
+
+            actions.appendChild(useButton);
+            header.appendChild(details);
+            header.appendChild(actions);
+            item.appendChild(header);
+            scanLocalNetworkResultsList.appendChild(item);
+        });
+    }
+
+    async function startLocalNetworkScan() {
+        if (_localNetworkScanInFlight) {
+            return;
+        }
+
+        const scanGeneration = _localNetworkScanGeneration;
+        clearLocalNetworkResults();
+        setLocalNetworkScanButtonState(true);
+        setLocalNetworkScanStatus('Scanning your active local network for LM Studio and Ollama servers...', 'muted');
+
+        try {
+            const result = await window.scanLocalModelServers({
+                candidatePorts: getLocalNetworkScanCandidatePorts()
+            });
+            const discoveries = Array.isArray(result?.discoveries) ? result.discoveries : [];
+
+            if (scanGeneration !== _localNetworkScanGeneration) {
+                return;
+            }
+
+            if (!result?.ok) {
+                setLocalNetworkScanStatus(result?.message || 'Unable to scan this network right now.', 'warning');
+                showToastNotice(result?.message || 'Unable to scan this network right now.', 'warning');
+                return;
+            }
+
+            if (discoveries.length === 0) {
+                setLocalNetworkScanStatus(result?.message || 'No LM Studio or Ollama servers responded on this network.', 'warning');
+                showToastNotice(result?.message || 'No LM Studio or Ollama servers responded on this network.', 'warning');
+                return;
+            }
+
+            if (discoveries.length === 1) {
+                applyDiscoveredLocalServer(discoveries[0]);
+                showToastNotice(`Found ${discoveries[0].type === 'ollama' ? 'Ollama' : 'LM Studio'} at ${discoveries[0].ip}:${discoveries[0].port}.`);
+                return;
+            }
+
+            setLocalNetworkScanStatus(`Found ${discoveries.length} servers. Choose one result to fill the address fields before saving.`, 'success');
+            renderLocalNetworkScanResults(discoveries);
+            showToastNotice(`Found ${discoveries.length} local servers. Choose one to use.`);
+        } catch (error) {
+            if (scanGeneration !== _localNetworkScanGeneration) {
+                return;
+            }
+            const message = error instanceof Error ? error.message : 'Failed to start local network scan.';
+            setLocalNetworkScanStatus(message, 'error');
+            showToastNotice(message, 'error');
+        } finally {
+            if (scanGeneration === _localNetworkScanGeneration) {
+                setLocalNetworkScanButtonState(false);
+            }
+        }
+    }
+
+    if (scanLocalNetworkBtn) {
+        scanLocalNetworkBtn.addEventListener('click', () => {
+            startLocalNetworkScan();
+        });
+    }
+
     const configLocalBtn = document.getElementById('configure-local-server-btn');
     if (configLocalBtn) {
         configLocalBtn.addEventListener('click', () => {
             restoreServerTypeSelection();
+            resetLocalNetworkScanUi();
             showInputModal(ipPortModal);
         });
     }
@@ -3066,6 +3276,7 @@ function initializeConnectionInputModals() {
         if (ipInput) ipInput.value = localStorage.getItem('serverIp') || '';
         if (portInput) portInput.value = localStorage.getItem('serverPort') || '';
         restoreServerTypeSelection();
+        resetLocalNetworkScanUi();
         hideInputModal(ipPortModal);
     };
 

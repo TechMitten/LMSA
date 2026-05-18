@@ -67,6 +67,14 @@ function getCloudSelectedModelKey() {
     return null;
 }
 
+function fetchWithPreferredNetworkTransport(url, options = {}) {
+    if (typeof window.fetchWithNativeBridge === 'function') {
+        return window.fetchWithNativeBridge(url, options);
+    }
+
+    return fetch(url, options);
+}
+
 /**
  * Detects if the LM Studio server is using the modern v1 Native API
  * or the legacy OpenAI-compatible API.
@@ -95,9 +103,10 @@ async function detectApiVersion(ip, port) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 4000);
             
-            const response = await fetch(`http://${ip}:${port}/api/v1/models`, {
+            const response = await fetchWithPreferredNetworkTransport(`http://${ip}:${port}/api/v1/models`, {
                 signal: controller.signal,
-                headers: getLMStudioAuthHeaders()
+                headers: getLMStudioAuthHeaders(),
+                timeoutMs: 4000
             }).catch(err => {
                 console.warn(`Native API check failed (fetch): ${err.message}`);
                 return { ok: false };
@@ -151,7 +160,7 @@ export async function getLMStudioContextSpecs() {
 
         if (!maxLimit && getUseOpenRouter()) {
             try {
-                const resp = await fetch('https://openrouter.ai/api/v1/models');
+                const resp = await fetchWithPreferredNetworkTransport('https://openrouter.ai/api/v1/models');
                 if (resp.ok) {
                     const data = await resp.json();
                     (data.data || []).forEach(m => {
@@ -186,11 +195,12 @@ export async function getLMStudioContextSpecs() {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 4000);
             try {
-                const response = await fetch(`http://${ip}:${port}/api/show`, {
+                const response = await fetchWithPreferredNetworkTransport(`http://${ip}:${port}/api/show`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: modelId, model: modelId }),
-                    signal: controller.signal
+                    signal: controller.signal,
+                    timeoutMs: 4000
                 });
                 if (response.ok) {
                     const showData = await response.json();
@@ -236,9 +246,10 @@ export async function getLMStudioContextSpecs() {
         const timeoutId = setTimeout(() => controller.abort(), 5000);
         let response;
         try {
-            response = await fetch(`http://${ip}:${port}/api/v1/models`, {
+            response = await fetchWithPreferredNetworkTransport(`http://${ip}:${port}/api/v1/models`, {
                 signal: controller.signal,
-                headers: getLMStudioAuthHeaders()
+                headers: getLMStudioAuthHeaders(),
+                timeoutMs: 5000
             });
         } finally {
             clearTimeout(timeoutId);
@@ -279,8 +290,9 @@ export async function getLMStudioContextSpecs() {
         // Legacy API: try well-known model info endpoints
         for (const path of ['/v1/internal/model/info', '/v1/model/info']) {
             try {
-                const resp = await fetch(`http://${ip}:${port}${path}`, {
-                    headers: getLMStudioAuthHeaders()
+                const resp = await fetchWithPreferredNetworkTransport(`http://${ip}:${port}${path}`, {
+                    headers: getLMStudioAuthHeaders(),
+                    timeoutMs: 5000
                 });
                 if (resp.ok) {
                     const info = await resp.json();
@@ -312,8 +324,9 @@ async function detectLmStudioLoadedModelViaCompletionProbe(ip, port, modelsList 
         // Optimized detection for Native API: check models list first
         if (useNative) {
             try {
-                const resp = await fetch(`http://${ip}:${port}/api/v1/models`, {
-                    headers: getLMStudioAuthHeaders()
+                const resp = await fetchWithPreferredNetworkTransport(`http://${ip}:${port}/api/v1/models`, {
+                    headers: getLMStudioAuthHeaders(),
+                    timeoutMs: 5000
                 });
                 if (resp.ok) {
                     const data = await resp.json();
@@ -349,14 +362,15 @@ async function detectLmStudioLoadedModelViaCompletionProbe(ip, port, modelsList 
             stream: false
         };
 
-        const chatResponse = await fetch(endpoint, {
+        const chatResponse = await fetchWithPreferredNetworkTransport(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 ...getLocalServerAuthHeaders()
             },
             body: JSON.stringify(requestBody),
-            signal: probeCtrl.signal
+            signal: probeCtrl.signal,
+            timeoutMs: 3000
         }).catch(() => ({ ok: false }));
 
         clearTimeout(probeTimer);
@@ -436,9 +450,10 @@ export async function fetchAvailableModels(options = {}) {
                 let loadedModelInfo = null;
 
                 if (apiVer === 'v1native') {
-                    const response = await fetch(`http://${ip}:${port}/api/v1/models`, {
+                    const response = await fetchWithPreferredNetworkTransport(`http://${ip}:${port}/api/v1/models`, {
                         signal: controller.signal,
-                        headers: getLMStudioAuthHeaders()
+                        headers: getLMStudioAuthHeaders(),
+                        timeoutMs: 10000
                     });
                     clearTimeout(timeoutId);
 
@@ -461,9 +476,10 @@ export async function fetchAvailableModels(options = {}) {
                         }
                     }
                 } else {
-                    const response = await fetch(`http://${ip}:${port}/v1/models`, {
+                    const response = await fetchWithPreferredNetworkTransport(`http://${ip}:${port}/v1/models`, {
                         signal: controller.signal,
-                        headers: getLocalServerAuthHeaders()
+                        headers: getLocalServerAuthHeaders(),
+                        timeoutMs: 10000
                     });
                     clearTimeout(timeoutId);
 
@@ -475,7 +491,10 @@ export async function fetchAvailableModels(options = {}) {
                         if (!loadedModelInfo) {
                             for (const path of ['/v1/internal/model/info', '/v1/model/info']) {
                                 try {
-                                    const infoResp = await fetch(`http://${ip}:${port}${path}`, { headers: getLocalServerAuthHeaders() });
+                                    const infoResp = await fetchWithPreferredNetworkTransport(`http://${ip}:${port}${path}`, {
+                                        headers: getLocalServerAuthHeaders(),
+                                        timeoutMs: 10000
+                                    });
                                     if (infoResp.ok) {
                                         const info = await infoResp.json();
                                         if (info?.id) {
@@ -537,7 +556,7 @@ export async function fetchAvailableModels(options = {}) {
  * @returns {Promise<Array>}
  */
 async function fetchOllamaModels(ip, port) {
-    const response = await fetch(`http://${ip}:${port}/api/tags`);
+    const response = await fetchWithPreferredNetworkTransport(`http://${ip}:${port}/api/tags`);
     if (!response.ok) throw new Error('Failed to fetch from Ollama');
     
     const data = await response.json();
@@ -555,7 +574,7 @@ async function fetchOllamaModels(ip, port) {
  */
 async function fetchCloudModels() {
     if (getUseOpenRouter()) {
-        const response = await fetch('https://openrouter.ai/api/v1/models');
+        const response = await fetchWithPreferredNetworkTransport('https://openrouter.ai/api/v1/models');
         if (!response.ok) throw new Error('Failed to fetch from OpenRouter');
         const data = await response.json();
         const models = (data.data || []).map(m => ({
@@ -575,7 +594,7 @@ async function fetchCloudModels() {
         const apiKey = localStorage.getItem('customOpenAIApiKey') || '';
         if (!baseUrl) return [];
         
-        const response = await fetch(`${baseUrl}/models`, {
+        const response = await fetchWithPreferredNetworkTransport(`${baseUrl}/models`, {
             headers: apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {}
         });
         if (!response.ok) throw new Error('Failed to fetch from custom OpenAI endpoint');
@@ -608,9 +627,10 @@ export async function isServerRunning() {
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
-        const response = await fetch(`http://${ip}:${port}/v1/models`, {
+        const response = await fetchWithPreferredNetworkTransport(`http://${ip}:${port}/v1/models`, {
             signal: controller.signal,
-            headers: getLocalServerAuthHeaders()
+            headers: getLocalServerAuthHeaders(),
+            timeoutMs: 3000
         }).catch(() => ({ ok: false }));
         clearTimeout(timeoutId);
         return response.ok;
@@ -640,7 +660,10 @@ async function tryEndpoints(ip, port, operation, endpoints, requestData = null, 
                 fetchOptions.body = JSON.stringify(requestData || {});
             }
 
-            const response = await fetch(`http://${ip}:${port}${endpoint.path}`, fetchOptions).catch(() => ({ ok: false }));
+            const response = await fetchWithPreferredNetworkTransport(`http://${ip}:${port}${endpoint.path}`, {
+                ...fetchOptions,
+                timeoutMs
+            }).catch(() => ({ ok: false }));
             clearTimeout(timeoutId);
             if (response.ok) return true;
         } catch (_) {}
@@ -669,10 +692,11 @@ async function waitForModelLoad(ip, port, modelId, maxAttempts = 15) {
                 max_tokens: 1
             };
 
-            const resp = await fetch(endpoint, {
+            const resp = await fetchWithPreferredNetworkTransport(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', ...getLMStudioAuthHeaders() },
-                body: JSON.stringify(requestBody)
+                body: JSON.stringify(requestBody),
+                timeoutMs: 30000
             });
 
             if (resp.ok) {
@@ -706,10 +730,11 @@ async function forceLoadModel(ip, port, modelId) {
             max_tokens: 10
         };
 
-        const response = await fetch(endpoint, {
+        const response = await fetchWithPreferredNetworkTransport(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...getLMStudioAuthHeaders() },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify(requestBody),
+            timeoutMs: 30000
         });
         return response.ok;
     } catch (_) {

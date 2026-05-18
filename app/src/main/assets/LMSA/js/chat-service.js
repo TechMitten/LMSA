@@ -45,6 +45,14 @@ function syncCompletionScrollState() {
     }, 150);
 }
 
+function fetchWithPreferredNetworkTransport(url, options = {}) {
+    if (typeof window.fetchWithNativeBridge === 'function') {
+        return window.fetchWithNativeBridge(url, options);
+    }
+
+    return fetch(url, options);
+}
+
 // Maximum number of historical web search results to include in context (legacy)
 // This is deprecated - web search results are now scoped to current turn only
 const MAX_HISTORICAL_SEARCHES = 3;
@@ -244,11 +252,14 @@ function shouldRetryWithoutThinking(response, errorText) {
 async function postChatCompletionWithReasoningFallback(url, headers, requestBody, signal) {
     const firstAttemptBody = applyReasoningOptions({ ...requestBody });
     const firstAttemptModel = typeof firstAttemptBody.model === 'string' ? firstAttemptBody.model : '';
-    let response = await fetch(url, {
+    const requestTimeoutMs = Math.max(getReasoningTimeout() * 1000, 120000);
+    let response = await fetchWithPreferredNetworkTransport(url, {
         method: 'POST',
         headers,
         body: JSON.stringify(firstAttemptBody),
-        signal
+        signal,
+        timeoutMs: requestTimeoutMs,
+        stream: true
     });
 
     if (response.ok) {
@@ -274,11 +285,13 @@ async function postChatCompletionWithReasoningFallback(url, headers, requestBody
     }
 
     debugLog(`Retrying request without LM Studio thinking payload for model: ${firstAttemptModel || 'unknown model'}`);
-    response = await fetch(url, {
+    response = await fetchWithPreferredNetworkTransport(url, {
         method: 'POST',
         headers,
         body: JSON.stringify(fallbackBody),
-        signal
+        signal,
+        timeoutMs: requestTimeoutMs,
+        stream: true
     });
 
     return { response, requestBody: fallbackBody };
@@ -660,7 +673,7 @@ async function fetchGeneratedImageAttachment(prompt) {
         requestHeaders['Authorization'] = `Bearer ${apiKey}`;
     }
 
-    const response = await fetch(attachment.remoteUrl, {
+    const response = await fetchWithPreferredNetworkTransport(attachment.remoteUrl, {
         headers: requestHeaders,
         cache: 'no-store'
     });
@@ -1614,11 +1627,12 @@ async function sendLmStudioMcpRequest(requestBody, signal) {
         requestHeaders['Authorization'] = `Bearer ${lmToken}`;
     }
 
-    const response = await fetch(getApiUrl({ preferNativeLmStudio: true }), {
+    const response = await fetchWithPreferredNetworkTransport(getApiUrl({ preferNativeLmStudio: true }), {
         method: 'POST',
         headers: requestHeaders,
         body: JSON.stringify(requestBody),
-        signal
+        signal,
+        timeoutMs: 300000
     });
 
     if (!response.ok) {
@@ -2243,20 +2257,6 @@ async function fetchWebSearchProviderResults(provider, query) {
 }
 
 async function fetchJsonWithNativeFallback(urlString, options = {}) {
-    if (window.nativeFetch && typeof window.nativeFetch === 'function') {
-        // Note: nativeFetch bridge currently only supports URL. 
-        // If the bridge doesn't support headers, Brave API requests might fail natively 
-        // and fall back to the browser's fetch below.
-        const nativeResult = await window.nativeFetch(urlString);
-        if (nativeResult) {
-            try {
-                return JSON.parse(nativeResult);
-            } catch (error) {
-                console.warn('Failed to parse native fetch result:', error);
-            }
-        }
-    }
-
     try {
         const response = await fetchWithTimeout(urlString, WEB_SEARCH_FETCH_TIMEOUT_MS, options);
         if (response.ok) {
@@ -2291,8 +2291,9 @@ async function fetchWithTimeout(url, timeoutMs, options = {}) {
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-        return await fetch(url, { 
+        return await fetchWithPreferredNetworkTransport(url, {
             ...options,
+            timeoutMs,
             signal: controller.signal 
         });
     } finally {
@@ -4194,10 +4195,11 @@ async function summarizeConversationSilently(messages) {
             stream: false
         };
 
-        const response = await fetch(apiUrl, {
+        const response = await fetchWithPreferredNetworkTransport(apiUrl, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify(requestBody),
+            timeoutMs: 60000
         });
 
         if (!response.ok) {
